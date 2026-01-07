@@ -3,8 +3,11 @@ import Layout from '@/components/Layout/Layout';
 import { 
   Save, Plus, Edit2, Trash2, Image, Calendar, 
   ChevronUp, ChevronDown, Eye, X, Check, AlertCircle, CheckCircle,
-  Upload
+  Upload, Loader2
 } from 'lucide-react';
+import { getToken } from '@/lib/auth';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
 const defaultEvents = [
   {
@@ -31,12 +34,14 @@ const defaultEvents = [
 ];
 
 export default function EventsPage() {
-  const [events, setEvents] = useState(defaultEvents);
+  const [events, setEvents] = useState([]);
   const [editingEvent, setEditingEvent] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [notification, setNotification] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [previewSlide, setPreviewSlide] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -46,12 +51,29 @@ export default function EventsPage() {
     date: ''
   });
 
+  // Fetch events from API
   useEffect(() => {
-    const saved = localStorage.getItem('carouselEvents');
-    if (saved) {
-      setEvents(JSON.parse(saved));
-    }
+    fetchEvents();
   }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/api/events`);
+      const data = await response.json();
+      
+      if (data.success && data.data.length > 0) {
+        setEvents(data.data);
+      } else {
+        setEvents(defaultEvents);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      setEvents(defaultEvents);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (notification) {
@@ -62,23 +84,74 @@ export default function EventsPage() {
 
   // Auto-slide preview
   useEffect(() => {
+    if (events.length === 0) return;
     const interval = setInterval(() => {
       setPreviewSlide((prev) => (prev + 1) % events.length);
     }, 4000);
     return () => clearInterval(interval);
   }, [events.length]);
 
-  const saveAllChanges = () => {
-    localStorage.setItem('carouselEvents', JSON.stringify(events));
-    setHasChanges(false);
-    setNotification({ type: 'success', message: 'Events saved! Changes will appear on homepage.' });
+  const saveAllChanges = async () => {
+    try {
+      setSaving(true);
+      const token = getToken();
+      
+      const response = await fetch(`${API_URL}/api/events/bulk/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ events })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setHasChanges(false);
+        setNotification({ type: 'success', message: 'Events saved! Changes will appear on homepage for everyone.' });
+        fetchEvents(); // Refresh from server
+      } else {
+        setNotification({ type: 'error', message: data.message || 'Failed to save events' });
+      }
+    } catch (error) {
+      console.error('Error saving events:', error);
+      setNotification({ type: 'error', message: 'Failed to save events. Please try again.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const resetToDefault = () => {
-    setEvents(defaultEvents);
-    localStorage.removeItem('carouselEvents');
-    setHasChanges(false);
-    setNotification({ type: 'success', message: 'Reset to default events' });
+  const resetToDefault = async () => {
+    try {
+      setSaving(true);
+      const token = getToken();
+      
+      const response = await fetch(`${API_URL}/api/events/bulk/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ events: defaultEvents })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setEvents(defaultEvents);
+        setHasChanges(false);
+        setNotification({ type: 'success', message: 'Reset to default events' });
+        fetchEvents();
+      } else {
+        setNotification({ type: 'error', message: 'Failed to reset events' });
+      }
+    } catch (error) {
+      console.error('Error resetting events:', error);
+      setNotification({ type: 'error', message: 'Failed to reset events' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleImageUpload = (e, isEditing = false) => {
@@ -110,7 +183,7 @@ export default function EventsPage() {
     setEvents([...events, newEvent]);
     setShowAddModal(false);
     setHasChanges(true);
-    setNotification({ type: 'success', message: 'Event added successfully' });
+    setNotification({ type: 'success', message: 'Event added. Click "Save All" to publish.' });
   };
 
   const startEditing = (event) => {
@@ -125,7 +198,7 @@ export default function EventsPage() {
     setEvents(events.map(e => e.id === editingEvent.id ? editingEvent : e));
     setEditingEvent(null);
     setHasChanges(true);
-    setNotification({ type: 'success', message: 'Event updated' });
+    setNotification({ type: 'success', message: 'Event updated. Click "Save All" to publish.' });
   };
 
   const deleteEvent = (id) => {
@@ -135,7 +208,7 @@ export default function EventsPage() {
     }
     setEvents(events.filter(e => e.id !== id));
     setHasChanges(true);
-    setNotification({ type: 'success', message: 'Event deleted' });
+    setNotification({ type: 'success', message: 'Event deleted. Click "Save All" to publish.' });
   };
 
   const moveEvent = (index, direction) => {
@@ -147,6 +220,17 @@ export default function EventsPage() {
     setHasChanges(true);
   };
 
+  if (loading) {
+    return (
+      <Layout title="Events Management" subtitle="Customize homepage carousel events">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <span className="ml-2 text-gray-600">Loading events...</span>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout title="Events Management" subtitle="Customize homepage carousel events">
       <div className="space-y-6">
@@ -157,15 +241,16 @@ export default function EventsPage() {
             <p className="text-gray-600 mt-1">Manage events displayed on the homepage carousel</p>
           </div>
           <div className="flex gap-3">
-            <button onClick={resetToDefault} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+            <button onClick={resetToDefault} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50">
               Reset
             </button>
             <button onClick={openAddModal} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2">
               <Plus className="w-5 h-5" />Add Event
             </button>
-            <button onClick={saveAllChanges} disabled={!hasChanges}
-              className={`px-6 py-2 rounded-lg font-medium flex items-center gap-2 ${hasChanges ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}>
-              <Save className="w-5 h-5" />Save All
+            <button onClick={saveAllChanges} disabled={!hasChanges || saving}
+              className={`px-6 py-2 rounded-lg font-medium flex items-center gap-2 ${hasChanges && !saving ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}>
+              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+              {saving ? 'Saving...' : 'Save All'}
             </button>
           </div>
         </div>
@@ -181,7 +266,7 @@ export default function EventsPage() {
         {hasChanges && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600" />
-            <span className="text-amber-800 font-medium">Unsaved changes. Click "Save All" to publish to homepage.</span>
+            <span className="text-amber-800 font-medium">Unsaved changes. Click "Save All" to publish to homepage for everyone.</span>
           </div>
         )}
 
@@ -196,7 +281,6 @@ export default function EventsPage() {
             {events.map((event, index) => (
               <div key={event.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all">
                 {editingEvent?.id === event.id ? (
-                  // Edit Mode
                   <div className="p-4 space-y-4">
                     <div>
                       <label className="text-sm font-medium text-gray-700 block mb-1">Title</label>
@@ -250,7 +334,6 @@ export default function EventsPage() {
                     </div>
                   </div>
                 ) : (
-                  // View Mode
                   <div className="flex">
                     <div className="w-32 h-24 flex-shrink-0">
                       <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
@@ -314,7 +397,6 @@ export default function EventsPage() {
                     </div>
                   </div>
                 ))}
-                {/* Dots */}
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
                   {events.map((_, index) => (
                     <button
@@ -332,14 +414,13 @@ export default function EventsPage() {
               </div>
             </div>
 
-            {/* Tips */}
             <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
               <h3 className="font-semibold text-blue-900 mb-2">Tips</h3>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• Use high-quality images (recommended: 1920x1080)</li>
                 <li>• Keep titles short and descriptive</li>
                 <li>• Use the arrows to reorder events</li>
-                <li>• Click "Save All" to publish changes</li>
+                <li>• Click "Save All" to publish changes for everyone</li>
               </ul>
             </div>
           </div>

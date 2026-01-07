@@ -46,12 +46,24 @@ export default function BarangayPortal() {
 
   const [newsItems, setNewsItems] = useState(defaultNewsItems);
 
-  // Load events from localStorage
+  // Load events from API
   useEffect(() => {
-    const savedEvents = localStorage.getItem('carouselEvents');
-    if (savedEvents) {
-      setNewsItems(JSON.parse(savedEvents));
-    }
+    const fetchEvents = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+        const response = await fetch(`${API_URL}/api/events`);
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.length > 0) {
+          setNewsItems(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        // Keep default events on error
+      }
+    };
+    
+    fetchEvents();
   }, []);
 
   // Update time every second
