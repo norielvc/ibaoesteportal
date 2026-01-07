@@ -1,9 +1,8 @@
 // API Configuration
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
-export const API_URL = API_BASE;
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
 export const getApiUrl = (endpoint) => {
-  return `${API_BASE}${endpoint}`;
+  return `${API_URL}${endpoint}`;
 };
 
 // Helper for API calls

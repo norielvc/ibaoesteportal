@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
 import { login } from '@/lib/auth';
-import { API_URL } from '@/lib/api';
 
 export default function Login() {
   const router = useRouter();
@@ -12,6 +11,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
