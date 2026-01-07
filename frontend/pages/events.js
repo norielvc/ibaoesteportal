@@ -5,7 +5,7 @@ import {
   ChevronUp, ChevronDown, Eye, X, Check, AlertCircle, CheckCircle,
   Upload, Loader2
 } from 'lucide-react';
-import { getToken } from '@/lib/auth';
+import { getAuthToken } from '@/lib/auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
@@ -94,7 +94,7 @@ export default function EventsPage() {
   const saveAllChanges = async () => {
     try {
       setSaving(true);
-      const token = getToken();
+      const token = getAuthToken();
       
       const response = await fetch(`${API_URL}/api/events/bulk/update`, {
         method: 'PUT',
@@ -125,7 +125,7 @@ export default function EventsPage() {
   const resetToDefault = async () => {
     try {
       setSaving(true);
-      const token = getToken();
+      const token = getAuthToken();
       
       const response = await fetch(`${API_URL}/api/events/bulk/update`, {
         method: 'PUT',
