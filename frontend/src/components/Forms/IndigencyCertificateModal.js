@@ -96,15 +96,23 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
   const fetchNextReferenceNumber = async () => {
     try {
       const response = await fetch(`${API_URL}/api/certificates/next-reference/certificate_of_indigency`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      if (data.success) {
+      if (data.success && data.referenceNumber) {
         setReferenceNumber(data.referenceNumber);
-        setFormCounter(data.count + 1);
+        if (data.nextNumber) {
+          setFormCounter(data.nextNumber);
+        }
+      } else {
+        // API returned but no success, use default
+        setReferenceNumber(`CI-${new Date().getFullYear()}-00001`);
       }
     } catch (error) {
       console.error('Error fetching reference number:', error);
-      const timestamp = Date.now().toString().slice(-5);
-      setReferenceNumber(`CI-${new Date().getFullYear()}-${timestamp}`);
+      // Fallback to 00001 instead of timestamp
+      setReferenceNumber(`CI-${new Date().getFullYear()}-00001`);
     }
   };
 
