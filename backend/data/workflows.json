@@ -1,0 +1,178 @@
+{
+  "barangay_clearance": [
+    {
+      "id": 1,
+      "name": "Submitted",
+      "description": "Application received",
+      "status": "pending",
+      "icon": "FileText",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": false,
+      "sendEmail": true
+    },
+    {
+      "id": 2,
+      "name": "Under Review",
+      "description": "Being reviewed by staff",
+      "status": "processing",
+      "icon": "Clock",
+      "autoApprove": false,
+      "assignedUsers": [
+        "f398db9a-1224-42f9-a72f-69dd14fa5064",
+        "379898b5-06e9-43a7-b51d-213aec975825"
+      ],
+      "requiresApproval": true,
+      "sendEmail": true
+    },
+    {
+      "id": 3,
+      "name": "Barangay Captain Approval",
+      "description": "Approved by authorized personnel",
+      "status": "approved",
+      "icon": "UserCheck",
+      "autoApprove": false,
+      "assignedUsers": [
+        "d165bf34-2a6e-4a33-8f13-a2e9868f28f6"
+      ],
+      "requiresApproval": true,
+      "sendEmail": true
+    },
+    {
+      "id": 4,
+      "name": "Ready for Pickup",
+      "description": "Certificate is ready",
+      "status": "ready",
+      "icon": "CheckCircle",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": false,
+      "sendEmail": false
+    },
+    {
+      "id": 5,
+      "name": "Released",
+      "description": "Certificate released to applicant",
+      "status": "released",
+      "icon": "CheckCircle",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": false,
+      "sendEmail": false
+    }
+  ],
+  "certificate_of_indigency": [
+    {
+      "id": 1,
+      "name": "Submitted",
+      "description": "Application received",
+      "status": "pending",
+      "icon": "FileText",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": false,
+      "sendEmail": true
+    },
+    {
+      "id": 2,
+      "name": "Under Review",
+      "description": "Being reviewed by staff",
+      "status": "processing",
+      "icon": "Clock",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": true,
+      "sendEmail": true
+    },
+    {
+      "id": 3,
+      "name": "Barangay Captain Approval",
+      "description": "Approved by authorized personnel",
+      "status": "approved",
+      "icon": "UserCheck",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": true,
+      "sendEmail": true
+    },
+    {
+      "id": 4,
+      "name": "Ready for Pickup",
+      "description": "Certificate is ready",
+      "status": "ready",
+      "icon": "CheckCircle",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": false,
+      "sendEmail": false
+    },
+    {
+      "id": 5,
+      "name": "Released",
+      "description": "Certificate released to applicant",
+      "status": "released",
+      "icon": "CheckCircle",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": false,
+      "sendEmail": false
+    }
+  ],
+  "barangay_residency": [
+    {
+      "id": 1,
+      "name": "Submitted",
+      "description": "Application received",
+      "status": "pending",
+      "icon": "FileText",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": false,
+      "sendEmail": true
+    },
+    {
+      "id": 2,
+      "name": "Under Review",
+      "description": "Being reviewed by staff",
+      "status": "processing",
+      "icon": "Clock",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": true,
+      "sendEmail": true
+    },
+    {
+      "id": 3,
+      "name": "Barangay Captain Approval",
+      "description": "Approved by authorized personnel",
+      "status": "approved",
+      "icon": "UserCheck",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": true,
+      "sendEmail": true
+    },
+    {
+      "id": 4,
+      "name": "Ready for Pickup",
+      "description": "Certificate is ready",
+      "status": "ready",
+      "icon": "CheckCircle",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": false,
+      "sendEmail": false
+    },
+    {
+      "id": 5,
+      "name": "Released",
+      "description": "Certificate released to applicant",
+      "status": "released",
+      "icon": "CheckCircle",
+      "autoApprove": false,
+      "assignedUsers": [],
+      "requiresApproval": false,
+      "sendEmail": false
+    }
+  ]
+}
