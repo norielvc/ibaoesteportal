@@ -15,6 +15,7 @@ const router = express.Router();
 router.post('/login', validateLogin, async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Login attempt for:', email);
 
     // Get user from Supabase
     const { data: users, error: fetchError } = await supabase
@@ -23,7 +24,10 @@ router.post('/login', validateLogin, async (req, res) => {
       .eq('email', email)
       .single();
 
+    console.log('Supabase query result:', { users: users ? 'found' : 'not found', error: fetchError });
+
     if (fetchError || !users) {
+      console.log('User not found or error:', fetchError);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
@@ -31,6 +35,7 @@ router.post('/login', validateLogin, async (req, res) => {
     }
 
     // Check if account is active
+    console.log('User status:', users.status);
     if (users.status !== 'active') {
       return res.status(401).json({
         success: false,
@@ -39,7 +44,9 @@ router.post('/login', validateLogin, async (req, res) => {
     }
 
     // Check password
+    console.log('Checking password...');
     const isPasswordValid = await bcrypt.compare(password, users.password_hash);
+    console.log('Password valid:', isPasswordValid);
     
     if (!isPasswordValid) {
       return res.status(401).json({
