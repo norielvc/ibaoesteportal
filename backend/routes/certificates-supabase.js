@@ -62,39 +62,49 @@ router.get('/next-reference/:type', async (req, res) => {
     const prefix = prefixMap[type] || 'REF';
     const year = new Date().getFullYear();
     
-    // Get the last reference number for this type and year
-    const { data: lastRecord, error } = await supabase
+    // Get ALL records of this type for this year, ordered by reference_number descending
+    const { data: records, error } = await supabase
       .from('certificate_requests')
       .select('reference_number')
       .eq('certificate_type', type)
-      .like('reference_number', `${prefix}-${year}-%`)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .order('reference_number', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching records:', error);
+      throw error;
+    }
     
     let nextNumber = 1;
     
-    if (lastRecord && lastRecord.reference_number) {
-      // Extract the number from the last reference (e.g., "BC-2026-00005" -> 5)
-      const parts = lastRecord.reference_number.split('-');
-      if (parts.length === 3) {
-        const lastNumber = parseInt(parts[2], 10);
-        if (!isNaN(lastNumber)) {
-          nextNumber = lastNumber + 1;
+    // Find the highest number from existing records for this year
+    if (records && records.length > 0) {
+      let maxNumber = 0;
+      for (const record of records) {
+        if (record.reference_number && record.reference_number.startsWith(`${prefix}-${year}-`)) {
+          const parts = record.reference_number.split('-');
+          if (parts.length === 3) {
+            const num = parseInt(parts[2], 10);
+            if (!isNaN(num) && num > maxNumber) {
+              maxNumber = num;
+            }
+          }
         }
       }
+      nextNumber = maxNumber + 1;
     }
     
     const referenceNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
     
+    console.log(`Next reference for ${type}: ${referenceNumber} (found ${records?.length || 0} records)`);
+    
     res.json({ 
       success: true, 
       referenceNumber,
-      lastNumber: nextNumber - 1,
       nextNumber
     });
   } catch (error) {
-    // If no records found, start from 1
+    console.error('Error getting next reference:', error);
+    // Fallback to 00001 if error
     const { type } = req.params;
     const prefixMap = {
       'barangay_clearance': 'BC',
@@ -108,7 +118,6 @@ router.get('/next-reference/:type', async (req, res) => {
     res.json({ 
       success: true, 
       referenceNumber,
-      lastNumber: 0,
       nextNumber: 1
     });
   }
@@ -166,29 +175,34 @@ router.post('/clearance', async (req, res) => {
     } = req.body;
 
     const year = new Date().getFullYear();
+    const prefix = 'BC';
     
-    // Get the last reference number for barangay_clearance this year
-    const { data: lastRecord } = await supabase
+    // Get ALL barangay_clearance records to find the highest number
+    const { data: records } = await supabase
       .from('certificate_requests')
       .select('reference_number')
       .eq('certificate_type', 'barangay_clearance')
-      .like('reference_number', `BC-${year}-%`)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .order('reference_number', { ascending: false });
     
     let nextNumber = 1;
-    if (lastRecord && lastRecord.reference_number) {
-      const parts = lastRecord.reference_number.split('-');
-      if (parts.length === 3) {
-        const lastNumber = parseInt(parts[2], 10);
-        if (!isNaN(lastNumber)) {
-          nextNumber = lastNumber + 1;
+    if (records && records.length > 0) {
+      let maxNumber = 0;
+      for (const record of records) {
+        if (record.reference_number && record.reference_number.startsWith(`${prefix}-${year}-`)) {
+          const parts = record.reference_number.split('-');
+          if (parts.length === 3) {
+            const num = parseInt(parts[2], 10);
+            if (!isNaN(num) && num > maxNumber) {
+              maxNumber = num;
+            }
+          }
         }
       }
+      nextNumber = maxNumber + 1;
     }
     
-    const refNumber = `BC-${year}-${String(nextNumber).padStart(5, '0')}`;
+    const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
+    console.log(`Creating clearance with reference: ${refNumber}`);
 
     const { data, error } = await supabase
       .from('certificate_requests')
@@ -236,29 +250,34 @@ router.post('/indigency', async (req, res) => {
     } = req.body;
 
     const year = new Date().getFullYear();
+    const prefix = 'CI';
     
-    // Get the last reference number for certificate_of_indigency this year
-    const { data: lastRecord } = await supabase
+    // Get ALL certificate_of_indigency records to find the highest number
+    const { data: records } = await supabase
       .from('certificate_requests')
       .select('reference_number')
       .eq('certificate_type', 'certificate_of_indigency')
-      .like('reference_number', `CI-${year}-%`)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .order('reference_number', { ascending: false });
     
     let nextNumber = 1;
-    if (lastRecord && lastRecord.reference_number) {
-      const parts = lastRecord.reference_number.split('-');
-      if (parts.length === 3) {
-        const lastNumber = parseInt(parts[2], 10);
-        if (!isNaN(lastNumber)) {
-          nextNumber = lastNumber + 1;
+    if (records && records.length > 0) {
+      let maxNumber = 0;
+      for (const record of records) {
+        if (record.reference_number && record.reference_number.startsWith(`${prefix}-${year}-`)) {
+          const parts = record.reference_number.split('-');
+          if (parts.length === 3) {
+            const num = parseInt(parts[2], 10);
+            if (!isNaN(num) && num > maxNumber) {
+              maxNumber = num;
+            }
+          }
         }
       }
+      nextNumber = maxNumber + 1;
     }
     
-    const refNumber = `CI-${year}-${String(nextNumber).padStart(5, '0')}`;
+    const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
+    console.log(`Creating indigency with reference: ${refNumber}`);
 
     const { data, error } = await supabase
       .from('certificate_requests')
@@ -306,29 +325,34 @@ router.post('/residency', async (req, res) => {
     } = req.body;
 
     const year = new Date().getFullYear();
+    const prefix = 'BR';
     
-    // Get the last reference number for barangay_residency this year
-    const { data: lastRecord } = await supabase
+    // Get ALL barangay_residency records to find the highest number
+    const { data: records } = await supabase
       .from('certificate_requests')
       .select('reference_number')
       .eq('certificate_type', 'barangay_residency')
-      .like('reference_number', `BR-${year}-%`)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .order('reference_number', { ascending: false });
     
     let nextNumber = 1;
-    if (lastRecord && lastRecord.reference_number) {
-      const parts = lastRecord.reference_number.split('-');
-      if (parts.length === 3) {
-        const lastNumber = parseInt(parts[2], 10);
-        if (!isNaN(lastNumber)) {
-          nextNumber = lastNumber + 1;
+    if (records && records.length > 0) {
+      let maxNumber = 0;
+      for (const record of records) {
+        if (record.reference_number && record.reference_number.startsWith(`${prefix}-${year}-`)) {
+          const parts = record.reference_number.split('-');
+          if (parts.length === 3) {
+            const num = parseInt(parts[2], 10);
+            if (!isNaN(num) && num > maxNumber) {
+              maxNumber = num;
+            }
+          }
         }
       }
+      nextNumber = maxNumber + 1;
     }
     
-    const refNumber = `BR-${year}-${String(nextNumber).padStart(5, '0')}`;
+    const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
+    console.log(`Creating residency with reference: ${refNumber}`);
 
     const { data, error } = await supabase
       .from('certificate_requests')
