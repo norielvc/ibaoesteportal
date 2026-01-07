@@ -62,26 +62,55 @@ router.get('/next-reference/:type', async (req, res) => {
     const prefix = prefixMap[type] || 'REF';
     const year = new Date().getFullYear();
     
-    // Count existing certificates of this type
-    const { count, error } = await supabase
+    // Get the last reference number for this type and year
+    const { data: lastRecord, error } = await supabase
       .from('certificate_requests')
-      .select('*', { count: 'exact', head: true })
-      .eq('certificate_type', type);
+      .select('reference_number')
+      .eq('certificate_type', type)
+      .like('reference_number', `${prefix}-${year}-%`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
     
-    if (error) throw error;
+    let nextNumber = 1;
     
-    const nextNumber = (count || 0) + 1;
+    if (lastRecord && lastRecord.reference_number) {
+      // Extract the number from the last reference (e.g., "BC-2026-00005" -> 5)
+      const parts = lastRecord.reference_number.split('-');
+      if (parts.length === 3) {
+        const lastNumber = parseInt(parts[2], 10);
+        if (!isNaN(lastNumber)) {
+          nextNumber = lastNumber + 1;
+        }
+      }
+    }
+    
     const referenceNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
     
     res.json({ 
       success: true, 
       referenceNumber,
-      count: count || 0,
+      lastNumber: nextNumber - 1,
       nextNumber
     });
   } catch (error) {
-    console.error('Error getting next reference:', error);
-    res.status(500).json({ success: false, message: error.message });
+    // If no records found, start from 1
+    const { type } = req.params;
+    const prefixMap = {
+      'barangay_clearance': 'BC',
+      'certificate_of_indigency': 'CI',
+      'barangay_residency': 'BR'
+    };
+    const prefix = prefixMap[type] || 'REF';
+    const year = new Date().getFullYear();
+    const referenceNumber = `${prefix}-${year}-00001`;
+    
+    res.json({ 
+      success: true, 
+      referenceNumber,
+      lastNumber: 0,
+      nextNumber: 1
+    });
   }
 });
 
@@ -136,13 +165,30 @@ router.post('/clearance', async (req, res) => {
       dateOfBirth, placeOfBirth, purpose
     } = req.body;
 
-    // Generate reference number
-    const { count } = await supabase
-      .from('certificate_requests')
-      .select('*', { count: 'exact', head: true })
-      .eq('certificate_type', 'barangay_clearance');
+    const year = new Date().getFullYear();
     
-    const refNumber = `BC-${new Date().getFullYear()}-${String((count || 0) + 1).padStart(5, '0')}`;
+    // Get the last reference number for barangay_clearance this year
+    const { data: lastRecord } = await supabase
+      .from('certificate_requests')
+      .select('reference_number')
+      .eq('certificate_type', 'barangay_clearance')
+      .like('reference_number', `BC-${year}-%`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    let nextNumber = 1;
+    if (lastRecord && lastRecord.reference_number) {
+      const parts = lastRecord.reference_number.split('-');
+      if (parts.length === 3) {
+        const lastNumber = parseInt(parts[2], 10);
+        if (!isNaN(lastNumber)) {
+          nextNumber = lastNumber + 1;
+        }
+      }
+    }
+    
+    const refNumber = `BC-${year}-${String(nextNumber).padStart(5, '0')}`;
 
     const { data, error } = await supabase
       .from('certificate_requests')
@@ -189,13 +235,30 @@ router.post('/indigency', async (req, res) => {
       dateOfBirth, placeOfBirth, purpose
     } = req.body;
 
-    // Generate reference number
-    const { count } = await supabase
-      .from('certificate_requests')
-      .select('*', { count: 'exact', head: true })
-      .eq('certificate_type', 'certificate_of_indigency');
+    const year = new Date().getFullYear();
     
-    const refNumber = `CI-${new Date().getFullYear()}-${String((count || 0) + 1).padStart(5, '0')}`;
+    // Get the last reference number for certificate_of_indigency this year
+    const { data: lastRecord } = await supabase
+      .from('certificate_requests')
+      .select('reference_number')
+      .eq('certificate_type', 'certificate_of_indigency')
+      .like('reference_number', `CI-${year}-%`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    let nextNumber = 1;
+    if (lastRecord && lastRecord.reference_number) {
+      const parts = lastRecord.reference_number.split('-');
+      if (parts.length === 3) {
+        const lastNumber = parseInt(parts[2], 10);
+        if (!isNaN(lastNumber)) {
+          nextNumber = lastNumber + 1;
+        }
+      }
+    }
+    
+    const refNumber = `CI-${year}-${String(nextNumber).padStart(5, '0')}`;
 
     const { data, error } = await supabase
       .from('certificate_requests')
@@ -242,13 +305,30 @@ router.post('/residency', async (req, res) => {
       dateOfBirth, placeOfBirth, purpose
     } = req.body;
 
-    // Generate reference number
-    const { count } = await supabase
-      .from('certificate_requests')
-      .select('*', { count: 'exact', head: true })
-      .eq('certificate_type', 'barangay_residency');
+    const year = new Date().getFullYear();
     
-    const refNumber = `BR-${new Date().getFullYear()}-${String((count || 0) + 1).padStart(5, '0')}`;
+    // Get the last reference number for barangay_residency this year
+    const { data: lastRecord } = await supabase
+      .from('certificate_requests')
+      .select('reference_number')
+      .eq('certificate_type', 'barangay_residency')
+      .like('reference_number', `BR-${year}-%`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    let nextNumber = 1;
+    if (lastRecord && lastRecord.reference_number) {
+      const parts = lastRecord.reference_number.split('-');
+      if (parts.length === 3) {
+        const lastNumber = parseInt(parts[2], 10);
+        if (!isNaN(lastNumber)) {
+          nextNumber = lastNumber + 1;
+        }
+      }
+    }
+    
+    const refNumber = `BR-${year}-${String(nextNumber).padStart(5, '0')}`;
 
     const { data, error } = await supabase
       .from('certificate_requests')
