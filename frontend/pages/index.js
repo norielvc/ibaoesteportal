@@ -684,7 +684,7 @@ export default function BarangayPortal() {
             </p>
           </div>
 
-          {/* Full Width Facility Carousel */}
+          {/* Full Width Facility Carousel - Updated without arrows */}
           <div className="relative mb-12">
             {(() => {
               const currentFacilityIndex = facilityImageSlides['main'] || 0;
