@@ -596,8 +596,8 @@ export default function BarangayPortal() {
 
               return (
                 <div className="relative overflow-hidden">
-                  {/* Container with Background - Reverted to original size */}
-                  <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 relative">
+                  {/* Container with Background - Fixed width */}
+                  <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 relative max-w-2xl mx-auto">
                     <div 
                       className="flex transition-transform duration-500 ease-in-out py-8"
                       style={{ transform: `translateX(-${currentFormSlide * 100}%)` }}
@@ -654,7 +654,7 @@ export default function BarangayPortal() {
                       })}
                     </div>
 
-                    {/* Navigation Arrows - Moved VERY close to container edge */}
+                    {/* Navigation Arrows - Positioned relative to the narrower container */}
                     <button
                       onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % forms.length)}
                       className="absolute -left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
