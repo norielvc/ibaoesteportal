@@ -596,10 +596,10 @@ export default function BarangayPortal() {
 
               return (
                 <div className="relative overflow-hidden">
-                  {/* Container with Background - Fixed width */}
-                  <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 relative max-w-2xl mx-auto">
+                  {/* Container with Background - Much narrower width */}
+                  <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 relative max-w-lg mx-auto overflow-hidden">
                     <div 
-                      className="flex transition-transform duration-500 ease-in-out py-8"
+                      className="flex transition-transform duration-500 ease-in-out"
                       style={{ transform: `translateX(-${currentFormSlide * 100}%)` }}
                     >
                       {forms.map((form) => {
@@ -607,47 +607,49 @@ export default function BarangayPortal() {
                         const colors = colorClasses[form.color];
                         
                         return (
-                          <div key={form.id} className="w-full flex-shrink-0 px-4">
-                            <div className="group relative bg-transparent rounded-3xl p-10 transition-all duration-500 overflow-hidden max-w-lg mx-auto">
+                          <div key={form.id} className="w-full flex-shrink-0">
+                            <div className="group relative bg-transparent rounded-3xl p-8 transition-all duration-500 overflow-hidden">
                               {/* Gradient Overlay on Hover */}
                               <div className={`absolute inset-0 bg-gradient-to-br ${colors.overlay} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl`}></div>
                               
                               {/* Icon Container */}
-                              <div className="relative mb-8">
-                                <div className={`w-20 h-20 bg-gradient-to-br ${colors.gradient} rounded-2xl flex items-center justify-center shadow-lg ${colors.shadow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                                  <Icon className="w-10 h-10 text-white" />
+                              <div className="relative mb-6">
+                                <div className={`w-16 h-16 bg-gradient-to-br ${colors.gradient} rounded-2xl flex items-center justify-center shadow-lg ${colors.shadow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 mx-auto`}>
+                                  <Icon className="w-8 h-8 text-white" />
                                 </div>
-                                <div className={`absolute -top-1 -right-1 w-7 h-7 ${colors.bg} rounded-full flex items-center justify-center`}>
-                                  <span className={`${colors.text} text-sm font-bold`}>{form.id}</span>
+                                <div className={`absolute -top-1 -right-1 w-6 h-6 ${colors.bg} rounded-full flex items-center justify-center`}>
+                                  <span className={`${colors.text} text-xs font-bold`}>{form.id}</span>
                                 </div>
                               </div>
 
                               {/* Content */}
-                              <h3 className={`text-2xl font-bold text-gray-900 mb-4 group-hover:${colors.text} transition-colors relative`}>
-                                {form.title}
-                              </h3>
-                              <p className="text-gray-500 mb-8 leading-relaxed relative text-lg">
-                                {form.description}
-                              </p>
+                              <div className="text-center">
+                                <h3 className={`text-xl font-bold text-gray-900 mb-3 group-hover:${colors.text} transition-colors relative`}>
+                                  {form.title}
+                                </h3>
+                                <p className="text-gray-500 mb-6 leading-relaxed relative text-sm">
+                                  {form.description}
+                                </p>
 
-                              {/* Features */}
-                              <div className="flex flex-wrap gap-3 mb-8 relative">
-                                {form.features.map((feature, idx) => (
-                                  <span key={idx} className={`px-4 py-2 ${colors.feature} text-sm font-medium rounded-full`}>
-                                    {feature}
-                                  </span>
-                                ))}
+                                {/* Features */}
+                                <div className="flex flex-wrap gap-2 mb-6 relative justify-center">
+                                  {form.features.map((feature, idx) => (
+                                    <span key={idx} className={`px-3 py-1 ${colors.feature} text-xs font-medium rounded-full`}>
+                                      {feature}
+                                    </span>
+                                  ))}
+                                </div>
+
+                                {/* Button */}
+                                <button 
+                                  onClick={form.onClick}
+                                  className={`relative z-10 w-full bg-gradient-to-r ${colors.button} text-white py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg ${colors.buttonShadow}`}
+                                >
+                                  <Plus className="w-5 h-5" />
+                                  Request Now
+                                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </button>
                               </div>
-
-                              {/* Button */}
-                              <button 
-                                onClick={form.onClick}
-                                className={`relative z-10 w-full bg-gradient-to-r ${colors.button} text-white py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg ${colors.buttonShadow} text-lg`}
-                              >
-                                <Plus className="w-6 h-6" />
-                                Request Now
-                                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                              </button>
                             </div>
                           </div>
                         );
