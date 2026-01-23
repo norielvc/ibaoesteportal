@@ -596,8 +596,8 @@ export default function BarangayPortal() {
 
               return (
                 <div className="relative overflow-hidden">
-                  {/* Container with Background */}
-                  <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 mx-4 md:mx-8 lg:mx-16 relative">
+                  {/* Container with Background - Reverted to original size */}
+                  <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 relative">
                     <div 
                       className="flex transition-transform duration-500 ease-in-out py-8"
                       style={{ transform: `translateX(-${currentFormSlide * 100}%)` }}
@@ -654,16 +654,16 @@ export default function BarangayPortal() {
                       })}
                     </div>
 
-                    {/* Navigation Arrows - Moved much closer to container */}
+                    {/* Navigation Arrows - Moved VERY close to container edge */}
                     <button
                       onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % forms.length)}
-                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
+                      className="absolute -left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
                     >
                       <ChevronLeft className="w-6 h-6 text-white" />
                     </button>
                     <button
                       onClick={() => setCurrentFormSlide((prev) => (prev + 1) % forms.length)}
-                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
+                      className="absolute -right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
                     >
                       <ChevronRight className="w-6 h-6 text-white" />
                     </button>
