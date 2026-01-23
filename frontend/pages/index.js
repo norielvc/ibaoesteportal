@@ -479,7 +479,7 @@ export default function BarangayPortal() {
         />
         
         {/* Light Overlay for Text Readability (Optional) */}
-        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 via-transparent to-blue-900/40"></div>
         
         {/* Additional Decorative Overlays */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -491,20 +491,20 @@ export default function BarangayPortal() {
           {/* Section Header */}
           <div className="text-center mb-16">
             {/* Enhanced Online Services Badge */}
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur-sm border border-white/50 text-gray-800 rounded-full text-sm font-semibold mb-6 shadow-lg">
-              <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-blue-600/90 backdrop-blur-sm border border-blue-500/50 text-white rounded-full text-sm font-semibold mb-6 shadow-lg">
+              <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-full">
                 <FileText className="w-4 h-4 text-white" />
               </div>
               <span className="tracking-wide">ONLINE SERVICES</span>
               <div className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span className="text-xs text-green-600 font-bold">LIVE</span>
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                <span className="text-xs text-green-300 font-bold">LIVE</span>
               </div>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg mb-4">
-              Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">Forms</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-2xl mb-4">
+              Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-lg">Forms</span>
             </h2>
-            <p className="text-white drop-shadow-md max-w-2xl mx-auto text-lg">
+            <p className="text-blue-50 drop-shadow-lg max-w-2xl mx-auto text-lg font-medium">
               Request official documents and certificates online. Fast, easy, and convenient.
             </p>
           </div>
@@ -655,15 +655,15 @@ export default function BarangayPortal() {
                   {/* Navigation Arrows - Moved closer */}
                   <button
                     onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % forms.length)}
-                    className="absolute left-8 md:left-12 top-1/2 -translate-y-1/2 w-14 h-14 bg-white hover:bg-gray-50 shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-gray-200"
+                    className="absolute left-8 md:left-12 top-1/2 -translate-y-1/2 w-14 h-14 bg-blue-600/80 hover:bg-blue-700/90 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
                   >
-                    <ChevronLeft className="w-7 h-7 text-gray-700" />
+                    <ChevronLeft className="w-7 h-7 text-white" />
                   </button>
                   <button
                     onClick={() => setCurrentFormSlide((prev) => (prev + 1) % forms.length)}
-                    className="absolute right-8 md:right-12 top-1/2 -translate-y-1/2 w-14 h-14 bg-white hover:bg-gray-50 shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-gray-200"
+                    className="absolute right-8 md:right-12 top-1/2 -translate-y-1/2 w-14 h-14 bg-blue-600/80 hover:bg-blue-700/90 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
                   >
-                    <ChevronRight className="w-7 h-7 text-gray-700" />
+                    <ChevronRight className="w-7 h-7 text-white" />
                   </button>
 
                   {/* Dots Navigation */}
@@ -673,7 +673,7 @@ export default function BarangayPortal() {
                         key={index}
                         onClick={() => setCurrentFormSlide(index)}
                         className={`w-3 h-3 rounded-full transition-all ${
-                          currentFormSlide === index ? 'bg-blue-600 w-8' : 'bg-gray-300 hover:bg-gray-400'
+                          currentFormSlide === index ? 'bg-yellow-400 w-8 shadow-lg' : 'bg-white/60 hover:bg-white/80 backdrop-blur-sm'
                         }`}
                       />
                     ))}
