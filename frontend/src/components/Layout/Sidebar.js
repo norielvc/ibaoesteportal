@@ -18,7 +18,8 @@ import {
   ClipboardList,
   QrCode,
   Building2,
-  Zap
+  Zap,
+  Image
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout, getUserData } from '@/lib/auth';
@@ -82,6 +83,12 @@ const navigation = [
     href: '/qr-scanner-native',
     icon: Zap,
     description: 'iPhone-optimized scanner'
+  },
+  {
+    name: 'Simple QR Scanner',
+    href: '/qr-scanner-simple',
+    icon: Image,
+    description: 'Upload photo method'
   },
   {
     name: 'Roles & Permissions',
