@@ -48,22 +48,91 @@ export default function QRScannerPage() {
       // Dynamically import html5-qrcode (client-side only)
       const { Html5Qrcode } = await import('html5-qrcode');
       
-      // Check camera permission
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      stream.getTracks().forEach(track => track.stop());
-      setCameraPermission(true);
+      // Check if we're on iOS Safari
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+      
+      // Request camera permission first
+      let stream;
+      try {
+        const constraints = {
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          }
+        };
+        
+        // For iOS, try different constraints
+        if (isIOS) {
+          constraints.video = {
+            facingMode: { exact: 'environment' },
+            width: { min: 320, ideal: 640, max: 1920 },
+            height: { min: 240, ideal: 480, max: 1080 }
+          };
+        }
+        
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        stream.getTracks().forEach(track => track.stop());
+        setCameraPermission(true);
+      } catch (permissionError) {
+        console.error('Camera permission error:', permissionError);
+        
+        // Try fallback constraints
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+          });
+          stream.getTracks().forEach(track => track.stop());
+          setCameraPermission(true);
+        } catch (fallbackError) {
+          setCameraPermission(false);
+          throw new Error('Camera access denied or not available');
+        }
+      }
 
-      // Initialize scanner
+      // Initialize scanner with better error handling
       html5QrCodeRef.current = new Html5Qrcode('qr-reader');
       
       const config = {
-        fps: 10,
+        fps: isIOS ? 5 : 10, // Lower FPS for iOS
         qrbox: { width: 250, height: 250 },
         aspectRatio: 1.0,
+        disableFlip: false,
+        videoConstraints: {
+          facingMode: 'environment'
+        }
       };
 
+      // Try to start with environment camera first
+      let cameraId = { facingMode: 'environment' };
+      
+      // Get available cameras for better iOS support
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+          // Find rear camera
+          const rearCamera = devices.find(device => 
+            device.label.toLowerCase().includes('back') || 
+            device.label.toLowerCase().includes('rear') ||
+            device.label.toLowerCase().includes('environment')
+          );
+          
+          if (rearCamera) {
+            cameraId = rearCamera.id;
+          } else {
+            // Use last camera (usually rear on mobile)
+            cameraId = devices[devices.length - 1].id;
+          }
+        }
+      } catch (deviceError) {
+        console.warn('Could not get camera devices:', deviceError);
+        // Fallback to facingMode
+        cameraId = { facingMode: 'environment' };
+      }
+
       await html5QrCodeRef.current.start(
-        { facingMode: 'environment' },
+        cameraId,
         config,
         onScanSuccess,
         onScanFailure
@@ -74,13 +143,21 @@ export default function QRScannerPage() {
       console.error('Scanner error:', err);
       setCameraPermission(false);
       
-      if (err.name === 'NotAllowedError') {
-        setError('Camera permission denied. Please allow camera access in your browser settings.');
+      let errorMessage = 'Failed to start scanner';
+      
+      if (err.name === 'NotAllowedError' || err.message.includes('denied')) {
+        errorMessage = 'Camera permission denied. Please allow camera access and try again.';
       } else if (err.name === 'NotFoundError') {
-        setError('No camera found on this device.');
-      } else {
-        setError(`Failed to start scanner: ${err.message}`);
+        errorMessage = 'No camera found on this device.';
+      } else if (err.name === 'NotReadableError') {
+        errorMessage = 'Camera is being used by another application.';
+      } else if (err.name === 'OverconstrainedError') {
+        errorMessage = 'Camera constraints not supported. Try refreshing the page.';
+      } else if (err.message) {
+        errorMessage = `Scanner error: ${err.message}`;
       }
+      
+      setError(errorMessage);
     }
   };
 
@@ -335,15 +412,37 @@ export default function QRScannerPage() {
             <div className="p-4 bg-red-50 border-t border-red-200">
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <div>
+                <div className="flex-1">
                   <p className="text-red-800 font-medium">Scanner Error</p>
                   <p className="text-red-600 text-sm mt-1">{error}</p>
-                  <button
-                    onClick={() => { setError(null); startScanner(); }}
-                    className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200"
-                  >
-                    Try Again
-                  </button>
+                  
+                  {/* iOS-specific help */}
+                  {/iPad|iPhone|iPod/.test(navigator.userAgent) && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-blue-800 font-medium text-sm mb-2">📱 iPhone/iPad Users:</p>
+                      <ul className="text-blue-700 text-xs space-y-1">
+                        <li>• Make sure you're using Safari browser</li>
+                        <li>• Tap the camera icon in the address bar and allow camera access</li>
+                        <li>• Try refreshing the page and allowing camera permission again</li>
+                        <li>• Check Settings → Safari → Camera and ensure it's allowed</li>
+                      </ul>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => { setError(null); startScanner(); }}
+                      className="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200"
+                    >
+                      Try Again
+                    </button>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200"
+                    >
+                      Refresh Page
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
