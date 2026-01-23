@@ -104,6 +104,42 @@ export default function BarangayPortal() {
     return iconMap[iconName] || Building2;
   };
 
+  // Touch/swipe handling for mobile
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      // Swipe left - next facility
+      setFacilityImageSlides(prev => ({ 
+        ...prev, 
+        main: ((prev['main'] || 0) + 1) % facilities.length 
+      }));
+    }
+    if (isRightSwipe) {
+      // Swipe right - previous facility
+      setFacilityImageSlides(prev => ({ 
+        ...prev, 
+        main: ((prev['main'] || 0) - 1 + facilities.length) % facilities.length 
+      }));
+    }
+  };
+
   // Load events from API
   useEffect(() => {
     const fetchEvents = async () => {
@@ -665,7 +701,12 @@ export default function BarangayPortal() {
               const colorSet = colors[facility.color] || colors['bg-blue-500'];
 
               return (
-                <div className="group relative bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+                <div 
+                  className="group relative bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100"
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                >
                   {/* Large Image Carousel */}
                   <div className="relative h-[400px] md:h-[500px] lg:h-[550px] overflow-hidden">
                     {facility.images.map((image, imgIndex) => (
@@ -693,20 +734,22 @@ export default function BarangayPortal() {
                       <Icon className="w-8 h-8 text-white" />
                     </div>
 
-                    {/* Image Navigation Dots */}
-                    <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2">
-                      {facility.images.map((_, dotIndex) => (
-                        <button
-                          key={dotIndex}
-                          onClick={() => setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: dotIndex }))}
-                          className={`transition-all duration-300 rounded-full ${
-                            currentImageIndex === dotIndex 
-                              ? 'w-8 h-2 bg-white' 
-                              : 'w-2 h-2 bg-white/50 hover:bg-white/80'
-                          }`}
-                        />
-                      ))}
-                    </div>
+                    {/* Image Navigation Dots - Made more prominent for touch */}
+                    {facility.images.length > 1 && (
+                      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-3">
+                        {facility.images.map((_, dotIndex) => (
+                          <button
+                            key={dotIndex}
+                            onClick={() => setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: dotIndex }))}
+                            className={`transition-all duration-300 rounded-full touch-manipulation ${
+                              currentImageIndex === dotIndex 
+                                ? 'w-10 h-3 bg-white shadow-lg' 
+                                : 'w-3 h-3 bg-white/60 hover:bg-white/90 active:bg-white'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
 
                     {/* Content Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
@@ -731,54 +774,14 @@ export default function BarangayPortal() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Image Arrow Navigation */}
-                    <button
-                      onClick={() => setFacilityImageSlides(prev => ({ 
-                        ...prev, 
-                        [currentFacilityIndex]: (currentImageIndex - 1 + facility.images.length) % facility.images.length 
-                      }))}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full flex items-center justify-center transition-all"
-                    >
-                      <ChevronLeft className="w-6 h-6 text-white" />
-                    </button>
-                    <button
-                      onClick={() => setFacilityImageSlides(prev => ({ 
-                        ...prev, 
-                        [currentFacilityIndex]: (currentImageIndex + 1) % facility.images.length 
-                      }))}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full flex items-center justify-center transition-all"
-                    >
-                      <ChevronRight className="w-6 h-6 text-white" />
-                    </button>
                   </div>
                 </div>
               );
             })()}
-
-            {/* Facility Navigation - Previous/Next */}
-            <button
-              onClick={() => setFacilityImageSlides(prev => ({ 
-                ...prev, 
-                main: ((prev['main'] || 0) - 1 + facilities.length) % facilities.length 
-              }))}
-              className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white hover:bg-gray-50 shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-gray-200"
-            >
-              <ChevronLeft className="w-7 h-7 text-gray-700" />
-            </button>
-            <button
-              onClick={() => setFacilityImageSlides(prev => ({ 
-                ...prev, 
-                main: ((prev['main'] || 0) + 1) % facilities.length 
-              }))}
-              className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white hover:bg-gray-50 shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-gray-200"
-            >
-              <ChevronRight className="w-7 h-7 text-gray-700" />
-            </button>
           </div>
 
-          {/* Facility Thumbnails */}
-          <div className="flex justify-center gap-4 mb-12">
+          {/* Facility Navigation Dots - Enhanced for Touch */}
+          <div className="flex justify-center gap-3 mb-12">
             {facilities.map((facility, index) => {
               const Icon = facility.icon;
               const isActive = (facilityImageSlides['main'] || 0) === index;
@@ -794,16 +797,16 @@ export default function BarangayPortal() {
                 <button
                   key={index}
                   onClick={() => setFacilityImageSlides(prev => ({ ...prev, main: index }))}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all touch-manipulation min-w-[80px] ${
                     isActive 
                       ? 'bg-white shadow-lg scale-110 border-2 border-blue-500' 
-                      : 'bg-white/50 hover:bg-white hover:shadow-md border-2 border-transparent'
+                      : 'bg-white/50 hover:bg-white hover:shadow-md border-2 border-transparent active:bg-white active:shadow-lg'
                   }`}
                 >
-                  <div className={`w-12 h-12 bg-gradient-to-br ${colors[facility.color]} rounded-xl flex items-center justify-center`}>
+                  <div className={`w-12 h-12 bg-gradient-to-br ${colors[facility.color]} rounded-xl flex items-center justify-center shadow-md`}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <span className={`text-xs font-medium ${isActive ? 'text-blue-600' : 'text-gray-600'}`}>
+                  <span className={`text-xs font-medium text-center leading-tight ${isActive ? 'text-blue-600' : 'text-gray-600'}`}>
                     {facility.name.split(' ')[0]}
                   </span>
                 </button>
