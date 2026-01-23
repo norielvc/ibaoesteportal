@@ -596,10 +596,10 @@ export default function BarangayPortal() {
 
               return (
                 <div className="relative overflow-hidden">
-                  {/* Container with Background - Much narrower width */}
-                  <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 relative max-w-lg mx-auto overflow-hidden">
+                  {/* Container with Background - Added height and better proportions */}
+                  <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 relative max-w-lg mx-auto overflow-hidden h-[500px] flex items-center">
                     <div 
-                      className="flex transition-transform duration-500 ease-in-out"
+                      className="flex transition-transform duration-500 ease-in-out w-full"
                       style={{ transform: `translateX(-${currentFormSlide * 100}%)` }}
                     >
                       {forms.map((form) => {
@@ -607,34 +607,34 @@ export default function BarangayPortal() {
                         const colors = colorClasses[form.color];
                         
                         return (
-                          <div key={form.id} className="w-full flex-shrink-0">
-                            <div className="group relative bg-transparent rounded-3xl p-8 transition-all duration-500 overflow-hidden">
+                          <div key={form.id} className="w-full flex-shrink-0 flex items-center justify-center">
+                            <div className="group relative bg-transparent rounded-3xl p-10 transition-all duration-500 overflow-hidden w-full max-w-md">
                               {/* Gradient Overlay on Hover */}
                               <div className={`absolute inset-0 bg-gradient-to-br ${colors.overlay} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl`}></div>
                               
                               {/* Icon Container */}
-                              <div className="relative mb-6">
-                                <div className={`w-16 h-16 bg-gradient-to-br ${colors.gradient} rounded-2xl flex items-center justify-center shadow-lg ${colors.shadow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 mx-auto`}>
-                                  <Icon className="w-8 h-8 text-white" />
+                              <div className="relative mb-8">
+                                <div className={`w-20 h-20 bg-gradient-to-br ${colors.gradient} rounded-2xl flex items-center justify-center shadow-lg ${colors.shadow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 mx-auto`}>
+                                  <Icon className="w-10 h-10 text-white" />
                                 </div>
-                                <div className={`absolute -top-1 -right-1 w-6 h-6 ${colors.bg} rounded-full flex items-center justify-center`}>
-                                  <span className={`${colors.text} text-xs font-bold`}>{form.id}</span>
+                                <div className={`absolute -top-1 -right-1 w-7 h-7 ${colors.bg} rounded-full flex items-center justify-center`}>
+                                  <span className={`${colors.text} text-sm font-bold`}>{form.id}</span>
                                 </div>
                               </div>
 
                               {/* Content */}
                               <div className="text-center">
-                                <h3 className={`text-xl font-bold text-gray-900 mb-3 group-hover:${colors.text} transition-colors relative`}>
+                                <h3 className={`text-2xl font-bold text-gray-900 mb-4 group-hover:${colors.text} transition-colors relative`}>
                                   {form.title}
                                 </h3>
-                                <p className="text-gray-500 mb-6 leading-relaxed relative text-sm">
+                                <p className="text-gray-500 mb-8 leading-relaxed relative text-base">
                                   {form.description}
                                 </p>
 
                                 {/* Features */}
-                                <div className="flex flex-wrap gap-2 mb-6 relative justify-center">
+                                <div className="flex flex-wrap gap-3 mb-8 relative justify-center">
                                   {form.features.map((feature, idx) => (
-                                    <span key={idx} className={`px-3 py-1 ${colors.feature} text-xs font-medium rounded-full`}>
+                                    <span key={idx} className={`px-4 py-2 ${colors.feature} text-sm font-medium rounded-full`}>
                                       {feature}
                                     </span>
                                   ))}
@@ -643,11 +643,11 @@ export default function BarangayPortal() {
                                 {/* Button */}
                                 <button 
                                   onClick={form.onClick}
-                                  className={`relative z-10 w-full bg-gradient-to-r ${colors.button} text-white py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg ${colors.buttonShadow}`}
+                                  className={`relative z-10 w-full bg-gradient-to-r ${colors.button} text-white py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg ${colors.buttonShadow} text-lg`}
                                 >
-                                  <Plus className="w-5 h-5" />
+                                  <Plus className="w-6 h-6" />
                                   Request Now
-                                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </button>
                               </div>
                             </div>
@@ -656,18 +656,18 @@ export default function BarangayPortal() {
                       })}
                     </div>
 
-                    {/* Navigation Arrows - Positioned relative to the narrower container */}
+                    {/* Navigation Arrows - Fixed positioning */}
                     <button
                       onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % forms.length)}
-                      className="absolute -left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
+                      className="absolute -left-8 top-1/2 -translate-y-1/2 w-14 h-14 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-blue-500/50"
                     >
-                      <ChevronLeft className="w-6 h-6 text-white" />
+                      <ChevronLeft className="w-7 h-7 text-white" />
                     </button>
                     <button
                       onClick={() => setCurrentFormSlide((prev) => (prev + 1) % forms.length)}
-                      className="absolute -right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
+                      className="absolute -right-8 top-1/2 -translate-y-1/2 w-14 h-14 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-blue-500/50"
                     >
-                      <ChevronRight className="w-6 h-6 text-white" />
+                      <ChevronRight className="w-7 h-7 text-white" />
                     </button>
                   </div>
 
