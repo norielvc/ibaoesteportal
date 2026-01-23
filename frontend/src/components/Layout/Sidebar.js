@@ -16,7 +16,8 @@ import {
   Calendar,
   GitBranch,
   ClipboardList,
-  QrCode
+  QrCode,
+  Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout, getUserData } from '@/lib/auth';
@@ -48,6 +49,13 @@ const navigation = [
     icon: Calendar,
     adminOnly: true,
     description: 'Manage homepage events'
+  },
+  {
+    name: 'Facilities',
+    href: '/facilities',
+    icon: Building2,
+    adminOnly: true,
+    description: 'Manage barangay facilities'
   },
   {
     name: 'Approval Workflows',

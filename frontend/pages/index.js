@@ -46,51 +46,8 @@ export default function BarangayPortal() {
 
   const [newsItems, setNewsItems] = useState(defaultNewsItems);
 
-  // Load events from API
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
-        const response = await fetch(`${API_URL}/api/events`);
-        const data = await response.json();
-        
-        if (data.success && data.data && data.data.length > 0) {
-          setNewsItems(data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        // Keep default events on error
-      }
-    };
-    
-    fetchEvents();
-  }, []);
-
-  // Update time every second
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const options = { 
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
-        timeZone: 'Asia/Manila'
-      };
-      setCurrentTime(now.toLocaleDateString('en-PH', options));
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Auto-slide for news carousel
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % newsItems.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [newsItems.length]);
-
-  const facilities = [
+  // Default facilities (fallback)
+  const defaultFacilities = [
     { 
       name: 'Health Center', 
       icon: Heart, 
@@ -133,6 +90,113 @@ export default function BarangayPortal() {
     }
   ];
 
+  const [facilities, setFacilities] = useState(defaultFacilities);
+
+  // Helper function to map icon names to components
+  const getIconComponent = (iconName) => {
+    const iconMap = {
+      'Heart': Heart,
+      'Building2': Building2,
+      'Baby': Baby,
+      'Home': Home,
+      'Award': Award
+    };
+    return iconMap[iconName] || Building2;
+  };
+
+  // Load events from API
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+        console.log('Fetching events from:', `${API_URL}/api/events`);
+        const response = await fetch(`${API_URL}/api/events`);
+        console.log('Events API response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Events API data:', data);
+        
+        if (data.success && data.data && data.data.length > 0) {
+          console.log('Setting events from API:', data.data);
+          setNewsItems(data.data);
+        } else {
+          console.log('No events from API, using defaults');
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        console.log('Using default events due to error');
+        // Keep default events on error
+      }
+    };
+    
+    fetchEvents();
+  }, []);
+
+  // Load facilities from API
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+        console.log('Fetching facilities from:', `${API_URL}/api/facilities`);
+        const response = await fetch(`${API_URL}/api/facilities`);
+        console.log('Facilities API response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Facilities API data:', data);
+        
+        if (data.success && data.data && data.data.length > 0) {
+          // Map icon names to actual components
+          const facilitiesWithIcons = data.data.map(facility => ({
+            ...facility,
+            icon: getIconComponent(facility.icon)
+          }));
+          console.log('Setting facilities from API:', facilitiesWithIcons);
+          setFacilities(facilitiesWithIcons);
+        } else {
+          console.log('No facilities from API, using defaults');
+        }
+      } catch (error) {
+        console.error('Error fetching facilities:', error);
+        console.log('Using default facilities due to error');
+        // Keep default facilities on error
+      }
+    };
+    
+    fetchFacilities();
+  }, []);
+
+  // Update time every second
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
+        timeZone: 'Asia/Manila'
+      };
+      setCurrentTime(now.toLocaleDateString('en-PH', options));
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Auto-slide for news carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % newsItems.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [newsItems.length]);
+
   // State for facility image slides
   const [facilityImageSlides, setFacilityImageSlides] = useState({});
 
@@ -143,7 +207,7 @@ export default function BarangayPortal() {
       initial[index] = 0;
     });
     setFacilityImageSlides(initial);
-  }, []);
+  }, [facilities]);
 
   // Auto-slide for facility images
   useEffect(() => {
