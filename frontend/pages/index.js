@@ -8,6 +8,7 @@ import {
 import BarangayClearanceModal from '@/components/Forms/BarangayClearanceModal';
 import IndigencyCertificateModal from '@/components/Forms/IndigencyCertificateModal';
 import ResidencyCertificateModal from '@/components/Forms/ResidencyCertificateModal';
+import BusinessPermitModal from '@/components/Forms/BusinessPermitModal';
 
 export default function BarangayPortal() {
   const router = useRouter();
@@ -18,6 +19,8 @@ export default function BarangayPortal() {
   const [showClearanceModal, setShowClearanceModal] = useState(false);
   const [showIndigencyModal, setShowIndigencyModal] = useState(false);
   const [showResidencyModal, setShowResidencyModal] = useState(false);
+  const [showBusinessPermitModal, setShowBusinessPermitModal] = useState(false);
+  const [currentFormSlide, setCurrentFormSlide] = useState(0);
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', message: ''
   });
@@ -259,6 +262,14 @@ export default function BarangayPortal() {
     setFacilityImageSlides(initial);
   }, [facilities]);
 
+  // Auto-slide for forms carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentFormSlide((prev) => (prev + 1) % 4); // 4 forms total
+    }, 6000); // 6 seconds per form
+    return () => clearInterval(interval);
+  }, []);
+
   // Auto-slide for facility images with facility transition
   useEffect(() => {
     const interval = setInterval(() => {
@@ -489,130 +500,178 @@ export default function BarangayPortal() {
             </p>
           </div>
 
-          {/* Forms Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Barangay Clearance Card */}
-            <div className="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden">
-              {/* Gradient Overlay on Hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              
-              {/* Icon Container */}
-              <div className="relative mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                  <Shield className="w-8 h-8 text-white" />
+          {/* Forms Carousel */}
+          <div className="relative mb-16">
+            {(() => {
+              const forms = [
+                {
+                  id: 1,
+                  title: 'Barangay Clearance',
+                  description: 'Official clearance for employment, business permits, and other legal purposes.',
+                  icon: Shield,
+                  color: 'blue',
+                  features: ['Employment', 'Business', 'Legal'],
+                  onClick: () => setShowClearanceModal(true)
+                },
+                {
+                  id: 2,
+                  title: 'Certificate of Indigency',
+                  description: 'Proof of financial status for medical, educational, and social assistance programs.',
+                  icon: FileText,
+                  color: 'green',
+                  features: ['Medical', 'Education', 'Assistance'],
+                  onClick: () => setShowIndigencyModal(true)
+                },
+                {
+                  id: 3,
+                  title: 'Barangay Residency',
+                  description: 'Certificate confirming your residence in Iba O\' Este for various requirements.',
+                  icon: Home,
+                  color: 'orange',
+                  features: ['Proof', 'Enrollment', 'ID'],
+                  onClick: () => setShowResidencyModal(true)
+                },
+                {
+                  id: 4,
+                  title: 'Business Permit',
+                  description: 'Official permit to operate a business within Iba O\' Este barangay jurisdiction.',
+                  icon: Building2,
+                  color: 'purple',
+                  features: ['New Business', 'Renewal', 'Transfer'],
+                  onClick: () => setShowBusinessPermitModal(true)
+                }
+              ];
+
+              const colorClasses = {
+                blue: {
+                  gradient: 'from-blue-500 to-blue-600',
+                  shadow: 'shadow-blue-500/30',
+                  bg: 'bg-blue-100',
+                  text: 'text-blue-600',
+                  button: 'from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800',
+                  buttonShadow: 'shadow-blue-500/25 group-hover:shadow-blue-500/40',
+                  overlay: 'from-blue-600/5 to-blue-600/10',
+                  feature: 'bg-blue-50 text-blue-600'
+                },
+                green: {
+                  gradient: 'from-green-500 to-green-600',
+                  shadow: 'shadow-green-500/30',
+                  bg: 'bg-green-100',
+                  text: 'text-green-600',
+                  button: 'from-green-600 to-green-700 hover:from-green-700 hover:to-green-800',
+                  buttonShadow: 'shadow-green-500/25 group-hover:shadow-green-500/40',
+                  overlay: 'from-green-600/5 to-green-600/10',
+                  feature: 'bg-green-50 text-green-600'
+                },
+                orange: {
+                  gradient: 'from-orange-500 to-orange-600',
+                  shadow: 'shadow-orange-500/30',
+                  bg: 'bg-orange-100',
+                  text: 'text-orange-600',
+                  button: 'from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800',
+                  buttonShadow: 'shadow-orange-500/25 group-hover:shadow-orange-500/40',
+                  overlay: 'from-orange-600/5 to-orange-600/10',
+                  feature: 'bg-orange-50 text-orange-600'
+                },
+                purple: {
+                  gradient: 'from-purple-500 to-purple-600',
+                  shadow: 'shadow-purple-500/30',
+                  bg: 'bg-purple-100',
+                  text: 'text-purple-600',
+                  button: 'from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800',
+                  buttonShadow: 'shadow-purple-500/25 group-hover:shadow-purple-500/40',
+                  overlay: 'from-purple-600/5 to-purple-600/10',
+                  feature: 'bg-purple-50 text-purple-600'
+                }
+              };
+
+              return (
+                <div className="relative overflow-hidden">
+                  <div 
+                    className="flex transition-transform duration-500 ease-in-out"
+                    style={{ transform: `translateX(-${currentFormSlide * 100}%)` }}
+                  >
+                    {forms.map((form) => {
+                      const Icon = form.icon;
+                      const colors = colorClasses[form.color];
+                      
+                      return (
+                        <div key={form.id} className="w-full flex-shrink-0 px-4">
+                          <div className="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden max-w-md mx-auto">
+                            {/* Gradient Overlay on Hover */}
+                            <div className={`absolute inset-0 bg-gradient-to-br ${colors.overlay} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`}></div>
+                            
+                            {/* Icon Container */}
+                            <div className="relative mb-6">
+                              <div className={`w-16 h-16 bg-gradient-to-br ${colors.gradient} rounded-2xl flex items-center justify-center shadow-lg ${colors.shadow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                                <Icon className="w-8 h-8 text-white" />
+                              </div>
+                              <div className={`absolute -top-1 -right-1 w-6 h-6 ${colors.bg} rounded-full flex items-center justify-center`}>
+                                <span className={`${colors.text} text-xs font-bold`}>{form.id}</span>
+                              </div>
+                            </div>
+
+                            {/* Content */}
+                            <h3 className={`text-xl font-bold text-gray-900 mb-3 group-hover:${colors.text} transition-colors relative`}>
+                              {form.title}
+                            </h3>
+                            <p className="text-gray-500 mb-6 leading-relaxed relative">
+                              {form.description}
+                            </p>
+
+                            {/* Features */}
+                            <div className="flex flex-wrap gap-2 mb-6 relative">
+                              {form.features.map((feature, idx) => (
+                                <span key={idx} className={`px-3 py-1 ${colors.feature} text-xs font-medium rounded-full`}>
+                                  {feature}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Button */}
+                            <button 
+                              onClick={form.onClick}
+                              className={`relative z-10 w-full bg-gradient-to-r ${colors.button} text-white py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg ${colors.buttonShadow}`}
+                            >
+                              <Plus className="w-5 h-5" />
+                              Request Now
+                              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Navigation Arrows */}
+                  <button
+                    onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % forms.length)}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white hover:bg-gray-50 shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-gray-200"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-gray-700" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentFormSlide((prev) => (prev + 1) % forms.length)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white hover:bg-gray-50 shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-gray-200"
+                  >
+                    <ChevronRight className="w-6 h-6 text-gray-700" />
+                  </button>
+
+                  {/* Dots Navigation */}
+                  <div className="flex justify-center gap-2 mt-8">
+                    {forms.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentFormSlide(index)}
+                        className={`w-3 h-3 rounded-full transition-all ${
+                          currentFormSlide === index ? 'bg-blue-600 w-8' : 'bg-gray-300 hover:bg-gray-400'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 text-xs font-bold">1</span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors relative">
-                Barangay Clearance
-              </h3>
-              <p className="text-gray-500 mb-6 leading-relaxed relative">
-                Official clearance for employment, business permits, and other legal purposes.
-              </p>
-
-              {/* Features */}
-              <div className="flex flex-wrap gap-2 mb-6 relative">
-                <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">Employment</span>
-                <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">Business</span>
-                <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">Legal</span>
-              </div>
-
-              {/* Button */}
-              <button 
-                onClick={() => setShowClearanceModal(true)}
-                className="relative z-10 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 group-hover:shadow-blue-500/40"
-              >
-                <Plus className="w-5 h-5" />
-                Request Now
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-
-            {/* Certificate of Indigency Card */}
-            <div className="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden">
-              {/* Gradient Overlay on Hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-green-600/5 to-green-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              
-              {/* Icon Container */}
-              <div className="relative mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                  <FileText className="w-8 h-8 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 text-xs font-bold">2</span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors relative">
-                Certificate of Indigency
-              </h3>
-              <p className="text-gray-500 mb-6 leading-relaxed relative">
-                Proof of financial status for medical, educational, and social assistance programs.
-              </p>
-
-              {/* Features */}
-              <div className="flex flex-wrap gap-2 mb-6 relative">
-                <span className="px-3 py-1 bg-green-50 text-green-600 text-xs font-medium rounded-full">Medical</span>
-                <span className="px-3 py-1 bg-green-50 text-green-600 text-xs font-medium rounded-full">Education</span>
-                <span className="px-3 py-1 bg-green-50 text-green-600 text-xs font-medium rounded-full">Assistance</span>
-              </div>
-
-              {/* Button */}
-              <button 
-                onClick={() => setShowIndigencyModal(true)}
-                className="relative z-10 w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-500/25 group-hover:shadow-green-500/40"
-              >
-                <Plus className="w-5 h-5" />
-                Request Now
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-
-            {/* Barangay Residency Card */}
-            <div className="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden">
-              {/* Gradient Overlay on Hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-600/5 to-orange-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              
-              {/* Icon Container */}
-              <div className="relative mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                  <Home className="w-8 h-8 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="text-orange-600 text-xs font-bold">3</span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors relative">
-                Barangay Residency
-              </h3>
-              <p className="text-gray-500 mb-6 leading-relaxed relative">
-                Certificate confirming your residence in Iba O' Este for various requirements.
-              </p>
-
-              {/* Features */}
-              <div className="flex flex-wrap gap-2 mb-6 relative">
-                <span className="px-3 py-1 bg-orange-50 text-orange-600 text-xs font-medium rounded-full">Proof</span>
-                <span className="px-3 py-1 bg-orange-50 text-orange-600 text-xs font-medium rounded-full">Enrollment</span>
-                <span className="px-3 py-1 bg-orange-50 text-orange-600 text-xs font-medium rounded-full">ID</span>
-              </div>
-
-              {/* Button */}
-              <button 
-                onClick={() => setShowResidencyModal(true)}
-                className="relative z-10 w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40"
-              >
-                <Plus className="w-5 h-5" />
-                Request Now
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
+              );
+            })()}
           </div>
 
           {/* Enhanced Bottom Info */}
@@ -941,6 +1000,12 @@ export default function BarangayPortal() {
       <ResidencyCertificateModal 
         isOpen={showResidencyModal} 
         onClose={() => setShowResidencyModal(false)} 
+      />
+
+      {/* Business Permit Modal */}
+      <BusinessPermitModal 
+        isOpen={showBusinessPermitModal} 
+        onClose={() => setShowBusinessPermitModal(false)} 
       />
 
       {/* Contact Section */}
