@@ -259,16 +259,33 @@ export default function BarangayPortal() {
     setFacilityImageSlides(initial);
   }, [facilities]);
 
-  // Auto-slide for facility images
+  // Auto-slide for facility images with facility transition
   useEffect(() => {
     const interval = setInterval(() => {
       setFacilityImageSlides(prev => {
         const updated = { ...prev };
-        facilities.forEach((facility, index) => {
-          if (facility.images && facility.images.length > 1) {
-            updated[index] = ((updated[index] || 0) + 1) % facility.images.length;
+        const currentFacilityIndex = updated['main'] || 0;
+        const currentFacility = facilities[currentFacilityIndex];
+        const currentImageIndex = updated[currentFacilityIndex] || 0;
+        
+        // Check if current facility has multiple images
+        if (currentFacility.images && currentFacility.images.length > 1) {
+          // If not at last image of current facility, go to next image
+          if (currentImageIndex < currentFacility.images.length - 1) {
+            updated[currentFacilityIndex] = currentImageIndex + 1;
+          } else {
+            // At last image of current facility, move to next facility
+            const nextFacilityIndex = (currentFacilityIndex + 1) % facilities.length;
+            updated['main'] = nextFacilityIndex;
+            updated[nextFacilityIndex] = 0; // Start from first image of next facility
           }
-        });
+        } else {
+          // Current facility has only one image, move to next facility
+          const nextFacilityIndex = (currentFacilityIndex + 1) % facilities.length;
+          updated['main'] = nextFacilityIndex;
+          updated[nextFacilityIndex] = 0; // Start from first image of next facility
+        }
+        
         return updated;
       });
     }, 4000);
