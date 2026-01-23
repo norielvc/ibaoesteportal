@@ -148,6 +148,10 @@ export default function BarangayPortal() {
         [currentFacilityIndex]: prevIndex 
       }));
     }
+    
+    // Reset touch values
+    setTouchStart(null);
+    setTouchEnd(null);
   };
 
   // Load events from API
@@ -746,23 +750,21 @@ export default function BarangayPortal() {
                       <Icon className="w-8 h-8 text-white" />
                     </div>
 
-                    {/* Image Navigation Dots - Enhanced and always visible for testing */}
-                    <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-3">
-                      {facility.images.map((_, dotIndex) => (
-                        <button
-                          key={dotIndex}
-                          onClick={() => {
-                            console.log('Dot clicked:', dotIndex, 'Current facility:', currentFacilityIndex);
-                            setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: dotIndex }));
-                          }}
-                          className={`transition-all duration-300 rounded-full touch-manipulation cursor-pointer ${
-                            currentImageIndex === dotIndex 
-                              ? 'w-12 h-4 bg-white shadow-lg border-2 border-blue-500' 
-                              : 'w-4 h-4 bg-white/70 hover:bg-white/90 active:bg-white border-2 border-white/30'
-                          }`}
-                        />
-                      ))}
-                    </div>
+                    {/* Simple image indicator dots */}
+                    {facility.images.length > 1 && (
+                      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2">
+                        {facility.images.map((_, dotIndex) => (
+                          <div
+                            key={dotIndex}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                              currentImageIndex === dotIndex 
+                                ? 'bg-white' 
+                                : 'bg-white/50'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
 
                     {/* Content Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
@@ -792,6 +794,49 @@ export default function BarangayPortal() {
               );
             })()}
           </div>
+
+          {/* Image Thumbnails Navigation */}
+          {(() => {
+            const currentFacilityIndex = facilityImageSlides['main'] || 0;
+            const facility = facilities[currentFacilityIndex];
+            const currentImageIndex = facilityImageSlides[currentFacilityIndex] || 0;
+            
+            // Only show thumbnails if facility has multiple images
+            if (facility.images.length <= 1) return null;
+            
+            return (
+              <div className="mb-8">
+                <div className="flex justify-center gap-3 overflow-x-auto pb-2">
+                  {facility.images.map((image, imgIndex) => (
+                    <button
+                      key={imgIndex}
+                      onClick={() => {
+                        console.log('Thumbnail clicked:', imgIndex);
+                        setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: imgIndex }));
+                      }}
+                      className={`flex-shrink-0 w-20 h-16 md:w-24 md:h-18 rounded-lg overflow-hidden transition-all duration-300 touch-manipulation ${
+                        currentImageIndex === imgIndex
+                          ? 'ring-4 ring-blue-500 ring-offset-2 shadow-lg scale-105'
+                          : 'ring-2 ring-gray-200 hover:ring-gray-300 active:ring-blue-400 hover:scale-102'
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${facility.name} thumbnail ${imgIndex + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = '/background.jpg';
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <p className="text-center text-sm text-gray-500 mt-2">
+                  Tap thumbnails to view different images
+                </p>
+              </div>
+            );
+          })()}
 
           {/* Facility Navigation Dots - Enhanced for Touch */}
           <div className="flex justify-center gap-3 mb-12">
