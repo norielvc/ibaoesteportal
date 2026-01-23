@@ -1151,6 +1151,33 @@ export default function BarangayPortal() {
               </div>
             </div>
           </div>
+
+          {/* Barangay Officials Photo Section */}
+          <div className="mt-16">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-white mb-2">Barangay Officials</h3>
+              <p className="text-blue-300">Meet our dedicated team serving Iba O' Este</p>
+            </div>
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <img 
+                src="/images/barangay-officials.jpg" 
+                alt="Barangay Iba O' Este Officials" 
+                className="w-full h-64 md:h-80 object-cover"
+                onError={(e) => {
+                  e.target.src = '/background.jpg';
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              <div className="absolute bottom-4 left-4 right-4">
+                <p className="text-white font-semibold text-lg drop-shadow-lg">
+                  Barangay Iba O' Este Leadership Team
+                </p>
+                <p className="text-blue-200 text-sm drop-shadow-md">
+                  Working together for our community's progress and development
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
