@@ -17,7 +17,8 @@ import {
   GitBranch,
   ClipboardList,
   QrCode,
-  Building2
+  Building2,
+  Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout, getUserData } from '@/lib/auth';
@@ -75,6 +76,12 @@ const navigation = [
     href: '/qr-scanner',
     icon: QrCode,
     description: 'Scan certificate QR codes'
+  },
+  {
+    name: 'Native QR Scanner',
+    href: '/qr-scanner-native',
+    icon: Zap,
+    description: 'iPhone-optimized scanner'
   },
   {
     name: 'Roles & Permissions',
