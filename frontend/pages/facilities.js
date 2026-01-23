@@ -85,7 +85,7 @@ export default function FacilitiesPage() {
   const [previewSlide, setPreviewSlide] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRefs = useRef({});
 
   const [formData, setFormData] = useState({
     name: '',
@@ -201,20 +201,41 @@ export default function FacilitiesPage() {
 
   const handleImageUpload = (e, isEditing = false, imageIndex = 0) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (isEditing && editingFacility) {
-          const newImages = [...editingFacility.images];
-          newImages[imageIndex] = reader.result;
-          setEditingFacility({ ...editingFacility, images: newImages });
-        } else {
-          const newImages = [...formData.images];
-          newImages[imageIndex] = reader.result;
-          setFormData({ ...formData, images: newImages });
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Check file size (1MB = 1024 * 1024 bytes)
+    if (file.size > 1024 * 1024) {
+      setNotification({ type: 'error', message: 'Image size must be less than 1MB' });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      setNotification({ type: 'error', message: 'Please select an image file' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (isEditing && editingFacility) {
+        const newImages = [...editingFacility.images];
+        newImages[imageIndex] = reader.result;
+        setEditingFacility({ ...editingFacility, images: newImages });
+      } else {
+        const newImages = [...formData.images];
+        newImages[imageIndex] = reader.result;
+        setFormData({ ...formData, images: newImages });
+      }
+      setNotification({ type: 'success', message: 'Image uploaded successfully' });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const triggerFileInput = (imageIndex, isEditing = false) => {
+    const inputId = isEditing ? `edit-${imageIndex}` : `add-${imageIndex}`;
+    const input = fileInputRefs.current[inputId];
+    if (input) {
+      input.click();
     }
   };
 
@@ -419,17 +440,46 @@ export default function FacilitiesPage() {
                         <label className="text-sm font-medium text-gray-700 block mb-1">Images</label>
                         {editingFacility.images.map((image, idx) => (
                           <div key={idx} className="flex gap-2 mb-2">
-                            <input
-                              type="text"
-                              value={image}
-                              onChange={(e) => {
-                                const newImages = [...editingFacility.images];
-                                newImages[idx] = e.target.value;
-                                setEditingFacility({ ...editingFacility, images: newImages });
-                              }}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                              placeholder="Image URL (e.g., /images/facility.jpg)"
-                            />
+                            <div className="flex-1 flex gap-2">
+                              {image.startsWith('data:') && (
+                                <div className="w-12 h-12 flex-shrink-0">
+                                  <img 
+                                    src={image} 
+                                    alt={`Preview ${idx + 1}`} 
+                                    className="w-full h-full object-cover rounded border"
+                                  />
+                                </div>
+                              )}
+                              <input
+                                type="text"
+                                value={image.startsWith('data:') ? `Uploaded Image ${idx + 1}` : image}
+                                onChange={(e) => {
+                                  if (!e.target.value.startsWith('data:')) {
+                                    const newImages = [...editingFacility.images];
+                                    newImages[idx] = e.target.value;
+                                    setEditingFacility({ ...editingFacility, images: newImages });
+                                  }
+                                }}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                placeholder="Image URL or click upload"
+                                readOnly={image.startsWith('data:')}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => triggerFileInput(idx, true)}
+                                className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 flex items-center gap-1 text-sm"
+                              >
+                                <Upload className="w-4 h-4" />
+                                Upload
+                              </button>
+                              <input
+                                type="file"
+                                ref={el => fileInputRefs.current[`edit-${idx}`] = el}
+                                onChange={(e) => handleImageUpload(e, true, idx)}
+                                accept="image/*"
+                                className="hidden"
+                              />
+                            </div>
                             <button 
                               onClick={() => {
                                 const newImages = editingFacility.images.filter((_, i) => i !== idx);
@@ -588,8 +638,9 @@ export default function FacilitiesPage() {
                 <li>• Use descriptive names and clear descriptions</li>
                 <li>• Choose appropriate icons and colors</li>
                 <li>• Add relevant features for each facility</li>
-                <li>• <strong>Images:</strong> Use URLs like /images/facility.jpg or https://example.com/image.jpg</li>
+                <li>• <strong>Images:</strong> Click "Upload" to select photos (max 1MB) or use URLs</li>
                 <li>• Multiple images create a carousel effect on homepage</li>
+                <li>• Supported formats: JPG, PNG, GIF, WebP</li>
                 <li>• Click "Save All" to publish changes for everyone</li>
               </ul>
             </div>
@@ -659,17 +710,46 @@ export default function FacilitiesPage() {
                   <label className="text-sm font-medium text-gray-700 block mb-1">Images</label>
                   {formData.images.map((image, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={image}
-                        onChange={(e) => {
-                          const newImages = [...formData.images];
-                          newImages[idx] = e.target.value;
-                          setFormData({ ...formData, images: newImages });
-                        }}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        placeholder="Image URL (e.g., /images/facility.jpg)"
-                      />
+                      <div className="flex-1 flex gap-2">
+                        {image.startsWith('data:') && (
+                          <div className="w-12 h-12 flex-shrink-0">
+                            <img 
+                              src={image} 
+                              alt={`Preview ${idx + 1}`} 
+                              className="w-full h-full object-cover rounded border"
+                            />
+                          </div>
+                        )}
+                        <input
+                          type="text"
+                          value={image.startsWith('data:') ? `Uploaded Image ${idx + 1}` : image}
+                          onChange={(e) => {
+                            if (!e.target.value.startsWith('data:')) {
+                              const newImages = [...formData.images];
+                              newImages[idx] = e.target.value;
+                              setFormData({ ...formData, images: newImages });
+                            }
+                          }}
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          placeholder="Image URL or click upload"
+                          readOnly={image.startsWith('data:')}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => triggerFileInput(idx, false)}
+                          className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 flex items-center gap-1 text-sm"
+                        >
+                          <Upload className="w-4 h-4" />
+                          Upload
+                        </button>
+                        <input
+                          type="file"
+                          ref={el => fileInputRefs.current[`add-${idx}`] = el}
+                          onChange={(e) => handleImageUpload(e, false, idx)}
+                          accept="image/*"
+                          className="hidden"
+                        />
+                      </div>
                       <button 
                         onClick={() => {
                           const newImages = formData.images.filter((_, i) => i !== idx);
