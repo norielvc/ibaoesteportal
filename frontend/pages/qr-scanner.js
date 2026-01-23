@@ -18,6 +18,7 @@ export default function QRScannerPage() {
   const [certificateData, setCertificateData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [scanHistory, setScanHistory] = useState([]);
+  const [cameraLoading, setCameraLoading] = useState(false);
   const scannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
 
@@ -43,6 +44,7 @@ export default function QRScannerPage() {
     setError(null);
     setScanResult(null);
     setCertificateData(null);
+    setCameraLoading(true);
     
     try {
       // Dynamically import html5-qrcode (client-side only)
@@ -50,111 +52,125 @@ export default function QRScannerPage() {
       
       // Check if we're on iOS Safari
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
       
-      // Request camera permission first
-      let stream;
-      try {
-        const constraints = {
-          video: {
-            facingMode: 'environment',
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-          }
-        };
-        
-        // For iOS, try different constraints
-        if (isIOS) {
-          constraints.video = {
-            facingMode: { exact: 'environment' },
-            width: { min: 320, ideal: 640, max: 1920 },
-            height: { min: 240, ideal: 480, max: 1080 }
-          };
-        }
-        
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        stream.getTracks().forEach(track => track.stop());
-        setCameraPermission(true);
-      } catch (permissionError) {
-        console.error('Camera permission error:', permissionError);
-        
-        // Try fallback constraints
+      console.log('Starting scanner on iOS:', isIOS);
+      
+      // For iOS, use a simpler approach
+      if (isIOS) {
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
+          // Simple permission check for iOS
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+              facingMode: 'environment',
+              width: 320,
+              height: 240
+            } 
           });
           stream.getTracks().forEach(track => track.stop());
           setCameraPermission(true);
-        } catch (fallbackError) {
-          setCameraPermission(false);
-          throw new Error('Camera access denied or not available');
+          console.log('iOS camera permission granted');
+        } catch (iosError) {
+          console.error('iOS camera error:', iosError);
+          throw new Error('Camera permission required. Please allow camera access and refresh the page.');
         }
+      } else {
+        // Standard permission check for other devices
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        stream.getTracks().forEach(track => track.stop());
+        setCameraPermission(true);
       }
 
-      // Initialize scanner with better error handling
+      // Initialize scanner
       html5QrCodeRef.current = new Html5Qrcode('qr-reader');
       
-      const config = {
-        fps: isIOS ? 5 : 10, // Lower FPS for iOS
+      // Simpler config for iOS
+      const config = isIOS ? {
+        fps: 5,
+        qrbox: 200,
+        aspectRatio: 1.0,
+        disableFlip: false
+      } : {
+        fps: 10,
         qrbox: { width: 250, height: 250 },
         aspectRatio: 1.0,
-        disableFlip: false,
-        videoConstraints: {
-          facingMode: 'environment'
-        }
+        disableFlip: false
       };
 
-      // Try to start with environment camera first
-      let cameraId = { facingMode: 'environment' };
-      
-      // Get available cameras for better iOS support
-      try {
-        const devices = await Html5Qrcode.getCameras();
-        if (devices && devices.length > 0) {
-          // Find rear camera
-          const rearCamera = devices.find(device => 
-            device.label.toLowerCase().includes('back') || 
-            device.label.toLowerCase().includes('rear') ||
-            device.label.toLowerCase().includes('environment')
-          );
+      console.log('Scanner config:', config);
+
+      // Start scanner with simpler camera selection
+      if (isIOS) {
+        // For iOS, try the simplest approach first
+        await html5QrCodeRef.current.start(
+          { facingMode: 'environment' },
+          config,
+          onScanSuccess,
+          onScanFailure
+        );
+      } else {
+        // For other devices, try to get specific camera
+        try {
+          const devices = await Html5Qrcode.getCameras();
+          console.log('Available cameras:', devices);
           
-          if (rearCamera) {
-            cameraId = rearCamera.id;
-          } else {
-            // Use last camera (usually rear on mobile)
-            cameraId = devices[devices.length - 1].id;
+          let cameraId = { facingMode: 'environment' };
+          
+          if (devices && devices.length > 0) {
+            const rearCamera = devices.find(device => 
+              device.label.toLowerCase().includes('back') || 
+              device.label.toLowerCase().includes('rear') ||
+              device.label.toLowerCase().includes('environment')
+            );
+            
+            if (rearCamera) {
+              cameraId = rearCamera.id;
+            } else {
+              cameraId = devices[devices.length - 1].id;
+            }
           }
+          
+          await html5QrCodeRef.current.start(
+            cameraId,
+            config,
+            onScanSuccess,
+            onScanFailure
+          );
+        } catch (deviceError) {
+          console.warn('Device enumeration failed, using facingMode:', deviceError);
+          await html5QrCodeRef.current.start(
+            { facingMode: 'environment' },
+            config,
+            onScanSuccess,
+            onScanFailure
+          );
         }
-      } catch (deviceError) {
-        console.warn('Could not get camera devices:', deviceError);
-        // Fallback to facingMode
-        cameraId = { facingMode: 'environment' };
       }
 
-      await html5QrCodeRef.current.start(
-        cameraId,
-        config,
-        onScanSuccess,
-        onScanFailure
-      );
-
       setScanning(true);
+      setCameraLoading(false);
+      console.log('Scanner started successfully');
+      
     } catch (err) {
       console.error('Scanner error:', err);
       setCameraPermission(false);
+      setCameraLoading(false);
       
-      let errorMessage = 'Failed to start scanner';
+      let errorMessage = 'Failed to start camera';
       
-      if (err.name === 'NotAllowedError' || err.message.includes('denied')) {
-        errorMessage = 'Camera permission denied. Please allow camera access and try again.';
+      if (err.name === 'NotAllowedError' || err.message.includes('denied') || err.message.includes('permission')) {
+        errorMessage = 'Camera permission denied. Please refresh the page and allow camera access.';
       } else if (err.name === 'NotFoundError') {
         errorMessage = 'No camera found on this device.';
       } else if (err.name === 'NotReadableError') {
-        errorMessage = 'Camera is being used by another application.';
+        errorMessage = 'Camera is being used by another app. Please close other camera apps and try again.';
       } else if (err.name === 'OverconstrainedError') {
-        errorMessage = 'Camera constraints not supported. Try refreshing the page.';
-      } else if (err.message) {
-        errorMessage = `Scanner error: ${err.message}`;
+        errorMessage = 'Camera settings not supported. Please refresh the page.';
+      } else if (err.message.includes('QR code scanner')) {
+        errorMessage = 'Scanner initialization failed. Please refresh the page and try again.';
+      } else {
+        errorMessage = `Camera error: ${err.message || 'Unknown error'}`;
       }
       
       setError(errorMessage);
@@ -266,7 +282,7 @@ export default function QRScannerPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           {/* Scanner Area */}
           <div className="relative">
-            {!scanning && !scanResult && (
+            {!scanning && !scanResult && !cameraLoading && (
               <div className="p-8 text-center">
                 <div className="w-64 h-64 mx-auto bg-gray-100 rounded-2xl flex items-center justify-center mb-6 border-2 border-dashed border-gray-300">
                   <div className="text-center">
@@ -287,6 +303,26 @@ export default function QRScannerPage() {
                   <Smartphone className="w-4 h-4 inline mr-1" />
                   Works best on mobile devices with camera
                 </p>
+              </div>
+            )}
+
+            {cameraLoading && (
+              <div className="p-8 text-center">
+                <div className="w-64 h-64 mx-auto bg-blue-50 rounded-2xl flex items-center justify-center mb-6 border-2 border-blue-200">
+                  <div className="text-center">
+                    <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-blue-600 font-medium">Initializing Camera...</p>
+                    <p className="text-blue-500 text-sm mt-2">Please wait while we access your camera</p>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => { setCameraLoading(false); setError('Camera initialization cancelled'); }}
+                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all flex items-center gap-2 mx-auto"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel
+                </button>
               </div>
             )}
 
