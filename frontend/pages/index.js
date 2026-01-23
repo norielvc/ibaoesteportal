@@ -470,20 +470,29 @@ export default function BarangayPortal() {
         </button>
       </section>
 
-      {/* Available Forms Section - Modern Design */}
-      <section id="forms" className="py-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
-        {/* Background Decorations */}
+      {/* Available Forms Section - Modern Design with Background */}
+      <section id="forms" className="py-20 relative overflow-hidden">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/images/barangay-captain.jpg)' }}
+        />
+        
+        {/* Background Overlay for Text Readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/85 via-blue-800/80 to-blue-900/85"></div>
+        
+        {/* Additional Decorative Overlays */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-100 rounded-full opacity-50 blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-green-100 rounded-full opacity-50 blur-3xl"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full opacity-50 blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full opacity-50 blur-3xl"></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Section Header */}
           <div className="text-center mb-16">
             {/* Enhanced Online Services Badge */}
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full text-sm font-semibold mb-6 shadow-lg shadow-blue-500/30">
-              <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-full">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-full text-sm font-semibold mb-6 shadow-lg">
+              <div className="flex items-center justify-center w-8 h-8 bg-white/30 rounded-full">
                 <FileText className="w-4 h-4" />
               </div>
               <span className="tracking-wide">ONLINE SERVICES</span>
@@ -492,10 +501,10 @@ export default function BarangayPortal() {
                 <span className="text-xs text-green-300">LIVE</span>
               </div>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">Forms</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">Forms</span>
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+            <p className="text-blue-100 max-w-2xl mx-auto text-lg">
               Request official documents and certificates online. Fast, easy, and convenient.
             </p>
           </div>
