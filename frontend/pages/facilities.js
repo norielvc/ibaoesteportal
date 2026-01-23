@@ -416,6 +416,43 @@ export default function FacilitiesPage() {
                         </div>
                       </div>
                       <div>
+                        <label className="text-sm font-medium text-gray-700 block mb-1">Images</label>
+                        {editingFacility.images.map((image, idx) => (
+                          <div key={idx} className="flex gap-2 mb-2">
+                            <input
+                              type="text"
+                              value={image}
+                              onChange={(e) => {
+                                const newImages = [...editingFacility.images];
+                                newImages[idx] = e.target.value;
+                                setEditingFacility({ ...editingFacility, images: newImages });
+                              }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              placeholder="Image URL (e.g., /images/facility.jpg)"
+                            />
+                            <button 
+                              onClick={() => {
+                                const newImages = editingFacility.images.filter((_, i) => i !== idx);
+                                if (newImages.length === 0) newImages.push('/background.jpg');
+                                setEditingFacility({ ...editingFacility, images: newImages });
+                              }} 
+                              className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                        <button 
+                          onClick={() => {
+                            const newImages = [...editingFacility.images, '/background.jpg'];
+                            setEditingFacility({ ...editingFacility, images: newImages });
+                          }} 
+                          className="text-blue-600 hover:text-blue-800 text-sm mb-3"
+                        >
+                          + Add Image
+                        </button>
+                      </div>
+                      <div>
                         <label className="text-sm font-medium text-gray-700 block mb-1">Features</label>
                         {editingFacility.features.map((feature, idx) => (
                           <div key={idx} className="flex gap-2 mb-2">
@@ -446,8 +483,20 @@ export default function FacilitiesPage() {
                     </div>
                   ) : (
                     <div className="flex">
-                      <div className="w-32 h-24 flex-shrink-0">
-                        <img src={facility.images[0]} alt={facility.name} className="w-full h-full object-cover" />
+                      <div className="w-32 h-24 flex-shrink-0 relative">
+                        <img 
+                          src={facility.images[0]} 
+                          alt={facility.name} 
+                          className="w-full h-full object-cover rounded-l-xl" 
+                          onError={(e) => {
+                            e.target.src = '/background.jpg';
+                          }}
+                        />
+                        {facility.images.length > 1 && (
+                          <div className="absolute top-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                            +{facility.images.length - 1}
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1 p-3">
                         <div className="flex items-start justify-between">
@@ -539,6 +588,8 @@ export default function FacilitiesPage() {
                 <li>• Use descriptive names and clear descriptions</li>
                 <li>• Choose appropriate icons and colors</li>
                 <li>• Add relevant features for each facility</li>
+                <li>• <strong>Images:</strong> Use URLs like /images/facility.jpg or https://example.com/image.jpg</li>
+                <li>• Multiple images create a carousel effect on homepage</li>
                 <li>• Click "Save All" to publish changes for everyone</li>
               </ul>
             </div>
@@ -603,6 +654,43 @@ export default function FacilitiesPage() {
                       ))}
                     </select>
                   </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Images</label>
+                  {formData.images.map((image, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={image}
+                        onChange={(e) => {
+                          const newImages = [...formData.images];
+                          newImages[idx] = e.target.value;
+                          setFormData({ ...formData, images: newImages });
+                        }}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Image URL (e.g., /images/facility.jpg)"
+                      />
+                      <button 
+                        onClick={() => {
+                          const newImages = formData.images.filter((_, i) => i !== idx);
+                          if (newImages.length === 0) newImages.push('/background.jpg');
+                          setFormData({ ...formData, images: newImages });
+                        }} 
+                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button 
+                    onClick={() => {
+                      const newImages = [...formData.images, '/background.jpg'];
+                      setFormData({ ...formData, images: newImages });
+                    }} 
+                    className="text-blue-600 hover:text-blue-800 text-sm mb-4"
+                  >
+                    + Add Image
+                  </button>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-1">Features</label>
