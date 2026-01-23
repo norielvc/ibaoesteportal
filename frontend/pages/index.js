@@ -501,10 +501,10 @@ export default function BarangayPortal() {
                 <span className="text-xs text-green-300 font-bold">LIVE</span>
               </div>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-2xl mb-4">
-              Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-lg">Forms</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 drop-shadow-2xl mb-4">
+              Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800 drop-shadow-lg">Forms</span>
             </h2>
-            <p className="text-blue-50 drop-shadow-lg max-w-2xl mx-auto text-lg font-medium">
+            <p className="text-gray-700 drop-shadow-lg max-w-2xl mx-auto text-lg font-medium">
               Request official documents and certificates online. Fast, easy, and convenient.
             </p>
           </div>
@@ -596,75 +596,78 @@ export default function BarangayPortal() {
 
               return (
                 <div className="relative overflow-hidden">
-                  <div 
-                    className="flex transition-transform duration-500 ease-in-out"
-                    style={{ transform: `translateX(-${currentFormSlide * 100}%)` }}
-                  >
-                    {forms.map((form) => {
-                      const Icon = form.icon;
-                      const colors = colorClasses[form.color];
-                      
-                      return (
-                        <div key={form.id} className="w-full flex-shrink-0 px-4">
-                          <div className="group relative bg-white rounded-3xl p-10 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden max-w-lg mx-auto">
-                            {/* Gradient Overlay on Hover */}
-                            <div className={`absolute inset-0 bg-gradient-to-br ${colors.overlay} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`}></div>
-                            
-                            {/* Icon Container */}
-                            <div className="relative mb-8">
-                              <div className={`w-20 h-20 bg-gradient-to-br ${colors.gradient} rounded-2xl flex items-center justify-center shadow-lg ${colors.shadow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                                <Icon className="w-10 h-10 text-white" />
+                  {/* Container with Background */}
+                  <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 mx-4 md:mx-8 lg:mx-16 relative">
+                    <div 
+                      className="flex transition-transform duration-500 ease-in-out py-8"
+                      style={{ transform: `translateX(-${currentFormSlide * 100}%)` }}
+                    >
+                      {forms.map((form) => {
+                        const Icon = form.icon;
+                        const colors = colorClasses[form.color];
+                        
+                        return (
+                          <div key={form.id} className="w-full flex-shrink-0 px-4">
+                            <div className="group relative bg-transparent rounded-3xl p-10 transition-all duration-500 overflow-hidden max-w-lg mx-auto">
+                              {/* Gradient Overlay on Hover */}
+                              <div className={`absolute inset-0 bg-gradient-to-br ${colors.overlay} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl`}></div>
+                              
+                              {/* Icon Container */}
+                              <div className="relative mb-8">
+                                <div className={`w-20 h-20 bg-gradient-to-br ${colors.gradient} rounded-2xl flex items-center justify-center shadow-lg ${colors.shadow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                                  <Icon className="w-10 h-10 text-white" />
+                                </div>
+                                <div className={`absolute -top-1 -right-1 w-7 h-7 ${colors.bg} rounded-full flex items-center justify-center`}>
+                                  <span className={`${colors.text} text-sm font-bold`}>{form.id}</span>
+                                </div>
                               </div>
-                              <div className={`absolute -top-1 -right-1 w-7 h-7 ${colors.bg} rounded-full flex items-center justify-center`}>
-                                <span className={`${colors.text} text-sm font-bold`}>{form.id}</span>
+
+                              {/* Content */}
+                              <h3 className={`text-2xl font-bold text-gray-900 mb-4 group-hover:${colors.text} transition-colors relative`}>
+                                {form.title}
+                              </h3>
+                              <p className="text-gray-500 mb-8 leading-relaxed relative text-lg">
+                                {form.description}
+                              </p>
+
+                              {/* Features */}
+                              <div className="flex flex-wrap gap-3 mb-8 relative">
+                                {form.features.map((feature, idx) => (
+                                  <span key={idx} className={`px-4 py-2 ${colors.feature} text-sm font-medium rounded-full`}>
+                                    {feature}
+                                  </span>
+                                ))}
                               </div>
+
+                              {/* Button */}
+                              <button 
+                                onClick={form.onClick}
+                                className={`relative z-10 w-full bg-gradient-to-r ${colors.button} text-white py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg ${colors.buttonShadow} text-lg`}
+                              >
+                                <Plus className="w-6 h-6" />
+                                Request Now
+                                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                              </button>
                             </div>
-
-                            {/* Content */}
-                            <h3 className={`text-2xl font-bold text-gray-900 mb-4 group-hover:${colors.text} transition-colors relative`}>
-                              {form.title}
-                            </h3>
-                            <p className="text-gray-500 mb-8 leading-relaxed relative text-lg">
-                              {form.description}
-                            </p>
-
-                            {/* Features */}
-                            <div className="flex flex-wrap gap-3 mb-8 relative">
-                              {form.features.map((feature, idx) => (
-                                <span key={idx} className={`px-4 py-2 ${colors.feature} text-sm font-medium rounded-full`}>
-                                  {feature}
-                                </span>
-                              ))}
-                            </div>
-
-                            {/* Button */}
-                            <button 
-                              onClick={form.onClick}
-                              className={`relative z-10 w-full bg-gradient-to-r ${colors.button} text-white py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg ${colors.buttonShadow} text-lg`}
-                            >
-                              <Plus className="w-6 h-6" />
-                              Request Now
-                              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            </button>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
 
-                  {/* Navigation Arrows - Moved closer */}
-                  <button
-                    onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % forms.length)}
-                    className="absolute left-8 md:left-12 top-1/2 -translate-y-1/2 w-14 h-14 bg-blue-600/80 hover:bg-blue-700/90 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
-                  >
-                    <ChevronLeft className="w-7 h-7 text-white" />
-                  </button>
-                  <button
-                    onClick={() => setCurrentFormSlide((prev) => (prev + 1) % forms.length)}
-                    className="absolute right-8 md:right-12 top-1/2 -translate-y-1/2 w-14 h-14 bg-blue-600/80 hover:bg-blue-700/90 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
-                  >
-                    <ChevronRight className="w-7 h-7 text-white" />
-                  </button>
+                    {/* Navigation Arrows - Moved much closer to container */}
+                    <button
+                      onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % forms.length)}
+                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                    <button
+                      onClick={() => setCurrentFormSlide((prev) => (prev + 1) % forms.length)}
+                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-10 border border-blue-500/50"
+                    >
+                      <ChevronRight className="w-6 h-6 text-white" />
+                    </button>
+                  </div>
 
                   {/* Dots Navigation */}
                   <div className="flex justify-center gap-2 mt-8">
@@ -673,7 +676,7 @@ export default function BarangayPortal() {
                         key={index}
                         onClick={() => setCurrentFormSlide(index)}
                         className={`w-3 h-3 rounded-full transition-all ${
-                          currentFormSlide === index ? 'bg-yellow-400 w-8 shadow-lg' : 'bg-white/60 hover:bg-white/80 backdrop-blur-sm'
+                          currentFormSlide === index ? 'bg-blue-600 w-8 shadow-lg' : 'bg-gray-400 hover:bg-gray-500'
                         }`}
                       />
                     ))}
