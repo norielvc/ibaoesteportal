@@ -478,8 +478,8 @@ export default function BarangayPortal() {
           style={{ backgroundImage: 'url(/images/barangay-captain.jpg)' }}
         />
         
-        {/* Background Overlay for Text Readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/85 via-blue-800/80 to-blue-900/85"></div>
+        {/* Light Overlay for Text Readability (Optional) */}
+        <div className="absolute inset-0 bg-black/20"></div>
         
         {/* Additional Decorative Overlays */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -491,20 +491,20 @@ export default function BarangayPortal() {
           {/* Section Header */}
           <div className="text-center mb-16">
             {/* Enhanced Online Services Badge */}
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-full text-sm font-semibold mb-6 shadow-lg">
-              <div className="flex items-center justify-center w-8 h-8 bg-white/30 rounded-full">
-                <FileText className="w-4 h-4" />
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur-sm border border-white/50 text-gray-800 rounded-full text-sm font-semibold mb-6 shadow-lg">
+              <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                <FileText className="w-4 h-4 text-white" />
               </div>
               <span className="tracking-wide">ONLINE SERVICES</span>
               <div className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                <span className="text-xs text-green-300">LIVE</span>
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="text-xs text-green-600 font-bold">LIVE</span>
               </div>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg mb-4">
               Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">Forms</span>
             </h2>
-            <p className="text-blue-100 max-w-2xl mx-auto text-lg">
+            <p className="text-white drop-shadow-md max-w-2xl mx-auto text-lg">
               Request official documents and certificates online. Fast, easy, and convenient.
             </p>
           </div>
