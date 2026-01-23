@@ -656,18 +656,18 @@ export default function BarangayPortal() {
                       })}
                     </div>
 
-                    {/* Navigation Arrows - Fixed positioning */}
+                    {/* Navigation Arrows - Fixed positioning closer to container */}
                     <button
                       onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % forms.length)}
-                      className="absolute -left-8 top-1/2 -translate-y-1/2 w-14 h-14 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-blue-500/50"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-blue-500/50"
                     >
-                      <ChevronLeft className="w-7 h-7 text-white" />
+                      <ChevronLeft className="w-6 h-6 text-white" />
                     </button>
                     <button
                       onClick={() => setCurrentFormSlide((prev) => (prev + 1) % forms.length)}
-                      className="absolute -right-8 top-1/2 -translate-y-1/2 w-14 h-14 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-blue-500/50"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-blue-500/50"
                     >
-                      <ChevronRight className="w-7 h-7 text-white" />
+                      <ChevronRight className="w-6 h-6 text-white" />
                     </button>
                   </div>
 
