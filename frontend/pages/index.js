@@ -124,18 +124,28 @@ export default function BarangayPortal() {
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
 
-    if (isLeftSwipe) {
-      // Swipe left - next facility
+    const currentFacilityIndex = facilityImageSlides['main'] || 0;
+    const facility = facilities[currentFacilityIndex];
+    const currentImageIndex = facilityImageSlides[currentFacilityIndex] || 0;
+
+    console.log('Swipe detected:', { distance, isLeftSwipe, isRightSwipe, currentImageIndex, totalImages: facility.images.length });
+
+    if (isLeftSwipe && facility.images.length > 1) {
+      // Swipe left - next image in current facility
+      const nextIndex = (currentImageIndex + 1) % facility.images.length;
+      console.log('Swiping to next image:', nextIndex);
       setFacilityImageSlides(prev => ({ 
         ...prev, 
-        main: ((prev['main'] || 0) + 1) % facilities.length 
+        [currentFacilityIndex]: nextIndex 
       }));
     }
-    if (isRightSwipe) {
-      // Swipe right - previous facility
+    if (isRightSwipe && facility.images.length > 1) {
+      // Swipe right - previous image in current facility
+      const prevIndex = (currentImageIndex - 1 + facility.images.length) % facility.images.length;
+      console.log('Swiping to previous image:', prevIndex);
       setFacilityImageSlides(prev => ({ 
         ...prev, 
-        main: ((prev['main'] || 0) - 1 + facilities.length) % facilities.length 
+        [currentFacilityIndex]: prevIndex 
       }));
     }
   };
@@ -703,12 +713,14 @@ export default function BarangayPortal() {
               return (
                 <div 
                   className="group relative bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100"
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
                 >
                   {/* Large Image Carousel */}
-                  <div className="relative h-[400px] md:h-[500px] lg:h-[550px] overflow-hidden">
+                  <div 
+                    className="relative h-[400px] md:h-[500px] lg:h-[550px] overflow-hidden"
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                  >
                     {facility.images.map((image, imgIndex) => (
                       <div
                         key={imgIndex}
@@ -734,22 +746,23 @@ export default function BarangayPortal() {
                       <Icon className="w-8 h-8 text-white" />
                     </div>
 
-                    {/* Image Navigation Dots - Made more prominent for touch */}
-                    {facility.images.length > 1 && (
-                      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-3">
-                        {facility.images.map((_, dotIndex) => (
-                          <button
-                            key={dotIndex}
-                            onClick={() => setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: dotIndex }))}
-                            className={`transition-all duration-300 rounded-full touch-manipulation ${
-                              currentImageIndex === dotIndex 
-                                ? 'w-10 h-3 bg-white shadow-lg' 
-                                : 'w-3 h-3 bg-white/60 hover:bg-white/90 active:bg-white'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    )}
+                    {/* Image Navigation Dots - Enhanced and always visible for testing */}
+                    <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-3">
+                      {facility.images.map((_, dotIndex) => (
+                        <button
+                          key={dotIndex}
+                          onClick={() => {
+                            console.log('Dot clicked:', dotIndex, 'Current facility:', currentFacilityIndex);
+                            setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: dotIndex }));
+                          }}
+                          className={`transition-all duration-300 rounded-full touch-manipulation cursor-pointer ${
+                            currentImageIndex === dotIndex 
+                              ? 'w-12 h-4 bg-white shadow-lg border-2 border-blue-500' 
+                              : 'w-4 h-4 bg-white/70 hover:bg-white/90 active:bg-white border-2 border-white/30'
+                          }`}
+                        />
+                      ))}
+                    </div>
 
                     {/* Content Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
