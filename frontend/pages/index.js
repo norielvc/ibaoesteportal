@@ -264,14 +264,16 @@ export default function BarangayPortal() {
     const interval = setInterval(() => {
       setFacilityImageSlides(prev => {
         const updated = { ...prev };
-        Object.keys(updated).forEach(key => {
-          updated[key] = (updated[key] + 1) % 3;
+        facilities.forEach((facility, index) => {
+          if (facility.images && facility.images.length > 1) {
+            updated[index] = ((updated[index] || 0) + 1) % facility.images.length;
+          }
         });
         return updated;
       });
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [facilities]);
 
   const stats = [
     { label: 'Total Population', value: '12,847', icon: Users },
@@ -805,8 +807,8 @@ export default function BarangayPortal() {
             if (facility.images.length <= 1) return null;
             
             return (
-              <div className="mb-8">
-                <div className="flex justify-center gap-3 overflow-x-auto pb-2">
+              <div className="mb-8 px-4">
+                <div className="flex justify-center gap-3 overflow-x-auto pb-4 pt-2">
                   {facility.images.map((image, imgIndex) => (
                     <button
                       key={imgIndex}
