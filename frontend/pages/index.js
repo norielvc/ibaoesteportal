@@ -232,26 +232,29 @@ export default function BarangayPortal() {
     const fetchOfficials = async () => {
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
-        console.log('Fetching officials from:', `${API_URL}/api/officials`);
+        console.log('🔍 Fetching officials from:', `${API_URL}/api/officials`);
         const response = await fetch(`${API_URL}/api/officials`);
-        console.log('Officials API response status:', response.status);
+        console.log('📊 Officials API response status:', response.status);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('Officials API data:', data);
+        console.log('📋 Officials API data received:', data);
+        console.log('📋 Number of officials:', data.data?.length || 0);
         
         if (data.success && data.data && data.data.length > 0) {
-          console.log('Setting officials from API:', data.data);
+          console.log('✅ Setting officials from API:', data.data);
           setOfficials(data.data);
+          console.log('✅ Officials state updated, count:', data.data.length);
         } else {
-          console.log('No officials from API, using empty array');
+          console.log('⚠️ No officials from API, using empty array');
+          console.log('⚠️ API response structure:', JSON.stringify(data, null, 2));
         }
       } catch (error) {
-        console.error('Error fetching officials:', error);
-        console.log('Using empty officials array due to error');
+        console.error('❌ Error fetching officials:', error);
+        console.log('❌ Using empty officials array due to error');
         // Keep empty array on error
       }
     };
@@ -1249,25 +1252,38 @@ export default function BarangayPortal() {
             
             {/* Officials Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {officials.length > 0 ? (
-                officials.map((official, index) => {
+              {(() => {
+                console.log('🎯 Rendering officials section, officials.length:', officials.length);
+                console.log('🎯 Officials data:', officials);
+                
+                if (officials.length > 0) {
+                  console.log('✅ Rendering', officials.length, 'officials from API');
+                  return officials.map((official, index) => {
                   // Define color schemes for different position types
-                  const getColorScheme = (positionType) => {
+                  const getColorScheme = (positionType, index) => {
                     const schemes = {
                       'captain': { from: 'from-blue-600', to: 'to-indigo-700', light: 'text-blue-100' },
                       'secretary': { from: 'from-teal-600', to: 'to-green-700', light: 'text-teal-100' },
                       'treasurer': { from: 'from-emerald-600', to: 'to-green-700', light: 'text-emerald-100' },
                       'sk_chairman': { from: 'from-cyan-600', to: 'to-blue-700', light: 'text-cyan-100' },
+                      'staff': { 
+                        // Rotate colors for different staff members
+                        0: { from: 'from-gray-600', to: 'to-slate-700', light: 'text-gray-100' },
+                        1: { from: 'from-indigo-600', to: 'to-blue-700', light: 'text-indigo-100' },
+                        2: { from: 'from-purple-600', to: 'to-indigo-700', light: 'text-purple-100' },
+                        3: { from: 'from-pink-600', to: 'to-purple-700', light: 'text-pink-100' },
+                        4: { from: 'from-rose-600', to: 'to-pink-700', light: 'text-rose-100' }
+                      }[index % 5] || { from: 'from-gray-600', to: 'to-slate-700', light: 'text-gray-100' },
                       'kagawad': { 
                         // Rotate colors for different kagawads
-                        1: { from: 'from-green-600', to: 'to-emerald-700', light: 'text-green-100' },
-                        2: { from: 'from-purple-600', to: 'to-violet-700', light: 'text-purple-100' },
-                        3: { from: 'from-orange-600', to: 'to-red-700', light: 'text-orange-100' },
-                        4: { from: 'from-pink-600', to: 'to-rose-700', light: 'text-pink-100' },
-                        5: { from: 'from-indigo-600', to: 'to-purple-700', light: 'text-indigo-100' },
-                        6: { from: 'from-yellow-600', to: 'to-orange-700', light: 'text-yellow-100' },
-                        7: { from: 'from-red-600', to: 'to-pink-700', light: 'text-red-100' }
-                      }[index - 4] || { from: 'from-gray-600', to: 'to-gray-700', light: 'text-gray-100' }
+                        0: { from: 'from-green-600', to: 'to-emerald-700', light: 'text-green-100' },
+                        1: { from: 'from-purple-600', to: 'to-violet-700', light: 'text-purple-100' },
+                        2: { from: 'from-orange-600', to: 'to-red-700', light: 'text-orange-100' },
+                        3: { from: 'from-pink-600', to: 'to-rose-700', light: 'text-pink-100' },
+                        4: { from: 'from-indigo-600', to: 'to-purple-700', light: 'text-indigo-100' },
+                        5: { from: 'from-yellow-600', to: 'to-orange-700', light: 'text-yellow-100' },
+                        6: { from: 'from-red-600', to: 'to-pink-700', light: 'text-red-100' }
+                      }[index % 7] || { from: 'from-gray-600', to: 'to-gray-700', light: 'text-gray-100' }
                     };
                     return schemes[positionType] || { from: 'from-gray-600', to: 'to-gray-700', light: 'text-gray-100' };
                   };
@@ -1280,7 +1296,7 @@ export default function BarangayPortal() {
                     return name.substring(0, 2).toUpperCase();
                   };
 
-                  const colorScheme = getColorScheme(official.position_type);
+                  const colorScheme = getColorScheme(official.position_type, index);
 
                   return (
                     <div key={official.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
@@ -1301,9 +1317,10 @@ export default function BarangayPortal() {
                       </div>
                     </div>
                   );
-                })
-              ) : (
-                // Fallback placeholder cards if no data from API
+                });
+                } else {
+                  console.log('⚠️ No officials data, showing fallback placeholders');
+                  return (
                 <>
                   {/* Barangay Captain */}
                   <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
@@ -1356,7 +1373,9 @@ export default function BarangayPortal() {
                     </div>
                   </div>
                 </>
-              )}
+                );
+                }
+              })()}
             </div>
             
             {/* Contact Information */}
