@@ -512,7 +512,7 @@ export default function BarangayPortal() {
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url(${item.image})` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-blue-800/70" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/60 to-blue-800/40" />
             <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
               <div className="max-w-2xl text-white">
                 <span className="inline-block bg-yellow-500 text-blue-900 px-3 py-1 rounded-full text-sm font-semibold mb-4">
@@ -601,7 +601,6 @@ export default function BarangayPortal() {
             {(() => {
               const forms = [
                 {
-                  id: 1,
                   title: 'Barangay Clearance',
                   description: 'Official clearance for employment, business permits, and other legal purposes.',
                   icon: Shield,
@@ -610,7 +609,6 @@ export default function BarangayPortal() {
                   onClick: () => setShowClearanceModal(true)
                 },
                 {
-                  id: 2,
                   title: 'Certificate of Indigency',
                   description: 'Proof of financial status for medical, educational, and social assistance programs.',
                   icon: FileText,
@@ -619,7 +617,6 @@ export default function BarangayPortal() {
                   onClick: () => setShowIndigencyModal(true)
                 },
                 {
-                  id: 3,
                   title: 'Barangay Residency',
                   description: 'Certificate confirming your residence in Iba O\' Este for various requirements.',
                   icon: Home,
@@ -628,7 +625,6 @@ export default function BarangayPortal() {
                   onClick: () => setShowResidencyModal(true)
                 },
                 {
-                  id: 4,
                   title: 'Business Permit',
                   description: 'Official permit to operate a business within Iba O\' Este barangay jurisdiction.',
                   icon: Building2,
@@ -915,19 +911,19 @@ export default function BarangayPortal() {
                     {/* Eligibility - Compact */}
                     <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
                       <Users className="w-3 h-3 md:w-4 md:h-4 text-blue-300 flex-shrink-0" />
-                      <span className="text-white text-xs md:text-xs font-medium">📚 ELIGIBILITY: GRADE 7 TO 4TH/5TH YEAR COLLEGE</span>
+                      <span className="text-white text-xs md:text-xs font-medium">ELIGIBILITY: GRADE 7 TO 4TH/5TH YEAR COLLEGE</span>
                     </div>
                     
                     {/* Selection - Compact */}
                     <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
                       <Clock className="w-3 h-3 md:w-4 md:h-4 text-green-300 flex-shrink-0" />
-                      <span className="text-white text-xs md:text-xs font-medium">⏰ SELECTION: FIRST COME, FIRST SERVE!</span>
+                      <span className="text-white text-xs md:text-xs font-medium">SELECTION: FIRST COME, FIRST SERVE!</span>
                     </div>
                     
                     {/* Notification - Compact */}
                     <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
                       <Phone className="w-3 h-3 md:w-4 md:h-4 text-purple-300 flex-shrink-0" />
-                      <span className="text-white text-xs md:text-xs font-medium">📞 NOTIFICATION: MAKIKIPAG-UGNAYAN KUNG KUWALIPIKADO</span>
+                      <span className="text-white text-xs md:text-xs font-medium">NOTIFICATION: MAKIKIPAG-UGNAYAN KUNG KUWALIPIKADO</span>
                     </div>
                   </div>
                 </div>
@@ -1292,49 +1288,49 @@ export default function BarangayPortal() {
       </section>
 
       {/* Facilities Section - Enhanced Modern Design */}
-      <section id="directory" className="py-16 md:py-24 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden animate-on-scroll">
+      <section id="directory" className="py-16 md:py-24 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden animate-on-scroll">
         {/* Enhanced Background Pattern */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-0 right-0 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-blue-200 to-indigo-300 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-emerald-200 to-teal-300 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-          <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-br from-purple-200 to-pink-300 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+          <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
         </div>
 
         {/* Floating Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-4 h-4 bg-blue-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0s' }}></div>
-          <div className="absolute top-40 right-20 w-3 h-3 bg-emerald-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-20 left-10 w-4 h-4 bg-pink-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0s' }}></div>
+          <div className="absolute top-40 right-20 w-3 h-3 bg-cyan-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '1s' }}></div>
           <div className="absolute bottom-32 left-20 w-5 h-5 bg-purple-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute bottom-20 right-10 w-3 h-3 bg-pink-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0.5s' }}></div>
+          <div className="absolute bottom-20 right-10 w-3 h-3 bg-blue-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0.5s' }}></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Enhanced Section Header */}
           <div className="text-center mb-16 md:mb-20">
             <div className="flex justify-center mb-6">
-              <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm text-blue-700 rounded-full text-sm font-semibold border border-blue-200 shadow-lg">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-semibold border border-white/20 shadow-lg">
+                <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
                   <Building2 className="w-4 h-4 text-white" />
                 </div>
                 <span className="tracking-wide">COMMUNITY SERVICES</span>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
               </div>
             </div>
             
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">Facilities</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+              Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400">Facilities</span>
             </h2>
             
             <div className="flex justify-center mb-6">
-              <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full"></div>
+              <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 rounded-full"></div>
             </div>
             
-            <p className="text-gray-600 max-w-3xl mx-auto text-lg md:text-xl leading-relaxed">
+            <p className="text-blue-100 max-w-3xl mx-auto text-lg md:text-xl leading-relaxed">
               Discover our state-of-the-art community facilities designed to serve and enhance the lives of Iba O' Este residents
             </p>
           </div>
 
-          {/* Enhanced Facility Showcase */}
+          {/* Enhanced Facility Showcase - Bigger Photos */}
           <div className="relative mb-16 md:mb-20">
             {(() => {
               const currentFacilityIndex = facilityImageSlides['main'] || 0;
@@ -1344,41 +1340,41 @@ export default function BarangayPortal() {
               const colors = {
                 'bg-red-500': { 
                   bg: 'from-red-500 to-rose-600', 
-                  light: 'from-red-50 to-rose-100', 
-                  text: 'text-red-600', 
-                  border: 'border-red-200', 
+                  light: 'from-red-50/10 to-rose-100/10', 
+                  text: 'text-red-300', 
+                  border: 'border-red-400/30', 
                   shadow: 'shadow-red-500/25',
                   glow: 'shadow-red-500/40'
                 },
                 'bg-blue-500': { 
                   bg: 'from-blue-500 to-indigo-600', 
-                  light: 'from-blue-50 to-indigo-100', 
-                  text: 'text-blue-600', 
-                  border: 'border-blue-200', 
+                  light: 'from-blue-50/10 to-indigo-100/10', 
+                  text: 'text-blue-300', 
+                  border: 'border-blue-400/30', 
                   shadow: 'shadow-blue-500/25',
                   glow: 'shadow-blue-500/40'
                 },
                 'bg-pink-500': { 
                   bg: 'from-pink-500 to-rose-600', 
-                  light: 'from-pink-50 to-rose-100', 
-                  text: 'text-pink-600', 
-                  border: 'border-pink-200', 
+                  light: 'from-pink-50/10 to-rose-100/10', 
+                  text: 'text-pink-300', 
+                  border: 'border-pink-400/30', 
                   shadow: 'shadow-pink-500/25',
                   glow: 'shadow-pink-500/40'
                 },
                 'bg-green-500': { 
                   bg: 'from-green-500 to-emerald-600', 
-                  light: 'from-green-50 to-emerald-100', 
-                  text: 'text-green-600', 
-                  border: 'border-green-200', 
+                  light: 'from-green-50/10 to-emerald-100/10', 
+                  text: 'text-green-300', 
+                  border: 'border-green-400/30', 
                   shadow: 'shadow-green-500/25',
                   glow: 'shadow-green-500/40'
                 },
                 'bg-orange-500': { 
                   bg: 'from-orange-500 to-amber-600', 
-                  light: 'from-orange-50 to-amber-100', 
-                  text: 'text-orange-600', 
-                  border: 'border-orange-200', 
+                  light: 'from-orange-50/10 to-amber-100/10', 
+                  text: 'text-orange-300', 
+                  border: 'border-orange-400/30', 
                   shadow: 'shadow-orange-500/25',
                   glow: 'shadow-orange-500/40'
                 }
@@ -1387,12 +1383,12 @@ export default function BarangayPortal() {
 
               return (
                 <div className="group relative">
-                  {/* Main Facility Card */}
-                  <div className={`relative bg-white rounded-3xl shadow-2xl overflow-hidden border-2 ${colorSet.border} hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2`}>
+                  {/* Main Facility Card - Bigger Photos */}
+                  <div className={`relative bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border-2 ${colorSet.border} hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2`}>
                     
-                    {/* Image Section */}
+                    {/* Image Section - Much Bigger */}
                     <div 
-                      className="relative h-[350px] md:h-[450px] lg:h-[500px] overflow-hidden"
+                      className="relative h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden"
                       onTouchStart={handleTouchStart}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
@@ -1440,19 +1436,14 @@ export default function BarangayPortal() {
                     </div>
 
                     {/* Enhanced Content Section */}
-                    <div className={`bg-gradient-to-br ${colorSet.light} p-6 md:p-8`}>
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                            {facility.name}
-                          </h3>
-                          <p className="text-gray-600 text-base md:text-lg leading-relaxed">
-                            {facility.description}
-                          </p>
-                        </div>
-                        <div className={`w-12 h-12 bg-gradient-to-br ${colorSet.bg} rounded-xl flex items-center justify-center ${colorSet.shadow}`}>
-                          <Icon className="w-6 h-6 text-white" />
-                        </div>
+                    <div className={`bg-gradient-to-br ${colorSet.light} backdrop-blur-sm p-6 md:p-8 border-t border-white/20`}>
+                      <div className="mb-4">
+                        <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                          {facility.name}
+                        </h3>
+                        <p className="text-blue-100 text-base md:text-lg leading-relaxed">
+                          {facility.description}
+                        </p>
                       </div>
 
                       {/* Enhanced Features */}
@@ -1460,7 +1451,7 @@ export default function BarangayPortal() {
                         {facility.features.map((feature, fIndex) => (
                           <span 
                             key={fIndex}
-                            className={`px-4 py-2 bg-white/80 backdrop-blur-sm ${colorSet.text} text-sm font-medium rounded-full border ${colorSet.border} shadow-sm hover:shadow-md transition-shadow`}
+                            className={`px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-white/30 shadow-sm hover:shadow-md transition-shadow`}
                           >
                             {feature}
                           </span>
@@ -1492,8 +1483,8 @@ export default function BarangayPortal() {
                       }}
                       className={`flex-shrink-0 w-20 h-16 md:w-28 md:h-20 rounded-xl overflow-hidden transition-all duration-300 ${
                         currentImageIndex === imgIndex
-                          ? 'ring-4 ring-blue-500 ring-offset-2 shadow-xl scale-110'
-                          : 'ring-2 ring-gray-200 hover:ring-gray-300 hover:scale-105 shadow-md'
+                          ? 'ring-4 ring-pink-400 ring-offset-2 shadow-xl scale-110'
+                          : 'ring-2 ring-white/30 hover:ring-white/50 hover:scale-105 shadow-md'
                       }`}
                     >
                       <img
@@ -1507,7 +1498,7 @@ export default function BarangayPortal() {
                     </button>
                   ))}
                 </div>
-                <p className="text-center text-sm text-gray-500 mt-3 font-medium">
+                <p className="text-center text-sm text-blue-200 mt-3 font-medium">
                   Tap thumbnails to explore different views
                 </p>
               </div>
@@ -1533,54 +1524,19 @@ export default function BarangayPortal() {
                   onClick={() => setFacilityImageSlides(prev => ({ ...prev, main: index }))}
                   className={`flex flex-col items-center gap-3 p-4 md:p-6 rounded-2xl transition-all duration-300 min-w-[100px] md:min-w-[120px] ${
                     isActive 
-                      ? 'bg-white shadow-xl scale-110 border-2 border-blue-500 transform -translate-y-2' 
-                      : 'bg-white/70 backdrop-blur-sm hover:bg-white hover:shadow-lg border-2 border-transparent hover:scale-105'
+                      ? 'bg-white/20 backdrop-blur-sm shadow-xl scale-110 border-2 border-pink-400 transform -translate-y-2' 
+                      : 'bg-white/10 backdrop-blur-sm hover:bg-white/20 hover:shadow-lg border-2 border-transparent hover:scale-105'
                   }`}
                 >
                   <div className={`w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br ${colors[facility.color]} rounded-2xl flex items-center justify-center shadow-lg ${isActive ? 'shadow-xl' : ''}`}>
                     <Icon className="w-7 h-7 md:w-8 md:h-8 text-white" />
                   </div>
-                  <span className={`text-xs md:text-sm font-semibold text-center leading-tight ${isActive ? 'text-blue-600' : 'text-gray-600'}`}>
+                  <span className={`text-xs md:text-sm font-semibold text-center leading-tight ${isActive ? 'text-pink-300' : 'text-blue-200'}`}>
                     {facility.name}
                   </span>
                 </button>
               );
             })}
-          </div>
-
-          {/* Enhanced Stats Section */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 text-center border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Building2 className="w-7 h-7 md:w-8 md:h-8 text-white" />
-              </div>
-              <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">5+</p>
-              <p className="text-gray-600 text-sm md:text-base font-medium">Modern Facilities</p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 text-center border border-green-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Users className="w-7 h-7 md:w-8 md:h-8 text-white" />
-              </div>
-              <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">2K+</p>
-              <p className="text-gray-600 text-sm md:text-base font-medium">Daily Visitors</p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 text-center border border-purple-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Calendar className="w-7 h-7 md:w-8 md:h-8 text-white" />
-              </div>
-              <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">24/7</p>
-              <p className="text-gray-600 text-sm md:text-base font-medium">Available Access</p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 text-center border border-orange-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Award className="w-7 h-7 md:w-8 md:h-8 text-white" />
-              </div>
-              <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">100%</p>
-              <p className="text-gray-600 text-sm md:text-base font-medium">Community Rated</p>
-            </div>
           </div>
 
         </div>
