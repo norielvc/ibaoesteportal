@@ -94,6 +94,7 @@ export default function BarangayPortal() {
   ];
 
   const [facilities, setFacilities] = useState(defaultFacilities);
+  const [officials, setOfficials] = useState([]);
 
   // Helper function to map icon names to components
   const getIconComponent = (iconName) => {
@@ -224,6 +225,38 @@ export default function BarangayPortal() {
     };
     
     fetchFacilities();
+  }, []);
+
+  // Load officials from API
+  useEffect(() => {
+    const fetchOfficials = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+        console.log('Fetching officials from:', `${API_URL}/api/officials`);
+        const response = await fetch(`${API_URL}/api/officials`);
+        console.log('Officials API response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Officials API data:', data);
+        
+        if (data.success && data.data && data.data.length > 0) {
+          console.log('Setting officials from API:', data.data);
+          setOfficials(data.data);
+        } else {
+          console.log('No officials from API, using empty array');
+        }
+      } catch (error) {
+        console.error('Error fetching officials:', error);
+        console.log('Using empty officials array due to error');
+        // Keep empty array on error
+      }
+    };
+    
+    fetchOfficials();
   }, []);
 
   // Update time every second
@@ -1216,107 +1249,114 @@ export default function BarangayPortal() {
             
             {/* Officials Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Barangay Captain */}
-              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 text-center">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-white">BC</span>
+              {officials.length > 0 ? (
+                officials.map((official, index) => {
+                  // Define color schemes for different position types
+                  const getColorScheme = (positionType) => {
+                    const schemes = {
+                      'captain': { from: 'from-blue-600', to: 'to-indigo-700', light: 'text-blue-100' },
+                      'secretary': { from: 'from-teal-600', to: 'to-green-700', light: 'text-teal-100' },
+                      'treasurer': { from: 'from-emerald-600', to: 'to-green-700', light: 'text-emerald-100' },
+                      'sk_chairman': { from: 'from-cyan-600', to: 'to-blue-700', light: 'text-cyan-100' },
+                      'kagawad': { 
+                        // Rotate colors for different kagawads
+                        1: { from: 'from-green-600', to: 'to-emerald-700', light: 'text-green-100' },
+                        2: { from: 'from-purple-600', to: 'to-violet-700', light: 'text-purple-100' },
+                        3: { from: 'from-orange-600', to: 'to-red-700', light: 'text-orange-100' },
+                        4: { from: 'from-pink-600', to: 'to-rose-700', light: 'text-pink-100' },
+                        5: { from: 'from-indigo-600', to: 'to-purple-700', light: 'text-indigo-100' },
+                        6: { from: 'from-yellow-600', to: 'to-orange-700', light: 'text-yellow-100' },
+                        7: { from: 'from-red-600', to: 'to-pink-700', light: 'text-red-100' }
+                      }[index - 4] || { from: 'from-gray-600', to: 'to-gray-700', light: 'text-gray-100' }
+                    };
+                    return schemes[positionType] || { from: 'from-gray-600', to: 'to-gray-700', light: 'text-gray-100' };
+                  };
+
+                  const getInitials = (name) => {
+                    const nameParts = name.split(' ');
+                    if (nameParts.length >= 2) {
+                      return nameParts[0][0] + nameParts[1][0];
+                    }
+                    return name.substring(0, 2).toUpperCase();
+                  };
+
+                  const colorScheme = getColorScheme(official.position_type);
+
+                  return (
+                    <div key={official.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
+                      <div className={`bg-gradient-to-br ${colorScheme.from} ${colorScheme.to} p-6 text-center`}>
+                        <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <span className="text-2xl font-bold text-white">{getInitials(official.name)}</span>
+                        </div>
+                        <h6 className="text-xl font-bold text-white mb-1">{official.position}</h6>
+                        {official.committee && (
+                          <p className={`${colorScheme.light} text-sm`}>{official.committee}</p>
+                        )}
+                      </div>
+                      <div className="p-6">
+                        <h7 className="text-lg font-semibold text-gray-900 mb-2">{official.name}</h7>
+                        <p className="text-gray-600 text-sm leading-relaxed">
+                          {official.description}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                // Fallback placeholder cards if no data from API
+                <>
+                  {/* Barangay Captain */}
+                  <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
+                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 text-center">
+                      <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl font-bold text-white">BC</span>
+                      </div>
+                      <h6 className="text-xl font-bold text-white mb-1">Barangay Captain</h6>
+                      <p className="text-blue-100 text-sm">Chief Executive</p>
+                    </div>
+                    <div className="p-6">
+                      <h7 className="text-lg font-semibold text-gray-900 mb-2">Loading...</h7>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        Leading the barangay with vision and dedication to community development and public service.
+                      </p>
+                    </div>
                   </div>
-                  <h6 className="text-xl font-bold text-white mb-1">Barangay Captain</h6>
-                  <p className="text-blue-100 text-sm">Chief Executive</p>
-                </div>
-                <div className="p-6">
-                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[Captain Name]</h7>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Leading the barangay with vision and dedication to community development and public service.
-                  </p>
-                </div>
-              </div>
-              
-              {/* Kagawad 1 */}
-              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-                <div className="bg-gradient-to-br from-green-600 to-emerald-700 p-6 text-center">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-white">K1</span>
+                  
+                  {/* Secretary */}
+                  <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
+                    <div className="bg-gradient-to-br from-teal-600 to-green-700 p-6 text-center">
+                      <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl font-bold text-white">BS</span>
+                      </div>
+                      <h6 className="text-xl font-bold text-white mb-1">Barangay Secretary</h6>
+                      <p className="text-teal-100 text-sm">Administrative Officer</p>
+                    </div>
+                    <div className="p-6">
+                      <h7 className="text-lg font-semibold text-gray-900 mb-2">Loading...</h7>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        Managing administrative functions and maintaining official records of the barangay.
+                      </p>
+                    </div>
                   </div>
-                  <h6 className="text-xl font-bold text-white mb-1">Kagawad</h6>
-                  <p className="text-green-100 text-sm">Committee on Health</p>
-                </div>
-                <div className="p-6">
-                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[Kagawad Name]</h7>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Overseeing health programs and medical services for the community's well-being.
-                  </p>
-                </div>
-              </div>
-              
-              {/* Kagawad 2 */}
-              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-                <div className="bg-gradient-to-br from-purple-600 to-violet-700 p-6 text-center">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-white">K2</span>
+
+                  {/* Kagawad Sample */}
+                  <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
+                    <div className="bg-gradient-to-br from-green-600 to-emerald-700 p-6 text-center">
+                      <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl font-bold text-white">K1</span>
+                      </div>
+                      <h6 className="text-xl font-bold text-white mb-1">Kagawad</h6>
+                      <p className="text-green-100 text-sm">Committee Member</p>
+                    </div>
+                    <div className="p-6">
+                      <h7 className="text-lg font-semibold text-gray-900 mb-2">Loading...</h7>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        Serving the community with dedication and commitment to public service.
+                      </p>
+                    </div>
                   </div>
-                  <h6 className="text-xl font-bold text-white mb-1">Kagawad</h6>
-                  <p className="text-purple-100 text-sm">Committee on Education</p>
-                </div>
-                <div className="p-6">
-                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[Kagawad Name]</h7>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Promoting educational programs and youth development initiatives in the barangay.
-                  </p>
-                </div>
-              </div>
-              
-              {/* Kagawad 3 */}
-              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-                <div className="bg-gradient-to-br from-orange-600 to-red-700 p-6 text-center">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-white">K3</span>
-                  </div>
-                  <h6 className="text-xl font-bold text-white mb-1">Kagawad</h6>
-                  <p className="text-orange-100 text-sm">Committee on Peace & Order</p>
-                </div>
-                <div className="p-6">
-                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[Kagawad Name]</h7>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Ensuring community safety and maintaining peace and order in the barangay.
-                  </p>
-                </div>
-              </div>
-              
-              {/* SK Chairman */}
-              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-                <div className="bg-gradient-to-br from-cyan-600 to-blue-700 p-6 text-center">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-white">SK</span>
-                  </div>
-                  <h6 className="text-xl font-bold text-white mb-1">SK Chairman</h6>
-                  <p className="text-cyan-100 text-sm">Youth Leader</p>
-                </div>
-                <div className="p-6">
-                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[SK Chairman Name]</h7>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Leading youth programs and representing the voice of young residents in the barangay.
-                  </p>
-                </div>
-              </div>
-              
-              {/* Barangay Secretary */}
-              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-                <div className="bg-gradient-to-br from-teal-600 to-green-700 p-6 text-center">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-white">BS</span>
-                  </div>
-                  <h6 className="text-xl font-bold text-white mb-1">Barangay Secretary</h6>
-                  <p className="text-teal-100 text-sm">Administrative Officer</p>
-                </div>
-                <div className="p-6">
-                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[Secretary Name]</h7>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Managing administrative functions and maintaining official records of the barangay.
-                  </p>
-                </div>
-              </div>
+                </>
+              )}
             </div>
             
             {/* Contact Information */}
