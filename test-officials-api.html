@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Officials API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .official { border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .loading { color: #666; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Barangay Officials API Test</h1>
+    <div id="status" class="loading">Loading officials...</div>
+    <div id="officials"></div>
+
+    <script>
+        async function testOfficialsAPI() {
+            const statusDiv = document.getElementById('status');
+            const officialsDiv = document.getElementById('officials');
+            
+            try {
+                // Test both local and production APIs
+                const APIs = [
+                    'http://localhost:5005/api/officials',
+                    'https://ibaoesteportal-production.up.railway.app/api/officials'
+                ];
+                
+                for (const apiUrl of APIs) {
+                    try {
+                        console.log(`Testing: ${apiUrl}`);
+                        const response = await fetch(apiUrl);
+                        const data = await response.json();
+                        
+                        if (data.success && data.data) {
+                            statusDiv.innerHTML = `<span class="success">✅ ${apiUrl} - Success! Found ${data.data.length} officials</span>`;
+                            
+                            officialsDiv.innerHTML = '<h2>Officials Data:</h2>';
+                            data.data.forEach((official, index) => {
+                                officialsDiv.innerHTML += `
+                                    <div class="official">
+                                        <strong>${index + 1}. ${official.name}</strong><br>
+                                        Position: ${official.position}<br>
+                                        ${official.committee ? `Committee: ${official.committee}<br>` : ''}
+                                        Description: ${official.description}
+                                    </div>
+                                `;
+                            });
+                            break; // Success, no need to try other APIs
+                        } else {
+                            throw new Error('Invalid response format');
+                        }
+                    } catch (err) {
+                        console.error(`Failed ${apiUrl}:`, err);
+                        statusDiv.innerHTML = `<span class="error">❌ ${apiUrl} - Failed: ${err.message}</span>`;
+                    }
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">❌ All APIs failed: ${error.message}</span>`;
+            }
+        }
+        
+        // Run test when page loads
+        testOfficialsAPI();
+    </script>
+</body>
+</html>

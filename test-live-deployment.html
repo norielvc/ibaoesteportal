@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Deployment Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .test-container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status { 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .test-link {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 8px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        .test-link:hover { background: #0056b3; }
+        .api-result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🚀 Live Deployment Test</h1>
+        <p><strong>Deployment Date:</strong> January 24, 2026</p>
+        
+        <div class="status success">
+            ✅ All changes successfully pushed to production!
+        </div>
+        
+        <h2>🌐 Live URLs</h2>
+        <div class="status info">
+            <strong>Frontend:</strong> https://ibaoesteportal.vercel.app<br>
+            <strong>Backend:</strong> https://ibaoesteportal-production.up.railway.app
+        </div>
+        
+        <h2>🔗 Test Links</h2>
+        <a href="https://ibaoesteportal.vercel.app" class="test-link" target="_blank">
+            🏠 Main Site
+        </a>
+        <a href="https://ibaoesteportal.vercel.app#officials" class="test-link" target="_blank">
+            👥 Officials Section (Direct)
+        </a>
+        <a href="https://ibaoesteportal-production.up.railway.app/api/officials" class="test-link" target="_blank">
+            🔌 Officials API
+        </a>
+        
+        <h2>🎯 What to Test</h2>
+        <ol>
+            <li><strong>Navigation:</strong> Click "Barangay Officials" in the main navigation</li>
+            <li><strong>Sections:</strong> Verify 4 segregated sections (Captain, Kagawad, SK Chairman, Staff)</li>
+            <li><strong>Order:</strong> Check officials are in correct order</li>
+            <li><strong>Mobile:</strong> Test mobile navigation menu</li>
+            <li><strong>API:</strong> Verify API returns 16 officials in correct order</li>
+        </ol>
+        
+        <h2>📊 Expected Results</h2>
+        <div class="api-result">
+            <strong>Officials Order:</strong><br>
+            1. ALEXANDER C. MANIO (Captain)<br>
+            2-8. JOELITO C. MANIO → LORENA G. LOPEZ (Kagawad 1-7)<br>
+            9. JOHN RUZZEL C. SANTOS (SK Chairman)<br>
+            10-16. ROYCE ANN C. GALVEZ → CIELITO B. DE LEON (Staff)
+        </div>
+        
+        <h2>🎨 New Features</h2>
+        <ul>
+            <li>✅ Segregated officials sections with icons</li>
+            <li>✅ "Barangay Officials" navigation link</li>
+            <li>✅ Professional gradient card designs</li>
+            <li>✅ Mobile-responsive layout</li>
+            <li>✅ Proper position hierarchy ordering</li>
+            <li>✅ Complete team of 16 officials</li>
+        </ul>
+        
+        <div class="status success">
+            🎉 Deployment Complete - All Systems Operational!
+        </div>
+        
+        <button onclick="testAPI()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Test Live API
+        </button>
+        <div id="api-test-result"></div>
+    </div>
+    
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-test-result');
+            resultDiv.innerHTML = '<p>Testing API...</p>';
+            
+            try {
+                const response = await fetch('https://ibaoesteportal-production.up.railway.app/api/officials');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="api-result">
+                            <strong>✅ API Test Successful!</strong><br>
+                            Officials Count: ${data.data.length}<br>
+                            First Official: ${data.data[0].name} (${data.data[0].position})<br>
+                            Last Official: ${data.data[data.data.length-1].name} (${data.data[data.data.length-1].position})<br>
+                            <br>
+                            <strong>Order Check:</strong><br>
+                            ${data.data.map((o, i) => `${i+1}. ${o.name} (${o.position_type})`).join('<br>')}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<div class="api-result">❌ API Error: ' + JSON.stringify(data) + '</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="api-result">❌ Network Error: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

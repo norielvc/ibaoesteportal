@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Segregated Officials</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { 
+            margin: 30px 0; 
+            padding: 20px; 
+            border: 2px solid #ddd; 
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        .section h2 { 
+            color: #333; 
+            border-bottom: 2px solid #007bff; 
+            padding-bottom: 10px;
+        }
+        .official { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border: 1px solid #ccc; 
+            border-radius: 5px;
+            background: white;
+        }
+        .captain { border-left: 5px solid #007bff; }
+        .kagawad { border-left: 5px solid #28a745; }
+        .sk_chairman { border-left: 5px solid #fd7e14; }
+        .staff { border-left: 5px solid #6f42c1; }
+        .secretary { border-left: 5px solid #6f42c1; }
+        .treasurer { border-left: 5px solid #6f42c1; }
+    </style>
+</head>
+<body>
+    <h1>Barangay Officials - Segregated Sections Test</h1>
+    <p>Testing the new segregated layout: Captain → Kagawad → SK Chairman → Staff</p>
+    
+    <button onclick="loadOfficials()">Load Officials by Section</button>
+    <div id="officials-sections"></div>
+    
+    <script>
+        async function loadOfficials() {
+            try {
+                const response = await fetch('http://localhost:5005/api/officials');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const sectionsDiv = document.getElementById('officials-sections');
+                    
+                    // Group officials by position type
+                    const groups = {
+                        captain: data.data.filter(o => o.position_type === 'captain'),
+                        kagawad: data.data.filter(o => o.position_type === 'kagawad'),
+                        sk_chairman: data.data.filter(o => o.position_type === 'sk_chairman'),
+                        staff: data.data.filter(o => ['secretary', 'treasurer', 'staff'].includes(o.position_type))
+                    };
+                    
+                    sectionsDiv.innerHTML = '';
+                    
+                    // Create sections
+                    const sections = [
+                        { key: 'captain', title: '👑 Barangay Captain', officials: groups.captain },
+                        { key: 'kagawad', title: '🏛️ Barangay Kagawad', officials: groups.kagawad },
+                        { key: 'sk_chairman', title: '🌟 SK Chairman', officials: groups.sk_chairman },
+                        { key: 'staff', title: '👥 Barangay Staff', officials: groups.staff }
+                    ];
+                    
+                    sections.forEach(section => {
+                        if (section.officials.length > 0) {
+                            const sectionDiv = document.createElement('div');
+                            sectionDiv.className = 'section';
+                            sectionDiv.innerHTML = `
+                                <h2>${section.title} (${section.officials.length})</h2>
+                                ${section.officials.map(official => `
+                                    <div class="official ${official.position_type}">
+                                        <strong>${official.name}</strong><br>
+                                        Position: ${official.position}<br>
+                                        ${official.committee ? `Committee: ${official.committee}<br>` : ''}
+                                        Description: ${official.description}
+                                    </div>
+                                `).join('')}
+                            `;
+                            sectionsDiv.appendChild(sectionDiv);
+                        }
+                    });
+                } else {
+                    document.getElementById('officials-sections').innerHTML = '<p>Error loading officials</p>';
+                }
+            } catch (error) {
+                document.getElementById('officials-sections').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

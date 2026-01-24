@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Officials Order</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .official { 
+            padding: 10px; 
+            margin: 5px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .captain { background: #e3f2fd; }
+        .kagawad { background: #e8f5e8; }
+        .sk_chairman { background: #fff3e0; }
+        .staff { background: #fce4ec; }
+        .secretary { background: #fce4ec; }
+        .treasurer { background: #fce4ec; }
+    </style>
+</head>
+<body>
+    <h1>Barangay Officials Order Test</h1>
+    <p>Expected Order: Brgy Captain → Kagawad → SK Chairman → Staff</p>
+    
+    <button onclick="loadOfficials()">Load Officials</button>
+    <div id="officials-list"></div>
+    
+    <script>
+        async function loadOfficials() {
+            try {
+                const response = await fetch('http://localhost:5005/api/officials');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const officialsDiv = document.getElementById('officials-list');
+                    officialsDiv.innerHTML = '<h2>Officials in Order:</h2>';
+                    
+                    data.data.forEach((official, index) => {
+                        const div = document.createElement('div');
+                        div.className = `official ${official.position_type}`;
+                        div.innerHTML = `
+                            <strong>${index + 1}. ${official.name}</strong><br>
+                            Position: ${official.position}<br>
+                            Type: ${official.position_type}<br>
+                            ${official.committee ? `Committee: ${official.committee}` : ''}
+                        `;
+                        officialsDiv.appendChild(div);
+                    });
+                } else {
+                    document.getElementById('officials-list').innerHTML = '<p>Error loading officials</p>';
+                }
+            } catch (error) {
+                document.getElementById('officials-list').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

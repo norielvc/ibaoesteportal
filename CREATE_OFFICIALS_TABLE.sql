@@ -26,7 +26,13 @@ INSERT INTO barangay_officials (name, position, position_type, committee, descri
 ('JOPHET M. TURLA', 'Kagawad 4', 'kagawad', 'Committee on Infrastructure', 'Overseeing infrastructure development and public works projects.', 8),
 ('JOHN BRYAN C. CRUZ', 'Kagawad 5', 'kagawad', 'Committee on Environment', 'Promoting environmental protection and sustainable development programs.', 9),
 ('ARNEL D. BERNARDINO', 'Kagawad 6', 'kagawad', 'Committee on Agriculture', 'Supporting agricultural programs and livelihood development for farmers.', 10),
-('LORENA G. LOPEZ', 'Kagawad 7', 'kagawad', 'Committee on Social Services', 'Managing social welfare programs and community assistance initiatives.', 11);
+('LORENA G. LOPEZ', 'Kagawad 7', 'kagawad', 'Committee on Social Services', 'Managing social welfare programs and community assistance initiatives.', 11),
+-- Staff Members
+('ROBERT D. SANTOS', 'Administrator', 'staff', NULL, 'Managing daily administrative operations and coordinating barangay services.', 12),
+('PERLITA C. DE JESUS', 'Assistant Secretary', 'staff', NULL, 'Assisting with administrative functions and document management.', 13),
+('KHINZ JANZL V. BARROGA', 'Assistant Administrator', 'staff', NULL, 'Supporting administrative operations and community programs.', 14),
+('EMIL D. ROBLES', 'Barangay Keeper', 'staff', NULL, 'Maintaining barangay facilities and ensuring proper upkeep of community assets.', 15),
+('CIELITO B. DE LEON', 'Clerk', 'staff', NULL, 'Processing documents and providing clerical support to barangay operations.', 16);
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_officials_position_type ON barangay_officials(position_type);

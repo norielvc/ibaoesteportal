@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Navigation Links</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .nav-test { 
+            padding: 20px; 
+            margin: 10px 0; 
+            border: 2px solid #007bff; 
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .nav-link {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .nav-link:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Navigation Links Test</h1>
+    <p>Testing the new Barangay Officials navigation link</p>
+    
+    <div class="nav-test">
+        <h2>Main Page Navigation Links</h2>
+        <p>These links should work on the main page (localhost:3000):</p>
+        
+        <a href="http://localhost:3000#news" class="nav-link" target="_blank">News & Updates</a>
+        <a href="http://localhost:3000#forms" class="nav-link" target="_blank">Barangay Forms</a>
+        <a href="http://localhost:3000#directory" class="nav-link" target="_blank">Facilities</a>
+        <a href="http://localhost:3000#officials" class="nav-link" target="_blank">🆕 Barangay Officials</a>
+        <a href="http://localhost:3000#contact" class="nav-link" target="_blank">Contact Us</a>
+    </div>
+    
+    <div class="nav-test">
+        <h2>Navigation Structure</h2>
+        <ul>
+            <li><strong>News & Updates</strong> → Hero carousel section</li>
+            <li><strong>Barangay Forms</strong> → Online forms section</li>
+            <li><strong>Facilities</strong> → Community facilities section</li>
+            <li><strong>🆕 Barangay Officials</strong> → Officials section (NEW!)</li>
+            <li><strong>Contact Us</strong> → Contact form section</li>
+        </ul>
+    </div>
+    
+    <div class="nav-test">
+        <h2>Expected Behavior</h2>
+        <p>When clicking "Barangay Officials" in the navigation:</p>
+        <ol>
+            <li>Page should scroll smoothly to the officials section</li>
+            <li>Should show the segregated officials layout</li>
+            <li>Should display: Captain → Kagawad → SK Chairman → Staff</li>
+            <li>Navigation link should highlight when hovering</li>
+        </ol>
+    </div>
+</body>
+</html>
