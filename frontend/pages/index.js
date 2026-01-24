@@ -1171,13 +1171,13 @@ export default function BarangayPortal() {
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/60"></div>
-          <div className="absolute bottom-8 right-8 max-w-md">
-            <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-right">
-              <h4 className="text-2xl md:text-3xl font-bold text-white mb-3 drop-shadow-lg">
+          <div className="absolute bottom-2 right-2 md:bottom-8 md:right-8 max-w-xs md:max-w-md">
+            <div className="bg-black/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-6 border border-white/20 text-right">
+              <h4 className="text-sm md:text-2xl lg:text-3xl font-bold text-white mb-1 md:mb-3 drop-shadow-lg leading-tight">
                 Barangay Iba O' Este Leadership Team
               </h4>
-              <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-green-400 ml-auto mb-4 rounded-full"></div>
-              <p className="text-blue-100 text-lg md:text-xl font-medium drop-shadow-md leading-relaxed">
+              <div className="w-12 md:w-24 h-0.5 md:h-1 bg-gradient-to-r from-blue-400 to-green-400 ml-auto mb-2 md:mb-4 rounded-full"></div>
+              <p className="text-blue-100 text-xs md:text-lg lg:text-xl font-medium drop-shadow-md leading-relaxed">
                 Working together for our community's progress and development
               </p>
             </div>
