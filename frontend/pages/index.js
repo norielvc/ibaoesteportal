@@ -1259,9 +1259,7 @@ export default function BarangayPortal() {
                 if (officials.length > 0) {
                   console.log('✅ Rendering', officials.length, 'officials from API');
                   return officials.map((official, index) => {
-                    console.log(`🎯 Rendering official ${index + 1}:`, official.name);
-                    
-                    // Define color schemes for different position types
+                  // Define color schemes for different position types
                   const getColorScheme = (positionType, index) => {
                     const schemes = {
                       'captain': { from: 'from-blue-600', to: 'to-indigo-700', light: 'text-blue-100' },
