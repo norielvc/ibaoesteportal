@@ -52,6 +52,31 @@ async function setupTables() {
       console.log('✅ Events table created successfully');
     }
 
+    // Create barangay_officials table
+    console.log('📋 Creating barangay_officials table...');
+    const { error: officialsError } = await supabase.rpc('exec_sql', {
+      sql: `
+        CREATE TABLE IF NOT EXISTS barangay_officials (
+          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          position VARCHAR(100) NOT NULL,
+          position_type VARCHAR(50) NOT NULL,
+          committee VARCHAR(255),
+          description TEXT,
+          order_index INTEGER DEFAULT 0,
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `
+    });
+
+    if (officialsError) {
+      console.error('❌ Error creating barangay_officials table:', officialsError);
+    } else {
+      console.log('✅ Barangay officials table created successfully');
+    }
+
     // Insert default facilities
     console.log('📋 Inserting default facilities...');
     const { error: insertFacilitiesError } = await supabase
@@ -142,6 +167,107 @@ async function setupTables() {
       console.error('❌ Error inserting events:', insertEventsError);
     } else {
       console.log('✅ Default events inserted successfully');
+    }
+
+    // Insert barangay officials
+    console.log('📋 Inserting barangay officials...');
+    const { error: insertOfficialsError } = await supabase
+      .from('barangay_officials')
+      .insert([
+        {
+          name: 'ALEXANDER C. MANIO',
+          position: 'Punong Barangay',
+          position_type: 'captain',
+          committee: null,
+          description: 'Leading the barangay with vision and dedication to community development and public service.',
+          order_index: 1
+        },
+        {
+          name: 'ROYCE ANN C. GALVEZ',
+          position: 'Secretary',
+          position_type: 'secretary',
+          committee: null,
+          description: 'Managing administrative functions and maintaining official records of the barangay.',
+          order_index: 2
+        },
+        {
+          name: 'MA. LUZ S. REYES',
+          position: 'Treasurer',
+          position_type: 'treasurer',
+          committee: null,
+          description: 'Managing barangay finances and ensuring proper allocation of resources.',
+          order_index: 3
+        },
+        {
+          name: 'JOHN RUZZEL C. SANTOS',
+          position: 'SK Chairman',
+          position_type: 'sk_chairman',
+          committee: null,
+          description: 'Leading youth programs and representing the voice of young residents in the barangay.',
+          order_index: 4
+        },
+        {
+          name: 'JOELITO C. MANIO',
+          position: 'Kagawad 1',
+          position_type: 'kagawad',
+          committee: 'Committee on Health',
+          description: 'Overseeing health programs and medical services for the community\'s well-being.',
+          order_index: 5
+        },
+        {
+          name: 'ENGELBERT M. INDUCTIVO',
+          position: 'Kagawad 2',
+          position_type: 'kagawad',
+          committee: 'Committee on Education',
+          description: 'Promoting educational programs and youth development initiatives in the barangay.',
+          order_index: 6
+        },
+        {
+          name: 'NORMANDO T. SANTOS',
+          position: 'Kagawad 3',
+          position_type: 'kagawad',
+          committee: 'Committee on Peace & Order',
+          description: 'Ensuring community safety and maintaining peace and order in the barangay.',
+          order_index: 7
+        },
+        {
+          name: 'JOPHET M. TURLA',
+          position: 'Kagawad 4',
+          position_type: 'kagawad',
+          committee: 'Committee on Infrastructure',
+          description: 'Overseeing infrastructure development and public works projects.',
+          order_index: 8
+        },
+        {
+          name: 'JOHN BRYAN C. CRUZ',
+          position: 'Kagawad 5',
+          position_type: 'kagawad',
+          committee: 'Committee on Environment',
+          description: 'Promoting environmental protection and sustainable development programs.',
+          order_index: 9
+        },
+        {
+          name: 'ARNEL D. BERNARDINO',
+          position: 'Kagawad 6',
+          position_type: 'kagawad',
+          committee: 'Committee on Agriculture',
+          description: 'Supporting agricultural programs and livelihood development for farmers.',
+          order_index: 10
+        },
+        {
+          name: 'LORENA G. LOPEZ',
+          position: 'Kagawad 7',
+          position_type: 'kagawad',
+          committee: 'Committee on Social Services',
+          description: 'Managing social welfare programs and community assistance initiatives.',
+          order_index: 11
+        }
+      ]);
+
+    if (insertOfficialsError) {
+      console.error('❌ Error inserting officials:', insertOfficialsError);
+    } else {
+      console.log('✅ Barangay officials inserted successfully');
     }
 
     console.log('🎉 Setup completed successfully!');

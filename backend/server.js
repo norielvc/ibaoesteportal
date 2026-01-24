@@ -12,6 +12,7 @@ const certificateRoutes = require('./routes/certificates-supabase');
 const workflowRoutes = require('./routes/workflows-supabase');
 const eventRoutes = require('./routes/events-supabase');
 const facilityRoutes = require('./routes/facilities-supabase');
+const officialRoutes = require('./routes/officials-supabase');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -107,6 +108,7 @@ app.use('/api/certificates', certificateRoutes); // Public for form submissions
 app.use('/api/workflows', workflowRoutes); // Workflow management
 app.use('/api/events', eventRoutes); // Events/Carousel management (public GET, private POST/PUT/DELETE)
 app.use('/api/facilities', facilityRoutes); // Facilities management (public GET, private POST/PUT/DELETE)
+app.use('/api/officials', officialRoutes); // Barangay officials (public GET)
 
 // 404 handler
 app.use('*', (req, res) => {
