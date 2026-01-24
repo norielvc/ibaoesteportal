@@ -441,6 +441,9 @@ export default function BarangayPortal() {
               <a href="#educational-assistance" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
                 Educational Assistance
               </a>
+              <a href="#senior-citizen-assistance" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+                Senior Citizen Services
+              </a>
               <a href="#contact" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
                 Contact Us
               </a>
@@ -479,6 +482,9 @@ export default function BarangayPortal() {
             </a>
             <a href="#educational-assistance" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
               Educational Assistance
+            </a>
+            <a href="#senior-citizen-assistance" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+              Senior Citizen Services
             </a>
             <a href="#contact" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
               Contact Us
@@ -849,261 +855,616 @@ export default function BarangayPortal() {
       </section>
 
       {/* Educational Assistance Program Section - SK Project - Trimmed for single screen */}
-      <section id="educational-assistance" className="py-12 bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
+      <section id="educational-assistance" className="py-8 md:py-12 bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
         {/* Background Elements */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+          <div className="absolute top-0 left-0 w-48 h-48 md:w-96 md:h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-48 h-48 md:w-96 md:h-96 bg-white rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
         </div>
 
-        {/* SK Chairman Background Image - Left Side - Moved Higher */}
-        <div className="absolute left-0 top-0 bottom-0 w-1/2 opacity-30 pointer-events-none">
+        {/* SK Chairman Background Image - Responsive */}
+        <div className="absolute left-0 top-0 bottom-0 w-full md:w-1/2 opacity-20 md:opacity-30 pointer-events-none">
           <div 
-            className="w-full h-full bg-cover bg-no-repeat bg-left-top"
+            className="w-full h-full bg-cover bg-no-repeat bg-center md:bg-left-top"
             style={{ 
               backgroundImage: 'url(/images/sk-chairman.png)',
               filter: 'brightness(0.9) contrast(1.1)',
-              backgroundPosition: 'left 20%'
+              backgroundPosition: 'center 20%'
             }}
           />
         </div>
 
-        <div className="relative z-10 w-full">
-          {/* All Educational Assistance content moved to align with Contact Us nav */}
-          <div className="flex justify-end">
-            <div style={{ width: '1000px', paddingRight: '60px' }}>
-              
-              {/* Section Header - Bigger */}
-              <div className="text-right mb-6">
-                <div className="flex justify-end mb-3">
-                  <div className="inline-flex items-center gap-4 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full">
-                    <GraduationCap className="w-8 h-8 text-white" />
-                    <span className="text-white font-bold text-xl md:text-2xl tracking-wide">SANGUNIANG KABATAAN PROJECT</span>
-                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                  </div>
-                </div>
+        <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
+          {/* Responsive Container */}
+          <div className="max-w-7xl mx-auto">
+            {/* Mobile-first layout, then desktop alignment */}
+            <div className="w-full md:flex md:justify-end">
+              <div className="w-full md:max-w-4xl lg:max-w-5xl md:pr-8 lg:pr-16">
                 
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 leading-tight text-right">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400">
-                    𝐄𝐃𝐔𝐂𝐀𝐓𝐈𝐎𝐍𝐀𝐋 𝐀𝐒𝐒𝐈𝐒𝐓𝐀𝐍𝐂𝐄 𝐏𝐑𝐎𝐆𝐑𝐀𝐌
-                  </span>
-                </h2>
-                
-                <div className="flex justify-end mb-3">
-                  <div className="w-28 h-1 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-full"></div>
-                </div>
-                
-                <p className="text-lg md:text-xl text-blue-100 font-light leading-relaxed text-right">
-                  Empowering the youth of Iba O' Este through quality education
-                </p>
-                <p className="text-base text-cyan-200 font-medium text-right">
-                  A Sanguniang Kabataan Initiative for Educational Excellence
-                </p>
-              </div>
-
-
-
-              {/* Compact Requirements Info - Horizontal Layout */}
-              <div className="mb-4">
-                <div className="flex flex-wrap justify-center gap-4 text-center">
-                  {/* Eligibility - Compact */}
-                  <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
-                    <Users className="w-4 h-4 text-blue-300" />
-                    <span className="text-white text-xs font-medium">📚 ELIGIBILITY: GRADE 7 TO 4TH/5TH YEAR COLLEGE</span>
+                {/* Section Header - Responsive */}
+                <div className="text-center md:text-right mb-6 md:mb-8">
+                  <div className="flex justify-center md:justify-end mb-3 md:mb-4">
+                    <div className="inline-flex items-center gap-2 md:gap-4 px-4 md:px-8 py-2 md:py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full">
+                      <GraduationCap className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                      <span className="text-white font-bold text-sm md:text-xl lg:text-2xl tracking-wide">SANGUNIANG KABATAAN PROJECT</span>
+                      <div className="w-2 h-2 md:w-3 md:h-3 bg-green-400 rounded-full animate-pulse"></div>
+                    </div>
                   </div>
                   
-                  {/* Selection - Compact */}
-                  <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
-                    <Clock className="w-4 h-4 text-green-300" />
-                    <span className="text-white text-xs font-medium">⏰ SELECTION: FIRST COME, FIRST SERVE!</span>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 leading-tight text-center md:text-right">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400">
+                      𝐄𝐃𝐔𝐂𝐀𝐓𝐈𝐎𝐍𝐀𝐋 𝐀𝐒𝐒𝐈𝐒𝐓𝐀𝐍𝐂𝐄 𝐏𝐑𝐎𝐆𝐑𝐀𝐌
+                    </span>
+                  </h2>
+                  
+                  <div className="flex justify-center md:justify-end mb-3">
+                    <div className="w-20 md:w-28 h-1 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-full"></div>
                   </div>
                   
-                  {/* Notification - Compact */}
-                  <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
-                    <Phone className="w-4 h-4 text-purple-300" />
-                    <span className="text-white text-xs font-medium">📞 NOTIFICATION: MAKIKIPAG-UGNAYAN KUNG KUWALIPIKADO</span>
-                  </div>
+                  <p className="text-base md:text-lg lg:text-xl text-blue-100 font-light leading-relaxed text-center md:text-right px-4 md:px-0">
+                    Empowering the youth of Iba O' Este through quality education
+                  </p>
+                  <p className="text-sm md:text-base text-cyan-200 font-medium text-center md:text-right px-4 md:px-0">
+                    A Sanguniang Kabataan Initiative for Educational Excellence
+                  </p>
                 </div>
-              </div>
 
-              {/* Application Form Section - Simplified */}
-              <div className="mb-6">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20 shadow-xl">
-                  <div className="text-center mb-6">
-                    <h3 className="text-3xl font-bold text-white mb-4 text-center">Ready to Apply?</h3>
-                    <p className="text-blue-200 text-base mb-6 text-center leading-relaxed max-w-3xl mx-auto">
-                      Take the first step towards your educational goals. Fill out our comprehensive application form and join hundreds of students who have benefited from this program.
-                    </p>
+                {/* Compact Requirements Info - Responsive */}
+                <div className="mb-4 md:mb-6">
+                  <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 md:gap-4 text-center px-2 md:px-0">
+                    {/* Eligibility - Compact */}
+                    <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
+                      <Users className="w-3 h-3 md:w-4 md:h-4 text-blue-300 flex-shrink-0" />
+                      <span className="text-white text-xs md:text-xs font-medium">📚 ELIGIBILITY: GRADE 7 TO 4TH/5TH YEAR COLLEGE</span>
+                    </div>
                     
-                    <div className="flex justify-center mb-6">
-                      <button
-                        onClick={() => setShowEducationalAssistanceModal(true)}
-                        className="group bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-600 hover:via-orange-600 hover:to-red-600 text-white px-16 py-4 rounded-xl font-bold text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-orange-500/25 flex items-center gap-4"
-                      >
-                        <GraduationCap className="w-8 h-8 group-hover:rotate-12 transition-transform" />
-                        APPLY NOW
-                        <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                      </button>
+                    {/* Selection - Compact */}
+                    <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
+                      <Clock className="w-3 h-3 md:w-4 md:h-4 text-green-300 flex-shrink-0" />
+                      <span className="text-white text-xs md:text-xs font-medium">⏰ SELECTION: FIRST COME, FIRST SERVE!</span>
                     </div>
+                    
+                    {/* Notification - Compact */}
+                    <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
+                      <Phone className="w-3 h-3 md:w-4 md:h-4 text-purple-300 flex-shrink-0" />
+                      <span className="text-white text-xs md:text-xs font-medium">📞 NOTIFICATION: MAKIKIPAG-UGNAYAN KUNG KUWALIPIKADO</span>
+                    </div>
+                  </div>
+                </div>
 
-                    {/* Requirements Preview - Bigger */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-white/15 rounded-lg p-4 text-center flex flex-col items-center justify-center min-h-[80px]">
-                        <User className="w-8 h-8 text-blue-300 mx-auto mb-2" />
-                        <p className="text-white text-sm font-medium">Personal Info</p>
+                {/* Application Form Section - Responsive */}
+                <div className="mb-4 md:mb-6">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-8 border border-white/20 shadow-xl mx-2 md:mx-0">
+                    <div className="text-center mb-4 md:mb-6">
+                      <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-3 md:mb-4 text-center">Ready to Apply?</h3>
+                      <p className="text-blue-200 text-sm md:text-base mb-4 md:mb-6 text-center leading-relaxed max-w-3xl mx-auto px-2 md:px-0">
+                        Take the first step towards your educational goals. Fill out our comprehensive application form and join hundreds of students who have benefited from this program.
+                      </p>
+                      
+                      <div className="flex justify-center mb-4 md:mb-6">
+                        <button
+                          onClick={() => setShowEducationalAssistanceModal(true)}
+                          className="group bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-600 hover:via-orange-600 hover:to-red-600 text-white px-8 md:px-16 py-3 md:py-4 rounded-xl font-bold text-lg md:text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-orange-500/25 flex items-center gap-2 md:gap-4"
+                        >
+                          <GraduationCap className="w-6 h-6 md:w-8 md:h-8 group-hover:rotate-12 transition-transform" />
+                          APPLY NOW
+                          <ChevronRight className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform" />
+                        </button>
                       </div>
-                      <div className="bg-white/15 rounded-lg p-4 text-center flex flex-col items-center justify-center min-h-[80px]">
-                        <MapPin className="w-8 h-8 text-green-300 mx-auto mb-2" />
-                        <p className="text-white text-sm font-medium">Address</p>
-                      </div>
-                      <div className="bg-white/15 rounded-lg p-4 text-center flex flex-col items-center justify-center min-h-[80px]">
-                        <GraduationCap className="w-8 h-8 text-purple-300 mx-auto mb-2" />
-                        <p className="text-white text-sm font-medium">Academic</p>
-                      </div>
-                      <div className="bg-white/15 rounded-lg p-4 text-center flex flex-col items-center justify-center min-h-[80px]">
-                        <Award className="w-8 h-8 text-yellow-300 mx-auto mb-2" />
-                        <p className="text-white text-sm font-medium">Awards</p>
+
+                      {/* Requirements Preview - Responsive Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                        <div className="bg-white/15 rounded-lg p-3 md:p-4 text-center flex flex-col items-center justify-center min-h-[70px] md:min-h-[80px]">
+                          <User className="w-6 h-6 md:w-8 md:h-8 text-blue-300 mx-auto mb-1 md:mb-2" />
+                          <p className="text-white text-xs md:text-sm font-medium">Personal Info</p>
+                        </div>
+                        <div className="bg-white/15 rounded-lg p-3 md:p-4 text-center flex flex-col items-center justify-center min-h-[70px] md:min-h-[80px]">
+                          <MapPin className="w-6 h-6 md:w-8 md:h-8 text-green-300 mx-auto mb-1 md:mb-2" />
+                          <p className="text-white text-xs md:text-sm font-medium">Address</p>
+                        </div>
+                        <div className="bg-white/15 rounded-lg p-3 md:p-4 text-center flex flex-col items-center justify-center min-h-[70px] md:min-h-[80px]">
+                          <GraduationCap className="w-6 h-6 md:w-8 md:h-8 text-purple-300 mx-auto mb-1 md:mb-2" />
+                          <p className="text-white text-xs md:text-sm font-medium">Academic</p>
+                        </div>
+                        <div className="bg-white/15 rounded-lg p-3 md:p-4 text-center flex flex-col items-center justify-center min-h-[70px] md:min-h-[80px]">
+                          <Award className="w-6 h-6 md:w-8 md:h-8 text-yellow-300 mx-auto mb-1 md:mb-2" />
+                          <p className="text-white text-xs md:text-sm font-medium">Awards</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Statistics Section - Bigger */}
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center bg-white/5 rounded-lg p-4 border border-white/10">
-                    <div className="text-3xl font-bold text-white mb-2">500+</div>
-                    <div className="text-blue-200 text-sm font-medium">Students Helped</div>
-                  </div>
-                  <div className="text-center bg-white/5 rounded-lg p-4 border border-white/10">
-                    <div className="text-3xl font-bold text-white mb-2">₱2M+</div>
-                    <div className="text-blue-200 text-sm font-medium">Total Assistance</div>
-                  </div>
-                  <div className="text-center bg-white/5 rounded-lg p-4 border border-white/10">
-                    <div className="text-3xl font-bold text-white mb-2">95%</div>
-                    <div className="text-blue-200 text-sm font-medium">Success Rate</div>
+                {/* Statistics Section - Responsive */}
+                <div className="px-2 md:px-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-6">
+                    <div className="text-center bg-white/5 rounded-lg p-3 md:p-4 border border-white/10">
+                      <div className="text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2">500+</div>
+                      <div className="text-blue-200 text-xs md:text-sm font-medium">Students Helped</div>
+                    </div>
+                    <div className="text-center bg-white/5 rounded-lg p-3 md:p-4 border border-white/10">
+                      <div className="text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2">₱2M+</div>
+                      <div className="text-blue-200 text-xs md:text-sm font-medium">Total Assistance</div>
+                    </div>
+                    <div className="text-center bg-white/5 rounded-lg p-3 md:p-4 border border-white/10">
+                      <div className="text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2">95%</div>
+                      <div className="text-blue-200 text-xs md:text-sm font-medium">Success Rate</div>
+                    </div>
                   </div>
                 </div>
+                
               </div>
-              
             </div>
           </div>
         </div>
       </section>
 
-      {/* Facilities Section - Full Width Carousel */}
-      <section id="directory" className="py-20 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden animate-on-scroll">
-        {/* Subtle Background Pattern */}
-        <div className="absolute inset-0 opacity-40">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-100 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+      {/* Senior Citizen Assistance Section */}
+      <section id="senior-citizen-assistance" className="py-8 md:py-12 bg-gradient-to-br from-emerald-900 via-teal-900 to-green-900 relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
+        {/* Background Elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-48 h-48 md:w-96 md:h-96 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 md:w-96 md:h-96 bg-white rounded-full blur-3xl -translate-x-1/2 translate-y-1/2"></div>
+        </div>
+
+        {/* Filipino Senior Citizens Background Image */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div 
+            className="w-full h-full bg-cover bg-center bg-no-repeat"
+            style={{ 
+              backgroundImage: 'url(/images/seniorcitizens.jpg)',
+              filter: 'brightness(0.7) contrast(1.2) sepia(0.2)',
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/60 via-transparent to-teal-900/60"></div>
+        </div>
+
+        <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            
+            {/* Section Header */}
+            <div className="text-center mb-8 md:mb-12">
+              <div className="flex justify-center mb-4 md:mb-6">
+                <div className="inline-flex items-center gap-3 md:gap-4 px-6 md:px-8 py-3 md:py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full">
+                  <Heart className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                  <span className="text-white font-bold text-lg md:text-xl lg:text-2xl tracking-wide">SENIOR CITIZEN SERVICES</span>
+                  <div className="w-2 h-2 md:w-3 md:h-3 bg-red-400 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400">
+                  SENIOR CITIZEN ASSISTANCE PROGRAM
+                </span>
+              </h2>
+              
+              <div className="flex justify-center mb-4 md:mb-6">
+                <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-full"></div>
+              </div>
+              
+              <p className="text-lg md:text-xl lg:text-2xl text-emerald-100 font-light leading-relaxed max-w-4xl mx-auto px-4 md:px-0">
+                Honoring our elders with comprehensive care and support services
+              </p>
+              <p className="text-base md:text-lg text-teal-200 font-medium max-w-3xl mx-auto px-4 md:px-0">
+                Dedicated programs for the health, welfare, and dignity of our senior citizens
+              </p>
+            </div>
+
+            {/* Services Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-12">
+              
+              {/* Healthcare Services */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+                <div className="flex items-center mb-4 md:mb-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <Heart className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg md:text-xl font-bold text-white">Healthcare Services</h3>
+                    <p className="text-emerald-200 text-sm md:text-base">Medical Care & Support</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Free medical check-ups and consultations</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Medicine assistance and subsidies</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Health monitoring and wellness programs</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Referral services to specialists</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Financial Assistance */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+                <div className="flex items-center mb-4 md:mb-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <Award className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg md:text-xl font-bold text-white">Financial Assistance</h3>
+                    <p className="text-emerald-200 text-sm md:text-base">Economic Support</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Senior citizen pension assistance</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Emergency financial aid</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Burial and funeral assistance</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Utility bill subsidies</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Social Services */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+                <div className="flex items-center mb-4 md:mb-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <Users className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg md:text-xl font-bold text-white">Social Services</h3>
+                    <p className="text-emerald-200 text-sm md:text-base">Community & Recreation</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Senior citizen activities and events</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Transportation assistance</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Recreational and wellness programs</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Social interaction and support groups</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Legal Assistance */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+                <div className="flex items-center mb-4 md:mb-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <Shield className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg md:text-xl font-bold text-white">Legal Assistance</h3>
+                    <p className="text-emerald-200 text-sm md:text-base">Rights & Protection</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Senior citizen ID processing</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Legal counseling and advice</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Document assistance and notarization</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Advocacy and rights protection</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Food & Nutrition */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+                <div className="flex items-center mb-4 md:mb-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <Baby className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg md:text-xl font-bold text-white">Food & Nutrition</h3>
+                    <p className="text-emerald-200 text-sm md:text-base">Nutritional Support</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Nutritional meals and food packs</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Dietary counseling and guidance</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Special dietary requirements support</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Community feeding programs</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Home Care Services */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+                <div className="flex items-center mb-4 md:mb-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <Home className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg md:text-xl font-bold text-white">Home Care Services</h3>
+                    <p className="text-emerald-200 text-sm md:text-base">In-Home Support</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Home visits and wellness checks</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Personal care assistance</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Household maintenance support</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span>Emergency response services</span>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+
+            {/* Call to Action */}
+            <div className="text-center mb-8 md:mb-12">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/20 shadow-xl max-w-4xl mx-auto">
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6">Need Assistance?</h3>
+                <p className="text-emerald-200 text-base md:text-lg mb-6 md:mb-8 leading-relaxed">
+                  Our dedicated team is here to help our senior citizens access the services and support they deserve. 
+                  Contact us today to learn more about available programs and how to apply.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <div className="flex items-center gap-3 bg-white/15 rounded-full px-6 py-3 border border-white/30">
+                    <Phone className="w-5 h-5 text-emerald-300" />
+                    <span className="text-white font-medium">(044) 123-4567</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white/15 rounded-full px-6 py-3 border border-white/30">
+                    <Mail className="w-5 h-5 text-emerald-300" />
+                    <span className="text-white font-medium">seniors@ibaoeste.gov.ph</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white/15 rounded-full px-6 py-3 border border-white/30">
+                    <Clock className="w-5 h-5 text-emerald-300" />
+                    <span className="text-white font-medium">Mon-Fri 8AM-5PM</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Statistics */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="text-center bg-white/5 rounded-xl p-4 md:p-6 border border-white/10">
+                <div className="text-2xl md:text-3xl font-bold text-white mb-2">1,200+</div>
+                <div className="text-emerald-200 text-sm md:text-base font-medium">Senior Citizens Served</div>
+              </div>
+              <div className="text-center bg-white/5 rounded-xl p-4 md:p-6 border border-white/10">
+                <div className="text-2xl md:text-3xl font-bold text-white mb-2">₱5M+</div>
+                <div className="text-emerald-200 text-sm md:text-base font-medium">Total Assistance Provided</div>
+              </div>
+              <div className="text-center bg-white/5 rounded-xl p-4 md:p-6 border border-white/10">
+                <div className="text-2xl md:text-3xl font-bold text-white mb-2">15</div>
+                <div className="text-emerald-200 text-sm md:text-base font-medium">Active Programs</div>
+              </div>
+              <div className="text-center bg-white/5 rounded-xl p-4 md:p-6 border border-white/10">
+                <div className="text-2xl md:text-3xl font-bold text-white mb-2">98%</div>
+                <div className="text-emerald-200 text-sm md:text-base font-medium">Satisfaction Rate</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Facilities Section - Enhanced Modern Design */}
+      <section id="directory" className="py-16 md:py-24 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden animate-on-scroll">
+        {/* Enhanced Background Pattern */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-0 right-0 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-blue-200 to-indigo-300 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-emerald-200 to-teal-300 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+          <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-br from-purple-200 to-pink-300 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+
+        {/* Floating Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-4 h-4 bg-blue-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0s' }}></div>
+          <div className="absolute top-40 right-20 w-3 h-3 bg-emerald-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute bottom-32 left-20 w-5 h-5 bg-purple-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute bottom-20 right-10 w-3 h-3 bg-pink-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0.5s' }}></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Section Header */}
-          <div className="text-center mb-12">
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-semibold mb-4 border border-blue-100">
-              <Building2 className="w-4 h-4" />
-              Community Services
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">Facilities</span>
+          {/* Enhanced Section Header */}
+          <div className="text-center mb-16 md:mb-20">
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm text-blue-700 rounded-full text-sm font-semibold border border-blue-200 shadow-lg">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                  <Building2 className="w-4 h-4 text-white" />
+                </div>
+                <span className="tracking-wide">COMMUNITY SERVICES</span>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+              Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">Facilities</span>
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-              Explore our modern community facilities designed to serve the residents of Iba O' Este
+            
+            <div className="flex justify-center mb-6">
+              <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full"></div>
+            </div>
+            
+            <p className="text-gray-600 max-w-3xl mx-auto text-lg md:text-xl leading-relaxed">
+              Discover our state-of-the-art community facilities designed to serve and enhance the lives of Iba O' Este residents
             </p>
           </div>
 
-          {/* Full Width Facility Carousel - Updated without arrows */}
-          <div className="relative mb-12">
+          {/* Enhanced Facility Showcase */}
+          <div className="relative mb-16 md:mb-20">
             {(() => {
               const currentFacilityIndex = facilityImageSlides['main'] || 0;
               const facility = facilities[currentFacilityIndex];
               const Icon = facility.icon;
               const currentImageIndex = facilityImageSlides[currentFacilityIndex] || 0;
               const colors = {
-                'bg-red-500': { bg: 'from-red-500 to-rose-600', light: 'bg-red-50', text: 'text-red-600', border: 'border-red-100', shadow: 'shadow-red-500/20', dot: 'bg-red-500' },
-                'bg-blue-500': { bg: 'from-blue-500 to-indigo-600', light: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100', shadow: 'shadow-blue-500/20', dot: 'bg-blue-500' },
-                'bg-pink-500': { bg: 'from-pink-500 to-rose-600', light: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-100', shadow: 'shadow-pink-500/20', dot: 'bg-pink-500' },
-                'bg-green-500': { bg: 'from-green-500 to-emerald-600', light: 'bg-green-50', text: 'text-green-600', border: 'border-green-100', shadow: 'shadow-green-500/20', dot: 'bg-green-500' },
-                'bg-orange-500': { bg: 'from-orange-500 to-amber-600', light: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-100', shadow: 'shadow-orange-500/20', dot: 'bg-orange-500' }
+                'bg-red-500': { 
+                  bg: 'from-red-500 to-rose-600', 
+                  light: 'from-red-50 to-rose-100', 
+                  text: 'text-red-600', 
+                  border: 'border-red-200', 
+                  shadow: 'shadow-red-500/25',
+                  glow: 'shadow-red-500/40'
+                },
+                'bg-blue-500': { 
+                  bg: 'from-blue-500 to-indigo-600', 
+                  light: 'from-blue-50 to-indigo-100', 
+                  text: 'text-blue-600', 
+                  border: 'border-blue-200', 
+                  shadow: 'shadow-blue-500/25',
+                  glow: 'shadow-blue-500/40'
+                },
+                'bg-pink-500': { 
+                  bg: 'from-pink-500 to-rose-600', 
+                  light: 'from-pink-50 to-rose-100', 
+                  text: 'text-pink-600', 
+                  border: 'border-pink-200', 
+                  shadow: 'shadow-pink-500/25',
+                  glow: 'shadow-pink-500/40'
+                },
+                'bg-green-500': { 
+                  bg: 'from-green-500 to-emerald-600', 
+                  light: 'from-green-50 to-emerald-100', 
+                  text: 'text-green-600', 
+                  border: 'border-green-200', 
+                  shadow: 'shadow-green-500/25',
+                  glow: 'shadow-green-500/40'
+                },
+                'bg-orange-500': { 
+                  bg: 'from-orange-500 to-amber-600', 
+                  light: 'from-orange-50 to-amber-100', 
+                  text: 'text-orange-600', 
+                  border: 'border-orange-200', 
+                  shadow: 'shadow-orange-500/25',
+                  glow: 'shadow-orange-500/40'
+                }
               };
               const colorSet = colors[facility.color] || colors['bg-blue-500'];
 
               return (
-                <div 
-                  className="group relative bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100"
-                >
-                  {/* Large Image Carousel */}
-                  <div 
-                    className="relative h-[400px] md:h-[500px] lg:h-[550px] overflow-hidden"
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                  >
-                    {facility.images.map((image, imgIndex) => (
-                      <div
-                        key={imgIndex}
-                        className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-                          currentImageIndex === imgIndex 
-                            ? 'opacity-100 scale-100' 
-                            : 'opacity-0 scale-105'
-                        }`}
-                      >
-                        <img 
-                          src={image} 
-                          alt={`${facility.name} ${imgIndex + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ))}
+                <div className="group relative">
+                  {/* Main Facility Card */}
+                  <div className={`relative bg-white rounded-3xl shadow-2xl overflow-hidden border-2 ${colorSet.border} hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2`}>
                     
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                    
-                    {/* Icon Badge */}
-                    <div className={`absolute top-6 left-6 w-16 h-16 bg-gradient-to-br ${colorSet.bg} rounded-2xl flex items-center justify-center shadow-xl ${colorSet.shadow} backdrop-blur-sm`}>
-                      <Icon className="w-8 h-8 text-white" />
-                    </div>
-
-                    {/* Simple image indicator dots */}
-                    {facility.images.length > 1 && (
-                      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2">
-                        {facility.images.map((_, dotIndex) => (
-                          <div
-                            key={dotIndex}
-                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                              currentImageIndex === dotIndex 
-                                ? 'bg-white' 
-                                : 'bg-white/50'
-                            }`}
+                    {/* Image Section */}
+                    <div 
+                      className="relative h-[350px] md:h-[450px] lg:h-[500px] overflow-hidden"
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                    >
+                      {facility.images.map((image, imgIndex) => (
+                        <div
+                          key={imgIndex}
+                          className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                            currentImageIndex === imgIndex 
+                              ? 'opacity-100 scale-100' 
+                              : 'opacity-0 scale-105'
+                          }`}
+                        >
+                          <img 
+                            src={image} 
+                            alt={`${facility.name} ${imgIndex + 1}`}
+                            className="w-full h-full object-cover"
                           />
-                        ))}
+                        </div>
+                      ))}
+                      
+                      {/* Enhanced Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                      
+                      {/* Floating Icon Badge */}
+                      <div className={`absolute top-6 left-6 w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br ${colorSet.bg} rounded-2xl flex items-center justify-center shadow-2xl ${colorSet.glow} backdrop-blur-sm transform group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-8 h-8 md:w-10 md:h-10 text-white" />
                       </div>
-                    )}
 
-                    {/* Content Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
-                      <div className="max-w-3xl">
-                        <h3 className="text-3xl md:text-4xl font-bold text-white mb-3">
-                          {facility.name}
-                        </h3>
-                        <p className="text-white/90 text-lg md:text-xl mb-6 leading-relaxed">
-                          {facility.description}
-                        </p>
-
-                        {/* Features */}
-                        <div className="flex flex-wrap gap-3">
-                          {facility.features.map((feature, fIndex) => (
-                            <span 
-                              key={fIndex}
-                              className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-white/30"
-                            >
-                              {feature}
-                            </span>
+                      {/* Enhanced Image Indicators */}
+                      {facility.images.length > 1 && (
+                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                          {facility.images.map((_, dotIndex) => (
+                            <div
+                              key={dotIndex}
+                              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                                currentImageIndex === dotIndex 
+                                  ? 'bg-white scale-125' 
+                                  : 'bg-white/60 hover:bg-white/80'
+                              }`}
+                            />
                           ))}
                         </div>
+                      )}
+                    </div>
+
+                    {/* Enhanced Content Section */}
+                    <div className={`bg-gradient-to-br ${colorSet.light} p-6 md:p-8`}>
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                            {facility.name}
+                          </h3>
+                          <p className="text-gray-600 text-base md:text-lg leading-relaxed">
+                            {facility.description}
+                          </p>
+                        </div>
+                        <div className={`w-12 h-12 bg-gradient-to-br ${colorSet.bg} rounded-xl flex items-center justify-center ${colorSet.shadow}`}>
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+
+                      {/* Enhanced Features */}
+                      <div className="flex flex-wrap gap-2 md:gap-3">
+                        {facility.features.map((feature, fIndex) => (
+                          <span 
+                            key={fIndex}
+                            className={`px-4 py-2 bg-white/80 backdrop-blur-sm ${colorSet.text} text-sm font-medium rounded-full border ${colorSet.border} shadow-sm hover:shadow-md transition-shadow`}
+                          >
+                            {feature}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -1112,29 +1473,27 @@ export default function BarangayPortal() {
             })()}
           </div>
 
-          {/* Image Thumbnails Navigation */}
+          {/* Enhanced Thumbnail Navigation */}
           {(() => {
             const currentFacilityIndex = facilityImageSlides['main'] || 0;
             const facility = facilities[currentFacilityIndex];
             const currentImageIndex = facilityImageSlides[currentFacilityIndex] || 0;
             
-            // Only show thumbnails if facility has multiple images
             if (facility.images.length <= 1) return null;
             
             return (
-              <div className="mb-8 px-4">
-                <div className="flex justify-center gap-3 overflow-x-auto pb-4 pt-2">
+              <div className="mb-12 md:mb-16">
+                <div className="flex justify-center gap-3 md:gap-4 overflow-x-auto pb-4 pt-2 px-4">
                   {facility.images.map((image, imgIndex) => (
                     <button
                       key={imgIndex}
                       onClick={() => {
-                        console.log('Thumbnail clicked:', imgIndex);
                         setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: imgIndex }));
                       }}
-                      className={`flex-shrink-0 w-20 h-16 md:w-24 md:h-18 rounded-lg overflow-hidden transition-all duration-300 touch-manipulation ${
+                      className={`flex-shrink-0 w-20 h-16 md:w-28 md:h-20 rounded-xl overflow-hidden transition-all duration-300 ${
                         currentImageIndex === imgIndex
-                          ? 'ring-4 ring-blue-500 ring-offset-2 shadow-lg scale-105'
-                          : 'ring-2 ring-gray-200 hover:ring-gray-300 active:ring-blue-400 hover:scale-102'
+                          ? 'ring-4 ring-blue-500 ring-offset-2 shadow-xl scale-110'
+                          : 'ring-2 ring-gray-200 hover:ring-gray-300 hover:scale-105 shadow-md'
                       }`}
                     >
                       <img
@@ -1148,15 +1507,15 @@ export default function BarangayPortal() {
                     </button>
                   ))}
                 </div>
-                <p className="text-center text-sm text-gray-500 mt-2">
-                  Tap thumbnails to view different images
+                <p className="text-center text-sm text-gray-500 mt-3 font-medium">
+                  Tap thumbnails to explore different views
                 </p>
               </div>
             );
           })()}
 
-          {/* Facility Navigation Dots - Enhanced for Touch */}
-          <div className="flex justify-center gap-3 mb-12">
+          {/* Enhanced Facility Navigation */}
+          <div className="flex justify-center gap-3 md:gap-4 mb-16 md:mb-20 overflow-x-auto pb-4">
             {facilities.map((facility, index) => {
               const Icon = facility.icon;
               const isActive = (facilityImageSlides['main'] || 0) === index;
@@ -1172,56 +1531,61 @@ export default function BarangayPortal() {
                 <button
                   key={index}
                   onClick={() => setFacilityImageSlides(prev => ({ ...prev, main: index }))}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all touch-manipulation min-w-[80px] ${
+                  className={`flex flex-col items-center gap-3 p-4 md:p-6 rounded-2xl transition-all duration-300 min-w-[100px] md:min-w-[120px] ${
                     isActive 
-                      ? 'bg-white shadow-lg scale-110 border-2 border-blue-500' 
-                      : 'bg-white/50 hover:bg-white hover:shadow-md border-2 border-transparent active:bg-white active:shadow-lg'
+                      ? 'bg-white shadow-xl scale-110 border-2 border-blue-500 transform -translate-y-2' 
+                      : 'bg-white/70 backdrop-blur-sm hover:bg-white hover:shadow-lg border-2 border-transparent hover:scale-105'
                   }`}
                 >
-                  <div className={`w-12 h-12 bg-gradient-to-br ${colors[facility.color]} rounded-xl flex items-center justify-center shadow-md`}>
-                    <Icon className="w-6 h-6 text-white" />
+                  <div className={`w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br ${colors[facility.color]} rounded-2xl flex items-center justify-center shadow-lg ${isActive ? 'shadow-xl' : ''}`}>
+                    <Icon className="w-7 h-7 md:w-8 md:h-8 text-white" />
                   </div>
-                  <span className={`text-xs font-medium text-center leading-tight ${isActive ? 'text-blue-600' : 'text-gray-600'}`}>
-                    {facility.name.split(' ')[0]}
+                  <span className={`text-xs md:text-sm font-semibold text-center leading-tight ${isActive ? 'text-blue-600' : 'text-gray-600'}`}>
+                    {facility.name}
                   </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Building2 className="w-6 h-6 text-blue-600" />
+          {/* Enhanced Stats Section */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 text-center border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Building2 className="w-7 h-7 md:w-8 md:h-8 text-white" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">5+</p>
-              <p className="text-gray-500 text-sm">Facilities</p>
+              <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">5+</p>
+              <p className="text-gray-600 text-sm md:text-base font-medium">Modern Facilities</p>
             </div>
-            <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Clock className="w-6 h-6 text-green-600" />
+            
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 text-center border border-green-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Users className="w-7 h-7 md:w-8 md:h-8 text-white" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">24/7</p>
-              <p className="text-gray-500 text-sm">Emergency</p>
+              <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">2K+</p>
+              <p className="text-gray-600 text-sm md:text-base font-medium">Daily Visitors</p>
             </div>
-            <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Users className="w-6 h-6 text-orange-600" />
+            
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 text-center border border-purple-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Calendar className="w-7 h-7 md:w-8 md:h-8 text-white" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">12K+</p>
-              <p className="text-gray-500 text-sm">Residents</p>
+              <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">24/7</p>
+              <p className="text-gray-600 text-sm md:text-base font-medium">Available Access</p>
             </div>
-            <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="w-6 h-6 text-purple-600" />
+            
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 text-center border border-orange-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Award className="w-7 h-7 md:w-8 md:h-8 text-white" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">100%</p>
-              <p className="text-gray-500 text-sm">Coverage</p>
+              <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">100%</p>
+              <p className="text-gray-600 text-sm md:text-base font-medium">Community Rated</p>
             </div>
           </div>
+
         </div>
       </section>
+
 
       {/* Barangay Clearance Modal */}
       <BarangayClearanceModal 
