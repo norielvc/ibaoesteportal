@@ -1155,12 +1155,14 @@ export default function BarangayPortal() {
         </div>
       </section>
 
-      {/* Barangay Officials Photo Section - Full Width */}
+      {/* Barangay Officials Section - New Layout */}
       <section className="bg-gray-900">
         <div className="text-center py-8">
           <h3 className="text-2xl font-bold text-white mb-2">Barangay Officials</h3>
           <p className="text-blue-300">Meet our dedicated team serving Iba O' Este</p>
         </div>
+        
+        {/* Photo - Full visibility without overlay */}
         <div className="relative">
           <img 
             src="/images/barangay-officials.jpg" 
@@ -1170,14 +1172,17 @@ export default function BarangayPortal() {
               e.target.src = '/background.jpg';
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/60"></div>
-          <div className="absolute bottom-2 right-2 md:bottom-8 md:right-8 max-w-xs md:max-w-md">
-            <div className="bg-black/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-6 border border-white/20 text-right">
-              <h4 className="text-sm md:text-2xl lg:text-3xl font-bold text-white mb-1 md:mb-3 drop-shadow-lg leading-tight">
+        </div>
+        
+        {/* Text Section - Below photo */}
+        <div className="bg-gradient-to-r from-blue-900 to-indigo-900 py-8 px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+              <h4 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-3 drop-shadow-lg">
                 Barangay Iba O' Este Leadership Team
               </h4>
-              <div className="w-12 md:w-24 h-0.5 md:h-1 bg-gradient-to-r from-blue-400 to-green-400 ml-auto mb-2 md:mb-4 rounded-full"></div>
-              <p className="text-blue-100 text-xs md:text-lg lg:text-xl font-medium drop-shadow-md leading-relaxed">
+              <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-green-400 mx-auto mb-4 rounded-full"></div>
+              <p className="text-blue-100 text-base md:text-lg lg:text-xl font-medium drop-shadow-md leading-relaxed max-w-2xl mx-auto">
                 Working together for our community's progress and development
               </p>
             </div>
