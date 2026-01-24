@@ -1174,17 +1174,233 @@ export default function BarangayPortal() {
           />
         </div>
         
-        {/* Text Section - Below photo */}
-        <div className="bg-gradient-to-r from-blue-900 to-indigo-900 py-8 px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <h4 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-3 drop-shadow-lg">
-                Barangay Iba O' Este Leadership Team
+        {/* Text Section - Professional Leadership Introduction */}
+        <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 py-16 px-4">
+          <div className="max-w-6xl mx-auto">
+            {/* Leadership Header */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full mb-6">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                <span className="text-blue-200 font-semibold text-sm tracking-wide uppercase">Leadership Team</span>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              </div>
+              
+              <h4 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+                Barangay Iba O' Este
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-green-400">
+                  Leadership Team
+                </span>
               </h4>
-              <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-green-400 mx-auto mb-4 rounded-full"></div>
-              <p className="text-blue-100 text-base md:text-lg lg:text-xl font-medium drop-shadow-md leading-relaxed max-w-2xl mx-auto">
+              
+              <div className="w-32 h-1 bg-gradient-to-r from-blue-400 via-cyan-400 to-green-400 mx-auto mb-6 rounded-full"></div>
+              
+              <p className="text-xl md:text-2xl text-blue-100 font-light leading-relaxed max-w-3xl mx-auto">
                 Working together for our community's progress and development
               </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Officials Details Section */}
+        <div className="bg-gradient-to-br from-gray-50 to-blue-50 py-16 px-4">
+          <div className="max-w-6xl mx-auto">
+            {/* Section Header */}
+            <div className="text-center mb-12">
+              <h5 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Meet Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Officials</span>
+              </h5>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                Dedicated leaders committed to serving the community of Iba O' Este with integrity and excellence
+              </p>
+            </div>
+            
+            {/* Officials Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Barangay Captain */}
+              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 text-center">
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-white">BC</span>
+                  </div>
+                  <h6 className="text-xl font-bold text-white mb-1">Barangay Captain</h6>
+                  <p className="text-blue-100 text-sm">Chief Executive</p>
+                </div>
+                <div className="p-6">
+                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[Captain Name]</h7>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Leading the barangay with vision and dedication to community development and public service.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Kagawad 1 */}
+              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div className="bg-gradient-to-br from-green-600 to-emerald-700 p-6 text-center">
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-white">K1</span>
+                  </div>
+                  <h6 className="text-xl font-bold text-white mb-1">Kagawad</h6>
+                  <p className="text-green-100 text-sm">Committee on Health</p>
+                </div>
+                <div className="p-6">
+                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[Kagawad Name]</h7>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Overseeing health programs and medical services for the community's well-being.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Kagawad 2 */}
+              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div className="bg-gradient-to-br from-purple-600 to-violet-700 p-6 text-center">
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-white">K2</span>
+                  </div>
+                  <h6 className="text-xl font-bold text-white mb-1">Kagawad</h6>
+                  <p className="text-purple-100 text-sm">Committee on Education</p>
+                </div>
+                <div className="p-6">
+                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[Kagawad Name]</h7>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Promoting educational programs and youth development initiatives in the barangay.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Kagawad 3 */}
+              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div className="bg-gradient-to-br from-orange-600 to-red-700 p-6 text-center">
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-white">K3</span>
+                  </div>
+                  <h6 className="text-xl font-bold text-white mb-1">Kagawad</h6>
+                  <p className="text-orange-100 text-sm">Committee on Peace & Order</p>
+                </div>
+                <div className="p-6">
+                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[Kagawad Name]</h7>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Ensuring community safety and maintaining peace and order in the barangay.
+                  </p>
+                </div>
+              </div>
+              
+              {/* SK Chairman */}
+              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div className="bg-gradient-to-br from-cyan-600 to-blue-700 p-6 text-center">
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-white">SK</span>
+                  </div>
+                  <h6 className="text-xl font-bold text-white mb-1">SK Chairman</h6>
+                  <p className="text-cyan-100 text-sm">Youth Leader</p>
+                </div>
+                <div className="p-6">
+                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[SK Chairman Name]</h7>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Leading youth programs and representing the voice of young residents in the barangay.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Barangay Secretary */}
+              <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div className="bg-gradient-to-br from-teal-600 to-green-700 p-6 text-center">
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-white">BS</span>
+                  </div>
+                  <h6 className="text-xl font-bold text-white mb-1">Barangay Secretary</h6>
+                  <p className="text-teal-100 text-sm">Administrative Officer</p>
+                </div>
+                <div className="p-6">
+                  <h7 className="text-lg font-semibold text-gray-900 mb-2">[Secretary Name]</h7>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Managing administrative functions and maintaining official records of the barangay.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Contact Information */}
+            <div className="mt-16 text-center">
+              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 max-w-2xl mx-auto">
+                <h6 className="text-2xl font-bold text-gray-900 mb-4">Get in Touch</h6>
+                <p className="text-gray-600 mb-6">
+                  Have questions or need assistance? Our officials are here to serve you.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Phone className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <span className="font-medium">(044) 123-4567</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <Mail className="w-4 h-4 text-green-600" />
+                    </div>
+                    <span className="font-medium">ibaoeste@calumpit.gov.ph</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Emergency Hotlines - Floating Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        {showHotlines && (
+          <div className="mb-4 bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 w-80 animate-fade-in">
+            <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+              Emergency Hotlines
+            </h4>
+            <div className="space-y-3">
+              {hotlines.map((hotline, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">{hotline.name}</span>
+                  <a 
+                    href={`tel:${hotline.number}`}
+                    className="text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+                  >
+                    {hotline.number}
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        <button
+          onClick={() => setShowHotlines(!showHotlines)}
+          className={`${
+            showHotlines ? 'bg-gray-600' : 'bg-red-600 hover:bg-red-700 animate-pulse'
+          } text-white p-4 rounded-full shadow-lg transition-all transform hover:scale-110`}       
+        >
+          {showHotlines ? <X className="w-6 h-6" /> : <Phone className="w-6 h-6" />}
+        </button>
+      </div>
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+}
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-green-600 text-sm">📧</span>
+                    </div>
+                    <span className="font-medium">ibaoeste@calumpit.gov.ph</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
