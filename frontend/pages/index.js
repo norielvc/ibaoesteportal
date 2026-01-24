@@ -1165,19 +1165,29 @@ export default function BarangayPortal() {
           <img 
             src="/images/barangay-officials.jpg" 
             alt="Barangay Iba O' Este Officials" 
-            className="w-full h-64 md:h-80 lg:h-96 object-cover"
+            className="w-full h-auto object-contain bg-gray-800"
             onError={(e) => {
               e.target.src = '/background.jpg';
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-          <div className="absolute bottom-6 left-6 right-6">
-            <p className="text-white font-semibold text-xl drop-shadow-lg">
-              Barangay Iba O' Este Leadership Team
-            </p>
-            <p className="text-blue-200 drop-shadow-md">
-              Working together for our community's progress and development
-            </p>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+          <div className="absolute bottom-0 left-0 right-0 p-8">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <h4 className="text-2xl md:text-3xl font-bold text-white mb-3 drop-shadow-lg">
+                  Barangay Iba O' Este Leadership Team
+                </h4>
+                <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-green-400 mx-auto mb-4 rounded-full"></div>
+                <p className="text-blue-100 text-lg md:text-xl font-medium drop-shadow-md leading-relaxed">
+                  Working together for our community's progress and development
+                </p>
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  <span className="text-blue-300 text-sm font-medium">Serving with dedication since 2019</span>
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
