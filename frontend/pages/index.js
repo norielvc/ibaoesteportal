@@ -494,7 +494,7 @@ export default function BarangayPortal() {
       </nav>
 
       {/* Hero Section with News Carousel */}
-      <section id="news" className="relative h-[500px] md:h-[600px] overflow-hidden">
+      <section id="news" className="relative h-[500px] md:h-[600px] overflow-hidden animate-on-scroll">
         {newsItems.map((item, index) => (
           <div
             key={index}
@@ -849,7 +849,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Educational Assistance Program Section - SK Project - Trimmed for single screen */}
-      <section id="educational-assistance" className="py-12 bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 relative overflow-hidden min-h-screen flex items-center">
+      <section id="educational-assistance" className="py-12 bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
         {/* Background Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
@@ -993,7 +993,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Facilities Section - Full Width Carousel */}
-      <section id="directory" className="py-20 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
+      <section id="directory" className="py-20 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden animate-on-scroll">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-40">
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
@@ -1254,7 +1254,7 @@ export default function BarangayPortal() {
       />
 
       {/* Contact Section */}
-      <section id="contact" className="py-16 bg-gray-900">
+      <section id="contact" className="py-16 bg-gray-900 animate-on-scroll">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-white mb-2">Feel free to contact us</h2>
@@ -1387,7 +1387,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Barangay Officials Section - New Layout */}
-      <section id="officials" className="bg-gray-900">
+      <section id="officials" className="bg-gray-900 animate-on-scroll">
         <div className="text-center py-8">
           <h3 className="text-2xl font-bold text-white mb-2">Barangay Officials</h3>
           <p className="text-blue-300">Meet our dedicated team serving Iba O' Este</p>
@@ -1552,7 +1552,9 @@ export default function BarangayPortal() {
                                   <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <span className="text-2xl font-bold text-white">{initials}</span>
                                   </div>
-                                  <h3 className="text-xl font-bold text-white mb-1">{official.position}</h3>
+                                  <h3 className="text-xl font-bold text-white mb-1">
+                                    {official.position.includes('Kagawad') ? 'Kagawad' : official.position}
+                                  </h3>
                                   {official.committee && (
                                     <p className="text-white/80 text-sm">{official.committee}</p>
                                   )}
