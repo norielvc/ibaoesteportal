@@ -25,6 +25,9 @@ export default function BarangayPortal() {
     firstName: '', lastName: '', email: '', phone: '', message: ''
   });
 
+  // Animation states
+  const [animatedElements, setAnimatedElements] = useState(new Set());
+
   // Default events (fallback)
   const defaultNewsItems = [
     {
@@ -339,6 +342,31 @@ export default function BarangayPortal() {
     return () => clearInterval(interval);
   }, [facilities]);
 
+  // Intersection Observer for scroll animations
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-in');
+          setAnimatedElements(prev => new Set([...prev, entry.target.id]));
+        }
+      });
+    }, observerOptions);
+
+    // Observe all animatable elements
+    const animatableElements = document.querySelectorAll('.animate-on-scroll');
+    animatableElements.forEach((el) => observer.observe(el));
+
+    return () => {
+      animatableElements.forEach((el) => observer.unobserve(el));
+    };
+  }, []);
+
   const stats = [
     { label: 'Total Population', value: '12,847', icon: Users },
     { label: 'Active Programs', value: '24', icon: TrendingUp },
@@ -405,6 +433,9 @@ export default function BarangayPortal() {
               <a href="#directory" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
                 Facilities
               </a>
+              <a href="#officials" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+                Barangay Officials
+              </a>
               <a href="#contact" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
                 Contact Us
               </a>
@@ -432,11 +463,17 @@ export default function BarangayPortal() {
             <a href="#news" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
               News & Updates
             </a>
-            <a href="#directory" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
-              Barangay Directory
-            </a>
             <a href="#forms" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
-              Downloadable Forms
+              Barangay Forms
+            </a>
+            <a href="#directory" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+              Facilities
+            </a>
+            <a href="#officials" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+              Barangay Officials
+            </a>
+            <a href="#contact" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+              Contact Us
             </a>
             <button
               onClick={() => router.push('/login')}
@@ -507,7 +544,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Available Forms Section - Modern Design with Background */}
-      <section id="forms" className="py-20 relative overflow-hidden">
+      <section id="forms" className="py-20 relative overflow-hidden animate-on-scroll">
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -780,7 +817,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Transparency Stats Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-800">
+      <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-800 animate-on-scroll">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-white text-center mb-12">Barangay at a Glance</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -1192,7 +1229,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Barangay Officials Section - New Layout */}
-      <section className="bg-gray-900">
+      <section id="officials" className="bg-gray-900">
         <div className="text-center py-8">
           <h3 className="text-2xl font-bold text-white mb-2">Barangay Officials</h3>
           <p className="text-blue-300">Meet our dedicated team serving Iba O' Este</p>
@@ -1250,133 +1287,138 @@ export default function BarangayPortal() {
               </p>
             </div>
             
-            {/* Officials Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {(() => {
-                console.log('🎯 Rendering officials section, officials.length:', officials.length);
-                console.log('🎯 Officials data:', officials);
-                
-                if (officials.length > 0) {
-                  console.log('✅ Rendering', officials.length, 'officials from API');
-                  return officials.map((official, index) => {
-                  // Define color schemes for different position types
-                  const getColorScheme = (positionType, index) => {
-                    const schemes = {
-                      'captain': { from: 'from-blue-600', to: 'to-indigo-700', light: 'text-blue-100' },
-                      'secretary': { from: 'from-teal-600', to: 'to-green-700', light: 'text-teal-100' },
-                      'treasurer': { from: 'from-emerald-600', to: 'to-green-700', light: 'text-emerald-100' },
-                      'sk_chairman': { from: 'from-cyan-600', to: 'to-blue-700', light: 'text-cyan-100' },
-                      'staff': { 
-                        // Rotate colors for different staff members
-                        0: { from: 'from-gray-600', to: 'to-slate-700', light: 'text-gray-100' },
-                        1: { from: 'from-indigo-600', to: 'to-blue-700', light: 'text-indigo-100' },
-                        2: { from: 'from-purple-600', to: 'to-indigo-700', light: 'text-purple-100' },
-                        3: { from: 'from-pink-600', to: 'to-purple-700', light: 'text-pink-100' },
-                        4: { from: 'from-rose-600', to: 'to-pink-700', light: 'text-rose-100' }
-                      }[index % 5] || { from: 'from-gray-600', to: 'to-slate-700', light: 'text-gray-100' },
-                      'kagawad': { 
-                        // Rotate colors for different kagawads
-                        0: { from: 'from-green-600', to: 'to-emerald-700', light: 'text-green-100' },
-                        1: { from: 'from-purple-600', to: 'to-violet-700', light: 'text-purple-100' },
-                        2: { from: 'from-orange-600', to: 'to-red-700', light: 'text-orange-100' },
-                        3: { from: 'from-pink-600', to: 'to-rose-700', light: 'text-pink-100' },
-                        4: { from: 'from-indigo-600', to: 'to-purple-700', light: 'text-indigo-100' },
-                        5: { from: 'from-yellow-600', to: 'to-orange-700', light: 'text-yellow-100' },
-                        6: { from: 'from-red-600', to: 'to-pink-700', light: 'text-red-100' }
-                      }[index % 7] || { from: 'from-gray-600', to: 'to-gray-700', light: 'text-gray-100' }
-                    };
-                    return schemes[positionType] || { from: 'from-gray-600', to: 'to-gray-700', light: 'text-gray-100' };
+            {/* Officials Segregated by Position */}
+            {officials.length > 0 ? (
+              <div className="space-y-16">
+                {(() => {
+                  // Group officials by position type
+                  const groupedOfficials = {
+                    captain: officials.filter(o => o.position_type === 'captain'),
+                    kagawad: officials.filter(o => o.position_type === 'kagawad'),
+                    sk_chairman: officials.filter(o => o.position_type === 'sk_chairman'),
+                    staff: officials.filter(o => ['secretary', 'treasurer', 'staff'].includes(o.position_type))
                   };
 
-                  const getInitials = (name) => {
-                    const nameParts = name.split(' ');
-                    if (nameParts.length >= 2) {
-                      return nameParts[0][0] + nameParts[1][0];
+                  const sections = [
+                    {
+                      key: 'captain',
+                      title: 'Barangay Captain',
+                      subtitle: 'Chief Executive Officer',
+                      officials: groupedOfficials.captain,
+                      bgColor: 'from-blue-600 to-indigo-700',
+                      icon: '👑'
+                    },
+                    {
+                      key: 'kagawad',
+                      title: 'Barangay Kagawad',
+                      subtitle: 'Council Members',
+                      officials: groupedOfficials.kagawad,
+                      bgColor: 'from-green-600 to-emerald-700',
+                      icon: '🏛️'
+                    },
+                    {
+                      key: 'sk_chairman',
+                      title: 'SK Chairman',
+                      subtitle: 'Youth Representative',
+                      officials: groupedOfficials.sk_chairman,
+                      bgColor: 'from-orange-600 to-amber-700',
+                      icon: '🌟'
+                    },
+                    {
+                      key: 'staff',
+                      title: 'Barangay Staff',
+                      subtitle: 'Administrative Team',
+                      officials: groupedOfficials.staff,
+                      bgColor: 'from-purple-600 to-violet-700',
+                      icon: '👥'
                     }
-                    return name.substring(0, 2).toUpperCase();
-                  };
+                  ];
 
-                  const colorScheme = getColorScheme(official.position_type, index);
+                  return sections.map((section) => {
+                    if (section.officials.length === 0) return null;
 
-                  return (
-                    <div key={official.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-                      <div className={`bg-gradient-to-br ${colorScheme.from} ${colorScheme.to} p-6 text-center`}>
-                        <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <span className="text-2xl font-bold text-white">{getInitials(official.name)}</span>
+                    return (
+                      <div key={section.key} className="mb-16">
+                        {/* Section Header */}
+                        <div className="text-center mb-8">
+                          <div className={`inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r ${section.bgColor} text-white rounded-full mb-4 shadow-lg`}>
+                            <span className="text-2xl">{section.icon}</span>
+                            <span className="font-bold text-lg tracking-wide">{section.title.toUpperCase()}</span>
+                          </div>
+                          <p className="text-gray-600 text-lg font-medium">{section.subtitle}</p>
                         </div>
-                        <h6 className="text-xl font-bold text-white mb-1">{official.position}</h6>
-                        {official.committee && (
-                          <p className={`${colorScheme.light} text-sm`}>{official.committee}</p>
-                        )}
-                      </div>
-                      <div className="p-6">
-                        <h7 className="text-lg font-semibold text-gray-900 mb-2">{official.name}</h7>
-                        <p className="text-gray-600 text-sm leading-relaxed">
-                          {official.description}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                });
-                } else {
-                  console.log('⚠️ No officials data, showing fallback placeholders');
-                  return (
-                <>
-                  {/* Barangay Captain */}
-                  <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 text-center">
-                      <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-2xl font-bold text-white">BC</span>
-                      </div>
-                      <h6 className="text-xl font-bold text-white mb-1">Barangay Captain</h6>
-                      <p className="text-blue-100 text-sm">Chief Executive</p>
-                    </div>
-                    <div className="p-6">
-                      <h7 className="text-lg font-semibold text-gray-900 mb-2">Loading...</h7>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        Leading the barangay with vision and dedication to community development and public service.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Secretary */}
-                  <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-                    <div className="bg-gradient-to-br from-teal-600 to-green-700 p-6 text-center">
-                      <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-2xl font-bold text-white">BS</span>
-                      </div>
-                      <h6 className="text-xl font-bold text-white mb-1">Barangay Secretary</h6>
-                      <p className="text-teal-100 text-sm">Administrative Officer</p>
-                    </div>
-                    <div className="p-6">
-                      <h7 className="text-lg font-semibold text-gray-900 mb-2">Loading...</h7>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        Managing administrative functions and maintaining official records of the barangay.
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Kagawad Sample */}
-                  <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-                    <div className="bg-gradient-to-br from-green-600 to-emerald-700 p-6 text-center">
-                      <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-2xl font-bold text-white">K1</span>
+                        {/* Officials Grid for this section */}
+                        <div className={`grid gap-6 ${
+                          section.key === 'captain' ? 'grid-cols-1 max-w-md mx-auto' :
+                          section.key === 'sk_chairman' ? 'grid-cols-1 max-w-md mx-auto' :
+                          'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                        }`}>
+                          {section.officials.map((official, index) => {
+                            const colors = [
+                              'from-blue-600 to-indigo-700',
+                              'from-teal-600 to-green-700', 
+                              'from-emerald-600 to-green-700',
+                              'from-cyan-600 to-blue-700',
+                              'from-green-600 to-emerald-700',
+                              'from-purple-600 to-violet-700',
+                              'from-orange-600 to-red-700',
+                              'from-pink-600 to-rose-700',
+                              'from-indigo-600 to-purple-700',
+                              'from-yellow-600 to-orange-700',
+                              'from-red-600 to-pink-700',
+                              'from-gray-600 to-slate-700',
+                              'from-violet-600 to-purple-700',
+                              'from-rose-600 to-pink-700',
+                              'from-amber-600 to-orange-700',
+                              'from-lime-600 to-green-700'
+                            ];
+                            
+                            // Use section-specific colors for consistency
+                            let colorClass;
+                            if (section.key === 'captain') {
+                              colorClass = 'from-blue-600 to-indigo-700';
+                            } else if (section.key === 'kagawad') {
+                              colorClass = colors[index % colors.length];
+                            } else if (section.key === 'sk_chairman') {
+                              colorClass = 'from-orange-600 to-amber-700';
+                            } else {
+                              colorClass = colors[(index + 8) % colors.length];
+                            }
+                            
+                            const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
+
+                            return (
+                              <div key={official.id || index} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                                <div className={`bg-gradient-to-br ${colorClass} p-6 text-center`}>
+                                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span className="text-2xl font-bold text-white">{initials}</span>
+                                  </div>
+                                  <h3 className="text-xl font-bold text-white mb-1">{official.position}</h3>
+                                  {official.committee && (
+                                    <p className="text-white/80 text-sm">{official.committee}</p>
+                                  )}
+                                </div>
+                                <div className="p-6">
+                                  <h4 className="text-lg font-semibold text-gray-900 mb-2">{official.name}</h4>
+                                  <p className="text-gray-600 text-sm leading-relaxed">
+                                    {official.description}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                      <h6 className="text-xl font-bold text-white mb-1">Kagawad</h6>
-                      <p className="text-green-100 text-sm">Committee Member</p>
-                    </div>
-                    <div className="p-6">
-                      <h7 className="text-lg font-semibold text-gray-900 mb-2">Loading...</h7>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        Serving the community with dedication and commitment to public service.
-                      </p>
-                    </div>
-                  </div>
-                </>
-                );
-                }
-              })()}
-            </div>
+                    );
+                  });
+                })()}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">Loading officials...</p>
+              </div>
+            )}
             
             {/* Contact Information */}
             <div className="mt-16 text-center">
@@ -1444,80 +1486,122 @@ export default function BarangayPortal() {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        
+        @keyframes slide-up {
+          from { 
+            opacity: 0; 
+            transform: translateY(50px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
+          }
+        }
+        
+        @keyframes slide-left {
+          from { 
+            opacity: 0; 
+            transform: translateX(50px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateX(0); 
+          }
+        }
+        
+        @keyframes slide-right {
+          from { 
+            opacity: 0; 
+            transform: translateX(-50px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateX(0); 
+          }
+        }
+        
+        @keyframes scale-in {
+          from { 
+            opacity: 0; 
+            transform: scale(0.8); 
+          }
+          to { 
+            opacity: 1; 
+            transform: scale(1); 
+          }
+        }
+        
+        @keyframes rotate-in {
+          from { 
+            opacity: 0; 
+            transform: rotate(-10deg) scale(0.8); 
+          }
+          to { 
+            opacity: 1; 
+            transform: rotate(0deg) scale(1); 
+          }
+        }
+        
+        /* Base state for animated elements */
+        .animate-on-scroll {
+          opacity: 0;
+          transform: translateY(50px);
+          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Animated states */
         .animate-fade-in {
           animation: fade-in 0.3s ease-out;
         }
-      `}</style>
-    </div>
-  );
-}
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="text-green-600 text-sm">📧</span>
-                    </div>
-                    <span className="font-medium">ibaoeste@calumpit.gov.ph</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-950 text-gray-400 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Logo" className="h-12 w-12 object-contain" />
-              <div>
-                <p className="text-white font-bold">Iba O' Este Portal</p>
-                <p className="text-sm">Calumpit, Bulacan</p>
-              </div>
-            </div>
-            <p className="text-sm">© 2026 Barangay Iba O' Este. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-
-      {/* Floating Emergency Hotlines Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        {showHotlines && (
-          <div className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl p-6 w-72 mb-4 animate-fade-in">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-500" />
-              Emergency Hotlines
-            </h3>
-            <div className="space-y-3">
-              {hotlines.map((hotline, index) => (
-                <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                  <span className="text-gray-600">{hotline.name}</span>
-                  <a href={`tel:${hotline.number}`} className="text-blue-600 font-semibold hover:underline">
-                    {hotline.number}
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        <button
-          onClick={() => setShowHotlines(!showHotlines)}
-          className={`${
-            showHotlines ? 'bg-gray-600' : 'bg-red-600 hover:bg-red-700 animate-pulse'
-          } text-white p-4 rounded-full shadow-lg transition-all transform hover:scale-110`}
-        >
-          {showHotlines ? <X className="w-6 h-6" /> : <Phone className="w-6 h-6" />}
-        </button>
-      </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+        
+        .animate-in {
+          opacity: 1 !important;
+          transform: translateY(0) !important;
         }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
+        
+        .animate-slide-up {
+          animation: slide-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .animate-slide-left {
+          animation: slide-left 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .animate-slide-right {
+          animation: slide-right 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .animate-scale-in {
+          animation: scale-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .animate-rotate-in {
+          animation: rotate-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        /* Staggered animations */
+        .animate-on-scroll:nth-child(1) { transition-delay: 0.1s; }
+        .animate-on-scroll:nth-child(2) { transition-delay: 0.2s; }
+        .animate-on-scroll:nth-child(3) { transition-delay: 0.3s; }
+        .animate-on-scroll:nth-child(4) { transition-delay: 0.4s; }
+        .animate-on-scroll:nth-child(5) { transition-delay: 0.5s; }
+        .animate-on-scroll:nth-child(6) { transition-delay: 0.6s; }
+        .animate-on-scroll:nth-child(7) { transition-delay: 0.7s; }
+        .animate-on-scroll:nth-child(8) { transition-delay: 0.8s; }
+        
+        /* Smooth scrolling for navigation */
+        html {
+          scroll-behavior: smooth;
+        }
+        
+        /* Enhanced hover effects */
+        .hover-lift {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
       `}</style>
     </div>

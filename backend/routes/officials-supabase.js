@@ -24,10 +24,37 @@ router.get('/', async (req, res) => {
 
     console.log(`Found ${officials?.length || 0} officials`);
     
+    // Custom ordering: Brgy Captain → Kagawad → SK Chairman → Staff (Secretary & Treasurer)
+    const positionOrder = {
+      'captain': 1,
+      'kagawad': 2, 
+      'sk_chairman': 3,
+      'secretary': 4, // Group with staff
+      'treasurer': 4, // Group with staff  
+      'staff': 4
+    };
+    
+    const sortedOfficials = officials?.sort((a, b) => {
+      const orderA = positionOrder[a.position_type] || 999;
+      const orderB = positionOrder[b.position_type] || 999;
+      
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      
+      // Within same position type, sort by order_index for kagawads, or by name for others
+      if (a.position_type === 'kagawad' && b.position_type === 'kagawad') {
+        return (a.order_index || 0) - (b.order_index || 0);
+      }
+      
+      // For staff positions, sort by order_index
+      return (a.order_index || 0) - (b.order_index || 0);
+    }) || [];
+    
     res.json({
       success: true,
-      data: officials || [],
-      count: officials?.length || 0
+      data: sortedOfficials,
+      count: sortedOfficials?.length || 0
     });
 
   } catch (error) {
