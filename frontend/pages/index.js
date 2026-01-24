@@ -529,49 +529,54 @@ export default function BarangayPortal() {
           </div>
         ))}
 
-        {/* Carousel Navigation */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-3">
-          {newsItems.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                currentSlide === index ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/75'
-              }`}
-            />
-          ))}
+        {/* Carousel Navigation with Integrated Arrows */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
+          {/* Left Arrow */}
+          <button
+            onClick={() => setCurrentSlide((prev) => (prev - 1 + newsItems.length) % newsItems.length)}
+            className="bg-white/30 hover:bg-white/50 backdrop-blur-sm p-2 rounded-full transition-all touch-manipulation"
+          >
+            <ChevronLeft className="w-4 h-4 text-white" />
+          </button>
+          
+          {/* Dots */}
+          <div className="flex gap-3">
+            {newsItems.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-3 h-3 rounded-full transition-all ${
+                  currentSlide === index ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/75'
+                }`}
+              />
+            ))}
+          </div>
+          
+          {/* Right Arrow */}
+          <button
+            onClick={() => setCurrentSlide((prev) => (prev + 1) % newsItems.length)}
+            className="bg-white/30 hover:bg-white/50 backdrop-blur-sm p-2 rounded-full transition-all touch-manipulation"
+          >
+            <ChevronRight className="w-4 h-4 text-white" />
+          </button>
         </div>
-
-        {/* Arrow Navigation */}
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev - 1 + newsItems.length) % newsItems.length)}
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm p-3 rounded-full transition-all"
-        >
-          <ChevronLeft className="w-6 h-6 text-white" />
-        </button>
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev + 1) % newsItems.length)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm p-3 rounded-full transition-all"
-        >
-          <ChevronRight className="w-6 h-6 text-white" />
-        </button>
       </section>
 
-      {/* Available Forms Section - Modern Design with Background */}
+      {/* Available Forms Section - Modern Design with Responsive Background */}
       <section id="forms" className="py-20 relative overflow-hidden animate-on-scroll">
-        {/* Background Image */}
+        {/* Responsive Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url(/images/barangay-captain.jpg)' }}
         />
         
-        {/* Light Overlay for Text Readability (Optional) */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 via-transparent to-blue-900/40"></div>
+        {/* Light Overlay for Text Readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/40 via-blue-900/30 to-blue-900/50"></div>
         
-        {/* Additional Decorative Overlays */}
+        {/* Additional Decorative Overlays - Responsive */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full opacity-50 blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full opacity-50 blur-3xl"></div>
+          <div className="absolute -top-20 md:-top-40 -right-20 md:-right-40 w-40 h-40 md:w-80 md:h-80 bg-white/10 rounded-full opacity-50 blur-3xl"></div>
+          <div className="absolute -bottom-20 md:-bottom-40 -left-20 md:-left-40 w-40 h-40 md:w-80 md:h-80 bg-white/10 rounded-full opacity-50 blur-3xl"></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
