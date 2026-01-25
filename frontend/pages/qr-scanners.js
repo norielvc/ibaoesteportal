@@ -19,6 +19,16 @@ export default function QRScannersPage() {
 
   const scanners = [
     {
+      id: 'employee',
+      name: 'Employee QR Scanner',
+      description: 'Mobile-optimized scanner for employee ID QR codes. Saves scan data to database with timestamps.',
+      icon: Smartphone,
+      color: 'blue',
+      status: 'Mobile Optimized',
+      features: ['Employee ID Scanning', 'Database Storage', 'Mobile Optimized', 'Attendance Tracking'],
+      path: '/employee-qr-scanner'
+    },
+    {
       id: 'fixed',
       name: 'Fixed QR Scanner',
       description: 'Most reliable scanner with multiple detection methods. Tries jsQR → Html5Qrcode → ZXing in sequence.',
@@ -262,15 +272,22 @@ export default function QRScannersPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Access</h3>
           <div className="flex flex-wrap justify-center gap-3">
             <button
+              onClick={() => router.push('/employee-qr-scanner')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
+            >
+              <Smartphone className="w-4 h-4" />
+              Employee Scanner
+            </button>
+            <button
               onClick={() => router.push('/qr-scanner-fixed')}
               className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
             >
               <CheckCircle className="w-4 h-4" />
-              Recommended Scanner
+              Fixed Scanner
             </button>
             <button
               onClick={() => window.open('/test-qr-detection.html', '_blank')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
+              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
             >
               <Wrench className="w-4 h-4" />
               Test Page

@@ -19,7 +19,8 @@ import {
   QrCode,
   Building2,
   Zap,
-  Image
+  Image,
+  Smartphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout, getUserData } from '@/lib/auth';
@@ -71,6 +72,12 @@ const navigation = [
     href: '/requests',
     icon: ClipboardList,
     description: 'Manage requests'
+  },
+  {
+    name: 'Employee QR Scanner',
+    href: '/employee-qr-scanner',
+    icon: Smartphone,
+    description: 'Scan employee ID QR codes'
   },
   {
     name: 'QR Scanner',
