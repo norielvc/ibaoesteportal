@@ -293,143 +293,170 @@ export default function MobileQRScannerPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2">
-        <div className="max-w-md mx-auto space-y-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="max-w-md mx-auto space-y-6">
           
-          {/* Header - Compact */}
-          <div className="text-center bg-white rounded-2xl p-4 shadow-lg">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-              <Smartphone className="w-8 h-8 text-white" />
+          {/* Header */}
+          <div className="text-center bg-white rounded-3xl p-6 shadow-lg">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Smartphone className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-1">Mobile QR Scanner</h1>
-            <p className="text-sm text-gray-600">Scan any QR code with your mobile device</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Mobile QR Scanner</h1>
+            <p className="text-gray-600">Scan any QR code with your mobile device</p>
           </div>
 
-          {/* Stats - Compact */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <div className="text-2xl font-bold text-blue-600 mb-1">{stats.today}</div>
-              <div className="text-xs text-gray-500">Today</div>
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl p-6 shadow-sm text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-1">{stats.today}</div>
+              <div className="text-sm text-gray-500">Today</div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <div className="text-2xl font-bold text-green-600 mb-1">{stats.total}</div>
-              <div className="text-xs text-gray-500">Total</div>
+            <div className="bg-white rounded-2xl p-6 shadow-sm text-center">
+              <div className="text-3xl font-bold text-green-600 mb-1">{stats.total}</div>
+              <div className="text-sm text-gray-500">Total</div>
             </div>
           </div>
 
-          {/* Duplicate Warning Modal - Compact */}
+          {/* Duplicate Warning Modal */}
           {duplicateInfo && awaitingAcknowledgment && (
-            <div className="bg-gradient-to-r from-red-400 to-red-500 rounded-2xl p-4 text-white shadow-xl">
-              <div className="text-center mb-3">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <AlertCircle className="w-6 h-6 text-white" />
+            <div className="bg-gradient-to-r from-red-400 to-red-500 rounded-3xl p-6 text-white shadow-xl">
+              <div className="text-center mb-4">
+                <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <AlertCircle className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-lg font-bold">⚠️ Duplicate QR Code!</h3>
-                <p className="text-sm text-red-100">This QR code has already been scanned</p>
+                <h3 className="text-xl font-bold">⚠️ Duplicate QR Code!</h3>
+                <p className="text-red-100">This QR code has already been scanned</p>
               </div>
 
-              <div className="bg-white bg-opacity-20 rounded-xl p-3 mb-3">
-                <div className="text-xs font-semibold text-red-100 mb-1">QR CODE:</div>
-                <div className="bg-white bg-opacity-20 rounded-lg p-2 mb-2">
-                  <p className="font-mono text-white text-sm font-bold break-all">{duplicateInfo.qrData}</p>
+              <div className="bg-white bg-opacity-20 rounded-2xl p-4 mb-4">
+                <div className="text-sm font-semibold text-red-100 mb-2">QR CODE DATA:</div>
+                <div className="bg-white bg-opacity-20 rounded-lg p-3 mb-3">
+                  <p className="font-mono text-white font-bold break-all">{duplicateInfo.qrData}</p>
                 </div>
                 
-                <div className="border-t border-white border-opacity-20 pt-2">
-                  <div className="text-xs font-semibold text-red-100 mb-1">ORIGINAL SCAN:</div>
-                  <div className="bg-white bg-opacity-10 rounded-lg p-2 space-y-1">
-                    <div className="flex items-center gap-2 text-xs">
-                      <Clock className="w-3 h-3 text-white" />
-                      <span className="text-white">{new Date(duplicateInfo.existingScan.scan_timestamp).toLocaleString()}</span>
+                <div className="border-t border-white border-opacity-20 pt-3">
+                  <div className="text-sm font-semibold text-red-100 mb-2">ORIGINAL SCAN DETAILS:</div>
+                  <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Clock className="w-4 h-4 text-white" />
+                      <div>
+                        <div className="text-white font-medium">
+                          {new Date(duplicateInfo.existingScan.scan_timestamp).toLocaleString()}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <User className="w-3 h-3 text-white" />
-                      <span className="text-white">{duplicateInfo.existingScan.scanned_by}</span>
+                    <div className="flex items-center gap-3 mb-2">
+                      <User className="w-4 h-4 text-white" />
+                      <div>
+                        <div className="text-white font-medium">
+                          {duplicateInfo.existingScan.scanned_by}
+                        </div>
+                        <div className="text-red-100 text-sm">
+                          {duplicateInfo.existingScan.scanned_by_email}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Smartphone className="w-4 h-4 text-white" />
+                      <div>
+                        <div className="text-white font-medium capitalize">
+                          {duplicateInfo.existingScan.scanner_type}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               
+              <div className="text-center mb-4">
+                <p className="text-red-100 text-sm">
+                  You must acknowledge this duplicate before scanning another QR code
+                </p>
+              </div>
+              
               <button
                 onClick={acknowledgeDuplicate}
-                className="w-full bg-white bg-opacity-20 text-white py-3 rounded-xl font-bold text-sm backdrop-blur-sm border border-white border-opacity-30 active:scale-95 transition-transform"
+                className="w-full bg-white bg-opacity-20 text-white py-4 rounded-2xl font-bold text-lg backdrop-blur-sm border border-white border-opacity-30 active:scale-95 transition-transform"
               >
                 ✓ I Understand - Continue Scanning
               </button>
             </div>
           )}
 
-          {/* Success Result - Compact */}
+          {/* Success Result - Only show for successful, non-duplicate scans */}
           {scanResult && !duplicateInfo && !awaitingAcknowledgment && (
-            <div className="bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl p-4 text-white shadow-xl">
-              <div className="text-center mb-3">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <CheckCircle className="w-6 h-6 text-white" />
+            <div className="bg-gradient-to-r from-green-400 to-emerald-500 rounded-3xl p-6 text-white shadow-xl">
+              <div className="text-center mb-4">
+                <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-lg font-bold">✅ QR Code Saved!</h3>
-                <p className="text-sm text-green-100">Successfully scanned and saved to database</p>
+                <h3 className="text-xl font-bold">✅ QR Code Saved!</h3>
+                <p className="text-green-100">Successfully scanned and saved to database</p>
               </div>
 
-              <div className="bg-white bg-opacity-20 rounded-xl p-3 mb-3">
-                <div className="text-xs font-semibold text-green-100 mb-1">QR CODE DATA:</div>
-                <div className="bg-white bg-opacity-20 rounded-lg p-2 mb-2">
-                  <p className="font-mono text-white text-sm font-bold break-all">{scanResult}</p>
+              <div className="bg-white bg-opacity-20 rounded-2xl p-4 mb-4">
+                <div className="text-sm font-semibold text-green-100 mb-2">QR CODE DATA:</div>
+                <div className="bg-white bg-opacity-20 rounded-lg p-3 mb-3">
+                  <p className="font-mono text-white font-bold break-all">{scanResult}</p>
                 </div>
                 
                 {scanTimestamp && (
-                  <div className="border-t border-white border-opacity-20 pt-2">
-                    <div className="text-xs font-semibold text-green-100 mb-1">SCAN TIME:</div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-white" />
+                  <div className="border-t border-white border-opacity-20 pt-3">
+                    <div className="text-sm font-semibold text-green-100 mb-2">SCAN TIME:</div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                        <Clock className="w-6 h-6 text-white" />
+                      </div>
                       <div>
-                        <div className="text-sm font-bold text-white">{scanTimestamp.toLocaleTimeString()}</div>
-                        <div className="text-xs text-green-100">{scanTimestamp.toLocaleDateString()}</div>
+                        <div className="font-bold text-white">{scanTimestamp.toLocaleTimeString()}</div>
+                        <div className="text-green-100">{scanTimestamp.toLocaleDateString()}</div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div className="border-t border-white border-opacity-20 pt-2 mt-2">
-                  <div className="flex items-center justify-center gap-1 text-green-100">
-                    <CheckCircle className="w-3 h-3" />
-                    <span className="text-xs">Saved to database successfully</span>
+                <div className="border-t border-white border-opacity-20 pt-3 mt-3">
+                  <div className="flex items-center justify-center gap-2 text-green-100">
+                    <CheckCircle className="w-4 h-4" />
+                    <span className="text-sm">Saved to database successfully</span>
                   </div>
                 </div>
               </div>
               
               <button
                 onClick={resetScanner}
-                className="w-full bg-white bg-opacity-20 text-white py-3 rounded-xl font-bold text-sm backdrop-blur-sm border border-white border-opacity-30 active:scale-95 transition-transform"
+                className="w-full bg-white bg-opacity-20 text-white py-4 rounded-2xl font-bold text-lg backdrop-blur-sm border border-white border-opacity-30 active:scale-95 transition-transform"
               >
                 Scan Another QR Code
               </button>
             </div>
           )}
 
-          {/* Scanner Interface - Compact */}
+          {/* Scanner Interface - Show when no scan result and no duplicate warning */}
           {!scanResult && !duplicateInfo && (
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
               {!processing ? (
-                <div className="p-6 text-center">
-                  <div className={`w-32 h-32 mx-auto rounded-2xl flex items-center justify-center mb-4 border-4 border-dashed ${
+                <div className="p-8 text-center">
+                  <div className={`w-40 h-40 mx-auto rounded-3xl flex items-center justify-center mb-6 border-4 border-dashed ${
                     awaitingAcknowledgment 
                       ? 'bg-gray-100 border-gray-300' 
                       : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300'
                   }`}>
-                    <Camera className={`w-12 h-12 ${
+                    <Camera className={`w-16 h-16 ${
                       awaitingAcknowledgment ? 'text-gray-400' : 'text-blue-400'
                     }`} />
                   </div>
                   
-                  <h3 className={`text-lg font-bold mb-2 ${
+                  <h3 className={`text-xl font-bold mb-2 ${
                     awaitingAcknowledgment ? 'text-gray-500' : 'text-gray-900'
                   }`}>
                     {awaitingAcknowledgment ? 'Scanner Disabled' : 'Ready to Scan'}
                   </h3>
-                  <p className={`text-sm mb-4 ${
+                  <p className={`mb-6 ${
                     awaitingAcknowledgment ? 'text-gray-400' : 'text-gray-600'
                   }`}>
                     {awaitingAcknowledgment 
-                      ? 'Please acknowledge the duplicate warning above'
+                      ? 'Please acknowledge the duplicate warning above to continue'
                       : 'Tap the button to take a photo of any QR code'
                     }
                   </p>
@@ -437,17 +464,17 @@ export default function MobileQRScannerPage() {
                   <button
                     onClick={triggerCamera}
                     disabled={awaitingAcknowledgment}
-                    className={`w-full py-4 px-6 rounded-xl font-bold text-sm shadow-lg transition-all flex items-center justify-center gap-2 ${
+                    className={`w-full py-5 px-8 rounded-2xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-3 ${
                       awaitingAcknowledgment
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white active:scale-95'
                     }`}
                   >
-                    <Camera className="w-5 h-5" />
+                    <Camera className="w-6 h-6" />
                     {awaitingAcknowledgment ? 'Scanner Disabled' : 'Take Photo & Scan'}
                   </button>
                   
-                  <p className={`text-xs mt-3 flex items-center justify-center gap-1 ${
+                  <p className={`text-xs mt-4 flex items-center justify-center gap-1 ${
                     awaitingAcknowledgment ? 'text-gray-400' : 'text-gray-500'
                   }`}>
                     <Zap className="w-3 h-3" />
@@ -465,37 +492,37 @@ export default function MobileQRScannerPage() {
                   />
                 </div>
               ) : (
-                <div className="p-6 text-center">
-                  <div className="w-32 h-32 mx-auto bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
-                    <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                <div className="p-8 text-center">
+                  <div className="w-40 h-40 mx-auto bg-blue-50 rounded-3xl flex items-center justify-center mb-6">
+                    <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"></div>
                   </div>
-                  <h3 className="text-lg font-bold text-blue-600 mb-2">Processing...</h3>
-                  <p className="text-sm text-blue-500">Detecting QR code in your photo</p>
+                  <h3 className="text-xl font-bold text-blue-600 mb-2">Processing...</h3>
+                  <p className="text-blue-500">Detecting QR code in your photo</p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Error Display - Compact */}
+          {/* Error Display */}
           {error && !duplicateInfo && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-5 h-5 text-red-500" />
+            <div className="bg-red-50 border-2 border-red-200 rounded-3xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-6 h-6 text-red-500" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-red-800 mb-2">Scan Not Saved</h3>
-                  <div className="text-sm text-red-600 mb-3 whitespace-pre-line">{error}</div>
-                  <div className="flex gap-2">
+                  <h3 className="text-lg font-bold text-red-800 mb-2">Scan Not Saved</h3>
+                  <div className="text-red-600 mb-4 whitespace-pre-line">{error}</div>
+                  <div className="flex gap-3">
                     <button
                       onClick={() => { setError(null); triggerCamera(); }}
-                      className="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-semibold active:scale-95 transition-transform"
+                      className="bg-red-100 text-red-700 px-6 py-3 rounded-xl font-semibold active:scale-95 transition-transform"
                     >
                       Try Again
                     </button>
                     <button
                       onClick={() => setError(null)}
-                      className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold active:scale-95 transition-transform"
+                      className="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-semibold active:scale-95 transition-transform"
                     >
                       Dismiss
                     </button>
@@ -505,27 +532,27 @@ export default function MobileQRScannerPage() {
             </div>
           )}
 
-          {/* Tips - Compact */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-sm">
-              <Zap className="w-4 h-4 text-blue-500" />
+          {/* Tips */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-blue-500" />
               Scanning Tips
             </h3>
-            <div className="space-y-2 text-xs text-gray-700">
-              <div className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+            <div className="space-y-3 text-sm text-gray-700">
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                 <span>Hold phone 6-12 inches from QR code</span>
               </div>
-              <div className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                 <span>Ensure good lighting (avoid shadows)</span>
               </div>
-              <div className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                 <span>Keep camera steady when taking photo</span>
               </div>
-              <div className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                 <span>Make sure entire QR code is visible</span>
               </div>
             </div>
