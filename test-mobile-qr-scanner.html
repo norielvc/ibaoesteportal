@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile QR Scanner Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .qr-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: white;
+            font-size: 24px;
+        }
+        .scan-area {
+            border: 2px dashed #ccc;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        .scan-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .scan-btn:active {
+            transform: scale(0.95);
+        }
+        .result {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+        .result.show {
+            display: block;
+        }
+        .error {
+            background: #ffeaea;
+            border: 2px solid #f44336;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+        .error.show {
+            display: block;
+        }
+        .processing {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .processing.show {
+            display: block;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .test-qr {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f8ff;
+            border-radius: 10px;
+            border: 2px solid #2196f3;
+        }
+        .test-qr img {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="qr-icon">📱</div>
+            <h1>Mobile QR Scanner Test</h1>
+            <p>Test QR code detection on mobile devices</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="successCount">0</div>
+                <div class="stat-label">Successful Scans</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="totalAttempts">0</div>
+                <div class="stat-label">Total Attempts</div>
+            </div>
+        </div>
+
+        <!-- Test QR Code -->
+        <div class="test-qr">
+            <h3>📷 Test QR Code</h3>
+            <p>Take a photo of this QR code to test:</p>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MOBILE-TEST-EMP001-SUCCESS" 
+                 alt="Test QR Code" style="image-rendering: pixelated;" />
+            <p><small><strong>Expected:</strong> "MOBILE-TEST-EMP001-SUCCESS"</small></p>
+        </div>
+
+        <!-- Scanner Interface -->
+        <div class="scan-area">
+            <div id="scanInterface">
+                <div style="font-size: 48px; margin-bottom: 15px;">📸</div>
+                <p>Ready to scan QR codes</p>
+                <button class="scan-btn" onclick="startScan()">📱 Take Photo & Scan</button>
+            </div>
+
+            <div id="processing" class="processing">
+                <div class="spinner"></div>
+                <p><strong>Processing QR Code...</strong></p>
+                <p>Trying multiple detection methods...</p>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="result" class="result">
+            <h3>✅ QR Code Detected!</h3>
+            <p><strong>Content:</strong></p>
+            <div id="qrContent" style="background: #f0f0f0; padding: 10px; border-radius: 5px; font-family: monospace; word-break: break-all;"></div>
+            <p><strong>Detection Time:</strong> <span id="detectionTime"></span></p>
+            <button class="scan-btn" onclick="resetScanner()" style="margin-top: 15px;">🔄 Scan Another</button>
+        </div>
+
+        <div id="error" class="error">
+            <h3>❌ Scan Failed</h3>
+            <p id="errorMessage"></p>
+            <button class="scan-btn" onclick="resetScanner()" style="background: #f44336;">🔄 Try Again</button>
+        </div>
+
+        <!-- Console Log -->
+        <div>
+            <h3>📝 Detection Log</h3>
+            <div id="log" class="log">Mobile QR Scanner ready...\n</div>
+        </div>
+
+        <!-- Hidden elements -->
+        <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;" />
+        <canvas id="canvas" style="display: none;"></canvas>
+    </div>
+
+    <script>
+        let successCount = 0;
+        let totalAttempts = 0;
+        let startTime = 0;
+
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `${timestamp}: ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStats() {
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('totalAttempts').textContent = totalAttempts;
+        }
+
+        function startScan() {
+            document.getElementById('fileInput').click();
+        }
+
+        function resetScanner() {
+            document.getElementById('scanInterface').style.display = 'block';
+            document.getElementById('processing').classList.remove('show');
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('error').classList.remove('show');
+        }
+
+        function showProcessing() {
+            document.getElementById('scanInterface').style.display = 'none';
+            document.getElementById('processing').classList.add('show');
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('error').classList.remove('show');
+        }
+
+        function showResult(qrData, detectionTime) {
+            document.getElementById('scanInterface').style.display = 'none';
+            document.getElementById('processing').classList.remove('show');
+            document.getElementById('result').classList.add('show');
+            document.getElementById('error').classList.remove('show');
+            
+            document.getElementById('qrContent').textContent = qrData;
+            document.getElementById('detectionTime').textContent = detectionTime + 'ms';
+            
+            successCount++;
+            updateStats();
+        }
+
+        function showError(message) {
+            document.getElementById('scanInterface').style.display = 'none';
+            document.getElementById('processing').classList.remove('show');
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('error').classList.add('show');
+            
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        async function detectQRMobile(file) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+
+                img.onload = async () => {
+                    try {
+                        log('📱 Image loaded, processing...');
+                        
+                        // Mobile-optimized canvas size
+                        const maxSize = 800;
+                        let { width, height } = img;
+                        
+                        if (width > maxSize || height > maxSize) {
+                            const ratio = Math.min(maxSize / width, maxSize / height);
+                            width = Math.floor(width * ratio);
+                            height = Math.floor(height * ratio);
+                            log(`📏 Resizing: ${img.width}x${img.height} → ${width}x${height}`);
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // High quality drawing
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const imageData = ctx.getImageData(0, 0, width, height);
+                        log(`📊 Image data: ${imageData.width}x${imageData.height}, ${imageData.data.length} bytes`);
+                        
+                        // Method 1: Try jsQR
+                        try {
+                            log('🔍 Trying jsQR detection...');
+                            const jsQRModule = await import('https://cdn.skypack.dev/jsqr');
+                            const jsQR = jsQRModule.default;
+                            
+                            if (typeof jsQR === 'function') {
+                                const result = jsQR(imageData.data, imageData.width, imageData.height, {
+                                    inversionAttempts: "attemptBoth",
+                                });
+                                
+                                if (result && result.data) {
+                                    log('✅ jsQR success: ' + result.data);
+                                    resolve(result.data);
+                                    return;
+                                }
+                                log('❌ jsQR: No QR code found');
+                            } else {
+                                log('❌ jsQR: Library not loaded properly');
+                            }
+                        } catch (jsqrError) {
+                            log('❌ jsQR error: ' + jsqrError.message);
+                        }
+
+                        // Method 2: Enhanced contrast detection
+                        try {
+                            log('🔍 Trying enhanced contrast detection...');
+                            const jsQRModule = await import('https://cdn.skypack.dev/jsqr');
+                            const jsQR = jsQRModule.default;
+                            
+                            if (typeof jsQR === 'function') {
+                                const enhancedImageData = ctx.createImageData(imageData.width, imageData.height);
+                                const originalData = imageData.data;
+                                const enhancedData = enhancedImageData.data;
+                                
+                                // Mobile-optimized contrast enhancement
+                                for (let i = 0; i < originalData.length; i += 4) {
+                                    const gray = 0.299 * originalData[i] + 0.587 * originalData[i + 1] + 0.114 * originalData[i + 2];
+                                    const enhanced = gray > 120 ? 255 : 0;
+                                    enhancedData[i] = enhanced;
+                                    enhancedData[i + 1] = enhanced;
+                                    enhancedData[i + 2] = enhanced;
+                                    enhancedData[i + 3] = originalData[i + 3];
+                                }
+                                
+                                const result = jsQR(enhancedData.data, enhancedImageData.width, enhancedImageData.height, {
+                                    inversionAttempts: "attemptBoth",
+                                });
+                                
+                                if (result && result.data) {
+                                    log('✅ Enhanced contrast success: ' + result.data);
+                                    resolve(result.data);
+                                    return;
+                                }
+                                log('❌ Enhanced contrast: No QR code found');
+                            }
+                        } catch (contrastError) {
+                            log('❌ Enhanced contrast error: ' + contrastError.message);
+                        }
+
+                        log('❌ All detection methods failed');
+                        resolve(null);
+                        
+                    } catch (err) {
+                        log('❌ Processing error: ' + err.message);
+                        reject(err);
+                    }
+                };
+
+                img.onerror = () => {
+                    log('❌ Image load failed');
+                    reject(new Error('Image load failed'));
+                };
+
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            totalAttempts++;
+            updateStats();
+            startTime = Date.now();
+
+            log(`📁 File selected: ${file.name} (${file.size} bytes)`);
+            showProcessing();
+
+            try {
+                if (!file.type.startsWith('image/')) {
+                    throw new Error('Please select a valid image file');
+                }
+
+                const result = await detectQRMobile(file);
+                const detectionTime = Date.now() - startTime;
+
+                if (result) {
+                    log(`🎉 QR Code detected in ${detectionTime}ms: ${result}`);
+                    showResult(result, detectionTime);
+                } else {
+                    log(`❌ No QR code found after ${detectionTime}ms`);
+                    showError('No QR code found in the image.\n\nTips:\n• Ensure good lighting\n• Hold camera steady\n• Get close to QR code\n• Make sure QR code is not damaged');
+                }
+
+            } catch (err) {
+                const detectionTime = Date.now() - startTime;
+                log(`❌ Scan failed after ${detectionTime}ms: ${err.message}`);
+                showError(`Scan failed: ${err.message}`);
+            }
+
+            // Reset file input
+            event.target.value = '';
+        });
+
+        // Initialize
+        log('📱 Mobile QR Scanner initialized');
+        updateStats();
+    </script>
+</body>
+</html>

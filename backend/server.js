@@ -14,6 +14,8 @@ const eventRoutes = require('./routes/events-supabase');
 const facilityRoutes = require('./routes/facilities-supabase');
 const officialRoutes = require('./routes/officials-supabase');
 const educationalAssistanceRoutes = require('./routes/educational-assistance-supabase');
+const employeeScansRoutes = require('./routes/employee-scans-supabase');
+const employeesQRRoutes = require('./routes/employees-qr-supabase');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -111,6 +113,8 @@ app.use('/api/events', eventRoutes); // Events/Carousel management (public GET, 
 app.use('/api/facilities', facilityRoutes); // Facilities management (public GET, private POST/PUT/DELETE)
 app.use('/api/officials', officialRoutes); // Barangay officials (public GET)
 app.use('/api/educational-assistance', educationalAssistanceRoutes); // Educational assistance program (public POST, private GET)
+app.use('/api/employee-scans', authenticateToken, employeeScansRoutes); // Employee QR scan tracking
+app.use('/api/employees', authenticateToken, employeesQRRoutes); // Employee QR management
 
 // 404 handler
 app.use('*', (req, res) => {
