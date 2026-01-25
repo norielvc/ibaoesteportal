@@ -149,6 +149,9 @@ export default function QRScannerSimplePage() {
   };
 
   const handleScanSuccess = async (decodedText) => {
+    console.log('🎉 QR CODE SUCCESSFULLY DETECTED:', decodedText);
+    console.log('📱 Scan timestamp:', new Date().toISOString());
+    
     setScanResult(decodedText);
     
     // Add to history
@@ -161,7 +164,10 @@ export default function QRScannerSimplePage() {
 
     // Try to fetch certificate data if it looks like a reference number
     if (decodedText.match(/^(BC|CI|BR)-\d{4}-\d{5}$/)) {
+      console.log('🔍 Detected certificate reference number, fetching data...');
       await fetchCertificateData(decodedText);
+    } else {
+      console.log('📄 QR content is not a certificate reference number');
     }
   };
 
@@ -189,7 +195,14 @@ export default function QRScannerSimplePage() {
 
   const copyToClipboard = () => {
     if (scanResult) {
-      navigator.clipboard.writeText(scanResult);
+      navigator.clipboard.writeText(scanResult).then(() => {
+        console.log('📋 Content copied to clipboard:', scanResult);
+        // You could add a toast notification here if you have one
+        alert('✅ Content copied to clipboard!');
+      }).catch(err => {
+        console.error('❌ Failed to copy to clipboard:', err);
+        alert('❌ Failed to copy to clipboard');
+      });
     }
   };
 
@@ -237,6 +250,93 @@ export default function QRScannerSimplePage() {
 
         {/* Scanner Container */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          
+          {/* Scan Results Display - Priority Section */}
+          {scanResult && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 p-6">
+              <div className="text-center mb-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-green-800 mb-2">🎉 QR Code Detected!</h2>
+                <p className="text-green-600">Successfully scanned QR code content</p>
+              </div>
+
+              {/* Large Scanned Content Display */}
+              <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-sm">
+                <label className="text-sm font-bold text-green-700 uppercase tracking-wide mb-3 block">📱 SCANNED CONTENT:</label>
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <p className="font-mono text-xl text-gray-900 font-bold break-all text-center">{scanResult}</p>
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={copyToClipboard}
+                    className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 flex items-center justify-center gap-2 transition-all"
+                  >
+                    <Copy className="w-5 h-5" />
+                    Copy Content
+                  </button>
+                  <button
+                    onClick={resetScanner}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 flex items-center justify-center gap-2 transition-all"
+                  >
+                    <RefreshCw className="w-5 h-5" />
+                    Scan Another
+                  </button>
+                </div>
+              </div>
+
+              {/* Certificate Data */}
+              {loading && (
+                <div className="text-center py-4 mt-4">
+                  <div className="animate-spin w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full mx-auto"></div>
+                  <p className="text-sm text-green-600 mt-2">Fetching certificate details...</p>
+                </div>
+              )}
+
+              {certificateData && (
+                <div className="bg-white rounded-xl p-4 border-2 border-green-200 mt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileText className="w-5 h-5 text-green-600" />
+                    <h4 className="font-semibold text-green-900">Certificate Found</h4>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-green-700">Type:</span>
+                      <span className="font-medium text-green-900">{getTypeLabel(certificateData.certificate_type)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-green-700">Applicant:</span>
+                      <span className="font-medium text-green-900">{certificateData.full_name || certificateData.applicant_name}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-green-700">Status:</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(certificateData.status)}`}>
+                        {certificateData.status?.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-green-700">Date Issued:</span>
+                      <span className="font-medium text-green-900">
+                        {certificateData.date_issued ? new Date(certificateData.date_issued).toLocaleDateString() : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => router.push(`/requests?search=${scanResult}`)}
+                    className="w-full mt-4 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    View Full Details
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Upload Area */}
           <div className="relative">
             {!scanResult && !processing && (
@@ -283,100 +383,8 @@ export default function QRScannerSimplePage() {
                     <div className="animate-spin w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                     <p className="text-purple-600 font-medium">Processing Image...</p>
                     <p className="text-purple-500 text-sm mt-2">Scanning for QR codes</p>
+                    <p className="text-purple-400 text-xs mt-2">🔍 Trying multiple detection methods...</p>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {scanResult && (
-              <div className="p-6">
-                {/* Success indicator */}
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <CheckCircle className="w-8 h-8 text-purple-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">QR Code Found!</h3>
-                </div>
-
-                {/* Scanned Result */}
-                <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Scanned Content</label>
-                  <div className="flex items-center gap-2 mt-2">
-                    <p className="flex-1 font-mono text-lg text-purple-600 font-semibold break-all">{scanResult}</p>
-                    <button
-                      onClick={copyToClipboard}
-                      className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                      title="Copy to clipboard"
-                    >
-                      <Copy className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Certificate Data */}
-                {loading && (
-                  <div className="text-center py-4">
-                    <div className="animate-spin w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
-                    <p className="text-sm text-gray-500 mt-2">Fetching certificate details...</p>
-                  </div>
-                )}
-
-                {certificateData && (
-                  <div className="bg-purple-50 rounded-xl p-4 border border-purple-200 mb-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <FileText className="w-5 h-5 text-purple-600" />
-                      <h4 className="font-semibold text-purple-900">Certificate Found</h4>
-                    </div>
-                    
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-purple-700">Type:</span>
-                        <span className="font-medium text-purple-900">{getTypeLabel(certificateData.certificate_type)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-purple-700">Applicant:</span>
-                        <span className="font-medium text-purple-900">{certificateData.full_name || certificateData.applicant_name}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-purple-700">Status:</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(certificateData.status)}`}>
-                          {certificateData.status?.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-purple-700">Date Issued:</span>
-                        <span className="font-medium text-purple-900">
-                          {certificateData.date_issued ? new Date(certificateData.date_issued).toLocaleDateString() : 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => router.push(`/requests?search=${scanResult}`)}
-                      className="w-full mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 flex items-center justify-center gap-2"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      View Full Details
-                    </button>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={resetScanner}
-                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 flex items-center justify-center gap-2"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Reset
-                  </button>
-                  <button
-                    onClick={triggerFileInput}
-                    className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 flex items-center justify-center gap-2"
-                  >
-                    <CameraIcon className="w-4 h-4" />
-                    Scan Another
-                  </button>
                 </div>
               </div>
             )}
