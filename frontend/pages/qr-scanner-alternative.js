@@ -65,11 +65,17 @@ export default function QRScannerAlternativePage() {
 
       console.log('🔍 Using Html5Qrcode library for detection...');
       
-      // Use Html5Qrcode library
+      // Use Html5Qrcode library - import it properly
       const { Html5Qrcode } = await import('html5-qrcode');
       
+      // Create a temporary element for scanning
+      const tempElement = document.createElement('div');
+      tempElement.id = 'temp-qr-reader-' + Date.now();
+      tempElement.style.display = 'none';
+      document.body.appendChild(tempElement);
+      
       // Create a temporary HTML5 QR Code scanner
-      const html5QrCode = new Html5Qrcode("temp-qr-reader");
+      const html5QrCode = new Html5Qrcode(tempElement.id);
       
       try {
         console.log('📸 Scanning file with Html5Qrcode...');
@@ -82,6 +88,11 @@ export default function QRScannerAlternativePage() {
         
         // Fallback to manual canvas method
         await tryCanvasMethod(file);
+      } finally {
+        // Clean up the temporary element
+        if (tempElement && tempElement.parentNode) {
+          tempElement.parentNode.removeChild(tempElement);
+        }
       }
       
     } catch (err) {
@@ -141,9 +152,37 @@ export default function QRScannerAlternativePage() {
                 resolve();
               } catch (zxingError) {
                 console.log('❌ ZXing-js also failed:', zxingError);
-                setError('No QR code could be detected in this image. Please try:\n• Taking a clearer photo\n• Ensuring good lighting\n• Making sure the entire QR code is visible\n• Using a different QR code');
-                setProcessing(false);
-                reject(zxingError);
+                
+                // Try jsQR as final fallback
+                try {
+                  console.log('🔍 Trying jsQR as final fallback...');
+                  const jsQR = (await import('jsqr')).default;
+                  
+                  if (typeof jsQR === 'function') {
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                      inversionAttempts: "attemptBoth",
+                    });
+                    
+                    if (code) {
+                      console.log('✅ QR Code detected with jsQR fallback:', code.data);
+                      handleScanSuccess(code.data);
+                      resolve();
+                    } else {
+                      console.log('❌ All detection methods failed');
+                      setError('No QR code could be detected in this image. Please try:\n• Taking a clearer photo\n• Ensuring good lighting\n• Making sure the entire QR code is visible\n• Using a different QR code');
+                      setProcessing(false);
+                      reject(new Error('All detection methods failed'));
+                    }
+                  } else {
+                    throw new Error('jsQR not available');
+                  }
+                } catch (jsqrError) {
+                  console.log('❌ jsQR fallback also failed:', jsqrError);
+                  setError('No QR code could be detected in this image. Please try:\n• Taking a clearer photo\n• Ensuring good lighting\n• Making sure the entire QR code is visible\n• Using a different QR code');
+                  setProcessing(false);
+                  reject(jsqrError);
+                }
               }
             }, 'image/png');
             
@@ -389,8 +428,7 @@ export default function QRScannerAlternativePage() {
           )}
         </div>
 
-        {/* Hidden elements for Html5Qrcode */}
-        <div id="temp-qr-reader" style={{ display: 'none' }}></div>
+        {/* Hidden canvas for image processing */}
         <canvas ref={canvasRef} className="hidden" />
       </div>
     </Layout>

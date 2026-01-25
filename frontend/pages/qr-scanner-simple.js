@@ -128,25 +128,18 @@ export default function QRScannerSimplePage() {
           
           let jsQR;
           try {
-            // Try different import methods for jsQR
-            const jsQRModule = await import('jsqr');
-            jsQR = jsQRModule.default || jsQRModule.jsQR || jsQRModule;
+            // Import jsQR - it's a default export
+            jsQR = (await import('jsqr')).default;
             console.log('✅ jsQR library loaded:', typeof jsQR);
             
             if (typeof jsQR !== 'function') {
-              console.log('🔄 jsQR not a function, trying alternative import...');
-              // Try alternative import
-              jsQR = (await import('jsqr')).default;
+              console.error('❌ jsQR is not a function:', typeof jsQR, jsQR);
+              throw new Error('QR detection library is not properly loaded. Please refresh the page and try again.');
             }
             
           } catch (importError) {
             console.error('❌ Failed to import jsQR:', importError);
             throw new Error('Failed to load QR detection library. Please refresh the page and try again.');
-          }
-          
-          if (typeof jsQR !== 'function') {
-            console.error('❌ jsQR is not a function after all attempts:', typeof jsQR, jsQR);
-            throw new Error('QR detection library is not properly loaded. Please refresh the page and try again.');
           }
           
           // Try multiple detection attempts with different settings
