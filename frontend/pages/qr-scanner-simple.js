@@ -125,79 +125,105 @@ export default function QRScannerSimplePage() {
           
           // Import and use jsQR with better options
           console.log('🔍 Loading jsQR library...');
-          const { default: jsQR } = await import('jsqr');
-          console.log('✅ jsQR library loaded successfully');
+          
+          let jsQR;
+          try {
+            // Try different import methods for jsQR
+            const jsQRModule = await import('jsqr');
+            jsQR = jsQRModule.default || jsQRModule.jsQR || jsQRModule;
+            console.log('✅ jsQR library loaded:', typeof jsQR);
+            
+            if (typeof jsQR !== 'function') {
+              console.log('🔄 jsQR not a function, trying alternative import...');
+              // Try alternative import
+              jsQR = (await import('jsqr')).default;
+            }
+            
+          } catch (importError) {
+            console.error('❌ Failed to import jsQR:', importError);
+            throw new Error('Failed to load QR detection library. Please refresh the page and try again.');
+          }
+          
+          if (typeof jsQR !== 'function') {
+            console.error('❌ jsQR is not a function after all attempts:', typeof jsQR, jsQR);
+            throw new Error('QR detection library is not properly loaded. Please refresh the page and try again.');
+          }
           
           // Try multiple detection attempts with different settings
           let code = null;
           let attemptCount = 0;
           
-          console.log('🔍 Attempt 1: Normal detection...');
-          attemptCount++;
-          code = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: "dontInvert",
-          });
-          
-          if (code) {
-            console.log('✅ QR Code found on attempt', attemptCount, ':', code.data);
-          } else {
-            console.log('❌ Attempt 1 failed, trying inverted...');
-            
-            // Second attempt - with inversion
-            console.log('🔍 Attempt 2: Inverted detection...');
+          try {
+            console.log('🔍 Attempt 1: Normal detection...');
             attemptCount++;
             code = jsQR(imageData.data, imageData.width, imageData.height, {
-              inversionAttempts: "onlyInvert",
+              inversionAttempts: "dontInvert",
             });
             
             if (code) {
-              console.log('✅ QR Code found on attempt', attemptCount, '(inverted):', code.data);
+              console.log('✅ QR Code found on attempt', attemptCount, ':', code.data);
             } else {
-              console.log('❌ Attempt 2 failed, trying both...');
+              console.log('❌ Attempt 1 failed, trying inverted...');
               
-              // Third attempt - try both
-              console.log('🔍 Attempt 3: Both normal and inverted...');
+              // Second attempt - with inversion
+              console.log('🔍 Attempt 2: Inverted detection...');
               attemptCount++;
               code = jsQR(imageData.data, imageData.width, imageData.height, {
-                inversionAttempts: "attemptBoth",
+                inversionAttempts: "onlyInvert",
               });
               
               if (code) {
-                console.log('✅ QR Code found on attempt', attemptCount, '(both):', code.data);
+                console.log('✅ QR Code found on attempt', attemptCount, '(inverted):', code.data);
               } else {
-                console.log('❌ Attempt 3 failed, trying contrast enhancement...');
+                console.log('❌ Attempt 2 failed, trying both...');
                 
-                // Fourth attempt - enhance contrast and try again
-                console.log('🔍 Attempt 4: Contrast enhancement...');
+                // Third attempt - try both
+                console.log('🔍 Attempt 3: Both normal and inverted...');
                 attemptCount++;
-                
-                // Create a copy of image data for contrast enhancement
-                const enhancedImageData = ctx.createImageData(imageData.width, imageData.height);
-                const originalData = imageData.data;
-                const enhancedData = enhancedImageData.data;
-                
-                // Enhance contrast
-                for (let i = 0; i < originalData.length; i += 4) {
-                  // Convert to grayscale and enhance contrast
-                  const gray = 0.299 * originalData[i] + 0.587 * originalData[i + 1] + 0.114 * originalData[i + 2];
-                  const enhanced = gray > 128 ? 255 : 0; // High contrast
-                  enhancedData[i] = enhanced;     // Red
-                  enhancedData[i + 1] = enhanced; // Green
-                  enhancedData[i + 2] = enhanced; // Blue
-                  enhancedData[i + 3] = originalData[i + 3]; // Alpha
-                }
-                
-                code = jsQR(enhancedData.data, enhancedImageData.width, enhancedImageData.height, {
+                code = jsQR(imageData.data, imageData.width, imageData.height, {
                   inversionAttempts: "attemptBoth",
                 });
                 
                 if (code) {
-                  console.log('✅ QR Code found on attempt', attemptCount, '(contrast enhanced):', code.data);
+                  console.log('✅ QR Code found on attempt', attemptCount, '(both):', code.data);
                 } else {
-                  console.log('❌ All', attemptCount, 'attempts failed');
+                  console.log('❌ Attempt 3 failed, trying contrast enhancement...');
+                  
+                  // Fourth attempt - enhance contrast and try again
+                  console.log('🔍 Attempt 4: Contrast enhancement...');
+                  attemptCount++;
+                  
+                  // Create a copy of image data for contrast enhancement
+                  const enhancedImageData = ctx.createImageData(imageData.width, imageData.height);
+                  const originalData = imageData.data;
+                  const enhancedData = enhancedImageData.data;
+                  
+                  // Enhance contrast
+                  for (let i = 0; i < originalData.length; i += 4) {
+                    // Convert to grayscale and enhance contrast
+                    const gray = 0.299 * originalData[i] + 0.587 * originalData[i + 1] + 0.114 * originalData[i + 2];
+                    const enhanced = gray > 128 ? 255 : 0; // High contrast
+                    enhancedData[i] = enhanced;     // Red
+                    enhancedData[i + 1] = enhanced; // Green
+                    enhancedData[i + 2] = enhanced; // Blue
+                    enhancedData[i + 3] = originalData[i + 3]; // Alpha
+                  }
+                  
+                  code = jsQR(enhancedData.data, enhancedImageData.width, enhancedImageData.height, {
+                    inversionAttempts: "attemptBoth",
+                  });
+                  
+                  if (code) {
+                    console.log('✅ QR Code found on attempt', attemptCount, '(contrast enhanced):', code.data);
+                  } else {
+                    console.log('❌ All', attemptCount, 'attempts failed');
+                  }
                 }
               }
             }
+          } catch (detectionError) {
+            console.error('❌ QR detection error:', detectionError);
+            throw new Error(`QR detection failed: ${detectionError.message}`);
           }
 
           if (code) {
