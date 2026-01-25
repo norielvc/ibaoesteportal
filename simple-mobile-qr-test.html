@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Mobile QR Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 32px;
+            color: white;
+        }
+        
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .scan-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            margin: 30px 0;
+            background: #f9f9f9;
+            transition: all 0.3s ease;
+        }
+        
+        .scan-area.processing {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .camera-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+        
+        .scan-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 20px 0;
+            transition: transform 0.2s ease;
+        }
+        
+        .scan-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .scan-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            display: none;
+            text-align: center;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .qr-content {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 16px;
+            word-break: break-all;
+            margin: 15px 0;
+        }
+        
+        .error {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .test-qr {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 15px;
+            border: 2px solid #2196f3;
+        }
+        
+        .test-qr img {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .tips {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .tips h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .tips ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tips li {
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .tips li:before {
+            content: "📱 ";
+            margin-right: 8px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">📱</div>
+            <h1>Simple Mobile QR Scanner</h1>
+            <p class="subtitle">Ultra-simple QR code detection</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="successCount">0</div>
+                <div class="stat-label">Success</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Attempts</div>
+            </div>
+        </div>
+
+        <!-- Test QR Code -->
+        <div class="test-qr">
+            <h3>🧪 Test QR Code</h3>
+            <p>Take a photo of this QR code to test:</p>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=EMP001-TEST-SUCCESS" 
+                 alt="Test QR Code" />
+            <p><small><strong>Expected:</strong> "EMP001-TEST-SUCCESS"</small></p>
+        </div>
+
+        <!-- Scanner Interface -->
+        <div class="scan-area" id="scanArea">
+            <div class="camera-icon">📸</div>
+            <p>Ready to scan employee QR codes</p>
+            <button class="scan-btn" id="scanBtn" onclick="startScan()">
+                📷 Take Photo & Scan QR
+            </button>
+        </div>
+
+        <!-- Results -->
+        <div id="result" class="result">
+            <h3>✅ QR Code Detected!</h3>
+            <div class="qr-content" id="qrContent"></div>
+            <button class="scan-btn" onclick="resetScanner()">🔄 Scan Another</button>
+        </div>
+
+        <div id="error" class="error">
+            <h3>❌ Scan Failed</h3>
+            <p id="errorMessage"></p>
+            <button class="scan-btn" onclick="resetScanner()">🔄 Try Again</button>
+        </div>
+
+        <!-- Tips -->
+        <div class="tips">
+            <h3>💡 Scanning Tips</h3>
+            <ul>
+                <li>Hold phone 6-12 inches from QR code</li>
+                <li>Ensure good lighting (no shadows)</li>
+                <li>Keep camera steady</li>
+                <li>Make sure entire QR code is visible</li>
+                <li>Try different angles if first attempt fails</li>
+            </ul>
+        </div>
+
+        <!-- Hidden elements -->
+        <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;" />
+        <canvas id="canvas" style="display: none;"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script>
+        let successCount = 0;
+        let totalCount = 0;
+
+        function updateStats() {
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('totalCount').textContent = totalCount;
+        }
+
+        function startScan() {
+            document.getElementById('fileInput').click();
+        }
+
+        function resetScanner() {
+            document.getElementById('scanArea').style.display = 'block';
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('error').classList.remove('show');
+            document.getElementById('scanBtn').disabled = false;
+        }
+
+        function showProcessing() {
+            document.getElementById('scanArea').classList.add('processing');
+            document.getElementById('scanBtn').disabled = true;
+            document.getElementById('scanBtn').innerHTML = '<div class="spinner"></div>Processing...';
+        }
+
+        function showResult(qrData) {
+            document.getElementById('scanArea').style.display = 'none';
+            document.getElementById('result').classList.add('show');
+            document.getElementById('error').classList.remove('show');
+            document.getElementById('qrContent').textContent = qrData;
+            
+            successCount++;
+            updateStats();
+            
+            // Vibrate if supported
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('scanArea').style.display = 'none';
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('error').classList.add('show');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        async function detectQR(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+
+                img.onload = () => {
+                    try {
+                        console.log('📱 Processing image...');
+                        
+                        // Optimize for mobile
+                        const maxSize = 800;
+                        let { width, height } = img;
+                        
+                        if (width > maxSize || height > maxSize) {
+                            const ratio = Math.min(maxSize / width, maxSize / height);
+                            width = Math.floor(width * ratio);
+                            height = Math.floor(height * ratio);
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const imageData = ctx.getImageData(0, 0, width, height);
+                        console.log('📊 Image data ready:', width + 'x' + height);
+                        
+                        // Try jsQR with different options
+                        const options = [
+                            { inversionAttempts: "dontInvert" },
+                            { inversionAttempts: "onlyInvert" },
+                            { inversionAttempts: "attemptBoth" }
+                        ];
+                        
+                        for (let i = 0; i < options.length; i++) {
+                            console.log('🔍 Attempt', i + 1, 'with options:', options[i]);
+                            
+                            if (typeof jsQR === 'function') {
+                                const code = jsQR(imageData.data, imageData.width, imageData.height, options[i]);
+                                
+                                if (code && code.data) {
+                                    console.log('✅ QR detected on attempt', i + 1, ':', code.data);
+                                    resolve(code.data);
+                                    return;
+                                }
+                            }
+                        }
+                        
+                        console.log('❌ No QR code found after all attempts');
+                        resolve(null);
+                        
+                    } catch (err) {
+                        console.error('❌ Detection error:', err);
+                        resolve(null);
+                    }
+                };
+
+                img.onerror = () => {
+                    console.error('❌ Image load failed');
+                    resolve(null);
+                };
+
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            totalCount++;
+            updateStats();
+
+            console.log('📁 File selected:', file.name, file.size + ' bytes');
+            showProcessing();
+
+            try {
+                if (!file.type.startsWith('image/')) {
+                    throw new Error('Please select a valid image file');
+                }
+
+                const result = await detectQR(file);
+
+                if (result) {
+                    console.log('🎉 Success:', result);
+                    showResult(result);
+                } else {
+                    console.log('❌ No QR found');
+                    showError('No QR code found in the image.\n\nTips:\n• Ensure good lighting\n• Hold camera steady\n• Get close to QR code\n• Make sure QR code is complete');
+                }
+
+            } catch (err) {
+                console.error('❌ Error:', err);
+                showError('Scan failed: ' + err.message);
+            }
+
+            // Reset file input
+            event.target.value = '';
+        });
+
+        // Initialize
+        console.log('📱 Simple Mobile QR Scanner ready');
+        updateStats();
+        
+        // Check if jsQR is loaded
+        if (typeof jsQR === 'function') {
+            console.log('✅ jsQR library loaded successfully');
+        } else {
+            console.error('❌ jsQR library not loaded');
+        }
+    </script>
+</body>
+</html>

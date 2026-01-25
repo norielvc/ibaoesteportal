@@ -74,6 +74,12 @@ const navigation = [
     description: 'Manage requests'
   },
   {
+    name: 'Mobile Employee Scanner',
+    href: '/mobile-employee-scanner',
+    icon: Smartphone,
+    description: 'Simple mobile QR scanner'
+  },
+  {
     name: 'Employee QR Scanner',
     href: '/employee-qr-scanner',
     icon: Smartphone,
