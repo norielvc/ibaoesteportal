@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../services/supabaseClient');
-const authMiddleware = require('../middleware/auth-supabase');
+const { authenticateToken } = require('../middleware/auth-supabase');
 
 // GET /api/employees/by-qr - Get employee data by QR code
-router.get('/by-qr', authMiddleware, async (req, res) => {
+router.get('/by-qr', authenticateToken, async (req, res) => {
   try {
     const { qr } = req.query;
 
@@ -114,7 +114,7 @@ router.get('/by-qr', authMiddleware, async (req, res) => {
 });
 
 // POST /api/employees/register-qr - Register QR code for an employee
-router.post('/register-qr', authMiddleware, async (req, res) => {
+router.post('/register-qr', authenticateToken, async (req, res) => {
   try {
     const { employee_id, qr_code, name, position, email, department } = req.body;
 
@@ -210,7 +210,7 @@ router.post('/register-qr', authMiddleware, async (req, res) => {
 });
 
 // GET /api/employees/qr-list - Get all employees with QR codes
-router.get('/qr-list', authMiddleware, async (req, res) => {
+router.get('/qr-list', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 50 } = req.query;
     const offset = (page - 1) * limit;

@@ -16,11 +16,9 @@ import {
   Calendar,
   GitBranch,
   ClipboardList,
-  QrCode,
   Building2,
-  Zap,
-  Image,
-  Smartphone
+  Smartphone,
+  History
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout, getUserData } from '@/lib/auth';
@@ -74,46 +72,16 @@ const navigation = [
     description: 'Manage requests'
   },
   {
-    name: 'Mobile Employee Scanner',
-    href: '/mobile-employee-scanner',
+    name: 'Mobile QR Scanner',
+    href: '/mobile-qr-scanner',
     icon: Smartphone,
-    description: 'Simple mobile QR scanner'
+    description: 'Scan any QR code with mobile'
   },
   {
-    name: 'Employee QR Scanner',
-    href: '/employee-qr-scanner',
-    icon: Smartphone,
-    description: 'Scan employee ID QR codes'
-  },
-  {
-    name: 'Employee Scan Monitor',
-    href: '/employee-scan-monitor',
-    icon: Activity,
-    description: 'Monitor scan activity'
-  },
-  {
-    name: 'Employee QR Generator',
-    href: '/employee-qr-generator',
-    icon: QrCode,
-    description: 'Generate employee QR codes'
-  },
-  {
-    name: 'QR Scanner',
-    href: '/qr-scanner',
-    icon: QrCode,
-    description: 'Scan certificate QR codes'
-  },
-  {
-    name: 'Native QR Scanner',
-    href: '/qr-scanner-native',
-    icon: Zap,
-    description: 'iPhone-optimized scanner'
-  },
-  {
-    name: 'Simple QR Scanner',
-    href: '/qr-scanner-simple',
-    icon: Image,
-    description: 'Upload photo method'
+    name: 'QR Scan History',
+    href: '/qr-scan-history',
+    icon: History,
+    description: 'View all scanned QR codes'
   },
   {
     name: 'Roles & Permissions',

@@ -16,6 +16,7 @@ const officialRoutes = require('./routes/officials-supabase');
 const educationalAssistanceRoutes = require('./routes/educational-assistance-supabase');
 const employeeScansRoutes = require('./routes/employee-scans-supabase');
 const employeesQRRoutes = require('./routes/employees-qr-supabase');
+const qrScansRoutes = require('./routes/qr-scans-supabase');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -90,7 +91,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Supabase connection check
-require('./services/supabaseClient');
+const { supabase } = require('./services/supabaseClient');
 console.log('✅ Connected to Supabase');
 
 // Health check endpoint
@@ -115,6 +116,7 @@ app.use('/api/officials', officialRoutes); // Barangay officials (public GET)
 app.use('/api/educational-assistance', educationalAssistanceRoutes); // Educational assistance program (public POST, private GET)
 app.use('/api/employee-scans', authenticateToken, employeeScansRoutes); // Employee QR scan tracking
 app.use('/api/employees', authenticateToken, employeesQRRoutes); // Employee QR management
+app.use('/api/qr-scans', authenticateToken, qrScansRoutes); // General QR scan tracking
 
 // 404 handler
 app.use('*', (req, res) => {

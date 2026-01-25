@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator for Testing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+        }
+        #qrcode {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .preset-btn {
+            background: #28a745;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .instructions {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .instructions ol {
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔳 QR Code Generator</h1>
+        <p>Generate QR codes for testing your Mobile QR Scanner</p>
+
+        <div class="input-group">
+            <label for="qrText">Enter text or data for QR code:</label>
+            <textarea id="qrText" rows="3" placeholder="Enter any text, URL, or data...">Hello World! This is a test QR code.</textarea>
+        </div>
+
+        <button onclick="generateQR()">📱 Generate QR Code</button>
+
+        <div class="preset-buttons">
+            <button class="preset-btn" onclick="setPreset('Hello World!')">Hello World</button>
+            <button class="preset-btn" onclick="setPreset('https://google.com')">Google URL</button>
+            <button class="preset-btn" onclick="setPreset('EMP001')">Employee ID</button>
+            <button class="preset-btn" onclick="setPreset('CERT-2024-001')">Certificate ID</button>
+            <button class="preset-btn" onclick="setPreset('Contact: John Doe, +1234567890')">Contact Info</button>
+        </div>
+
+        <div id="qrcode"></div>
+
+        <div class="instructions">
+            <h3>📋 How to Test:</h3>
+            <ol>
+                <li><strong>Generate a QR code</strong> using the form above</li>
+                <li><strong>Take a screenshot</strong> or save the QR code image</li>
+                <li><strong>Open your Mobile QR Scanner</strong> at <code>http://localhost:3000/mobile-qr-scanner</code></li>
+                <li><strong>Use the scanner</strong> to take a photo of the QR code</li>
+                <li><strong>Verify</strong> that the scanned data matches what you entered</li>
+                <li><strong>Check</strong> that the timestamp is recorded correctly</li>
+            </ol>
+            
+            <h3>💡 Tips:</h3>
+            <ul>
+                <li>Make sure the QR code is clearly visible on your screen</li>
+                <li>Use good lighting when scanning</li>
+                <li>Hold your phone steady when taking the photo</li>
+                <li>Try different types of data (text, URLs, numbers)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        function generateQR() {
+            const text = document.getElementById('qrText').value;
+            const qrContainer = document.getElementById('qrcode');
+            
+            if (!text.trim()) {
+                alert('Please enter some text for the QR code');
+                return;
+            }
+
+            // Clear previous QR code
+            qrContainer.innerHTML = '';
+
+            // Generate QR code
+            QRCode.toCanvas(text, {
+                width: 300,
+                height: 300,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            }, function (error, canvas) {
+                if (error) {
+                    console.error('Error generating QR code:', error);
+                    alert('Error generating QR code');
+                    return;
+                }
+                
+                qrContainer.appendChild(canvas);
+                
+                // Add download button
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = '💾 Download QR Code';
+                downloadBtn.onclick = function() {
+                    const link = document.createElement('a');
+                    link.download = 'qr-code.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                };
+                qrContainer.appendChild(downloadBtn);
+            });
+        }
+
+        function setPreset(text) {
+            document.getElementById('qrText').value = text;
+            generateQR();
+        }
+
+        // Generate initial QR code
+        window.onload = function() {
+            generateQR();
+        };
+    </script>
+</body>
+</html>

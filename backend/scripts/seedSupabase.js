@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const supabase = require('../services/supabaseClient');
+const { supabase } = require('../services/supabaseClient');
 require('dotenv').config();
 
 const sampleUsers = [

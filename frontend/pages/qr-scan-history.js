@@ -1,0 +1,609 @@
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import Layout from '@/components/Layout/Layout';
+import { 
+  History, Search, Calendar, User, Clock, 
+  Smartphone, RefreshCw, Eye, Trash2, Download, CheckCircle, AlertCircle
+} from 'lucide-react';
+import { isAuthenticated, getAuthToken } from '@/lib/auth';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+
+export default function QRScanHistoryPage() {
+  const router = useRouter();
+  const [scans, setScans] = useState([]);
+  const [duplicates, setDuplicates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [duplicatesLoading, setDuplicatesLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({ today: 0, total: 0 });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [activeTab, setActiveTab] = useState('scans'); // 'scans' or 'duplicates'
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+    loadScans();
+    loadStats();
+    loadDuplicates();
+  }, [currentPage, searchTerm, selectedDate]);
+
+  const loadDuplicates = async () => {
+    try {
+      setDuplicatesLoading(true);
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/qr-scans/duplicates`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setDuplicates(data.data || []);
+      } else {
+        console.error('Failed to load duplicates');
+      }
+    } catch (err) {
+      console.error('Error loading duplicates:', err);
+    } finally {
+      setDuplicatesLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/qr-scans/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setStats(data.stats);
+      }
+    } catch (err) {
+      console.error('Error loading stats:', err);
+    }
+  };
+
+  const loadScans = async () => {
+    try {
+      setLoading(true);
+      const token = getAuthToken();
+      
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: 20
+      });
+      
+      if (searchTerm) params.append('qr_data', searchTerm);
+      if (selectedDate) params.append('date', selectedDate);
+
+      const response = await fetch(`${API_URL}/api/qr-scans?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setScans(data.data || []);
+        setTotalPages(data.pagination?.pages || 1);
+      } else {
+        setError('Failed to load scan history');
+      }
+    } catch (err) {
+      console.error('Error loading scans:', err);
+      setError('Error loading scan history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const formatQRData = (data) => {
+    if (data.length > 50) {
+      return data.substring(0, 50) + '...';
+    }
+    return data;
+  };
+
+  const exportToCSV = () => {
+    const headers = ['Date', 'Time', 'QR Data', 'Scanner Type', 'User'];
+    const csvData = scans.map(scan => [
+      new Date(scan.scan_timestamp).toLocaleDateString(),
+      new Date(scan.scan_timestamp).toLocaleTimeString(),
+      `"${scan.qr_data.replace(/"/g, '""')}"`,
+      scan.scanner_type,
+      scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'
+    ]);
+
+    const csvContent = [headers, ...csvData]
+      .map(row => row.join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qr-scan-history-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Layout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <History className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">QR Scan History</h1>
+                <p className="text-gray-600">View all scanned QR codes and their details</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={exportToCSV}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span>Export CSV</span>
+              </button>
+              <button
+                onClick={loadScans}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Refresh</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Today's Scans</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.today}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <History className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Scans</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Smartphone className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Active Scanners</p>
+                <p className="text-2xl font-bold text-gray-900">{scans.length > 0 ? 1 : 0}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Duplicate Attempts</p>
+                <p className="text-2xl font-bold text-gray-900">{duplicates.length}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Search QR Data
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by QR code content..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filter by Date
+              </label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedDate('');
+                  setCurrentPage(1);
+                }}
+                className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white rounded-lg shadow-sm">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6">
+              <button
+                onClick={() => setActiveTab('scans')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'scans'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                All Scans ({scans.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('duplicates')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'duplicates'
+                    ? 'border-red-500 text-red-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Duplicate Attempts ({duplicates.length})
+              </button>
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'scans' ? (
+            // Existing scans table
+            <div>
+              {loading ? (
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">Loading scan history...</p>
+                </div>
+              ) : error ? (
+                <div className="p-8 text-center text-red-600">
+                  <p>{error}</p>
+                </div>
+              ) : scans.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No QR scans found</p>
+                  <p className="text-sm">Try scanning some QR codes first!</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Scan Time
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          QR Code Data
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Scanner Type
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Scanned By
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {scans.map((scan) => (
+                        <tr key={scan.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <Clock className="w-4 h-4 text-gray-400 mr-2" />
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {formatDate(scan.scan_timestamp)}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 font-mono bg-gray-50 p-2 rounded">
+                              {formatQRData(scan.qr_data)}
+                            </div>
+                            {scan.qr_data.length > 50 && (
+                              <button
+                                onClick={() => alert(scan.qr_data)}
+                                className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                              >
+                                View Full Data
+                              </button>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <Smartphone className="w-4 h-4 text-gray-400 mr-2" />
+                              <span className="text-sm text-gray-900 capitalize">
+                                {scan.scanner_type}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <User className="w-4 h-4 text-gray-400 mr-2" />
+                              <span className="text-sm text-gray-900">
+                                {scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button
+                              onClick={() => {
+                                const details = `
+QR Code Data: ${scan.qr_data}
+Scan Time: ${formatDate(scan.scan_timestamp)}
+Scanner Type: ${scan.scanner_type}
+Scanned By: ${scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
+Device Info: ${JSON.stringify(scan.device_info, null, 2)}
+                                `.trim();
+                                alert(details);
+                              }}
+                              className="text-blue-600 hover:text-blue-900 mr-3"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : (
+            // Duplicates table
+            <div>
+              {duplicatesLoading ? (
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">Loading duplicate attempts...</p>
+                </div>
+              ) : duplicates.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-300" />
+                  <p>No duplicate scan attempts found</p>
+                  <p className="text-sm">All QR codes have been scanned only once!</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-red-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider">
+                          QR Code Data
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider">
+                          Original Scan
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider">
+                          Duplicate Attempt
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider">
+                          Time Difference
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {duplicates.map((duplicate, index) => (
+                        <tr key={index} className="hover:bg-red-50">
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 font-mono bg-gray-50 p-2 rounded">
+                              {formatQRData(duplicate.qr_data)}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              <div className="font-medium">{duplicate.original_scan.scanned_by}</div>
+                              <div className="text-gray-500">{formatDate(duplicate.original_scan.scan_timestamp)}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              <div className="font-medium">{duplicate.duplicate_attempt.scanned_by}</div>
+                              <div className="text-gray-500">{formatDate(duplicate.duplicate_attempt.scan_timestamp)}</div>
+                              <div className="text-xs text-red-600">Blocked - Duplicate</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {Math.round(duplicate.time_difference / (1000 * 60))} minutes later
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Scan History Table */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ display: 'none' }}>
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Recent Scans</h2>
+          </div>
+
+          {loading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading scan history...</p>
+            </div>
+          ) : error ? (
+            <div className="p-8 text-center text-red-600">
+              <p>{error}</p>
+            </div>
+          ) : scans.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>No QR scans found</p>
+              <p className="text-sm">Try scanning some QR codes first!</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Scan Time
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      QR Code Data
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Scanner Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Scanned By
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {scans.map((scan) => (
+                    <tr key={scan.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Clock className="w-4 h-4 text-gray-400 mr-2" />
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {formatDate(scan.scan_timestamp)}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 font-mono bg-gray-50 p-2 rounded">
+                          {formatQRData(scan.qr_data)}
+                        </div>
+                        {scan.qr_data.length > 50 && (
+                          <button
+                            onClick={() => alert(scan.qr_data)}
+                            className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                          >
+                            View Full Data
+                          </button>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Smartphone className="w-4 h-4 text-gray-400 mr-2" />
+                          <span className="text-sm text-gray-900 capitalize">
+                            {scan.scanner_type}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <User className="w-4 h-4 text-gray-400 mr-2" />
+                          <span className="text-sm text-gray-900">
+                            {scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => {
+                            const details = `
+QR Code Data: ${scan.qr_data}
+Scan Time: ${formatDate(scan.scan_timestamp)}
+Scanner Type: ${scan.scanner_type}
+Scanned By: ${scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
+Device Info: ${JSON.stringify(scan.device_info, null, 2)}
+                            `.trim();
+                            alert(details);
+                          }}
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Page {currentPage} of {totalPages}
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </Layout>
+  );
+}

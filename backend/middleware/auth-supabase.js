@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const supabase = require('../services/supabaseClient');
+const { supabase } = require('../services/supabaseClient');
 
 /**
  * Middleware to authenticate JWT tokens (Supabase version)

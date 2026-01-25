@@ -1,17 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../services/supabaseClient');
-const authMiddleware = require('../middleware/auth-supabase');
+const { authenticateToken } = require('../middleware/auth-supabase');
 
 // Create employee_scans table if it doesn't exist
 const createEmployeeScansTable = async () => {
   try {
-    const { error } = await supabase.rpc('create_employee_scans_table_if_not_exists');
-    if (error && !error.message.includes('already exists')) {
-      console.error('Error creating employee_scans table:', error);
+    // Try to query the table first to see if it exists
+    const { data, error } = await supabase
+      .from('employee_scans')
+      .select('count(*)')
+      .limit(1);
+    
+    if (error && error.code === 'PGRST116') {
+      console.log('📝 Employee scans table does not exist, it needs to be created in Supabase dashboard');
+      console.log('ℹ️  Please create the table manually or the API will not work');
+    } else {
+      console.log('✅ Employee scans table exists and is ready');
     }
   } catch (err) {
-    console.error('Error in createEmployeeScansTable:', err);
+    console.error('Error checking employee scans table:', err);
   }
 };
 
@@ -19,10 +27,10 @@ const createEmployeeScansTable = async () => {
 createEmployeeScansTable();
 
 // POST /api/employee-scans - Save a new employee scan
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { qr_data, scan_timestamp, scanner_type, device_info } = req.body;
-    const user_id = req.user.id;
+    const user_id = req.user._id;
 
     console.log('📱 Saving employee scan:', {
       qr_data,
@@ -82,7 +90,7 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 // GET /api/employee-scans - Get all employee scans with pagination
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 50, date, qr_data } = req.query;
     const offset = (page - 1) * limit;
@@ -145,7 +153,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // GET /api/employee-scans/stats - Get scan statistics
-router.get('/stats', authMiddleware, async (req, res) => {
+router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -220,7 +228,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
 });
 
 // GET /api/employee-scans/recent - Get recent scans
-router.get('/recent', authMiddleware, async (req, res) => {
+router.get('/recent', authenticateToken, async (req, res) => {
   try {
     const { limit = 10 } = req.query;
 
@@ -256,7 +264,7 @@ router.get('/recent', authMiddleware, async (req, res) => {
 });
 
 // DELETE /api/employee-scans/:id - Delete a scan record
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 

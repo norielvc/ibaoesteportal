@@ -1,4 +1,4 @@
-const supabase = require('../services/supabaseClient');
+const { supabase } = require('../services/supabaseClient');
 
 async function setupTables() {
   console.log('🚀 Setting up Supabase tables...');

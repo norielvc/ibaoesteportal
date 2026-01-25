@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile QR Scanner Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .scan-area {
+            border: 3px dashed #007bff;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: #f8f9ff;
+        }
+        .camera-btn {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .camera-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+        }
+        .result {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        .result.show {
+            display: block;
+        }
+        .qr-data {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        .timestamp {
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        .error.show {
+            display: block;
+        }
+        .processing {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .processing.show {
+            display: block;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tips {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .tips h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .tips ul {
+            margin: 10px 0 0 0;
+            padding-left: 20px;
+        }
+        .tips li {
+            margin-bottom: 5px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Mobile QR Scanner Test</h1>
+        
+        <div class="scan-area">
+            <div style="font-size: 48px; margin-bottom: 15px;">📷</div>
+            <p>Tap the button below to take a photo and scan QR code</p>
+        </div>
+
+        <button class="camera-btn" onclick="triggerCamera()">
+            📸 Take Photo & Scan QR Code
+        </button>
+
+        <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;" onchange="handleFileSelect(event)">
+
+        <div id="processing" class="processing">
+            <div class="spinner"></div>
+            <p>Processing image and detecting QR code...</p>
+        </div>
+
+        <div id="result" class="result">
+            <h3>✅ QR Code Detected!</h3>
+            <div>
+                <strong>QR Code Data:</strong>
+                <div id="qrData" class="qr-data"></div>
+            </div>
+            <div class="timestamp">
+                <strong>Scanned at:</strong> <span id="timestamp"></span>
+            </div>
+            <button class="camera-btn" onclick="resetScanner()" style="margin-top: 15px;">
+                🔄 Scan Another QR Code
+            </button>
+        </div>
+
+        <div id="error" class="error">
+            <h4>❌ Scan Failed</h4>
+            <p id="errorMessage"></p>
+            <button class="camera-btn" onclick="resetScanner()" style="margin-top: 10px;">
+                🔄 Try Again
+            </button>
+        </div>
+
+        <div class="tips">
+            <h4>💡 Scanning Tips:</h4>
+            <ul>
+                <li>Hold phone 6-12 inches from QR code</li>
+                <li>Ensure good lighting (avoid shadows)</li>
+                <li>Keep camera steady when taking photo</li>
+                <li>Make sure entire QR code is visible</li>
+                <li>Try different angles if first attempt fails</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script>
+        function triggerCamera() {
+            document.getElementById('fileInput').click();
+        }
+
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            console.log('📱 Starting QR scan:', file.name);
+            
+            // Reset UI
+            hideAll();
+            document.getElementById('processing').classList.add('show');
+
+            try {
+                const result = await detectQR(file);
+                if (result) {
+                    showResult(result);
+                } else {
+                    showError('No QR code detected. Please try again with better lighting and make sure the QR code is clearly visible.');
+                }
+            } catch (err) {
+                console.error('❌ Scan error:', err);
+                showError(`Scan failed: ${err.message}`);
+            }
+
+            // Clear file input
+            event.target.value = '';
+        }
+
+        async function detectQR(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                
+                img.onload = () => {
+                    try {
+                        console.log('📱 Processing image...');
+                        
+                        // Create canvas
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Optimize size for mobile
+                        const maxSize = 600;
+                        let { width, height } = img;
+                        
+                        if (width > maxSize || height > maxSize) {
+                            const ratio = Math.min(maxSize / width, maxSize / height);
+                            width = Math.floor(width * ratio);
+                            height = Math.floor(height * ratio);
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const imageData = ctx.getImageData(0, 0, width, height);
+                        
+                        // Try jsQR detection
+                        if (typeof jsQR === 'function') {
+                            console.log('🔍 Trying jsQR detection...');
+                            
+                            // Try multiple detection settings
+                            const detectionOptions = [
+                                { inversionAttempts: "dontInvert" },
+                                { inversionAttempts: "onlyInvert" },
+                                { inversionAttempts: "attemptBoth" }
+                            ];
+                            
+                            for (const options of detectionOptions) {
+                                console.log('🔍 Trying detection with options:', options);
+                                const code = jsQR(imageData.data, imageData.width, imageData.height, options);
+                                
+                                if (code && code.data) {
+                                    console.log('✅ QR Code detected:', code.data);
+                                    resolve(code.data);
+                                    return;
+                                }
+                            }
+                        }
+                        
+                        console.log('❌ No QR code found');
+                        resolve(null);
+                        
+                    } catch (err) {
+                        console.error('❌ Detection error:', err);
+                        resolve(null);
+                    }
+                };
+
+                img.onerror = () => {
+                    console.error('❌ Image load failed');
+                    resolve(null);
+                };
+
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        function showResult(qrData) {
+            hideAll();
+            document.getElementById('qrData').textContent = qrData;
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+            document.getElementById('result').classList.add('show');
+            
+            console.log('🎉 QR Code Result:', qrData);
+        }
+
+        function showError(message) {
+            hideAll();
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('error').classList.add('show');
+        }
+
+        function hideAll() {
+            document.getElementById('processing').classList.remove('show');
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('error').classList.remove('show');
+        }
+
+        function resetScanner() {
+            hideAll();
+        }
+
+        // Test with sample QR codes
+        console.log('📱 Mobile QR Scanner Test Ready');
+        console.log('💡 Try scanning QR codes with text, URLs, or other data');
+    </script>
+</body>
+</html>

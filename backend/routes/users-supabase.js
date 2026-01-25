@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const supabase = require('../services/supabaseClient');
+const { supabase } = require('../services/supabaseClient');
 const { requireAdmin } = require('../middleware/auth-supabase');
 const { validateUserCreation } = require('../middleware/validation');
 

@@ -1,4 +1,4 @@
-const supabase = require('../services/supabaseClient');
+const { supabase } = require('../services/supabaseClient');
 
 async function createOfficialsTable() {
   console.log('🚀 Creating barangay_officials table directly...');
