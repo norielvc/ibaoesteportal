@@ -86,6 +86,18 @@ const navigation = [
     description: 'Scan employee ID QR codes'
   },
   {
+    name: 'Employee Scan Monitor',
+    href: '/employee-scan-monitor',
+    icon: Activity,
+    description: 'Monitor scan activity'
+  },
+  {
+    name: 'Employee QR Generator',
+    href: '/employee-qr-generator',
+    icon: QrCode,
+    description: 'Generate employee QR codes'
+  },
+  {
     name: 'QR Scanner',
     href: '/qr-scanner',
     icon: QrCode,
