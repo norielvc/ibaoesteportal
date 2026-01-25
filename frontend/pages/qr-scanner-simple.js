@@ -50,35 +50,88 @@ export default function QRScannerSimplePage() {
 
       img.onload = async () => {
         try {
-          // Set canvas size to image size
-          canvas.width = img.width;
-          canvas.height = img.height;
+          // Calculate optimal canvas size (max 800px for better performance)
+          const maxSize = 800;
+          let { width, height } = img;
           
-          // Draw image to canvas
-          ctx.drawImage(img, 0, 0);
+          if (width > maxSize || height > maxSize) {
+            const ratio = Math.min(maxSize / width, maxSize / height);
+            width = Math.floor(width * ratio);
+            height = Math.floor(height * ratio);
+          }
+
+          // Set canvas size
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Draw image to canvas with better quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
           
           // Get image data
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, width, height);
           
-          // Import and use jsQR
+          // Import and use jsQR with better options
           const { default: jsQR } = await import('jsqr');
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
+          
+          // Try multiple detection attempts with different settings
+          let code = null;
+          
+          // First attempt - normal detection
+          code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+          });
+          
+          // Second attempt - with inversion
+          if (!code) {
+            code = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: "onlyInvert",
+            });
+          }
+          
+          // Third attempt - try both
+          if (!code) {
+            code = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: "attemptBoth",
+            });
+          }
+          
+          // Fourth attempt - enhance contrast and try again
+          if (!code) {
+            // Enhance contrast
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+              // Convert to grayscale and enhance contrast
+              const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+              const enhanced = gray > 128 ? 255 : 0; // High contrast
+              data[i] = enhanced;     // Red
+              data[i + 1] = enhanced; // Green
+              data[i + 2] = enhanced; // Blue
+            }
+            
+            code = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: "attemptBoth",
+            });
+          }
 
           if (code) {
+            console.log('QR Code detected:', code.data);
             handleScanSuccess(code.data);
           } else {
-            setError('No QR code found in the image. Please try another image or make sure the QR code is clearly visible.');
+            console.log('No QR code found in image');
+            setError('No QR code found in the image. Please try:\n• Taking a clearer photo\n• Getting closer to the QR code\n• Ensuring good lighting\n• Making sure the QR code is not damaged');
           }
         } catch (err) {
           console.error('QR processing error:', err);
-          setError('Failed to process the image. Please try again.');
+          setError('Failed to process the image. Please try again with a different image.');
         } finally {
           setProcessing(false);
         }
       };
 
       img.onerror = () => {
-        setError('Failed to load the image. Please select a valid image file.');
+        setError('Failed to load the image. Please select a valid image file (JPG, PNG, etc.).');
         setProcessing(false);
       };
 
@@ -87,7 +140,7 @@ export default function QRScannerSimplePage() {
       
     } catch (err) {
       console.error('File processing error:', err);
-      setError('Failed to process the selected file.');
+      setError('Failed to process the selected file. Please try again.');
       setProcessing(false);
     }
 
@@ -415,6 +468,17 @@ export default function QRScannerSimplePage() {
           
           <div className="mt-4 p-3 bg-green-100 rounded-lg border border-green-200">
             <p className="text-green-800 text-sm font-medium">✅ Works on ALL devices without camera permission issues!</p>
+          </div>
+          
+          <div className="mt-3 p-3 bg-blue-100 rounded-lg border border-blue-200">
+            <h4 className="text-blue-800 text-sm font-semibold mb-2">💡 Tips for Better QR Detection:</h4>
+            <ul className="text-blue-700 text-xs space-y-1">
+              <li>• Ensure good lighting when taking photos</li>
+              <li>• Hold the camera steady and get close to the QR code</li>
+              <li>• Make sure the entire QR code is visible in the frame</li>
+              <li>• Avoid shadows or reflections on the QR code</li>
+              <li>• Try different angles if the first attempt doesn't work</li>
+            </ul>
           </div>
         </div>
 
