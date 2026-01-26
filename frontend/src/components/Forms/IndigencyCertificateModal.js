@@ -430,7 +430,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                   onClick={handleCustomizeForm}
                   className="px-6 py-2.5 border border-green-300 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-medium flex items-center justify-center gap-2 shadow-sm">
                   <Eye className="w-5 h-5" />
-                  Customize Information
+                  Edit Information
                 </button>
                 <button 
                   type="button" 

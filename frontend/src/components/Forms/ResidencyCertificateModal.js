@@ -429,7 +429,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
                   onClick={handleCustomizeForm}
                   className="px-6 py-2.5 border border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg font-medium flex items-center justify-center gap-2 shadow-sm">
                   <Eye className="w-5 h-5" />
-                  Customize Information
+                  Edit Information
                 </button>
                 <button 
                   type="button" 
