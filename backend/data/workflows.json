@@ -80,7 +80,10 @@
       "status": "processing",
       "icon": "Clock",
       "autoApprove": false,
-      "assignedUsers": [],
+      "assignedUsers": [
+        "f398db9a-1224-42f9-a72f-69dd14fa5064",
+        "379898b5-06e9-43a7-b51d-213aec975825"
+      ],
       "requiresApproval": true,
       "sendEmail": true
     },
@@ -91,7 +94,9 @@
       "status": "approved",
       "icon": "UserCheck",
       "autoApprove": false,
-      "assignedUsers": [],
+      "assignedUsers": [
+        "d165bf34-2a6e-4a33-8f13-a2e9868f28f6"
+      ],
       "requiresApproval": true,
       "sendEmail": true
     },
@@ -137,7 +142,10 @@
       "status": "processing",
       "icon": "Clock",
       "autoApprove": false,
-      "assignedUsers": [],
+      "assignedUsers": [
+        "f398db9a-1224-42f9-a72f-69dd14fa5064",
+        "379898b5-06e9-43a7-b51d-213aec975825"
+      ],
       "requiresApproval": true,
       "sendEmail": true
     },
@@ -148,7 +156,9 @@
       "status": "approved",
       "icon": "UserCheck",
       "autoApprove": false,
-      "assignedUsers": [],
+      "assignedUsers": [
+        "d165bf34-2a6e-4a33-8f13-a2e9868f28f6"
+      ],
       "requiresApproval": true,
       "sendEmail": true
     },

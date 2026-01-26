@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Certificate Submission</title>
+</head>
+<body>
+    <h1>Test Certificate Submission</h1>
+    <button onclick="submitTestRequest()">Submit Test Barangay Clearance</button>
+    <button onclick="submitTestIndigency()">Submit Test Indigency Certificate</button>
+    <button onclick="checkRequests()">Check All Requests</button>
+    <div id="result"></div>
+
+    <script>
+        const API_URL = 'http://localhost:5005';
+        
+        async function submitTestRequest() {
+            try {
+                const response = await fetch(`${API_URL}/api/certificates/clearance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fullName: 'TEST USER FOR STAFF',
+                        age: 30,
+                        sex: 'Male',
+                        civilStatus: 'Single',
+                        address: 'Test Address',
+                        contactNumber: '09123456789',
+                        dateOfBirth: '1994-01-01',
+                        placeOfBirth: 'Test Place',
+                        purpose: 'Testing staff assignment'
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <h3>Barangay Clearance Result:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        async function submitTestIndigency() {
+            try {
+                const response = await fetch(`${API_URL}/api/certificates/indigency`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fullName: 'TEST INDIGENCY USER',
+                        age: 25,
+                        gender: 'Female',
+                        civilStatus: 'Married',
+                        address: 'Test Address 2',
+                        contactNumber: '09987654321',
+                        dateOfBirth: '1999-01-01',
+                        placeOfBirth: 'Test Place 2',
+                        purpose: 'Testing indigency assignment'
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <h3>Indigency Certificate Result:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        async function checkRequests() {
+            try {
+                const response = await fetch(`${API_URL}/api/certificates`);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <h3>All Certificate Requests:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
