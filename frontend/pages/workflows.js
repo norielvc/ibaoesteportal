@@ -7,7 +7,8 @@ import {
   ArrowUp, ArrowDown, GripVertical, Settings, Eye, Users, Mail
 } from 'lucide-react';
 import { isAuthenticated, getUserData, getAuthToken } from '@/lib/auth';
-import { API_URL } from '@/lib/api';
+// API Configuration
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
 // Certificate types
 const certificateTypes = [

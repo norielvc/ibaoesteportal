@@ -7,7 +7,8 @@ import {
   FileCheck, History, Filter, Shield, Printer, Download
 } from 'lucide-react';
 import { getAuthToken, getUserData } from '@/lib/auth';
-import { API_URL } from '@/lib/api';
+// API Configuration
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
 export default function RequestsPage() {
   const router = useRouter();

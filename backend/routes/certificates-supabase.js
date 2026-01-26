@@ -203,21 +203,23 @@ router.post('/clearance', async (req, res) => {
     
     const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
     console.log(`Creating clearance with reference: ${refNumber}`);
+    console.log(`Original fullName: "${fullName}" -> Uppercase: "${fullName?.toUpperCase()}"`);
+    console.log(`Original address: "${address}" -> Uppercase: "${address?.toUpperCase()}"`);
 
     const { data, error } = await supabase
       .from('certificate_requests')
       .insert([{
         reference_number: refNumber,
         certificate_type: 'barangay_clearance',
-        full_name: fullName,
+        full_name: fullName?.toUpperCase() || '',
         age: parseInt(age),
-        sex,
-        civil_status: civilStatus,
-        address,
+        sex: sex?.toUpperCase() || '',
+        civil_status: civilStatus?.toUpperCase() || '',
+        address: address?.toUpperCase() || '',
         contact_number: contactNumber,
         date_of_birth: dateOfBirth,
-        place_of_birth: placeOfBirth,
-        purpose,
+        place_of_birth: placeOfBirth?.toUpperCase() || '',
+        purpose: purpose?.toUpperCase() || '',
         status: 'pending',
         date_issued: new Date().toISOString()
       }])
@@ -284,15 +286,15 @@ router.post('/indigency', async (req, res) => {
       .insert([{
         reference_number: refNumber,
         certificate_type: 'certificate_of_indigency',
-        full_name: fullName,
+        full_name: fullName?.toUpperCase() || '',
         age: parseInt(age),
-        sex: gender,
-        civil_status: civilStatus,
-        address,
+        sex: gender?.toUpperCase() || '',
+        civil_status: civilStatus?.toUpperCase() || '',
+        address: address?.toUpperCase() || '',
         contact_number: contactNumber,
         date_of_birth: dateOfBirth,
-        place_of_birth: placeOfBirth,
-        purpose,
+        place_of_birth: placeOfBirth?.toUpperCase() || '',
+        purpose: purpose?.toUpperCase() || '',
         status: 'pending',
         date_issued: new Date().toISOString()
       }])
@@ -359,15 +361,15 @@ router.post('/residency', async (req, res) => {
       .insert([{
         reference_number: refNumber,
         certificate_type: 'barangay_residency',
-        full_name: fullName,
+        full_name: fullName?.toUpperCase() || '',
         age: parseInt(age),
-        sex,
-        civil_status: civilStatus,
-        address,
+        sex: sex?.toUpperCase() || '',
+        civil_status: civilStatus?.toUpperCase() || '',
+        address: address?.toUpperCase() || '',
         contact_number: contactNumber,
         date_of_birth: dateOfBirth,
-        place_of_birth: placeOfBirth,
-        purpose,
+        place_of_birth: placeOfBirth?.toUpperCase() || '',
+        purpose: purpose?.toUpperCase() || '',
         status: 'pending',
         date_issued: new Date().toISOString()
       }])

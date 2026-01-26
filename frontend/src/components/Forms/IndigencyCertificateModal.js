@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download } from 'lucide-react';
-import { API_URL } from '@/lib/api';
+// API Configuration
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
 // Default officials data (fallback)
 const defaultOfficials = {
@@ -68,11 +69,13 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
   const [formCounter, setFormCounter] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [notification, setNotification] = useState(null);
   const [officials, setOfficials] = useState(defaultOfficials);
   const [isDownloading, setIsDownloading] = useState(false);
   const [currentDate, setCurrentDate] = useState('');
-  const [referenceNumber, setReferenceNumber] = useState('CI-2026-00001');
+  const [referenceNumber, setReferenceNumber] = useState(''); // Will be set after submission
+  const [submittedReferenceNumber, setSubmittedReferenceNumber] = useState(''); // For success display
   const certificateRef = useRef(null);
   const [formData, setFormData] = useState({
     fullName: '', age: '', gender: '', civilStatus: '',
@@ -86,36 +89,6 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     setCurrentDate(now.toLocaleDateString('en-US', options));
   }, [isOpen]);
-
-  // Fetch the next reference number from database
-  useEffect(() => {
-    if (isOpen) {
-      fetchNextReferenceNumber();
-    }
-  }, [isOpen]);
-
-  const fetchNextReferenceNumber = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/certificates/next-reference/certificate_of_indigency`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      if (data.success && data.referenceNumber) {
-        setReferenceNumber(data.referenceNumber);
-        if (data.nextNumber) {
-          setFormCounter(data.nextNumber);
-        }
-      } else {
-        // API returned but no success, use default
-        setReferenceNumber(`CI-${new Date().getFullYear()}-00001`);
-      }
-    } catch (error) {
-      console.error('Error fetching reference number:', error);
-      // Fallback to 00001 instead of timestamp
-      setReferenceNumber(`CI-${new Date().getFullYear()}-00001`);
-    }
-  };
 
   useEffect(() => {
     const savedOfficials = localStorage.getItem('barangayOfficials');
@@ -184,8 +157,11 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
       const result = await response.json();
 
       if (result.success) {
-        setNotification({ type: 'success', title: 'Application Submitted!', message: `Certificate of Indigency (${result.referenceNumber}) has been submitted successfully. We will notify you when it's ready for pickup.` });
-        setTimeout(() => { resetForm(); onClose(); }, 3000);
+        // Set the reference number received from the server
+        setSubmittedReferenceNumber(result.referenceNumber);
+        setReferenceNumber(result.referenceNumber); // For PDF generation
+        setNotification(null); // Clear any existing notifications
+        setShowSuccessModal(true); // Show success modal
       } else {
         throw new Error(result.message || 'Failed to submit application');
       }
@@ -204,7 +180,10 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
     setFormData({ fullName: '', age: '', gender: '', civilStatus: '', address: '', dateOfBirth: '', placeOfBirth: '', purpose: '', contactNumber: '' });
     setShowPreview(false);
     setShowConfirmationPopup(false);
+    setShowSuccessModal(false);
     setNotification(null);
+    setReferenceNumber('');
+    setSubmittedReferenceNumber('');
   };
 
   const handleDownloadPDF = async () => {
@@ -248,7 +227,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
               <div className="bg-white/20 p-2 rounded-lg"><FileText className="w-6 h-6 text-white" /></div>
               <div>
                 <h2 className="text-xl font-bold text-white">New Certificate of Indigency Application</h2>
-                <p className="text-green-200 text-sm">Reference: {referenceNumber}</p>
+                <p className="text-green-200 text-sm">Reference: {referenceNumber || 'Will be assigned after submission'}</p>
               </div>
             </div>
             <button onClick={onClose} className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded-lg"><X className="w-6 h-6" /></button>
@@ -259,12 +238,14 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
           <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
             {!showPreview ? (
               <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-green-100 p-2 rounded-lg"><Info className="w-5 h-5 text-green-600" /></div>
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-green-100 p-1.5 rounded-md"><Info className="w-4 h-4 text-green-600" /></div>
                     <div>
-                      <label className="block text-sm font-semibold text-green-800">Reference Number</label>
-                      <p className="text-2xl font-mono font-bold text-green-900 mt-1">{referenceNumber}</p>
+                      <label className="block text-sm font-medium text-gray-700">Reference Number</label>
+                      <p className="text-sm text-gray-900">
+                        {referenceNumber || 'Will be assigned after submission'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -368,7 +349,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                 </div>
               </form>
             ) : (
-              <IndigencyPreview formData={formData} referenceNumber={referenceNumber} currentDate={currentDate} officials={officials} certificateRef={certificateRef} />
+              <IndigencyPreview formData={formData} referenceNumber={referenceNumber || 'PENDING'} currentDate={currentDate} officials={officials} certificateRef={certificateRef} />
             )}
           </div>
 
@@ -415,7 +396,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                 <div className="flex justify-center">
                   <IndigencyPreview 
                     formData={formData} 
-                    referenceNumber={referenceNumber} 
+                    referenceNumber={referenceNumber || 'PENDING'} 
                     currentDate={currentDate} 
                     officials={officials} 
                     certificateRef={certificateRef} 
@@ -438,6 +419,78 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                   className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg">
                   <CheckCircle className="w-5 h-5" />
                   Proceed with Submission
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-70 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
+            
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+              {/* Success Header */}
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-center">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Application Submitted!</h2>
+                <p className="text-green-100 text-sm">Your request has been processed successfully</p>
+              </div>
+
+              {/* Success Content */}
+              <div className="p-6 text-center">
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm font-medium text-green-800 mb-2">Your Reference Number:</p>
+                  <p className="text-2xl font-bold text-green-900 font-mono tracking-wider">
+                    {submittedReferenceNumber}
+                  </p>
+                  <p className="text-xs text-green-600 mt-2">Please keep this reference number safe</p>
+                </div>
+
+                <div className="space-y-4 text-left">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                      <Info className="w-4 h-4" />
+                      Important Instructions:
+                    </h4>
+                    <ul className="text-sm text-blue-800 space-y-2">
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500 mt-1">•</span>
+                        <span>Our Barangay staff will contact you via SMS regarding your request status</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500 mt-1">•</span>
+                        <span>Please ensure your mobile number <strong>({formData.contactNumber})</strong> is correct and active</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500 mt-1">•</span>
+                        <span>Processing time is typically 1-3 business days</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500 mt-1">•</span>
+                        <span>Bring a valid ID when picking up your certificate</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Success Actions */}
+              <div className="border-t bg-gray-50 px-6 py-4">
+                <button 
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    resetForm();
+                    onClose();
+                  }}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 shadow-lg">
+                  <CheckCircle className="w-5 h-5" />
+                  Got it, Thanks!
                 </button>
               </div>
             </div>

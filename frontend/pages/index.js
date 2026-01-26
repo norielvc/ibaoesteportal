@@ -690,12 +690,12 @@ export default function BarangayPortal() {
                       className="flex transition-transform duration-500 ease-in-out w-full"
                       style={{ transform: `translateX(-${currentFormSlide * 100}%)` }}
                     >
-                      {forms.map((form) => {
+                      {forms.map((form, formIndex) => {
                         const Icon = form.icon;
                         const colors = colorClasses[form.color];
                         
                         return (
-                          <div key={form.id} className="w-full flex-shrink-0 flex items-center justify-center">
+                          <div key={formIndex} className="w-full flex-shrink-0 flex items-center justify-center">
                             <div className="group relative bg-transparent rounded-3xl p-10 transition-all duration-500 overflow-hidden w-full max-w-md">
                               {/* Gradient Overlay on Hover */}
                               <div className={`absolute inset-0 bg-gradient-to-br ${colors.overlay} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl`}></div>
@@ -706,7 +706,7 @@ export default function BarangayPortal() {
                                   <Icon className="w-10 h-10 text-white" />
                                 </div>
                                 <div className={`absolute -top-1 -right-1 w-7 h-7 ${colors.bg} rounded-full flex items-center justify-center`}>
-                                  <span className={`${colors.text} text-sm font-bold`}>{form.id}</span>
+                                  <span className={`${colors.text} text-sm font-bold`}>{formIndex + 1}</span>
                                 </div>
                               </div>
 

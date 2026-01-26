@@ -6,7 +6,8 @@ import EditEmployeeModal from '@/components/Modals/EditEmployeeModal';
 import ViewEmployeeModal from '@/components/Modals/ViewEmployeeModal';
 import DeleteConfirmModal from '@/components/Modals/DeleteConfirmModal';
 import { getAuthToken } from '@/lib/auth';
-import { API_URL } from '@/lib/api';
+// API Configuration
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
 export default function Employees() {
   const [employees, setEmployees] = useState([]);
