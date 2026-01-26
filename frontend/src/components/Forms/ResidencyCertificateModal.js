@@ -66,6 +66,7 @@ function Notification({ type, title, message, onClose }) {
 export default function ResidencyCertificateModal({ isOpen, onClose }) {
   const [formCounter, setFormCounter] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
+  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
   const [notification, setNotification] = useState(null);
   const [officials, setOfficials] = useState(defaultOfficials);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -164,6 +165,12 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
     e.preventDefault();
     if (!validateForm()) return;
 
+    // Show PDF confirmation popup instead of directly submitting
+    setShowConfirmationPopup(true);
+  };
+
+  const handleProceedSubmission = async () => {
+    setShowConfirmationPopup(false);
     setNotification({ type: 'info', title: 'Submitting...', message: 'Please wait while we process your application.' });
 
     try {
@@ -187,9 +194,15 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
     }
   };
 
+  const handleCustomizeForm = () => {
+    setShowConfirmationPopup(false);
+    // Form remains open for editing
+  };
+
   const resetForm = () => {
     setFormData({ fullName: '', age: '', sex: '', civilStatus: '', address: '', dateOfBirth: '', placeOfBirth: '', purpose: '', contactNumber: '' });
     setShowPreview(false);
+    setShowConfirmationPopup(false);
     setNotification(null);
   };
 
@@ -359,10 +372,6 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
           </div>
 
           <div className="border-t bg-gray-50 px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end">
-            <button type="button" onClick={() => setShowPreview(!showPreview)}
-              className="px-6 py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-center gap-2">
-              <Eye className="w-5 h-5" />{showPreview ? 'Back to Form' : 'Preview Certificate'}
-            </button>
             {!showPreview && (
               <button type="submit" onClick={handleSubmit}
                 className="px-6 py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg">
@@ -370,31 +379,71 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
               </button>
             )}
             {showPreview && (
-              <>
-                <button type="button" onClick={() => {
-                  const printContent = certificateRef.current;
-                  if (!printContent) return;
-                  const printWindow = window.open('', '_blank');
-                  printWindow.document.write(`
-                    <!DOCTYPE html><html><head><title>Barangay Residency - ${referenceNumber}</title>
-                    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-                    <style>@page { size: A4 portrait; margin: 0; } @media print { html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } } body { margin: 0; padding: 0; display: flex; justify-content: center; } .certificate { width: 210mm; min-height: 297mm; padding: 8mm; box-sizing: border-box; background: white; }</style>
-                    </head><body><div class="certificate">${printContent.innerHTML}</div>
-                    <script>window.onload = function() { setTimeout(function() { window.print(); window.close(); }, 500); };</script></body></html>
-                  `);
-                  printWindow.document.close();
-                }} className="px-6 py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg">
-                  <Printer className="w-5 h-5" />Print
-                </button>
-                <button type="button" onClick={handleDownloadPDF} disabled={isDownloading}
-                  className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg disabled:opacity-50">
-                  <Download className="w-5 h-5" />{isDownloading ? 'Generating...' : 'Download PDF'}
-                </button>
-              </>
+              <button type="button" onClick={() => setShowPreview(false)}
+                className="px-6 py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-center gap-2">
+                <Eye className="w-5 h-5" />Back to Form
+              </button>
             )}
           </div>
         </div>
       </div>
+
+      {/* PDF Confirmation Popup */}
+      {showConfirmationPopup && (
+        <div className="fixed inset-0 z-60 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowConfirmationPopup(false)} />
+            
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+              {/* Popup Header */}
+              <div className="bg-gradient-to-r from-orange-600 to-orange-800 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 p-2 rounded-lg"><FileText className="w-6 h-6 text-white" /></div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Review Your Application</h2>
+                    <p className="text-orange-200 text-sm">Please double-check all information before proceeding</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowConfirmationPopup(false)} className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded-lg">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* PDF Preview */}
+              <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-4 bg-gray-100">
+                <div className="flex justify-center">
+                  <ResidencyPreview 
+                    formData={formData} 
+                    referenceNumber={referenceNumber} 
+                    currentDate={currentDate} 
+                    officials={officials} 
+                    certificateRef={certificateRef} 
+                  />
+                </div>
+              </div>
+
+              {/* Popup Actions */}
+              <div className="border-t bg-white px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end">
+                <button 
+                  type="button" 
+                  onClick={handleCustomizeForm}
+                  className="px-6 py-2.5 border border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg font-medium flex items-center justify-center gap-2 shadow-sm">
+                  <Eye className="w-5 h-5" />
+                  Customize Information
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleProceedSubmission}
+                  className="px-6 py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg">
+                  <CheckCircle className="w-5 h-5" />
+                  Proceed with Submission
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.3s ease-out; }`}</style>
     </div>
   );
