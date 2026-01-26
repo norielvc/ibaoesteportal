@@ -574,7 +574,7 @@ function IndigencyPreview({ formData, referenceNumber, currentDate, officials, c
                 <div className="flex">
                   <span className="w-40 font-semibold">Name</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1 font-bold underline">{formData.fullName || '_________________'}</span>
+                  <span className="flex-1 font-bold underline">{formData.fullName?.toUpperCase() || '_________________'}</span>
                 </div>
                 <div className="flex">
                   <span className="w-40 font-semibold">Age</span>
@@ -584,27 +584,27 @@ function IndigencyPreview({ formData, referenceNumber, currentDate, officials, c
                 <div className="flex">
                   <span className="w-40 font-semibold">Gender</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.gender || '_________________'}</span>
+                  <span className="flex-1">{formData.gender?.toUpperCase() || '_________________'}</span>
                 </div>
                 <div className="flex">
                   <span className="w-40 font-semibold">Civil Status</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.civilStatus || '_________________'}</span>
+                  <span className="flex-1">{formData.civilStatus?.toUpperCase() || '_________________'}</span>
                 </div>
                 <div className="flex">
                   <span className="w-40 font-semibold">Residential Address</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.address || '_________________'}</span>
+                  <span className="flex-1">{formData.address?.toUpperCase() || '_________________'}</span>
                 </div>
                 <div className="flex">
                   <span className="w-40 font-semibold">Date of Birth</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '_________________'}</span>
+                  <span className="flex-1">{formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : '_________________'}</span>
                 </div>
                 <div className="flex">
                   <span className="w-40 font-semibold">Place of Birth</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.placeOfBirth || '_________________'}</span>
+                  <span className="flex-1">{formData.placeOfBirth?.toUpperCase() || '_________________'}</span>
                 </div>
               </div>
 
@@ -613,7 +613,7 @@ function IndigencyPreview({ formData, referenceNumber, currentDate, officials, c
               </p>
 
               <p className="mb-8 font-semibold pl-4">
-                {formData.purpose || '_________________________________'}
+                {formData.purpose?.toUpperCase() || '_________________________________'}
               </p>
 
               <p className="mb-10">
