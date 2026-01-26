@@ -67,16 +67,36 @@ export default function RequestsPage() {
     fetchRequests();
   }, []);
 
+  // Re-fetch requests when view mode changes
+  useEffect(() => {
+    if (currentUser) {
+      fetchRequests();
+    }
+  }, [viewMode, currentUser]);
+
   const fetchRequests = async () => {
     setLoading(true);
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/certificates`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setRequests(data.certificates || []);
+      
+      // If viewing "My Assignments", use the workflow assignments API
+      if (viewMode === 'assigned') {
+        const response = await fetch(`${API_URL}/api/workflow-assignments/my-assignments`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setRequests(data.certificates || []);
+        }
+      } else {
+        // For "All Requests" view, use the regular certificates API
+        const response = await fetch(`${API_URL}/api/certificates`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setRequests(data.certificates || []);
+        }
       }
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -87,26 +107,30 @@ export default function RequestsPage() {
 
   // Check if current user is assigned to approve a request at its current step
   const isUserAssignedToRequest = (request) => {
-    if (!currentUser || !workflows) {
-      console.log('Missing currentUser or workflows:', { currentUser: !!currentUser, workflows: !!workflows });
+    if (!currentUser) {
       return false;
     }
     
     // Admin can see all
     if (currentUser.role === 'admin') return true;
     
+    // If we're in "My Assignments" view, all requests are already filtered to assigned ones
+    if (viewMode === 'assigned') {
+      return true;
+    }
+    
+    // For "All Requests" view, use the original workflow logic as fallback
+    if (!workflows) {
+      return false;
+    }
+    
     // Get workflow for this certificate type - it's an array of steps directly
     const workflowSteps = workflows[request.certificate_type];
     if (!workflowSteps || !Array.isArray(workflowSteps) || workflowSteps.length === 0) {
-      console.log('No workflow found for:', request.certificate_type, 'Available workflows:', Object.keys(workflows), 'workflowSteps:', workflowSteps);
       return false;
     }
     
     // Determine current step index based on status
-    // pending = Step 0 (Submitted) - needs to go to Step 1 (Staff Review)
-    // processing = Step 1 already done, now at Step 2 (Captain Approval)
-    // approved = Step 2 already done, now at Step 3 (Ready)
-    let stepIndex = 0;
     const statusToStepIndex = {
       'pending': 1,      // Pending requests need Staff Review (step index 1)
       'submitted': 1,    // Same as pending
@@ -119,35 +143,19 @@ export default function RequestsPage() {
       'released': 4      // Released, final step
     };
     
-    stepIndex = statusToStepIndex[request.status] || 0;
-    
+    const stepIndex = statusToStepIndex[request.status] || 0;
     const currentStep = workflowSteps[stepIndex];
-    if (!currentStep) {
-      console.log('No step found at index:', stepIndex, 'Total steps:', workflowSteps.length);
+    
+    if (!currentStep || !currentStep.requiresApproval) {
       return false;
     }
     
-    // Only show requests that require approval at this step
-    if (!currentStep.requiresApproval) {
-      return false; // Don't show non-approval steps to staff
-    }
-    
-    // Check if user is assigned to this step - use _id which is the Supabase UUID
+    // Check if user is assigned to this step
     const userId = currentUser._id || currentUser.id;
     const assignedUsers = currentStep.assignedUsers || [];
     
-    // Compare as strings to handle any type mismatches
-    const isAssigned = assignedUsers.some(assignedId => {
-      const match = String(assignedId) === String(userId);
-      return match;
-    });
-    
-    // Debug log for first request only to avoid spam
-    if (request === requests[0]) {
-      console.log('=== Workflow Assignment Debug ===');
-      console.log('Current User ID:', userId);
-      console.log('Current User:', currentUser);
-      console.log('Request Status:', request.status);
+    return assignedUsers.some(assignedId => String(assignedId) === String(userId));
+  };
       console.log('Step Index:', stepIndex);
       console.log('Step Name:', currentStep.name);
       console.log('Step Requires Approval:', currentStep.requiresApproval);
@@ -331,11 +339,38 @@ export default function RequestsPage() {
   });
 
   // Count requests assigned to current user
-  const assignedCount = requests.filter(r => isUserAssignedToRequest(r)).length;
-  const pendingActionCount = requests.filter(r => 
-    isUserAssignedToRequest(r) && 
-    ['pending', 'processing'].includes(r.status)
-  ).length;
+  const [assignedCount, setAssignedCount] = useState(0);
+  const [pendingActionCount, setPendingActionCount] = useState(0);
+  
+  // Fetch assignment counts
+  useEffect(() => {
+    const fetchAssignmentCounts = async () => {
+      if (!currentUser) return;
+      
+      try {
+        const token = getAuthToken();
+        const response = await fetch(`${API_URL}/api/workflow-assignments/user/${currentUser._id || currentUser.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          const totalAssigned = data.count || 0;
+          const pendingActions = data.assignments?.filter(a => 
+            a.status === 'pending' && 
+            ['pending', 'processing'].includes(a.certificate_requests?.status)
+          ).length || 0;
+          
+          setAssignedCount(totalAssigned);
+          setPendingActionCount(pendingActions);
+        }
+      } catch (error) {
+        console.error('Error fetching assignment counts:', error);
+      }
+    };
+    
+    fetchAssignmentCounts();
+  }, [currentUser]);
 
   return (
     <Layout>
