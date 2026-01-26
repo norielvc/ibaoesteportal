@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { supabase } = require('../services/supabaseClient');
 const { authenticateToken } = require('../middleware/auth-supabase');
+const certificateGenerationService = require('../services/certificateGenerationService');
+const smsNotificationService = require('../services/smsNotificationService');
+const qrCodeService = require('../services/qrCodeService');
 
 // Get workflow assignments for a specific user
 router.get('/user/:userId', authenticateToken, async (req, res) => {
@@ -165,8 +168,20 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       // Move to next step in workflow
       if (assignment.step_id === 2) { // Staff review -> Captain approval
         newRequestStatus = 'processing';
-      } else if (assignment.step_id === 3) { // Captain approval -> Ready
+      } else if (assignment.step_id === 3) { // Captain approval -> Ready for pickup
         newRequestStatus = 'approved';
+        
+        // 🎯 CAPTAIN APPROVAL COMPLETE - TRIGGER POST-APPROVAL WORKFLOW
+        console.log(`🎉 Captain approved request ${assignment.certificate_requests.reference_number}`);
+        
+        // Start post-approval process asynchronously (don't block the response)
+        setImmediate(async () => {
+          try {
+            await processPostApprovalWorkflow(assignment.request_id, assignment.certificate_requests);
+          } catch (error) {
+            console.error('Error in post-approval workflow:', error);
+          }
+        });
       }
     } else if (action === 'reject') {
       newStatus = 'completed';
@@ -288,5 +303,90 @@ router.get('/history/:requestId', authenticateToken, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// 🎯 POST-APPROVAL WORKFLOW FUNCTION
+async function processPostApprovalWorkflow(requestId, requestData) {
+  console.log(`🚀 Starting post-approval workflow for ${requestData.reference_number}`);
+  
+  try {
+    // Step 1: Generate Certificate
+    console.log('📄 Step 1: Generating certificate...');
+    const certificateResult = await certificateGenerationService.generateCertificate(requestId);
+    
+    if (certificateResult.success) {
+      console.log(`✅ Certificate generated: ${certificateResult.filename}`);
+    } else {
+      throw new Error('Certificate generation failed');
+    }
+
+    // Step 2: Generate Pickup QR Code
+    console.log('🔗 Step 2: Generating pickup QR code...');
+    const qrResult = await qrCodeService.generatePickupQRCode(requestId);
+    
+    if (qrResult.success) {
+      console.log(`✅ Pickup QR code generated: ${qrResult.pickupToken}`);
+    } else {
+      throw new Error('QR code generation failed');
+    }
+
+    // Step 3: Send SMS Notification
+    console.log('📱 Step 3: Sending SMS notification...');
+    const smsResult = await smsNotificationService.sendCertificateReadyNotification(requestId);
+    
+    if (smsResult.success) {
+      console.log(`✅ SMS sent successfully to ${requestData.contact_number}`);
+    } else {
+      console.warn(`⚠️ SMS sending failed: ${smsResult.message}`);
+    }
+
+    // Step 4: Log completion
+    console.log('📝 Step 4: Logging workflow completion...');
+    await supabase
+      .from('workflow_history')
+      .insert([{
+        request_id: requestId,
+        request_type: requestData.certificate_type,
+        step_id: 4,
+        step_name: 'Post-Approval Processing',
+        action: 'completed',
+        performed_by: 'system',
+        previous_status: 'approved',
+        new_status: 'ready_for_pickup',
+        comments: `Certificate generated, QR code created, SMS sent. Ready for pickup.`
+      }]);
+
+    console.log(`🎉 Post-approval workflow completed for ${requestData.reference_number}`);
+    
+    return {
+      success: true,
+      certificate: certificateResult,
+      qrCode: qrResult,
+      sms: smsResult
+    };
+
+  } catch (error) {
+    console.error(`❌ Post-approval workflow failed for ${requestData.reference_number}:`, error);
+    
+    // Log the error but don't fail the main approval process
+    await supabase
+      .from('workflow_history')
+      .insert([{
+        request_id: requestId,
+        request_type: requestData.certificate_type,
+        step_id: 4,
+        step_name: 'Post-Approval Processing',
+        action: 'failed',
+        performed_by: 'system',
+        previous_status: 'approved',
+        new_status: 'approved',
+        comments: `Post-approval workflow failed: ${error.message}`
+      }]);
+
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
 
 module.exports = router;

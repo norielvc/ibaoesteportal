@@ -18,6 +18,7 @@ const educationalAssistanceRoutes = require('./routes/educational-assistance-sup
 const employeeScansRoutes = require('./routes/employee-scans-supabase');
 const employeesQRRoutes = require('./routes/employees-qr-supabase');
 const qrScansRoutes = require('./routes/qr-scans-supabase');
+const pickupRoutes = require('./routes/pickup-supabase');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -119,6 +120,7 @@ app.use('/api/educational-assistance', educationalAssistanceRoutes); // Educatio
 app.use('/api/employee-scans', authenticateToken, employeeScansRoutes); // Employee QR scan tracking
 app.use('/api/employees', authenticateToken, employeesQRRoutes); // Employee QR management
 app.use('/api/qr-scans', authenticateToken, qrScansRoutes); // General QR scan tracking
+app.use('/api/pickup', pickupRoutes); // Certificate pickup verification (public)
 
 // 404 handler
 app.use('*', (req, res) => {
