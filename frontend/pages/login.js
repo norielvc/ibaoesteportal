@@ -57,27 +57,44 @@ export default function Login() {
       </div>
 
       {/* Simple Navigation */}
-      <div className="absolute top-0 left-0 right-0 py-6 px-6 z-20">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          {/* Back Button */}
-          <button 
-            onClick={() => router.push('/')}
-            className="group inline-flex items-center gap-3 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
-          >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-medium">Back to Portal</span>
-          </button>
+      <div className="absolute top-0 left-0 right-0 py-4 px-4 z-20">
+        <div className="max-w-7xl mx-auto">
+          {/* Mobile Layout - Stacked */}
+          <div className="flex flex-col gap-3 sm:hidden">
+            <button 
+              onClick={() => router.push('/')}
+              className="group inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl text-sm"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-medium">Back to Portal</span>
+            </button>
+            
+            <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg text-sm">
+              <Shield className="w-4 h-4" />
+              <span className="font-bold">SECURE PORTAL</span>
+            </div>
+          </div>
           
-          {/* Secure Portal Badge - moved to right side */}
-          <div className="inline-flex items-center gap-4 px-8 py-4 bg-blue-600 text-white rounded-full shadow-lg">
-            <Shield className="w-6 h-6" />
-            <span className="text-lg font-bold">SECURE PORTAL</span>
+          {/* Desktop Layout - Side by Side */}
+          <div className="hidden sm:flex justify-between items-center">
+            <button 
+              onClick={() => router.push('/')}
+              className="group inline-flex items-center gap-3 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-medium">Back to Portal</span>
+            </button>
+            
+            <div className="inline-flex items-center gap-4 px-8 py-4 bg-blue-600 text-white rounded-full shadow-lg">
+              <Shield className="w-6 h-6" />
+              <span className="text-lg font-bold">SECURE PORTAL</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-6 pt-32 sm:pt-24">
         <div className="w-full max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             
