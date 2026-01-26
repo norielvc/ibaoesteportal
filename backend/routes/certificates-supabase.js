@@ -203,8 +203,6 @@ router.post('/clearance', async (req, res) => {
     
     const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
     console.log(`Creating clearance with reference: ${refNumber}`);
-    console.log(`Original fullName: "${fullName}" -> Uppercase: "${fullName?.toUpperCase()}"`);
-    console.log(`Original address: "${address}" -> Uppercase: "${address?.toUpperCase()}"`);
 
     const { data, error } = await supabase
       .from('certificate_requests')
