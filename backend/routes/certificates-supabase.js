@@ -226,6 +226,30 @@ router.post('/clearance', async (req, res) => {
 
     if (error) throw error;
 
+    // Create initial workflow assignments for staff (step 2: Under Review)
+    const staffUserIds = [
+      '9550a8b2-9e32-4f52-a260-52766afb49b1', // Noriel Cruz
+      'f398db9a-1224-42f9-a72f-69dd14fa5064', // Jane Smith
+      '379898b5-06e9-43a7-b51d-213aec975825'  // Sarah Wilson
+    ];
+    
+    for (const staffUserId of staffUserIds) {
+      const { error: assignmentError } = await supabase
+        .from('workflow_assignments')
+        .insert([{
+          request_id: data.id,
+          request_type: 'barangay_clearance',
+          step_id: 2, // Step 2: Under Review
+          step_name: 'Under Review',
+          assigned_user_id: staffUserId,
+          status: 'pending'
+        }]);
+      
+      if (assignmentError) {
+        console.error('Failed to create workflow assignment:', assignmentError);
+      }
+    }
+
     // Send email notifications to next step approvers
     notifyNextStepApprovers('barangay_clearance', refNumber, fullName, data.id);
 
@@ -301,6 +325,30 @@ router.post('/indigency', async (req, res) => {
 
     if (error) throw error;
 
+    // Create initial workflow assignments for staff (step 2: Under Review)
+    const staffUserIds = [
+      '9550a8b2-9e32-4f52-a260-52766afb49b1', // Noriel Cruz
+      'f398db9a-1224-42f9-a72f-69dd14fa5064', // Jane Smith
+      '379898b5-06e9-43a7-b51d-213aec975825'  // Sarah Wilson
+    ];
+    
+    for (const staffUserId of staffUserIds) {
+      const { error: assignmentError } = await supabase
+        .from('workflow_assignments')
+        .insert([{
+          request_id: data.id,
+          request_type: 'certificate_of_indigency',
+          step_id: 2, // Step 2: Under Review
+          step_name: 'Under Review',
+          assigned_user_id: staffUserId,
+          status: 'pending'
+        }]);
+      
+      if (assignmentError) {
+        console.error('Failed to create workflow assignment:', assignmentError);
+      }
+    }
+
     // Send email notifications to next step approvers
     notifyNextStepApprovers('certificate_of_indigency', refNumber, fullName, data.id);
 
@@ -375,6 +423,30 @@ router.post('/residency', async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // Create initial workflow assignments for staff (step 2: Under Review)
+    const staffUserIds = [
+      '9550a8b2-9e32-4f52-a260-52766afb49b1', // Noriel Cruz
+      'f398db9a-1224-42f9-a72f-69dd14fa5064', // Jane Smith
+      '379898b5-06e9-43a7-b51d-213aec975825'  // Sarah Wilson
+    ];
+    
+    for (const staffUserId of staffUserIds) {
+      const { error: assignmentError } = await supabase
+        .from('workflow_assignments')
+        .insert([{
+          request_id: data.id,
+          request_type: 'barangay_residency',
+          step_id: 2, // Step 2: Under Review
+          step_name: 'Under Review',
+          assigned_user_id: staffUserId,
+          status: 'pending'
+        }]);
+      
+      if (assignmentError) {
+        console.error('Failed to create workflow assignment:', assignmentError);
+      }
+    }
 
     // Send email notifications to next step approvers
     notifyNextStepApprovers('barangay_residency', refNumber, fullName, data.id);

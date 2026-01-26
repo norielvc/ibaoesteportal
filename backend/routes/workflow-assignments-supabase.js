@@ -198,6 +198,37 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
     
     if (requestUpdateError) throw requestUpdateError;
     
+    // Create next step assignments if approved
+    if (action === 'approve') {
+      let nextStepAssignments = [];
+      
+      if (assignment.step_id === 2) {
+        // Staff approved -> Create captain assignments
+        nextStepAssignments = [
+          'aaa242af-6ef2-4c72-8729-f8e8d68ec1fa', // David Brown
+          '2a6054aa-d73d-4f52-876f-efa95f77add9'  // Admin User
+        ];
+        
+        for (const captainId of nextStepAssignments) {
+          const { error: assignError } = await supabase
+            .from('workflow_assignments')
+            .insert([{
+              request_id: assignment.request_id,
+              request_type: assignment.request_type,
+              step_id: 3,
+              step_name: 'Barangay Captain Approval',
+              assigned_user_id: captainId,
+              status: 'pending'
+            }]);
+          
+          if (assignError) {
+            console.error('Failed to create captain assignment:', assignError);
+          }
+        }
+      }
+      // Note: Step 3 (Captain approval) -> Step 4 (Ready) doesn't need assignments
+    }
+    
     // Log workflow history
     const { error: historyError } = await supabase
       .from('workflow_history')
