@@ -13,15 +13,13 @@
     },
     {
       "id": 2,
-      "name": "Under Review",
-      "description": "Being reviewed by staff",
-      "status": "processing",
+      "name": "Staff Review",
+      "description": "Being reviewed by assigned staff",
+      "status": "staff_review",
       "icon": "Clock",
       "autoApprove": false,
       "assignedUsers": [
-        "9550a8b2-9e32-4f52-a260-52766afb49b1",
-        "f398db9a-1224-42f9-a72f-69dd14fa5064",
-        "379898b5-06e9-43a7-b51d-213aec975825"
+        "9550a8b2-9e32-4f52-a260-52766afb49b1"
       ],
       "requiresApproval": true,
       "sendEmail": true
@@ -29,13 +27,12 @@
     {
       "id": 3,
       "name": "Barangay Captain Approval",
-      "description": "Approved by authorized personnel",
-      "status": "approved",
+      "description": "Awaiting Barangay Captain approval",
+      "status": "captain_approval",
       "icon": "UserCheck",
       "autoApprove": false,
       "assignedUsers": [
-        "aaa242af-6ef2-4c72-8729-f8e8d68ec1fa",
-        "2a6054aa-d73d-4f52-876f-efa95f77add9"
+        "d165bf34-2a6e-4a33-8f13-a2e9868f28f6"
       ],
       "requiresApproval": true,
       "sendEmail": true
@@ -77,15 +74,13 @@
     },
     {
       "id": 2,
-      "name": "Under Review",
-      "description": "Being reviewed by staff",
-      "status": "processing",
+      "name": "Staff Review",
+      "description": "Being reviewed by assigned staff",
+      "status": "staff_review",
       "icon": "Clock",
       "autoApprove": false,
       "assignedUsers": [
-        "9550a8b2-9e32-4f52-a260-52766afb49b1",
-        "f398db9a-1224-42f9-a72f-69dd14fa5064",
-        "379898b5-06e9-43a7-b51d-213aec975825"
+        "9550a8b2-9e32-4f52-a260-52766afb49b1"
       ],
       "requiresApproval": true,
       "sendEmail": true
@@ -93,13 +88,12 @@
     {
       "id": 3,
       "name": "Barangay Captain Approval",
-      "description": "Approved by authorized personnel",
-      "status": "approved",
+      "description": "Awaiting Barangay Captain approval",
+      "status": "captain_approval",
       "icon": "UserCheck",
       "autoApprove": false,
       "assignedUsers": [
-        "aaa242af-6ef2-4c72-8729-f8e8d68ec1fa",
-        "2a6054aa-d73d-4f52-876f-efa95f77add9"
+        "d165bf34-2a6e-4a33-8f13-a2e9868f28f6"
       ],
       "requiresApproval": true,
       "sendEmail": true
@@ -141,15 +135,13 @@
     },
     {
       "id": 2,
-      "name": "Under Review",
-      "description": "Being reviewed by staff",
-      "status": "processing",
+      "name": "Staff Review",
+      "description": "Being reviewed by assigned staff",
+      "status": "staff_review",
       "icon": "Clock",
       "autoApprove": false,
       "assignedUsers": [
-        "9550a8b2-9e32-4f52-a260-52766afb49b1",
-        "f398db9a-1224-42f9-a72f-69dd14fa5064",
-        "379898b5-06e9-43a7-b51d-213aec975825"
+        "9550a8b2-9e32-4f52-a260-52766afb49b1"
       ],
       "requiresApproval": true,
       "sendEmail": true
@@ -157,13 +149,12 @@
     {
       "id": 3,
       "name": "Barangay Captain Approval",
-      "description": "Approved by authorized personnel",
-      "status": "approved",
+      "description": "Awaiting Barangay Captain approval",
+      "status": "captain_approval",
       "icon": "UserCheck",
       "autoApprove": false,
       "assignedUsers": [
-        "aaa242af-6ef2-4c72-8729-f8e8d68ec1fa",
-        "2a6054aa-d73d-4f52-876f-efa95f77add9"
+        "d165bf34-2a6e-4a33-8f13-a2e9868f28f6"
       ],
       "requiresApproval": true,
       "sendEmail": true

@@ -205,8 +205,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       if (assignment.step_id === 2) {
         // Staff approved -> Create captain assignments
         nextStepAssignments = [
-          'aaa242af-6ef2-4c72-8729-f8e8d68ec1fa', // David Brown
-          '2a6054aa-d73d-4f52-876f-efa95f77add9'  // Admin User
+          'd165bf34-2a6e-4a33-8f13-a2e9868f28f6' // John Doe (as shown in UI)
         ];
         
         for (const captainId of nextStepAssignments) {

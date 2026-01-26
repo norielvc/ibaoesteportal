@@ -228,9 +228,7 @@ router.post('/clearance', async (req, res) => {
 
     // Create initial workflow assignments for staff (step 2: Under Review)
     const staffUserIds = [
-      '9550a8b2-9e32-4f52-a260-52766afb49b1', // Noriel Cruz
-      'f398db9a-1224-42f9-a72f-69dd14fa5064', // Jane Smith
-      '379898b5-06e9-43a7-b51d-213aec975825'  // Sarah Wilson
+      '9550a8b2-9e32-4f52-a260-52766afb49b1' // Noriel Cruz (as shown in UI)
     ];
     
     for (const staffUserId of staffUserIds) {
@@ -239,8 +237,8 @@ router.post('/clearance', async (req, res) => {
         .insert([{
           request_id: data.id,
           request_type: 'barangay_clearance',
-          step_id: 2, // Step 2: Under Review
-          step_name: 'Under Review',
+          step_id: 2, // Step 2: Staff Review
+          step_name: 'Staff Review',
           assigned_user_id: staffUserId,
           status: 'pending'
         }]);
@@ -327,9 +325,7 @@ router.post('/indigency', async (req, res) => {
 
     // Create initial workflow assignments for staff (step 2: Under Review)
     const staffUserIds = [
-      '9550a8b2-9e32-4f52-a260-52766afb49b1', // Noriel Cruz
-      'f398db9a-1224-42f9-a72f-69dd14fa5064', // Jane Smith
-      '379898b5-06e9-43a7-b51d-213aec975825'  // Sarah Wilson
+      '9550a8b2-9e32-4f52-a260-52766afb49b1' // Noriel Cruz (as shown in UI)
     ];
     
     for (const staffUserId of staffUserIds) {
@@ -338,8 +334,8 @@ router.post('/indigency', async (req, res) => {
         .insert([{
           request_id: data.id,
           request_type: 'certificate_of_indigency',
-          step_id: 2, // Step 2: Under Review
-          step_name: 'Under Review',
+          step_id: 2, // Step 2: Staff Review
+          step_name: 'Staff Review',
           assigned_user_id: staffUserId,
           status: 'pending'
         }]);
@@ -426,9 +422,7 @@ router.post('/residency', async (req, res) => {
 
     // Create initial workflow assignments for staff (step 2: Under Review)
     const staffUserIds = [
-      '9550a8b2-9e32-4f52-a260-52766afb49b1', // Noriel Cruz
-      'f398db9a-1224-42f9-a72f-69dd14fa5064', // Jane Smith
-      '379898b5-06e9-43a7-b51d-213aec975825'  // Sarah Wilson
+      '9550a8b2-9e32-4f52-a260-52766afb49b1' // Noriel Cruz (as shown in UI)
     ];
     
     for (const staffUserId of staffUserIds) {
@@ -437,8 +431,8 @@ router.post('/residency', async (req, res) => {
         .insert([{
           request_id: data.id,
           request_type: 'barangay_residency',
-          step_id: 2, // Step 2: Under Review
-          step_name: 'Under Review',
+          step_id: 2, // Step 2: Staff Review
+          step_name: 'Staff Review',
           assigned_user_id: staffUserId,
           status: 'pending'
         }]);
