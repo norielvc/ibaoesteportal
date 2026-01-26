@@ -58,7 +58,7 @@ export default function Login() {
 
       {/* Simple Navigation */}
       <div className="absolute top-0 left-0 right-0 py-6 px-6 z-20">
-        <div className="max-w-7xl mx-auto flex justify-start">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Back Button */}
           <button 
             onClick={() => router.push('/')}
@@ -67,6 +67,12 @@ export default function Login() {
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back to Portal</span>
           </button>
+          
+          {/* Secure Portal Badge - moved to right side */}
+          <div className="inline-flex items-center gap-4 px-8 py-4 bg-blue-600 text-white rounded-full shadow-lg">
+            <Shield className="w-6 h-6" />
+            <span className="text-lg font-bold">SECURE PORTAL</span>
+          </div>
         </div>
       </div>
 
@@ -77,14 +83,6 @@ export default function Login() {
             
             {/* Left Side - Enlarged Branding */}
             <div className="text-center lg:text-left space-y-10">
-              {/* Secure Portal Badge */}
-              <div className="flex justify-center lg:justify-start">
-                <div className="inline-flex items-center gap-4 px-8 py-4 bg-blue-600 text-white rounded-full shadow-lg">
-                  <Shield className="w-6 h-6" />
-                  <span className="text-lg font-bold">SECURE PORTAL</span>
-                </div>
-              </div>
-
               {/* Enlarged Main Title with BRGY. */}
               <div className="space-y-8">
                 <div className="space-y-4">
