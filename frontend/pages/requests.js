@@ -156,16 +156,6 @@ export default function RequestsPage() {
     
     return assignedUsers.some(assignedId => String(assignedId) === String(userId));
   };
-      console.log('Step Index:', stepIndex);
-      console.log('Step Name:', currentStep.name);
-      console.log('Step Requires Approval:', currentStep.requiresApproval);
-      console.log('Assigned Users in Step:', assignedUsers);
-      console.log('Is Assigned:', isAssigned);
-      console.log('================================');
-    }
-    
-    return isAssigned;
-  };
 
   // Get the current workflow step for a request
   const getCurrentWorkflowStep = (request) => {

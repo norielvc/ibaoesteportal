@@ -52,6 +52,7 @@ export default function WorkflowsPage() {
   const [newStep, setNewStep] = useState({ name: '', description: '', status: '', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false });
   const [users, setUsers] = useState([]);
   const [showAssignModal, setShowAssignModal] = useState(null);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -97,7 +98,7 @@ export default function WorkflowsPage() {
     // First try to load from API (database)
     try {
       const token = getAuthToken();
-      const response = await fetch('${API_URL}/api/workflows', {
+      const response = await fetch(`${API_URL}/api/workflows`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -136,7 +137,7 @@ export default function WorkflowsPage() {
     // Also save to API (database) so other users can access
     try {
       const token = getAuthToken();
-      const response = await fetch('${API_URL}/api/workflows', {
+      const response = await fetch(`${API_URL}/api/workflows`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -156,9 +157,39 @@ export default function WorkflowsPage() {
     }
   };
 
+  const syncWorkflowAssignments = async () => {
+    setSyncing(true);
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/workflows/sync-assignments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        showNotificationMsg('success', `Workflow assignments synced! Created ${data.data.totalAssignments} assignments across ${data.data.updatedSteps} steps.`);
+        if (data.data.errors && data.data.errors.length > 0) {
+          console.warn('Sync completed with errors:', data.data.errors);
+          showNotificationMsg('warning', `Sync completed with ${data.data.errors.length} warnings. Check console for details.`);
+        }
+      } else {
+        showNotificationMsg('error', data.message || 'Failed to sync workflow assignments');
+      }
+    } catch (error) {
+      console.error('Error syncing workflow assignments:', error);
+      showNotificationMsg('error', 'Failed to sync workflow assignments');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const showNotificationMsg = (type, message) => {
     setNotification({ type, message });
-    setTimeout(() => setNotification(null), 3000);
+    setTimeout(() => setNotification(null), type === 'success' ? 5000 : 3000);
   };
 
   const getCurrentSteps = () => workflows[selectedCertificate] || [];
@@ -247,22 +278,45 @@ export default function WorkflowsPage() {
               <GitBranch className="w-7 h-7 text-blue-600" />
               Approval Workflows
             </h1>
-            <p className="text-gray-600 mt-1">Configure approval flow for each certificate type</p>
+            <p className="text-gray-600 mt-1">Configure approval flow for each certificate type. Click "Save & Sync Assignments" to update the database with current assignments.</p>
           </div>
-          <button
-            onClick={handleResetToDefault}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            Reset to Default
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={syncWorkflowAssignments}
+              disabled={syncing}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+            >
+              {syncing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Save & Sync Assignments
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleResetToDefault}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Reset to Default
+            </button>
+          </div>
         </div>
 
         {/* Notification */}
         {notification && (
           <div className={`p-4 rounded-lg flex items-center gap-2 ${
-            notification.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+            notification.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 
+            notification.type === 'warning' ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
+            'bg-red-50 text-red-800 border border-red-200'
           }`}>
-            {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+            {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : 
+             notification.type === 'warning' ? <AlertCircle className="w-5 h-5" /> :
+             <AlertCircle className="w-5 h-5" />}
             {notification.message}
           </div>
         )}
