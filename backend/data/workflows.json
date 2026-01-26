@@ -19,6 +19,7 @@
       "icon": "Clock",
       "autoApprove": false,
       "assignedUsers": [
+        "9550a8b2-9e32-4f52-a260-52766afb49b1",
         "f398db9a-1224-42f9-a72f-69dd14fa5064",
         "379898b5-06e9-43a7-b51d-213aec975825"
       ],
@@ -33,7 +34,8 @@
       "icon": "UserCheck",
       "autoApprove": false,
       "assignedUsers": [
-        "d165bf34-2a6e-4a33-8f13-a2e9868f28f6"
+        "aaa242af-6ef2-4c72-8729-f8e8d68ec1fa",
+        "2a6054aa-d73d-4f52-876f-efa95f77add9"
       ],
       "requiresApproval": true,
       "sendEmail": true
@@ -81,6 +83,7 @@
       "icon": "Clock",
       "autoApprove": false,
       "assignedUsers": [
+        "9550a8b2-9e32-4f52-a260-52766afb49b1",
         "f398db9a-1224-42f9-a72f-69dd14fa5064",
         "379898b5-06e9-43a7-b51d-213aec975825"
       ],
@@ -95,7 +98,8 @@
       "icon": "UserCheck",
       "autoApprove": false,
       "assignedUsers": [
-        "d165bf34-2a6e-4a33-8f13-a2e9868f28f6"
+        "aaa242af-6ef2-4c72-8729-f8e8d68ec1fa",
+        "2a6054aa-d73d-4f52-876f-efa95f77add9"
       ],
       "requiresApproval": true,
       "sendEmail": true
@@ -143,6 +147,7 @@
       "icon": "Clock",
       "autoApprove": false,
       "assignedUsers": [
+        "9550a8b2-9e32-4f52-a260-52766afb49b1",
         "f398db9a-1224-42f9-a72f-69dd14fa5064",
         "379898b5-06e9-43a7-b51d-213aec975825"
       ],
@@ -157,7 +162,8 @@
       "icon": "UserCheck",
       "autoApprove": false,
       "assignedUsers": [
-        "d165bf34-2a6e-4a33-8f13-a2e9868f28f6"
+        "aaa242af-6ef2-4c72-8729-f8e8d68ec1fa",
+        "2a6054aa-d73d-4f52-876f-efa95f77add9"
       ],
       "requiresApproval": true,
       "sendEmail": true
