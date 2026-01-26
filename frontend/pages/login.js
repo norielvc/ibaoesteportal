@@ -84,7 +84,7 @@ export default function Login() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-6 pt-24 sm:pt-20">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-6 pt-24 sm:pt-20 pb-24">
         <div className="w-full max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             
@@ -246,7 +246,7 @@ export default function Login() {
                   </form>
 
                   {/* Additional Info */}
-                  <div className="pt-6 border-t border-gray-200">
+                  <div className="pt-6 border-t border-gray-200 mb-4">
                     <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
                       <Shield className="w-4 h-4" />
                       <span>Secured with 256-bit encryption</span>
@@ -260,10 +260,10 @@ export default function Login() {
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 py-6 px-6 z-10">
+      <div className="absolute bottom-0 left-0 right-0 py-8 px-6 z-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 text-sm leading-relaxed">
               © 2026 Barangay Iba O' Este, Calumpit, Bulacan. All rights reserved.
             </p>
           </div>
