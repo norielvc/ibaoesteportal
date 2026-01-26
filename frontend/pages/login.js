@@ -59,8 +59,8 @@ export default function Login() {
       {/* Simple Navigation */}
       <div className="absolute top-0 left-0 right-0 py-4 px-4 z-20">
         <div className="max-w-7xl mx-auto">
-          {/* Mobile Layout - Stacked */}
-          <div className="flex flex-col gap-3 sm:hidden">
+          {/* Mobile Layout - Only Back Button */}
+          <div className="flex justify-start sm:hidden">
             <button 
               onClick={() => router.push('/')}
               className="group inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl text-sm"
@@ -68,15 +68,10 @@ export default function Login() {
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span className="font-medium">Back to Portal</span>
             </button>
-            
-            <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg text-sm">
-              <Shield className="w-4 h-4" />
-              <span className="font-bold">SECURE PORTAL</span>
-            </div>
           </div>
           
-          {/* Desktop Layout - Side by Side */}
-          <div className="hidden sm:flex justify-between items-center">
+          {/* Desktop Layout - Only Back Button */}
+          <div className="hidden sm:flex justify-start">
             <button 
               onClick={() => router.push('/')}
               className="group inline-flex items-center gap-3 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
@@ -84,17 +79,12 @@ export default function Login() {
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               <span className="font-medium">Back to Portal</span>
             </button>
-            
-            <div className="inline-flex items-center gap-4 px-8 py-4 bg-blue-600 text-white rounded-full shadow-lg">
-              <Shield className="w-6 h-6" />
-              <span className="text-lg font-bold">SECURE PORTAL</span>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-6 pt-32 sm:pt-24">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-6 pt-24 sm:pt-20">
         <div className="w-full max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             
@@ -112,6 +102,14 @@ export default function Login() {
                 </div>
                 
                 <div className="w-40 h-1.5 bg-gradient-to-r from-blue-500 to-blue-700 rounded-full mx-auto lg:mx-0"></div>
+                
+                {/* Secure Portal Badge - moved here */}
+                <div className="flex justify-center lg:justify-start">
+                  <div className="inline-flex items-center gap-4 px-8 py-4 bg-blue-600 text-white rounded-full shadow-lg">
+                    <Shield className="w-6 h-6" />
+                    <span className="text-lg font-bold">SECURE PORTAL</span>
+                  </div>
+                </div>
                 
                 <p className="text-gray-700 text-xl md:text-2xl lg:text-3xl leading-relaxed max-w-2xl mx-auto lg:mx-0 font-semibold">
                   Your gateway to efficient barangay management and community services
