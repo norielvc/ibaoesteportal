@@ -108,6 +108,84 @@ router.post('/confirm', async (req, res) => {
   }
 });
 
+// Quick verify by reference number (authenticated for dashboard users)
+router.get('/verify-ref', authenticateToken, async (req, res) => {
+  try {
+    const { ref } = req.query;
+    if (!ref) {
+      return res.status(400).json({ success: false, message: 'Missing reference number' });
+    }
+
+    const { data: request, error } = await supabase
+      .from('certificate_requests')
+      .select('*')
+      .eq('reference_number', ref)
+      .single();
+
+    if (error || !request) {
+      return res.status(404).json({ success: false, message: 'Certificate not found' });
+    }
+
+    res.json({
+      success: true,
+      valid: true,
+      request,
+      message: 'Valid certificate found'
+    });
+  } catch (error) {
+    console.error('Error in verify-ref:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Manual confirm pickup by reference (authenticated)
+router.post('/confirm-manual', authenticateToken, async (req, res) => {
+  try {
+    const { ref, pickedUpBy } = req.body;
+
+    if (!ref || !pickedUpBy) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing reference number or pickup person name'
+      });
+    }
+
+    // Get the request ID by reference
+    const { data: request, error: fetchError } = await supabase
+      .from('certificate_requests')
+      .select('id')
+      .eq('reference_number', ref)
+      .single();
+
+    if (fetchError || !request) {
+      return res.status(404).json({ success: false, message: 'Certificate not found' });
+    }
+
+    // Mark certificate request as released
+    const { error: updateError } = await supabase
+      .from('certificate_requests')
+      .update({
+        status: 'released',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', request.id);
+
+    if (updateError) throw updateError;
+
+    res.json({
+      success: true,
+      message: 'Certificate pickup confirmed manually'
+    });
+
+  } catch (error) {
+    console.error('Error in confirm-manual:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
 // Get pickup history for a request (authenticated)
 router.get('/history/:requestId', authenticateToken, async (req, res) => {
   try {

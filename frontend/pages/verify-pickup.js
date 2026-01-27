@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { 
-  CheckCircle, XCircle, Clock, User, FileText, 
+import {
+  CheckCircle, XCircle, Clock, User, FileText,
   Calendar, Phone, MapPin, AlertTriangle, Shield
 } from 'lucide-react';
 
@@ -11,7 +11,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 export default function VerifyPickupPage() {
   const router = useRouter();
   const { token, ref } = router.query;
-  
+
   const [verification, setVerification] = useState(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
@@ -19,23 +19,39 @@ export default function VerifyPickupPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
-    if (token && ref) {
-      verifyPickupToken();
+    if (ref) {
+      verifyPickup();
+    } else {
+      setLoading(false);
     }
   }, [token, ref]);
 
-  const verifyPickupToken = async () => {
+  const verifyPickup = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/pickup/verify?token=${token}&ref=${ref}`);
+      let url = `${API_URL}/api/pickup/verify?token=${token}&ref=${ref}`;
+
+      // If token is missing, use an authenticated reference lookup
+      if (!token && ref) {
+        console.log('Token missing, using reference-only lookup');
+        url = `${API_URL}/api/pickup/verify-ref?ref=${ref}`;
+      }
+
+      const headers = {};
+      const authToken = getAuthToken();
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
+      const response = await fetch(url, { headers });
       const data = await response.json();
-      
+
       setVerification(data);
     } catch (error) {
-      console.error('Error verifying pickup token:', error);
+      console.error('Error verifying pickup:', error);
       setVerification({
         valid: false,
-        message: 'Failed to verify pickup token'
+        message: 'Failed to verify pickup code'
       });
     } finally {
       setLoading(false);
@@ -50,19 +66,25 @@ export default function VerifyPickupPage() {
 
     setConfirming(true);
     try {
-      const response = await fetch(`${API_URL}/api/pickup/confirm`, {
+      const headers = { 'Content-Type': 'application/json' };
+      const authToken = getAuthToken();
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
+      // If we have a token, use the secure confirm endpoint
+      // Otherwise use the manual confirm by reference endpoint
+      const endpoint = token ? 'confirm' : 'confirm-manual';
+      const body = token ? { token, pickedUpBy: pickedUpBy.trim() } : { ref, pickedUpBy: pickedUpBy.trim() };
+
+      const response = await fetch(`${API_URL}/api/pickup/${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          token,
-          pickedUpBy: pickedUpBy.trim()
-        })
+        headers,
+        body: JSON.stringify(body)
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         setShowConfirmation(true);
       } else {
@@ -198,7 +220,7 @@ export default function VerifyPickupPage() {
                 <label className="block text-sm font-medium text-gray-500 mb-1">Reference Number</label>
                 <p className="font-mono font-semibold text-blue-600 text-lg">{request.reference_number}</p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1">Certificate Type</label>
                 <p className="font-medium text-gray-900">{getCertificateTypeLabel(request.certificate_type)}</p>
