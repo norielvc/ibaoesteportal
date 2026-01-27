@@ -122,19 +122,9 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
 
         {/* Form Body - Scrollable */}
         <div className="flex-1 overflow-y-auto">
-          {/* Program Details */}
-          <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white p-4 rounded-lg border border-blue-200">
-                <h3 className="font-bold text-blue-800 mb-2">📚 ELIGIBILITY</h3>
-                <p className="text-sm text-gray-700">ONLY FOR INCOMING GRADE 7 TO 4TH / 5TH YEAR COLLEGE</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg border border-green-200">
-                <h3 className="font-bold text-green-800 mb-2">⏰ SELECTION</h3>
-                <p className="text-sm text-gray-700">FIRST COME, FIRST SERVE!</p>
-              </div>
-            </div>
-            <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          {/* Notification */}
+          <div className="p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-b">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-sm text-yellow-800 font-medium">
                 📞 KAMI PO AY MAKIKIPAG-UGNAYAN SA INYO KUNG KAYO PO AY KUWALIPIKADO.
               </p>

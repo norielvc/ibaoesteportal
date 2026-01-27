@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import {
   Menu, X, ChevronRight, ChevronLeft, Plus, Send, Phone, MapPin, Mail,
-  Clock, Sun, Users, FileText, Award, Building2, Heart, Baby,
+  Clock, Sun, Moon, Cloud, CloudRain, Users, FileText, Award, Building2, Heart, Baby,
   AlertTriangle, Shield, Home, Calendar, TrendingUp, CheckCircle, GraduationCap, User
 } from 'lucide-react';
 import BarangayClearanceModal from '@/components/Forms/BarangayClearanceModal';
@@ -17,6 +17,7 @@ export default function BarangayPortal() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showHotlines, setShowHotlines] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
+  const [weatherInfo, setWeatherInfo] = useState({ icon: Sun, text: 'Loading...', color: 'text-yellow-400' });
   const [showClearanceModal, setShowClearanceModal] = useState(false);
   const [showIndigencyModal, setShowIndigencyModal] = useState(false);
   const [showResidencyModal, setShowResidencyModal] = useState(false);
@@ -267,9 +268,9 @@ export default function BarangayPortal() {
     fetchOfficials();
   }, []);
 
-  // Update time every second
+  // Update time and weather every second
   useEffect(() => {
-    const updateTime = () => {
+    const updateTimeAndWeather = () => {
       const now = new Date();
       const options = {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -277,9 +278,47 @@ export default function BarangayPortal() {
         timeZone: 'Asia/Manila'
       };
       setCurrentTime(now.toLocaleDateString('en-PH', options));
+
+      // Get current hour for weather logic
+      const hour = now.getHours();
+      
+      // Dynamic weather based on time of day
+      let weather;
+      if (hour >= 6 && hour < 12) {
+        // Morning (6 AM - 12 PM)
+        weather = { 
+          icon: Sun, 
+          text: 'Morning, 28°C', 
+          color: 'text-yellow-400' 
+        };
+      } else if (hour >= 12 && hour < 18) {
+        // Afternoon (12 PM - 6 PM)
+        weather = { 
+          icon: Sun, 
+          text: 'Afternoon, 31°C', 
+          color: 'text-orange-400' 
+        };
+      } else if (hour >= 18 && hour < 21) {
+        // Evening (6 PM - 9 PM)
+        weather = { 
+          icon: Cloud, 
+          text: 'Evening, 26°C', 
+          color: 'text-blue-300' 
+        };
+      } else {
+        // Night (9 PM - 6 AM)
+        weather = { 
+          icon: Moon, 
+          text: 'Night, 24°C', 
+          color: 'text-blue-200' 
+        };
+      }
+      
+      setWeatherInfo(weather);
     };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
+    
+    updateTimeAndWeather();
+    const interval = setInterval(updateTimeAndWeather, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -413,8 +452,8 @@ export default function BarangayPortal() {
               <span>{currentTime || 'Loading...'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Sun className="w-4 h-4 text-yellow-400" />
-              <span>Weather: Sunny, 31°C</span>
+              <weatherInfo.icon className={`w-4 h-4 ${weatherInfo.color}`} />
+              <span>Weather: {weatherInfo.text}</span>
             </div>
           </div>
         </div>
@@ -426,23 +465,23 @@ export default function BarangayPortal() {
           <div className="flex justify-end items-center h-12 gap-8">
             {/* Desktop Navigation - Right Side */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#news" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
-                News & Updates
-              </a>
               <a href="#forms" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
                 Barangay Forms
-              </a>
-              <a href="#directory" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
-                Facilities
-              </a>
-              <a href="#officials" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
-                Barangay Officials
               </a>
               <a href="#educational-assistance" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
                 Educational Assistance
               </a>
               <a href="#senior-citizen-assistance" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
                 Senior Citizen Services
+              </a>
+              <a href="#officials" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+                Barangay Officials
+              </a>
+              <a href="#directory" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+                Facilities
+              </a>
+              <a href="#news" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+                News & Updates
               </a>
               <a href="#contact" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
                 Contact Us
@@ -468,23 +507,23 @@ export default function BarangayPortal() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200 py-4 px-4 space-y-3">
-            <a href="#news" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
-              News & Updates
-            </a>
             <a href="#forms" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
               Barangay Forms
-            </a>
-            <a href="#directory" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
-              Facilities
-            </a>
-            <a href="#officials" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
-              Barangay Officials
             </a>
             <a href="#educational-assistance" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
               Educational Assistance
             </a>
             <a href="#senior-citizen-assistance" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
               Senior Citizen Services
+            </a>
+            <a href="#officials" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+              Barangay Officials
+            </a>
+            <a href="#directory" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+              Facilities
+            </a>
+            <a href="#news" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+              News & Updates
             </a>
             <a href="#contact" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
               Contact Us
@@ -500,7 +539,7 @@ export default function BarangayPortal() {
       </nav>
 
       {/* Hero Section with News Carousel */}
-      <section id="news" className="relative h-[500px] md:h-[600px] overflow-hidden animate-on-scroll">
+      <section id="news" className="relative h-[600px] md:h-[700px] overflow-hidden animate-on-scroll">
         {newsItems.map((item, index) => (
           <div
             key={index}
@@ -566,7 +605,7 @@ export default function BarangayPortal() {
         <div
           className="absolute inset-0 bg-cover bg-no-repeat"
           style={{
-            backgroundImage: 'url(/images/kapitanbackground.png)',
+            backgroundImage: 'url(/images/barangay-captain.jpg)',
             backgroundPosition: 'center center',
           }}
         />
@@ -901,12 +940,6 @@ export default function BarangayPortal() {
                     <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
                       <Clock className="w-3 h-3 md:w-4 md:h-4 text-green-300 flex-shrink-0" />
                       <span className="text-white text-xs md:text-xs font-medium">SELECTION: FIRST COME, FIRST SERVE!</span>
-                    </div>
-
-                    {/* Notification - Compact */}
-                    <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
-                      <Phone className="w-3 h-3 md:w-4 md:h-4 text-purple-300 flex-shrink-0" />
-                      <span className="text-white text-xs md:text-xs font-medium">NOTIFICATION: MAKIKIPAG-UGNAYAN KUNG KUWALIPIKADO</span>
                     </div>
                   </div>
                 </div>
