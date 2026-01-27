@@ -1,6 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const qrCodeService = require('../services/qrCodeService');
+const { authenticateToken } = require('../middleware/auth-supabase');
+const { supabase } = require('../services/supabaseClient');
+
+// Get all pickup records (authenticated)
+router.get('/all', authenticateToken, async (req, res) => {
+  try {
+    const { data: pickups, error } = await supabase
+      .from('certificate_pickups')
+      .select(`
+        *,
+        certificate_requests:request_id (*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      pickups: pickups || []
+    });
+
+  } catch (error) {
+    console.error('Error fetching all pickup records:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
 
 // Verify pickup token (public endpoint)
 router.get('/verify', async (req, res) => {
@@ -16,7 +45,7 @@ router.get('/verify', async (req, res) => {
     }
 
     const verification = await qrCodeService.verifyPickupToken(token, ref);
-    
+
     res.json({
       success: true,
       ...verification
@@ -46,7 +75,7 @@ router.post('/confirm', async (req, res) => {
 
     // First verify the token is still valid
     const verification = await qrCodeService.verifyPickupToken(token, '');
-    
+
     if (!verification.valid) {
       return res.status(400).json({
         success: false,
@@ -56,7 +85,7 @@ router.post('/confirm', async (req, res) => {
 
     // Mark as picked up
     const result = await qrCodeService.markAsPickedUp(token, pickedUpBy);
-    
+
     if (result.success) {
       res.json({
         success: true,
@@ -80,12 +109,12 @@ router.post('/confirm', async (req, res) => {
 });
 
 // Get pickup history for a request (authenticated)
-router.get('/history/:requestId', async (req, res) => {
+router.get('/history/:requestId', authenticateToken, async (req, res) => {
   try {
     const { requestId } = req.params;
-    
+
     const result = await qrCodeService.getPickupHistory(requestId);
-    
+
     res.json(result);
 
   } catch (error) {

@@ -21,6 +21,37 @@ export default function PickupManagementPage() {
   const [selectedCertificate, setSelectedCertificate] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  const handleManualRelease = async (certificateId, pickedUpBy) => {
+    try {
+      const token = getAuthToken();
+      // Using the standard status update endpoint for manual release
+      const response = await fetch(`${API_URL}/api/certificates/${certificateId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: 'released',
+          action: 'pickup',
+          comment: `Manually released to: ${pickedUpBy}`
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Certificate successfully marked as picked up');
+        setSelectedCertificate(null);
+        handleRefresh();
+      } else {
+        alert(data.message || 'Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to process pickup');
+    }
+  };
+
   useEffect(() => {
     fetchCertificates();
     fetchPickupRecords();
@@ -186,8 +217,8 @@ export default function PickupManagementPage() {
               <button
                 onClick={() => setStatusFilter('ready')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${statusFilter === 'ready'
-                    ? 'bg-cyan-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-cyan-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
               >
                 <Package className="w-4 h-4" />
@@ -196,8 +227,8 @@ export default function PickupManagementPage() {
               <button
                 onClick={() => setStatusFilter('released')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${statusFilter === 'released'
-                    ? 'bg-green-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-green-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
               >
                 <CheckCircle className="w-4 h-4" />
@@ -206,8 +237,8 @@ export default function PickupManagementPage() {
               <button
                 onClick={() => setStatusFilter('all')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${statusFilter === 'all'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
               >
                 <History className="w-4 h-4" />
@@ -251,23 +282,26 @@ export default function PickupManagementPage() {
           ) : (
             <div className="divide-y divide-gray-100">
               {filteredCertificates.map((certificate) => (
-                <div key={certificate.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div key={certificate.id} className="p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <FileCheck className="w-6 h-6 text-blue-600" />
+                    {/* Left side - Icon, Name, Type, and Status in one line */}
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <FileCheck className="w-5 h-5 text-blue-600" />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="font-semibold text-gray-900">
+
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-semibold text-gray-900 truncate">
                             {certificate.applicant_name || certificate.full_name}
                           </h3>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold border ${getStatusColor(certificate.status)}`}>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold border ${getStatusColor(certificate.status)} flex-shrink-0`}>
                             {certificate.status?.replace(/_/g, ' ').toUpperCase()}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mb-1">{getTypeLabel(certificate.certificate_type)}</p>
+
                         <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span className="truncate">{getTypeLabel(certificate.certificate_type)}</span>
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
                             {formatDate(certificate.updated_at)}
@@ -282,17 +316,12 @@ export default function PickupManagementPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    {/* Right side - Reference number and actions */}
+                    <div className="flex items-center gap-4 flex-shrink-0">
                       <div className="text-right">
                         <p className="font-mono font-semibold text-blue-600 text-lg">
                           {certificate.reference_number}
                         </p>
-                        {certificate.address && (
-                          <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
-                            <MapPin className="w-4 h-4" />
-                            <span className="truncate max-w-48">{certificate.address}</span>
-                          </div>
-                        )}
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -304,20 +333,20 @@ export default function PickupManagementPage() {
                           <Eye className="w-5 h-5" />
                         </button>
 
-                        {certificate.status === 'ready' && (
+                        {['ready', 'ready_for_pickup'].includes(certificate.status) && (
                           <button
                             onClick={() => openPickupVerification(certificate.reference_number)}
-                            className="px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 flex items-center gap-2"
+                            className="px-3 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 flex items-center gap-2 text-sm"
                             title="Open Pickup Verification"
                           >
                             <QrCode className="w-4 h-4" />
-                            Verify Pickup
+                            Verify
                             <ExternalLink className="w-3 h-3" />
                           </button>
                         )}
 
                         {certificate.status === 'released' && (
-                          <div className="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium flex items-center gap-2">
+                          <div className="px-3 py-2 bg-green-100 text-green-700 rounded-lg font-medium flex items-center gap-2 text-sm">
                             <CheckCircle className="w-4 h-4" />
                             Released
                           </div>
@@ -340,6 +369,7 @@ export default function PickupManagementPage() {
             getTypeLabel={getTypeLabel}
             formatDate={formatDate}
             openPickupVerification={openPickupVerification}
+            handleManualRelease={handleManualRelease}
           />
         )}
       </div>
@@ -348,7 +378,7 @@ export default function PickupManagementPage() {
 }
 
 // Certificate Details Modal Component
-function CertificateDetailsModal({ certificate, onClose, getStatusColor, getTypeLabel, formatDate, openPickupVerification }) {
+function CertificateDetailsModal({ certificate, onClose, getStatusColor, getTypeLabel, formatDate, openPickupVerification, handleManualRelease }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -444,7 +474,7 @@ function CertificateDetailsModal({ certificate, onClose, getStatusColor, getType
             </div>
 
             {/* Pickup Instructions */}
-            {certificate.status === 'ready' && (
+            {['ready', 'ready_for_pickup'].includes(certificate.status) && (
               <div className="bg-cyan-50 rounded-xl p-4 border border-cyan-200">
                 <h3 className="font-semibold text-cyan-900 flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-5 h-5" />
@@ -462,15 +492,29 @@ function CertificateDetailsModal({ certificate, onClose, getStatusColor, getType
 
           {/* Footer Actions */}
           <div className="border-t bg-gray-50 px-6 py-4 flex gap-3 justify-end">
-            {certificate.status === 'ready' && (
-              <button
-                onClick={() => openPickupVerification(certificate.reference_number)}
-                className="px-6 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 flex items-center gap-2"
-              >
-                <QrCode className="w-4 h-4" />
-                Verify Pickup
-                <ExternalLink className="w-3 h-3" />
-              </button>
+            {['ready', 'ready_for_pickup'].includes(certificate.status) && (
+              <>
+                <button
+                  onClick={() => {
+                    const name = prompt("Enter the name of the person picking up the certificate:", certificate.applicant_name || certificate.full_name);
+                    if (name) {
+                      handleManualRelease(certificate.id, name);
+                    }
+                  }}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Mark as Picked Up
+                </button>
+                <button
+                  onClick={() => openPickupVerification(certificate.reference_number)}
+                  className="px-6 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 flex items-center gap-2"
+                >
+                  <QrCode className="w-4 h-4" />
+                  Verify with QR
+                  <ExternalLink className="w-3 h-3" />
+                </button>
+              </>
             )}
             <button
               onClick={onClose}
