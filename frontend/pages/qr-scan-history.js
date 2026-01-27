@@ -83,11 +83,10 @@ export default function QRScanHistoryPage() {
 
   const [selectedScan, setSelectedScan] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
   const handleDeleteScan = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this specific scan record?')) return;
-
     try {
       setDeletingId(id);
       const token = getAuthToken();
@@ -99,6 +98,7 @@ export default function QRScanHistoryPage() {
       const data = await response.json();
       if (data.success) {
         toast.success('Record deleted successfully');
+        setIsDeleteConfirmOpen(false);
         setIsViewModalOpen(false);
         loadScans();
         loadStats();
@@ -910,18 +910,12 @@ Device Info: ${JSON.stringify(scan.device_info, null, 2)}
             {/* Modal Footer */}
             <div className="px-10 py-7 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
               <button
-                onClick={() => handleDeleteScan(selectedScan.id)}
+                onClick={() => setIsDeleteConfirmOpen(true)}
                 disabled={deletingId === selectedScan.id}
                 className="w-full sm:w-auto px-8 py-3 bg-red-50 text-red-600 rounded-2xl font-bold text-sm hover:bg-red-100 transition-all active:scale-95 flex items-center justify-center space-x-2 border border-red-100"
               >
-                {deletingId === selectedScan.id ? (
-                  <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4" />
-                    <span>Delete Record</span>
-                  </>
-                )}
+                <Trash2 className="w-4 h-4" />
+                <span>Delete Record</span>
               </button>
 
               <button
@@ -931,6 +925,52 @@ Device Info: ${JSON.stringify(scan.device_info, null, 2)}
               >
                 Close Details
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {isDeleteConfirmOpen && selectedScan && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-gray-900/40 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div className="p-10 text-center">
+              <div className="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-100 shadow-sm shadow-red-200/50">
+                <Trash2 className="w-10 h-10 text-red-600 animate-bounce" />
+              </div>
+
+              <h3 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">Delete Scan Record?</h3>
+              <p className="text-gray-500 text-sm leading-relaxed mb-8">
+                This action is permanent. Information for <span className="text-gray-900 font-bold">{parseQRData(selectedScan.qr_data).name || 'this scan'}</span> will be removed from the history logs.
+              </p>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => handleDeleteScan(selectedScan.id)}
+                  disabled={deletingId === selectedScan.id}
+                  className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-base hover:bg-red-700 transition-all active:scale-[0.98] shadow-xl shadow-red-600/20 flex items-center justify-center"
+                >
+                  {deletingId === selectedScan.id ? (
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    "Yes, Confirm Delete"
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setIsDeleteConfirmOpen(false)}
+                  disabled={deletingId === selectedScan.id}
+                  className="w-full py-4 bg-gray-50 text-gray-600 rounded-2xl font-bold text-base hover:bg-gray-100 transition-all active:scale-[0.98]"
+                >
+                  Keep Record
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 py-4 border-t border-gray-100">
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center">
+                Authorized Admin Action Only
+              </p>
             </div>
           </div>
         </div>
