@@ -564,8 +564,11 @@ export default function BarangayPortal() {
       <section id="forms" className="py-20 relative overflow-hidden animate-on-scroll">
         {/* Responsive Background Image */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/images/brgycaptain.png)' }}
+          className="absolute inset-0 bg-cover bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/images/kapitanbackground.png)',
+            backgroundPosition: 'center center',
+          }}
         />
 
         {/* Light Overlay for Text Readability */}
@@ -775,52 +778,52 @@ export default function BarangayPortal() {
 
           {/* Enhanced Bottom Info */}
           <div className="mt-16">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 max-w-4xl mx-auto">
               {/* Processing Time */}
-              <div className="group relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
-                    <Clock className="w-7 h-7 text-white" />
+              <div className="group relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl md:rounded-2xl p-3 md:p-6 border border-blue-100 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-2 md:gap-4">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
+                    <Clock className="w-5 h-5 md:w-7 md:h-7 text-white" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">1-3 Days</p>
-                    <p className="text-sm text-blue-600 font-medium">Processing Time</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900">1-3 Days</p>
+                    <p className="text-xs md:text-sm text-blue-600 font-medium">Processing Time</p>
                   </div>
                 </div>
-                <div className="absolute top-3 right-3">
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">FAST</span>
+                <div className="absolute top-2 md:top-3 right-2 md:right-3">
+                  <span className="px-1.5 py-0.5 md:px-2 md:py-1 bg-blue-100 text-blue-700 text-[10px] md:text-xs font-semibold rounded-full">FAST</span>
                 </div>
               </div>
 
               {/* 100% Online */}
-              <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30 group-hover:scale-110 transition-transform">
-                    <CheckCircle className="w-7 h-7 text-white" />
+              <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl md:rounded-2xl p-3 md:p-6 border border-green-100 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-2 md:gap-4">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30 group-hover:scale-110 transition-transform">
+                    <CheckCircle className="w-5 h-5 md:w-7 md:h-7 text-white" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">100%</p>
-                    <p className="text-sm text-green-600 font-medium">Fully Online</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900">100%</p>
+                    <p className="text-xs md:text-sm text-green-600 font-medium">Fully Online</p>
                   </div>
                 </div>
-                <div className="absolute top-3 right-3">
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">NO LINES</span>
+                <div className="absolute top-2 md:top-3 right-2 md:right-3">
+                  <span className="px-1.5 py-0.5 md:px-2 md:py-1 bg-green-100 text-green-700 text-[10px] md:text-xs font-semibold rounded-full">NO LINES</span>
                 </div>
               </div>
 
               {/* SMS Notification */}
-              <div className="group relative bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform">
-                    <Phone className="w-7 h-7 text-white" />
+              <div className="group relative bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl md:rounded-2xl p-3 md:p-6 border border-orange-100 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-2 md:gap-4">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform">
+                    <Phone className="w-5 h-5 md:w-7 md:h-7 text-white" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">SMS</p>
-                    <p className="text-sm text-orange-600 font-medium">Instant Updates</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900">SMS</p>
+                    <p className="text-xs md:text-sm text-orange-600 font-medium">Instant Updates</p>
                   </div>
                 </div>
-                <div className="absolute top-3 right-3">
-                  <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">REAL-TIME</span>
+                <div className="absolute top-2 md:top-3 right-2 md:right-3">
+                  <span className="px-1.5 py-0.5 md:px-2 md:py-1 bg-orange-100 text-orange-700 text-[10px] md:text-xs font-semibold rounded-full">REAL-TIME</span>
                 </div>
               </div>
             </div>
@@ -828,29 +831,7 @@ export default function BarangayPortal() {
         </div>
       </section>
 
-      {/* Transparency Stats Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-800 animate-on-scroll">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Barangay at a Glance</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={index}
-                  className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center transform hover:scale-105 transition-all border border-white/20"
-                >
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <p className="text-4xl font-bold text-white mb-2">{stat.value}</p>
-                  <p className="text-blue-200">{stat.label}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+
 
       {/* Educational Assistance Program Section - SK Project - Trimmed for single screen */}
       <section id="educational-assistance" className="py-8 md:py-12 bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
@@ -1248,7 +1229,7 @@ export default function BarangayPortal() {
                   Contact us today to learn more about available programs and how to apply.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
                   <div className="flex items-center gap-3 bg-white/15 rounded-full px-6 py-3 border border-white/30">
                     <Phone className="w-5 h-5 text-emerald-300" />
                     <span className="text-white font-medium">(044) 123-4567</span>
@@ -1261,6 +1242,17 @@ export default function BarangayPortal() {
                     <Clock className="w-5 h-5 text-emerald-300" />
                     <span className="text-white font-medium">Mon-Fri 8AM-5PM</span>
                   </div>
+                </div>
+
+                {/* Message Us Here Button */}
+                <div className="mt-6">
+                  <a
+                    href="#contact"
+                    className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Send className="w-5 h-5" />
+                    Message Us Here
+                  </a>
                 </div>
               </div>
             </div>
@@ -1399,8 +1391,8 @@ export default function BarangayPortal() {
                         <div
                           key={imgIndex}
                           className={`absolute inset-0 transition-all duration-700 ease-in-out ${currentImageIndex === imgIndex
-                              ? 'opacity-100 scale-100'
-                              : 'opacity-0 scale-105'
+                            ? 'opacity-100 scale-100'
+                            : 'opacity-0 scale-105'
                             }`}
                         >
                           <img
@@ -1426,8 +1418,8 @@ export default function BarangayPortal() {
                             <div
                               key={dotIndex}
                               className={`w-3 h-3 rounded-full transition-all duration-300 ${currentImageIndex === dotIndex
-                                  ? 'bg-white scale-125'
-                                  : 'bg-white/60 hover:bg-white/80'
+                                ? 'bg-white scale-125'
+                                : 'bg-white/60 hover:bg-white/80'
                                 }`}
                             />
                           ))}
@@ -1482,8 +1474,8 @@ export default function BarangayPortal() {
                         setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: imgIndex }));
                       }}
                       className={`flex-shrink-0 w-20 h-16 md:w-28 md:h-20 rounded-xl overflow-hidden transition-all duration-300 ${currentImageIndex === imgIndex
-                          ? 'ring-4 ring-pink-400 ring-offset-2 shadow-xl scale-110'
-                          : 'ring-2 ring-white/30 hover:ring-white/50 hover:scale-105 shadow-md'
+                        ? 'ring-4 ring-pink-400 ring-offset-2 shadow-xl scale-110'
+                        : 'ring-2 ring-white/30 hover:ring-white/50 hover:scale-105 shadow-md'
                         }`}
                     >
                       <img
@@ -1522,8 +1514,8 @@ export default function BarangayPortal() {
                   key={index}
                   onClick={() => setFacilityImageSlides(prev => ({ ...prev, main: index }))}
                   className={`flex flex-col items-center gap-3 p-4 md:p-6 rounded-2xl transition-all duration-300 min-w-[100px] md:min-w-[120px] ${isActive
-                      ? 'bg-white/20 backdrop-blur-sm shadow-xl scale-110 border-2 border-pink-400 transform -translate-y-2'
-                      : 'bg-white/10 backdrop-blur-sm hover:bg-white/20 hover:shadow-lg border-2 border-transparent hover:scale-105'
+                    ? 'bg-white/20 backdrop-blur-sm shadow-xl scale-110 border-2 border-pink-400 transform -translate-y-2'
+                    : 'bg-white/10 backdrop-blur-sm hover:bg-white/20 hover:shadow-lg border-2 border-transparent hover:scale-105'
                     }`}
                 >
                   <div className={`w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br ${colors[facility.color]} rounded-2xl flex items-center justify-center shadow-lg ${isActive ? 'shadow-xl' : ''}`}>
@@ -1571,138 +1563,30 @@ export default function BarangayPortal() {
         onClose={() => setShowEducationalAssistanceModal(false)}
       />
 
-      {/* Contact Section */}
-      <section id="contact" className="py-16 bg-gray-900 animate-on-scroll">
+      {/* Transparency Stats Section - Barangay at a Glance */}
+      <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-800 animate-on-scroll">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-2">Feel free to contact us</h2>
-            <p className="text-xl text-blue-400 italic">Wag mahiya at kami ay inyong tanungin</p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Form */}
-            <div className="bg-white rounded-2xl p-8 shadow-xl">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                    <input
-                      type="text"
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      placeholder="Juan"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                    <input
-                      type="text"
-                      value={formData.lastName}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      placeholder="Dela Cruz"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    placeholder="juan@example.com"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone / Numero ng Telepono
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    placeholder="09XX XXX XXXX"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                  <textarea
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
-                    placeholder="Your message here..."
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 transform hover:scale-105 shadow-lg"
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Barangay at a Glance</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {stats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={index}
+                  className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center transform hover:scale-105 transition-all border border-white/20"
                 >
-                  <Send className="w-5 h-5" />
-                  Send Message
-                </button>
-              </form>
-            </div>
-
-            {/* Contact Info */}
-            <div className="space-y-8">
-              <div className="bg-blue-800/50 backdrop-blur-sm rounded-2xl p-8 border border-blue-700/50">
-                <h3 className="text-xl font-bold text-white mb-6">Contact Information</h3>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-blue-600 p-3 rounded-lg">
-                      <MapPin className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">Address</p>
-                      <p className="text-blue-200">Brgy. Iba O' Este, Calumpit, Bulacan</p>
-                    </div>
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
+                    <Icon className="w-8 h-8 text-white" />
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="bg-blue-600 p-3 rounded-lg">
-                      <Phone className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">Phone</p>
-                      <p className="text-blue-200">(044) 123-4567</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="bg-blue-600 p-3 rounded-lg">
-                      <Mail className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">Email</p>
-                      <p className="text-blue-200">ibaoeste@calumpit.gov.ph</p>
-                    </div>
-                  </div>
+                  <p className="text-4xl font-bold text-white mb-2">{stat.value}</p>
+                  <p className="text-blue-200">{stat.label}</p>
                 </div>
-              </div>
-
-              <div className="bg-blue-800/50 backdrop-blur-sm rounded-2xl p-8 border border-blue-700/50">
-                <h3 className="text-xl font-bold text-white mb-4">Office Hours</h3>
-                <div className="space-y-2 text-blue-200">
-                  <p>Monday - Friday: 8:00 AM - 5:00 PM</p>
-                  <p>Saturday: 8:00 AM - 12:00 PM</p>
-                  <p>Sunday: Closed</p>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
-
         </div>
       </section>
+
 
       {/* Barangay Officials Section - New Layout */}
       <section id="officials" className="bg-gray-900 animate-on-scroll">
@@ -1826,8 +1710,8 @@ export default function BarangayPortal() {
 
                         {/* Officials Grid for this section */}
                         <div className={`grid gap-6 ${section.key === 'captain' ? 'grid-cols-1 max-w-md mx-auto' :
-                            section.key === 'sk_chairman' ? 'grid-cols-1 max-w-md mx-auto' :
-                              'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                          section.key === 'sk_chairman' ? 'grid-cols-1 max-w-md mx-auto' :
+                            'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
                           }`}>
                           {section.officials.map((official, index) => {
                             const colors = [
@@ -1897,30 +1781,142 @@ export default function BarangayPortal() {
               </div>
             )}
 
-            {/* Contact Information */}
-            <div className="mt-16 text-center">
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 max-w-2xl mx-auto">
-                <h6 className="text-2xl font-bold text-gray-900 mb-4">Get in Touch</h6>
-                <p className="text-gray-600 mb-6">
-                  Have questions or need assistance? Our officials are here to serve you.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Phone className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <span className="font-medium">(044) 123-4567</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="py-16 bg-gray-900 animate-on-scroll">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-white mb-2">Feel free to contact us</h2>
+            <p className="text-xl text-blue-400 italic">Wag mahiya at kami ay inyong tanungin</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Contact Form */}
+            <div className="bg-white rounded-2xl p-8 shadow-xl">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                    <input
+                      type="text"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="Juan"
+                      required
+                    />
                   </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <Mail className="w-4 h-4 text-green-600" />
-                    </div>
-                    <span className="font-medium">ibaoeste@calumpit.gov.ph</span>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                    <input
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="Dela Cruz"
+                      required
+                    />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email / Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="juan@example.com"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone / Numero ng Telepono
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="09XX XXX XXXX"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                  <textarea
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+                    placeholder="Your message here..."
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 transform hover:scale-105 shadow-lg"
+                >
+                  <Send className="w-5 h-5" />
+                  Send Message
+                </button>
+              </form>
+            </div>
+
+            {/* Contact Info */}
+            <div className="space-y-8">
+              <div className="bg-blue-800/50 backdrop-blur-sm rounded-2xl p-8 border border-blue-700/50">
+                <h3 className="text-xl font-bold text-white mb-6">Contact Information</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-blue-600 p-3 rounded-lg">
+                      <MapPin className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">Address</p>
+                      <p className="text-blue-200">Brgy. Iba O' Este, Calumpit, Bulacan</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="bg-blue-600 p-3 rounded-lg">
+                      <Phone className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">Phone</p>
+                      <p className="text-blue-200">(044) 123-4567</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="bg-blue-600 p-3 rounded-lg">
+                      <Mail className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">Email</p>
+                      <p className="text-blue-200">ibaoeste@calumpit.gov.ph</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-800/50 backdrop-blur-sm rounded-2xl p-8 border border-blue-700/50">
+                <h3 className="text-xl font-bold text-white mb-4">Office Hours</h3>
+                <div className="space-y-2 text-blue-200">
+                  <p>Monday - Friday: 8:00 AM - 5:00 PM</p>
+                  <p>Saturday: 8:00 AM - 12:00 PM</p>
+                  <p>Sunday: Closed</p>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
       </section>
 
