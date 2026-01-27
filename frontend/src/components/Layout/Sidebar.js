@@ -19,7 +19,8 @@ import {
   Smartphone,
   History,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout, getUserData } from '@/lib/auth';
@@ -36,6 +37,12 @@ const mainMenuItems = [
     href: '/requests',
     icon: ClipboardList,
     description: 'Manage requests'
+  },
+  {
+    name: 'Pickup Management',
+    href: '/pickup-management',
+    icon: Package,
+    description: 'Certificate pickups'
   },
   {
     name: 'QR Scanner',

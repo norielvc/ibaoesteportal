@@ -1,5 +1,4 @@
 const certificateGenerationService = require('./backend/services/certificateGenerationService');
-const smsNotificationService = require('./backend/services/smsNotificationService');
 const qrCodeService = require('./backend/services/qrCodeService');
 
 async function testPostApprovalWorkflow() {
@@ -31,19 +30,7 @@ async function testPostApprovalWorkflow() {
       console.log('⚠️ Certificate generation test skipped (needs database)');
     }
 
-    console.log('\n2. Testing SMS Notification Service...');
-    try {
-      const smsResult = await smsNotificationService.sendViaMock(
-        '+639171234567',
-        'Test SMS: Your certificate is ready for pickup!'
-      );
-      console.log('SMS Result:', smsResult);
-      console.log('✅ SMS notification service working');
-    } catch (error) {
-      console.log('❌ SMS notification test failed:', error.message);
-    }
-
-    console.log('\n3. Testing QR Code Service...');
+    console.log('\n2. Testing QR Code Service...');
     try {
       // Test QR code generation logic
       const qrData = qrCodeService.generateQRData(mockRequest, 'test-token-123');
@@ -53,25 +40,16 @@ async function testPostApprovalWorkflow() {
       console.log('❌ QR code test failed:', error.message);
     }
 
-    console.log('\n4. Testing Phone Number Formatting...');
-    const testNumbers = ['09171234567', '639171234567', '+639171234567', '9171234567'];
-    testNumbers.forEach(number => {
-      const formatted = smsNotificationService.formatPhoneNumber(number);
-      console.log(`${number} -> ${formatted}`);
-    });
-    console.log('✅ Phone number formatting working');
-
     console.log('\n🎉 POST-APPROVAL WORKFLOW TESTS COMPLETED!');
     console.log('\nServices ready:');
     console.log('- 📄 Certificate Generation Service');
-    console.log('- 📱 SMS Notification Service (Mock)');
     console.log('- 🔗 QR Code Service');
     console.log('- 📋 Pickup Verification System');
 
     console.log('\n📋 Next Steps:');
     console.log('1. Create database tables manually in Supabase SQL Editor');
     console.log('2. Test with a real captain approval');
-    console.log('3. Verify SMS and QR code generation');
+    console.log('3. Verify certificate generation and QR codes');
     console.log('4. Test pickup verification page');
 
   } catch (error) {

@@ -13,20 +13,13 @@ When a **Barangay Captain approves** a certificate request, the following automa
 - **Secure Storage**: Certificates saved with unique filenames
 - **Multiple Types**: Supports Barangay Clearance, Indigency, and Residency certificates
 
-#### 2. **📱 SMS Notification System**
-- **Instant Notification**: SMS sent immediately when certificate is ready
-- **Professional Message**: Includes reference number and pickup instructions
-- **Phone Validation**: Automatic formatting for Philippine numbers
-- **Multiple Providers**: Support for Twilio, Semaphore, or Mock (for testing)
-- **Delivery Tracking**: All SMS messages logged in database
-
-#### 3. **🔗 QR Code Pickup System**
+#### 2. **🔗 QR Code Pickup System**
 - **Secure Tokens**: Unique pickup tokens generated for each certificate
 - **30-Day Validity**: Pickup codes expire after 30 days
 - **Verification URL**: QR codes link to pickup verification page
 - **Anti-Fraud**: Prevents duplicate pickups and unauthorized access
 
-#### 4. **📋 Pickup Verification & Tracking**
+#### 3. **📋 Pickup Verification & Tracking**
 - **Public Verification Page**: `/verify-pickup` for QR code scanning
 - **Identity Confirmation**: Records who picked up the certificate
 - **Status Tracking**: Real-time pickup status updates
@@ -42,12 +35,11 @@ When a **Barangay Captain approves** a certificate request, the following automa
 ### **After (New Process)**
 1. **Captain approves** → Status: "approved"
 2. **🤖 Automatic Certificate Generation** → PDF created with QR code
-3. **📱 SMS Notification Sent** → "Your certificate is ready for pickup!"
-4. **🔗 QR Code Generated** → Secure pickup verification token
-5. **📋 Status Updated** → "ready_for_pickup"
-6. **👤 Applicant Visits Office** → Scans QR code or shows reference number
-7. **✅ Staff Verifies** → Uses pickup verification page
-8. **📝 Pickup Confirmed** → Certificate marked as "released"
+3. **🔗 QR Code Generated** → Secure pickup verification token
+4. **📋 Status Updated** → "ready_for_pickup"
+5. **👤 Applicant Visits Office** → Scans QR code or shows reference number
+6. **✅ Staff Verifies** → Uses pickup verification page
+7. **📝 Pickup Confirmed** → Certificate marked as "released"
 
 ---
 
@@ -61,13 +53,7 @@ When a **Barangay Captain approves** a certificate request, the following automa
 await certificateGenerationService.generateCertificate(requestId);
 ```
 
-#### 2. **SMS Notification Service** (`smsNotificationService.js`)
-```javascript
-// Sends SMS notifications to applicants
-await smsNotificationService.sendCertificateReadyNotification(requestId);
-```
-
-#### 3. **QR Code Service** (`qrCodeService.js`)
+#### 2. **QR Code Service** (`qrCodeService.js`)
 ```javascript
 // Generates secure pickup QR codes
 await qrCodeService.generatePickupQRCode(requestId);
@@ -75,20 +61,7 @@ await qrCodeService.generatePickupQRCode(requestId);
 
 ### **Database Tables Added**
 
-#### 1. **SMS Notifications Table**
-```sql
-CREATE TABLE sms_notifications (
-    id UUID PRIMARY KEY,
-    request_id UUID REFERENCES certificate_requests(id),
-    phone_number VARCHAR(20),
-    message TEXT,
-    provider VARCHAR(50),
-    status VARCHAR(20),
-    sent_at TIMESTAMP
-);
-```
-
-#### 2. **Certificate Pickups Table**
+#### 1. **Certificate Pickups Table**
 ```sql
 CREATE TABLE certificate_pickups (
     id UUID PRIMARY KEY,
@@ -128,25 +101,6 @@ CREATE TABLE certificate_pickups (
 
 ---
 
-## 📱 **SMS Notification Features**
-
-### **Message Content**
-```
-Good day [NAME]! Your [CERTIFICATE TYPE] (Ref: [REF_NUMBER]) is now ready for pickup at Barangay Iba O' Este office. Please bring a valid ID. Office hours: Mon-Fri 8AM-5PM. Thank you!
-```
-
-### **Phone Number Support**
-- **Multiple Formats**: 09XX, 639XX, +639XX automatically formatted
-- **Validation**: Ensures proper Philippine mobile format
-- **International**: Supports +63 country code
-
-### **Provider Support**
-- **Twilio**: International SMS service
-- **Semaphore**: Philippine SMS service
-- **Mock**: Development/testing mode
-
----
-
 ## 🔗 **QR Code System Features**
 
 ### **QR Code Data Structure**
@@ -180,8 +134,8 @@ Good day [NAME]! Your [CERTIFICATE TYPE] (Ref: [REF_NUMBER]) is now ready for pi
 5. **Complete Process** - Certificate marked as released
 
 ### **For Applicants**
-1. **Receive SMS** notification when ready
-2. **Visit Office** during business hours
+1. **Check Portal** or visit office to check status
+2. **Visit Office** during business hours when ready
 3. **Present ID** and reference number or QR code
 4. **Pickup Certificate** - Staff verifies and releases
 
@@ -190,20 +144,19 @@ Good day [NAME]! Your [CERTIFICATE TYPE] (Ref: [REF_NUMBER]) is now ready for pi
 ## 🎯 **Benefits of New System**
 
 ### **For Applicants**
-- ✅ **Instant Notifications** - Know immediately when certificate is ready
-- ✅ **No More Waiting** - No need to call or visit to check status
+- ✅ **No More Waiting** - Certificates ready immediately after approval
 - ✅ **Secure Process** - QR codes prevent fraud and mix-ups
-- ✅ **Clear Instructions** - SMS includes all pickup details
+- ✅ **Clear Process** - Can check status anytime on portal
 
 ### **For Barangay Staff**
 - ✅ **Automated Process** - No manual certificate generation
-- ✅ **Reduced Workload** - Automatic notifications and tracking
+- ✅ **Reduced Workload** - Automatic generation and tracking
 - ✅ **Better Organization** - Digital tracking of all pickups
 - ✅ **Audit Trail** - Complete history of certificate lifecycle
 
 ### **For Administrators**
 - ✅ **Complete Visibility** - Track entire certificate process
-- ✅ **Performance Metrics** - SMS delivery rates, pickup times
+- ✅ **Performance Metrics** - Pickup times and completion rates
 - ✅ **Fraud Prevention** - Secure tokens and verification
 - ✅ **Professional Image** - Modern, efficient service
 
@@ -213,27 +166,22 @@ Good day [NAME]! Your [CERTIFICATE TYPE] (Ref: [REF_NUMBER]) is now ready for pi
 
 ### ✅ **Completed Features**
 - [x] Certificate generation service
-- [x] SMS notification system
 - [x] QR code generation and verification
 - [x] Pickup tracking system
 - [x] Verification web page
 - [x] API endpoints for pickup process
 - [x] Integration with workflow approval system
+- [x] **Database tables created and configured**
+- [x] **System fully operational and ready for use**
 
-### 📋 **Database Setup Required**
-The following SQL scripts need to be run in Supabase SQL Editor:
+### ✅ **Database Setup Complete**
+All required database tables have been created:
 
-1. **SMS Notifications Table**: `backend/scripts/create-sms-notifications-table.sql`
-2. **Certificate Pickups Table**: `backend/scripts/create-certificate-pickups-table.sql`
+1. ✅ **Certificate Pickups Table**: `certificate_pickups` - Created in Supabase
+2. ✅ **Workflow Tables**: All workflow management tables operational
+3. ✅ **Certificate Requests**: Main certificate tracking table ready
 
 ### 🔧 **Configuration Options**
-
-#### **SMS Provider Setup** (Optional)
-```env
-SMS_PROVIDER=mock          # or 'twilio', 'semaphore'
-SMS_API_KEY=your_api_key   # for production SMS
-SMS_SENDER_ID=BARANGAY     # SMS sender name
-```
 
 #### **Certificate Storage**
 - Certificates saved to: `backend/generated-certificates/`
@@ -249,9 +197,8 @@ The system now provides a **complete end-to-end certificate management experienc
 1. **Application Submission** → Online forms with PDF preview
 2. **Staff Review** → Assigned to Noriel Cruz for verification
 3. **Captain Approval** → Assigned to John Doe for final approval
-4. **🆕 Automatic Processing** → Certificate generation, SMS, QR codes
-5. **🆕 Pickup Notification** → SMS with pickup instructions
-6. **🆕 Secure Pickup** → QR code verification and tracking
-7. **🆕 Complete Audit Trail** → Full history of certificate lifecycle
+4. **🆕 Automatic Processing** → Certificate generation and QR codes
+5. **🆕 Secure Pickup** → QR code verification and tracking
+6. **🆕 Complete Audit Trail** → Full history of certificate lifecycle
 
 **This transforms the barangay certificate process from manual to fully automated, providing a modern, efficient, and professional service to residents!** 🎉

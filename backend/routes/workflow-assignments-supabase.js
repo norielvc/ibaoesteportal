@@ -3,7 +3,6 @@ const router = express.Router();
 const { supabase } = require('../services/supabaseClient');
 const { authenticateToken } = require('../middleware/auth-supabase');
 const certificateGenerationService = require('../services/certificateGenerationService');
-const smsNotificationService = require('../services/smsNotificationService');
 const qrCodeService = require('../services/qrCodeService');
 
 // Get workflow assignments for a specific user
@@ -79,7 +78,7 @@ router.get('/user/:userId/request/:requestId', authenticateToken, async (req, re
 // Get all requests assigned to a user (for "My Assignments" view)
 router.get('/my-assignments', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id; // From auth token
+    const userId = req.user._id; // From auth token (note: using _id not id)
     const { status = 'pending' } = req.query;
     
     const { data, error } = await supabase
@@ -137,7 +136,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
   try {
     const { assignmentId } = req.params;
     const { action, comment } = req.body; // action: 'approve', 'reject', 'return'
-    const userId = req.user.id;
+    const userId = req.user._id;
     
     // Get the assignment
     const { data: assignment, error: fetchError } = await supabase
@@ -329,18 +328,8 @@ async function processPostApprovalWorkflow(requestId, requestData) {
       throw new Error('QR code generation failed');
     }
 
-    // Step 3: Send SMS Notification
-    console.log('📱 Step 3: Sending SMS notification...');
-    const smsResult = await smsNotificationService.sendCertificateReadyNotification(requestId);
-    
-    if (smsResult.success) {
-      console.log(`✅ SMS sent successfully to ${requestData.contact_number}`);
-    } else {
-      console.warn(`⚠️ SMS sending failed: ${smsResult.message}`);
-    }
-
-    // Step 4: Log completion
-    console.log('📝 Step 4: Logging workflow completion...');
+    // Step 3: Log completion
+    console.log('📝 Step 3: Logging workflow completion...');
     await supabase
       .from('workflow_history')
       .insert([{
@@ -352,7 +341,7 @@ async function processPostApprovalWorkflow(requestId, requestData) {
         performed_by: 'system',
         previous_status: 'approved',
         new_status: 'ready_for_pickup',
-        comments: `Certificate generated, QR code created, SMS sent. Ready for pickup.`
+        comments: `Certificate generated and QR code created. Ready for pickup.`
       }]);
 
     console.log(`🎉 Post-approval workflow completed for ${requestData.reference_number}`);
@@ -360,8 +349,7 @@ async function processPostApprovalWorkflow(requestId, requestData) {
     return {
       success: true,
       certificate: certificateResult,
-      qrCode: qrResult,
-      sms: smsResult
+      qrCode: qrResult
     };
 
   } catch (error) {

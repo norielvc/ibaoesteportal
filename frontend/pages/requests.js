@@ -412,6 +412,19 @@ export default function RequestsPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
+              {/* Quick Filter for Ready for Pickup */}
+              <button
+                onClick={() => setStatusFilter('ready_for_pickup')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                  statusFilter === 'ready_for_pickup' 
+                    ? 'bg-cyan-600 text-white shadow-md' 
+                    : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'
+                }`}
+              >
+                <FileCheck className="w-4 h-4" />
+                Ready for Pickup ({requests.filter(r => r.status === 'ready_for_pickup').length})
+              </button>
+
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -459,6 +472,86 @@ export default function RequestsPage() {
             </div>
           </div>
         </div>
+
+        {/* Ready for Pickup Section */}
+        {filteredRequests.filter(req => req.status === 'ready_for_pickup').length > 0 && (
+          <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl shadow-sm border border-cyan-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center">
+                  <FileCheck className="w-6 h-6 text-cyan-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-cyan-900">Certificates Ready for Pickup</h2>
+                  <p className="text-cyan-700">These certificates have been approved and are ready for collection</p>
+                </div>
+              </div>
+              <div className="bg-cyan-100 px-4 py-2 rounded-lg">
+                <span className="text-cyan-800 font-bold text-lg">
+                  {filteredRequests.filter(req => req.status === 'ready_for_pickup').length}
+                </span>
+              </div>
+            </div>
+            
+            <div className="grid gap-4">
+              {filteredRequests.filter(req => req.status === 'ready_for_pickup').map((request) => (
+                <div key={request.id} className="bg-white rounded-lg border border-cyan-200 p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-cyan-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{request.applicant_name || request.full_name}</p>
+                        <p className="text-sm text-gray-500">{getTypeLabel(request.certificate_type)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="font-mono font-semibold text-cyan-600">{request.reference_number}</p>
+                        <p className="text-sm text-gray-500">{formatDate(request.updated_at)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setSelectedRequest(request)}
+                          className="p-2 text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 rounded-lg transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </button>
+                        <a
+                          href={`/verify-pickup?ref=${request.reference_number}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 flex items-center gap-2 text-sm"
+                          title="Open Pickup Verification"
+                        >
+                          <Shield className="w-4 h-4" />
+                          Verify Pickup
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-4 p-4 bg-cyan-100 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-cyan-700 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-cyan-900 mb-1">Pickup Instructions</h3>
+                  <ul className="text-sm text-cyan-800 space-y-1">
+                    <li>• Certificates are ready for collection at the barangay office</li>
+                    <li>• Applicants should bring valid government-issued ID</li>
+                    <li>• Use "Verify Pickup" button to process certificate collection</li>
+                    <li>• Office hours: Monday to Friday, 8:00 AM - 5:00 PM</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Requests Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -637,7 +730,7 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
         
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -654,7 +747,7 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
             </button>
           </div>
 
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)] space-y-6">
+          <div className="p-6 overflow-y-auto max-h-[calc(95vh-200px)] space-y-6">
             {/* Status and Step */}
             <div className="flex items-center justify-between flex-wrap gap-3">
               <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border ${getStatusColor(request.status)}`}>
@@ -694,82 +787,86 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
             </div>
 
             {/* Applicant Info */}
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-500" />
-                Applicant Information
-              </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-500">Full Name</p>
-                  <p className="font-medium text-gray-900">{request.applicant_name || request.full_name || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Contact Number</p>
-                  <p className="font-medium text-gray-900">{request.contact_number || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Age</p>
-                  <p className="font-medium text-gray-900">{request.age || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Sex</p>
-                  <p className="font-medium text-gray-900">{request.sex || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Civil Status</p>
-                  <p className="font-medium text-gray-900">{request.civil_status || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Date of Birth</p>
-                  <p className="font-medium text-gray-900">{request.date_of_birth || 'N/A'}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-gray-500">Address</p>
-                  <p className="font-medium text-gray-900">{request.address || 'N/A'}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-500" />
+                  Applicant Information
+                </h3>
+                <div className="grid grid-cols-1 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-500">Full Name</p>
+                    <p className="font-medium text-gray-900">{request.applicant_name || request.full_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Contact Number</p>
+                    <p className="font-medium text-gray-900">{request.contact_number || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Age</p>
+                    <p className="font-medium text-gray-900">{request.age || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Sex</p>
+                    <p className="font-medium text-gray-900">{request.sex || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Civil Status</p>
+                    <p className="font-medium text-gray-900">{request.civil_status || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Date of Birth</p>
+                    <p className="font-medium text-gray-900">{request.date_of_birth || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Address</p>
+                    <p className="font-medium text-gray-900">{request.address || 'N/A'}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Purpose */}
-            <div className="bg-blue-50 rounded-xl p-4">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2">
-                <FileCheck className="w-5 h-5 text-blue-500" />
-                Purpose
-              </h3>
-              <p className="text-gray-700">{request.purpose || 'Not specified'}</p>
-            </div>
-
-            {/* Timeline */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
-                <History className="w-5 h-5 text-blue-500" />
-                Timeline
-              </h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Submitted</span>
-                  <span className="font-medium">{formatDate(request.created_at)}</span>
+              <div className="space-y-6">
+                {/* Purpose */}
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2">
+                    <FileCheck className="w-5 h-5 text-blue-500" />
+                    Purpose
+                  </h3>
+                  <p className="text-gray-700">{request.purpose || 'Not specified'}</p>
                 </div>
-                {request.updated_at && request.updated_at !== request.created_at && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Last Updated</span>
-                    <span className="font-medium">{formatDate(request.updated_at)}</span>
+
+                {/* Timeline */}
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                    <History className="w-5 h-5 text-blue-500" />
+                    Timeline
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Submitted</span>
+                      <span className="font-medium">{formatDate(request.created_at)}</span>
+                    </div>
+                    {request.updated_at && request.updated_at !== request.created_at && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Last Updated</span>
+                        <span className="font-medium">{formatDate(request.updated_at)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Admin Comment if any */}
+                {request.admin_comment && (
+                  <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                    <h3 className="font-semibold text-orange-800 flex items-center gap-2 mb-2">
+                      <AlertTriangle className="w-5 h-5" />
+                      Admin Notes
+                    </h3>
+                    <p className="text-orange-700">{request.admin_comment}</p>
                   </div>
                 )}
               </div>
             </div>
-
-            {/* Admin Comment if any */}
-            {request.admin_comment && (
-              <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
-                <h3 className="font-semibold text-orange-800 flex items-center gap-2 mb-2">
-                  <AlertTriangle className="w-5 h-5" />
-                  Admin Notes
-                </h3>
-                <p className="text-orange-700">{request.admin_comment}</p>
-              </div>
-            )}
           </div>
 
           {/* Footer Actions */}
@@ -844,7 +941,7 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
         
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
           <div className="p-6">
             {/* Icon */}
             <div className={`w-16 h-16 ${cfg.iconBg} rounded-full flex items-center justify-center mx-auto mb-4`}>
@@ -1060,7 +1157,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900/80">
       <div className="flex min-h-screen items-start justify-center p-4 pt-8">
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-7xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-indigo-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
             <div className="flex items-center gap-3">
