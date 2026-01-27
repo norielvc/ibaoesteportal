@@ -39,7 +39,8 @@ const defaultOfficials = {
   logos: {
     leftLogo: '/iba-o-este.png',
     rightLogo: '/calumpit.png',
-    logoSize: 80
+    logoSize: 80,
+    captainImage: '/images/brgycaptain.png'
   },
   // Header Style - General
   headerStyle: {
@@ -92,14 +93,15 @@ export default function OfficialsPage() {
   const [activeTab, setActiveTab] = useState('officials');
   const leftLogoRef = useRef(null);
   const rightLogoRef = useRef(null);
+  const captainImageRef = useRef(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('barangayOfficials');
     if (saved) {
       const parsed = JSON.parse(saved);
-      setOfficials({ 
-        ...defaultOfficials, 
-        ...parsed, 
+      setOfficials({
+        ...defaultOfficials,
+        ...parsed,
         contactInfo: { ...defaultOfficials.contactInfo, ...parsed.contactInfo },
         headerInfo: { ...defaultOfficials.headerInfo, ...parsed.headerInfo },
         logos: { ...defaultOfficials.logos, ...parsed.logos },
@@ -154,16 +156,26 @@ export default function OfficialsPage() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        updateStyle('logos', side === 'left' ? 'leftLogo' : 'rightLogo', reader.result);
-        setNotification({ type: 'success', message: `${side === 'left' ? 'Left' : 'Right'} logo uploaded` });
+        let fieldName = '';
+        if (side === 'left') fieldName = 'leftLogo';
+        else if (side === 'right') fieldName = 'rightLogo';
+        else if (side === 'captain') fieldName = 'captainImage';
+
+        updateStyle('logos', fieldName, reader.result);
+        setNotification({ type: 'success', message: `${side.charAt(0).toUpperCase() + side.slice(1)} image uploaded` });
       };
       reader.readAsDataURL(file);
     }
   };
 
   const removeLogo = (side) => {
-    updateStyle('logos', side === 'left' ? 'leftLogo' : 'rightLogo', '');
-    setNotification({ type: 'success', message: `${side === 'left' ? 'Left' : 'Right'} logo removed` });
+    let fieldName = '';
+    if (side === 'left') fieldName = 'leftLogo';
+    else if (side === 'right') fieldName = 'rightLogo';
+    else if (side === 'captain') fieldName = 'captainImage';
+
+    updateStyle('logos', fieldName, '');
+    setNotification({ type: 'success', message: `${side.charAt(0).toUpperCase() + side.slice(1)} image removed` });
   };
 
   const saveAllChanges = () => {
@@ -295,7 +307,7 @@ export default function OfficialsPage() {
               <EditableField label="Treasurer" field="treasurer" value={officials.treasurer} icon={Award} />
               <EditableField label="SK Chairman" field="skChairman" value={officials.skChairman} icon={Users} />
             </div>
-            
+
             <div className="bg-gray-50 rounded-2xl p-6 border">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-blue-600" />Kagawad</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -382,6 +394,34 @@ export default function OfficialsPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Captain's Image */}
+                <div className="bg-white rounded-xl p-4 border md:col-span-2">
+                  <label className="text-sm font-medium text-gray-700 block mb-3">Punong Barangay Portrait</label>
+                  <div className="flex items-center gap-6">
+                    <div className="w-32 h-40 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden shadow-inner">
+                      {officials.logos?.captainImage ? (
+                        <img src={officials.logos.captainImage} alt="Captain" className="w-full h-full object-cover" />
+                      ) : (
+                        <Users className="w-10 h-10 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs text-gray-500 mb-2">This image appears in the certificate sidebar above the Captain's name.<br />Recommended size: 300x400 pixels (3:4 aspect ratio).</p>
+                      <div className="flex gap-2">
+                        <input type="file" ref={captainImageRef} accept="image/*" onChange={(e) => handleLogoUpload('captain', e)} className="hidden" />
+                        <button onClick={() => captainImageRef.current?.click()} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm flex items-center gap-2 hover:bg-purple-700">
+                          <Upload className="w-4 h-4" />Upload Portrait
+                        </button>
+                        {officials.logos?.captainImage && (
+                          <button onClick={() => removeLogo('captain')} className="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm flex items-center gap-2 hover:bg-red-200">
+                            <Trash2 className="w-4 h-4" />Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="mt-4">
                 <SizeSlider label="Logo Size" value={officials.logos?.logoSize || 80} onChange={updateStyle} section="logos" field="logoSize" min={40} max={120} />
@@ -403,7 +443,7 @@ export default function OfficialsPage() {
             {/* Individual Header Text Styles */}
             <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-200">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Type className="w-5 h-5 text-indigo-600" />Individual Text Styling</h3>
-              
+
               {/* Country Style */}
               <div className="bg-white rounded-xl p-4 border mb-4">
                 <div className="flex items-center justify-between mb-3">
@@ -561,9 +601,16 @@ export default function OfficialsPage() {
             <div className="bg-white rounded-2xl p-6 border">
               <h3 className="font-bold text-gray-900 mb-4">Sidebar Preview</h3>
               <div className="w-56 rounded-lg p-4 text-white" style={{ background: `linear-gradient(to bottom, ${officials.sidebarStyle?.bgColor}, ${officials.sidebarStyle?.gradientEnd})` }}>
-                <p className="font-bold text-center mb-3" style={{ fontSize: `${(officials.sidebarStyle?.titleSize || 14) + 4}px` }}>BARANGAY<br/>IBA O' ESTE</p>
+                <p className="font-bold text-center mb-3" style={{ fontSize: `${(officials.sidebarStyle?.titleSize || 14) + 4}px` }}>BARANGAY<br />IBA O' ESTE</p>
                 <div className="border-t border-white/30 pt-3">
                   <p className="font-bold mb-2" style={{ color: officials.sidebarStyle?.labelColor, fontSize: `${(officials.sidebarStyle?.titleSize || 14) + 1}px` }}>BARANGAY COUNCIL</p>
+                  <div className="mb-2 w-[140px] aspect-[3/4] mx-auto rounded-lg overflow-hidden border-2 border-white/20 shadow-inner bg-black/10">
+                    <img
+                      src={officials.logos?.captainImage || '/images/brgycaptain.png'}
+                      alt="Punong Barangay"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <p style={{ color: `${officials.sidebarStyle?.labelColor}cc`, fontSize: `${officials.sidebarStyle?.textSize || 11}px` }}>Punong Barangay</p>
                   <p className="font-semibold" style={{ color: officials.sidebarStyle?.textColor, fontSize: `${(officials.sidebarStyle?.textSize || 11) + 1}px` }}>{officials.chairman}</p>
                   <div className="border-t border-white/30 mt-2 pt-2">

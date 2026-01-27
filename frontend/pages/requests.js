@@ -971,7 +971,7 @@ const defaultOfficials = {
     barangayName: 'BARANGAY IBA O\' ESTE',
     officeName: 'Office of the Punong Barangay'
   },
-  logos: { leftLogo: '/iba-o-este.png', rightLogo: '/calumpit.png', logoSize: 80 },
+  logos: { leftLogo: '/iba-o-este.png', rightLogo: '/calumpit.png', logoSize: 80, captainImage: '/images/brgycaptain.png' },
   headerStyle: { bgColor: '#ffffff', borderColor: '#1e40af', fontFamily: 'default' },
   countryStyle: { color: '#4b5563', size: 12, fontWeight: 'normal', fontFamily: 'default' },
   provinceStyle: { color: '#4b5563', size: 12, fontWeight: 'normal', fontFamily: 'default' },
@@ -1211,7 +1211,14 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
             <div className="border-t pt-3" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
               <p className="font-bold mb-3" style={{ color: sidebarStyle.labelColor, fontSize: `${(sidebarStyle.titleSize || 13) + 2}px` }}>BARANGAY COUNCIL</p>
-              <div className="mb-3">
+              <div className="mb-3 text-center">
+                <div className="mb-2 w-[140px] aspect-[3/4] mx-auto rounded-lg overflow-hidden border-2 border-white/20 shadow-inner bg-black/10">
+                  <img
+                    src={logos.captainImage || '/images/brgycaptain.png'}
+                    alt="Punong Barangay"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Punong Barangay</p>
                 <p className="font-semibold" style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11) + 1}px` }}>{officials.chairman}</p>
               </div>
@@ -1255,16 +1262,28 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
           </div>
 
           {/* Main Content - Certificate Body */}
-          <div className={`flex-1 p-6 flex flex-col ${getFontClass(bodyStyle.fontFamily)}`} style={{ backgroundColor: bodyStyle.bgColor }}>
+          <div className={`flex-1 p-6 flex flex-col relative ${getFontClass(bodyStyle.fontFamily)}`} style={{ backgroundColor: bodyStyle.bgColor }}>
+            {/* Background Watermark */}
+            <div className="absolute inset-0 flex justify-center pointer-events-none opacity-[0.15] z-0 pt-24">
+              <img
+                src={logos.leftLogo || '/iba-o-este.png'}
+                alt="Watermark"
+                style={{ width: '550px', height: '550px', objectFit: 'contain' }}
+              />
+            </div>
+
             {/* Title */}
-            <div className="text-center mb-6">
+            <div className="text-center mb-6 relative z-10">
               <h1 className="font-bold underline" style={{ color: '#16a34a', fontSize: `${bodyStyle.titleSize || 24}px` }}>
-                BARANGAY CLEARANCE CERTIFICATE
+                {request.certificate_type === 'barangay_clearance' ? 'BARANGAY CLEARANCE CERTIFICATE' :
+                  request.certificate_type === 'certificate_of_indigency' ? 'CERTIFICATE OF INDIGENCY' :
+                    request.certificate_type === 'barangay_residency' ? 'BARANGAY RESIDENCY CERTIFICATE' :
+                      'CERTIFICATE'}
               </h1>
             </div>
 
             {/* Body Content */}
-            <div className="flex-1" style={{ color: bodyStyle.textColor, fontSize: `${bodyStyle.textSize || 14}px` }}>
+            <div className="flex-1 relative z-10" style={{ color: bodyStyle.textColor, fontSize: `${bodyStyle.textSize || 14}px` }}>
               <p className="font-bold mb-6">To Whom It May Concern:</p>
 
               <p className="mb-6 text-justify leading-relaxed">

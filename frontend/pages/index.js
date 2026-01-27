@@ -56,42 +56,42 @@ export default function BarangayPortal() {
 
   // Default facilities (fallback)
   const defaultFacilities = [
-    { 
-      name: 'Health Center', 
-      icon: Heart, 
-      description: 'Primary healthcare services for residents', 
+    {
+      name: 'Health Center',
+      icon: Heart,
+      description: 'Primary healthcare services for residents',
       color: 'bg-red-500',
       images: ['/background.jpg', '/background.jpg', '/background.jpg'],
       features: ['Free Checkups', 'Vaccination', 'First Aid']
     },
-    { 
-      name: 'Multi-purpose Hall', 
-      icon: Building2, 
-      description: 'Events, meetings, and community gatherings', 
+    {
+      name: 'Multi-purpose Hall',
+      icon: Building2,
+      description: 'Events, meetings, and community gatherings',
       color: 'bg-blue-500',
       images: ['/background.jpg', '/background.jpg', '/background.jpg'],
       features: ['500 Capacity', 'AC Equipped', 'Stage']
     },
-    { 
-      name: 'Daycare Center', 
-      icon: Baby, 
-      description: 'Early childhood education and care', 
+    {
+      name: 'Daycare Center',
+      icon: Baby,
+      description: 'Early childhood education and care',
       color: 'bg-pink-500',
       images: ['/background.jpg', '/background.jpg', '/background.jpg'],
       features: ['Ages 3-5', 'Free Education', 'Meals']
     },
-    { 
-      name: 'Barangay Hall', 
-      icon: Home, 
-      description: 'Administrative services and assistance', 
+    {
+      name: 'Barangay Hall',
+      icon: Home,
+      description: 'Administrative services and assistance',
       color: 'bg-green-500',
       images: ['/background.jpg', '/background.jpg', '/background.jpg'],
       features: ['Documents', 'Assistance', 'Info Desk']
     },
-    { 
-      name: 'Sports Complex', 
-      icon: Award, 
-      description: 'Basketball court and fitness area', 
+    {
+      name: 'Sports Complex',
+      icon: Award,
+      description: 'Basketball court and fitness area',
       color: 'bg-orange-500',
       images: ['/background.jpg', '/background.jpg', '/background.jpg'],
       features: ['Basketball', 'Volleyball', 'Gym']
@@ -128,7 +128,7 @@ export default function BarangayPortal() {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
@@ -143,21 +143,21 @@ export default function BarangayPortal() {
       // Swipe left - next image in current facility
       const nextIndex = (currentImageIndex + 1) % facility.images.length;
       console.log('Swiping to next image:', nextIndex);
-      setFacilityImageSlides(prev => ({ 
-        ...prev, 
-        [currentFacilityIndex]: nextIndex 
+      setFacilityImageSlides(prev => ({
+        ...prev,
+        [currentFacilityIndex]: nextIndex
       }));
     }
     if (isRightSwipe && facility.images.length > 1) {
       // Swipe right - previous image in current facility
       const prevIndex = (currentImageIndex - 1 + facility.images.length) % facility.images.length;
       console.log('Swiping to previous image:', prevIndex);
-      setFacilityImageSlides(prev => ({ 
-        ...prev, 
-        [currentFacilityIndex]: prevIndex 
+      setFacilityImageSlides(prev => ({
+        ...prev,
+        [currentFacilityIndex]: prevIndex
       }));
     }
-    
+
     // Reset touch values
     setTouchStart(null);
     setTouchEnd(null);
@@ -171,14 +171,14 @@ export default function BarangayPortal() {
         console.log('Fetching events from:', `${API_URL}/api/events`);
         const response = await fetch(`${API_URL}/api/events`);
         console.log('Events API response status:', response.status);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('Events API data:', data);
-        
+
         if (data.success && data.data && data.data.length > 0) {
           console.log('Setting events from API:', data.data);
           setNewsItems(data.data);
@@ -191,7 +191,7 @@ export default function BarangayPortal() {
         // Keep default events on error
       }
     };
-    
+
     fetchEvents();
   }, []);
 
@@ -203,14 +203,14 @@ export default function BarangayPortal() {
         console.log('Fetching facilities from:', `${API_URL}/api/facilities`);
         const response = await fetch(`${API_URL}/api/facilities`);
         console.log('Facilities API response status:', response.status);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('Facilities API data:', data);
-        
+
         if (data.success && data.data && data.data.length > 0) {
           // Map icon names to actual components
           const facilitiesWithIcons = data.data.map(facility => ({
@@ -228,7 +228,7 @@ export default function BarangayPortal() {
         // Keep default facilities on error
       }
     };
-    
+
     fetchFacilities();
   }, []);
 
@@ -240,15 +240,15 @@ export default function BarangayPortal() {
         console.log('🔍 Fetching officials from:', `${API_URL}/api/officials`);
         const response = await fetch(`${API_URL}/api/officials`);
         console.log('📊 Officials API response status:', response.status);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('📋 Officials API data received:', data);
         console.log('📋 Number of officials:', data.data?.length || 0);
-        
+
         if (data.success && data.data && data.data.length > 0) {
           console.log('✅ Setting officials from API:', data.data);
           setOfficials(data.data);
@@ -263,7 +263,7 @@ export default function BarangayPortal() {
         // Keep empty array on error
       }
     };
-    
+
     fetchOfficials();
   }, []);
 
@@ -271,7 +271,7 @@ export default function BarangayPortal() {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const options = { 
+      const options = {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
         timeZone: 'Asia/Manila'
@@ -319,7 +319,7 @@ export default function BarangayPortal() {
         const currentFacilityIndex = updated['main'] || 0;
         const currentFacility = facilities[currentFacilityIndex];
         const currentImageIndex = updated[currentFacilityIndex] || 0;
-        
+
         // Check if current facility has multiple images
         if (currentFacility.images && currentFacility.images.length > 1) {
           // If not at last image of current facility, go to next image
@@ -337,7 +337,7 @@ export default function BarangayPortal() {
           updated['main'] = nextFacilityIndex;
           updated[nextFacilityIndex] = 0; // Start from first image of next facility
         }
-        
+
         return updated;
       });
     }, 4000);
@@ -405,7 +405,7 @@ export default function BarangayPortal() {
               </p>
             </div>
           </div>
-          
+
           {/* Right Side - Date/Time and Weather */}
           <div className="flex flex-col items-end gap-1 mt-4 md:mt-0 text-white text-sm">
             <div className="flex items-center gap-2">
@@ -504,9 +504,8 @@ export default function BarangayPortal() {
         {newsItems.map((item, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              currentSlide === index ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`absolute inset-0 transition-opacity duration-1000 ${currentSlide === index ? 'opacity-100' : 'opacity-0'
+              }`}
           >
             <div
               className="absolute inset-0 bg-cover bg-center"
@@ -538,20 +537,19 @@ export default function BarangayPortal() {
           >
             <ChevronLeft className="w-4 h-4 text-white" />
           </button>
-          
+
           {/* Dots */}
           <div className="flex gap-3">
             {newsItems.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  currentSlide === index ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/75'
-                }`}
+                className={`w-3 h-3 rounded-full transition-all ${currentSlide === index ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/75'
+                  }`}
               />
             ))}
           </div>
-          
+
           {/* Right Arrow */}
           <button
             onClick={() => setCurrentSlide((prev) => (prev + 1) % newsItems.length)}
@@ -565,14 +563,14 @@ export default function BarangayPortal() {
       {/* Available Forms Section - Modern Design with Responsive Background */}
       <section id="forms" className="py-20 relative overflow-hidden animate-on-scroll">
         {/* Responsive Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/images/barangay-captain.jpg)' }}
+          style={{ backgroundImage: 'url(/images/brgycaptain.png)' }}
         />
-        
+
         {/* Light Overlay for Text Readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/40 via-blue-900/30 to-blue-900/50"></div>
-        
+
         {/* Additional Decorative Overlays - Responsive */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-20 md:-top-40 -right-20 md:-right-40 w-40 h-40 md:w-80 md:h-80 bg-white/10 rounded-full opacity-50 blur-3xl"></div>
@@ -686,20 +684,20 @@ export default function BarangayPortal() {
                 <div className="relative overflow-hidden">
                   {/* Container with Background - Added height and better proportions */}
                   <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 relative max-w-lg mx-auto overflow-hidden h-[500px] flex items-center">
-                    <div 
+                    <div
                       className="flex transition-transform duration-500 ease-in-out w-full"
                       style={{ transform: `translateX(-${currentFormSlide * 100}%)` }}
                     >
                       {forms.map((form, formIndex) => {
                         const Icon = form.icon;
                         const colors = colorClasses[form.color];
-                        
+
                         return (
                           <div key={formIndex} className="w-full flex-shrink-0 flex items-center justify-center">
                             <div className="group relative bg-transparent rounded-3xl p-10 transition-all duration-500 overflow-hidden w-full max-w-md">
                               {/* Gradient Overlay on Hover */}
                               <div className={`absolute inset-0 bg-gradient-to-br ${colors.overlay} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl`}></div>
-                              
+
                               {/* Icon Container */}
                               <div className="relative mb-8">
                                 <div className={`w-20 h-20 bg-gradient-to-br ${colors.gradient} rounded-2xl flex items-center justify-center shadow-lg ${colors.shadow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 mx-auto`}>
@@ -729,7 +727,7 @@ export default function BarangayPortal() {
                                 </div>
 
                                 {/* Button */}
-                                <button 
+                                <button
                                   onClick={form.onClick}
                                   className={`relative z-10 w-full bg-gradient-to-r ${colors.button} text-white py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg ${colors.buttonShadow} text-lg`}
                                 >
@@ -765,9 +763,8 @@ export default function BarangayPortal() {
                       <button
                         key={index}
                         onClick={() => setCurrentFormSlide(index)}
-                        className={`w-3 h-3 rounded-full transition-all ${
-                          currentFormSlide === index ? 'bg-blue-600 w-8 shadow-lg' : 'bg-gray-400 hover:bg-gray-500'
-                        }`}
+                        className={`w-3 h-3 rounded-full transition-all ${currentFormSlide === index ? 'bg-blue-600 w-8 shadow-lg' : 'bg-gray-400 hover:bg-gray-500'
+                          }`}
                       />
                     ))}
                   </div>
@@ -865,9 +862,9 @@ export default function BarangayPortal() {
 
         {/* SK Chairman Background Image - Responsive */}
         <div className="absolute left-0 top-0 bottom-0 w-full md:w-1/2 opacity-20 md:opacity-30 pointer-events-none">
-          <div 
+          <div
             className="w-full h-full bg-cover bg-no-repeat bg-center md:bg-left-top"
-            style={{ 
+            style={{
               backgroundImage: 'url(/images/sk-chairman.png)',
               filter: 'brightness(0.9) contrast(1.1)',
               backgroundPosition: 'center 20%'
@@ -881,7 +878,7 @@ export default function BarangayPortal() {
             {/* Mobile-first layout, then desktop alignment */}
             <div className="w-full md:flex md:justify-end">
               <div className="w-full md:max-w-4xl lg:max-w-5xl md:pr-8 lg:pr-16">
-                
+
                 {/* Section Header - Responsive */}
                 <div className="text-center md:text-right mb-6 md:mb-8">
                   <div className="flex justify-center md:justify-end mb-3 md:mb-4">
@@ -891,17 +888,17 @@ export default function BarangayPortal() {
                       <div className="w-2 h-2 md:w-3 md:h-3 bg-green-400 rounded-full animate-pulse"></div>
                     </div>
                   </div>
-                  
+
                   <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 leading-tight text-center md:text-right">
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400">
                       𝐄𝐃𝐔𝐂𝐀𝐓𝐈𝐎𝐍𝐀𝐋 𝐀𝐒𝐒𝐈𝐒𝐓𝐀𝐍𝐂𝐄 𝐏𝐑𝐎𝐆𝐑𝐀𝐌
                     </span>
                   </h2>
-                  
+
                   <div className="flex justify-center md:justify-end mb-3">
                     <div className="w-20 md:w-28 h-1 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-full"></div>
                   </div>
-                  
+
                   <p className="text-base md:text-lg lg:text-xl text-blue-100 font-light leading-relaxed text-center md:text-right px-4 md:px-0">
                     Empowering the youth of Iba O' Este through quality education
                   </p>
@@ -918,13 +915,13 @@ export default function BarangayPortal() {
                       <Users className="w-3 h-3 md:w-4 md:h-4 text-blue-300 flex-shrink-0" />
                       <span className="text-white text-xs md:text-xs font-medium">ELIGIBILITY: GRADE 7 TO 4TH/5TH YEAR COLLEGE</span>
                     </div>
-                    
+
                     {/* Selection - Compact */}
                     <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
                       <Clock className="w-3 h-3 md:w-4 md:h-4 text-green-300 flex-shrink-0" />
                       <span className="text-white text-xs md:text-xs font-medium">SELECTION: FIRST COME, FIRST SERVE!</span>
                     </div>
-                    
+
                     {/* Notification - Compact */}
                     <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
                       <Phone className="w-3 h-3 md:w-4 md:h-4 text-purple-300 flex-shrink-0" />
@@ -941,7 +938,7 @@ export default function BarangayPortal() {
                       <p className="text-blue-200 text-sm md:text-base mb-4 md:mb-6 text-center leading-relaxed max-w-3xl mx-auto px-2 md:px-0">
                         Take the first step towards your educational goals. Fill out our comprehensive application form and join hundreds of students who have benefited from this program.
                       </p>
-                      
+
                       <div className="flex justify-center mb-4 md:mb-6">
                         <button
                           onClick={() => setShowEducationalAssistanceModal(true)}
@@ -993,7 +990,7 @@ export default function BarangayPortal() {
                     </div>
                   </div>
                 </div>
-                
+
               </div>
             </div>
           </div>
@@ -1010,9 +1007,9 @@ export default function BarangayPortal() {
 
         {/* Filipino Senior Citizens Background Image */}
         <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <div 
+          <div
             className="w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{ 
+            style={{
               backgroundImage: 'url(/images/seniorcitizens.jpg)',
               filter: 'brightness(0.7) contrast(1.2) sepia(0.2)',
             }}
@@ -1022,7 +1019,7 @@ export default function BarangayPortal() {
 
         <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            
+
             {/* Section Header */}
             <div className="text-center mb-8 md:mb-12">
               <div className="flex justify-center mb-4 md:mb-6">
@@ -1032,17 +1029,17 @@ export default function BarangayPortal() {
                   <div className="w-2 h-2 md:w-3 md:h-3 bg-red-400 rounded-full animate-pulse"></div>
                 </div>
               </div>
-              
+
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400">
                   SENIOR CITIZEN ASSISTANCE PROGRAM
                 </span>
               </h2>
-              
+
               <div className="flex justify-center mb-4 md:mb-6">
                 <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-full"></div>
               </div>
-              
+
               <p className="text-lg md:text-xl lg:text-2xl text-emerald-100 font-light leading-relaxed max-w-4xl mx-auto px-4 md:px-0">
                 Honoring our elders with comprehensive care and support services
               </p>
@@ -1053,7 +1050,7 @@ export default function BarangayPortal() {
 
             {/* Services Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-12">
-              
+
               {/* Healthcare Services */}
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
                 <div className="flex items-center mb-4 md:mb-6">
@@ -1247,10 +1244,10 @@ export default function BarangayPortal() {
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/20 shadow-xl max-w-4xl mx-auto">
                 <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6">Need Assistance?</h3>
                 <p className="text-emerald-200 text-base md:text-lg mb-6 md:mb-8 leading-relaxed">
-                  Our dedicated team is here to help our senior citizens access the services and support they deserve. 
+                  Our dedicated team is here to help our senior citizens access the services and support they deserve.
                   Contact us today to learn more about available programs and how to apply.
                 </p>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                   <div className="flex items-center gap-3 bg-white/15 rounded-full px-6 py-3 border border-white/30">
                     <Phone className="w-5 h-5 text-emerald-300" />
@@ -1321,15 +1318,15 @@ export default function BarangayPortal() {
                 <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
               </div>
             </div>
-            
+
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
               Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400">Facilities</span>
             </h2>
-            
+
             <div className="flex justify-center mb-6">
               <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 rounded-full"></div>
             </div>
-            
+
             <p className="text-blue-100 max-w-3xl mx-auto text-lg md:text-xl leading-relaxed">
               Discover our state-of-the-art community facilities designed to serve and enhance the lives of Iba O' Este residents
             </p>
@@ -1343,43 +1340,43 @@ export default function BarangayPortal() {
               const Icon = facility.icon;
               const currentImageIndex = facilityImageSlides[currentFacilityIndex] || 0;
               const colors = {
-                'bg-red-500': { 
-                  bg: 'from-red-500 to-rose-600', 
-                  light: 'from-red-50/10 to-rose-100/10', 
-                  text: 'text-red-300', 
-                  border: 'border-red-400/30', 
+                'bg-red-500': {
+                  bg: 'from-red-500 to-rose-600',
+                  light: 'from-red-50/10 to-rose-100/10',
+                  text: 'text-red-300',
+                  border: 'border-red-400/30',
                   shadow: 'shadow-red-500/25',
                   glow: 'shadow-red-500/40'
                 },
-                'bg-blue-500': { 
-                  bg: 'from-blue-500 to-indigo-600', 
-                  light: 'from-blue-50/10 to-indigo-100/10', 
-                  text: 'text-blue-300', 
-                  border: 'border-blue-400/30', 
+                'bg-blue-500': {
+                  bg: 'from-blue-500 to-indigo-600',
+                  light: 'from-blue-50/10 to-indigo-100/10',
+                  text: 'text-blue-300',
+                  border: 'border-blue-400/30',
                   shadow: 'shadow-blue-500/25',
                   glow: 'shadow-blue-500/40'
                 },
-                'bg-pink-500': { 
-                  bg: 'from-pink-500 to-rose-600', 
-                  light: 'from-pink-50/10 to-rose-100/10', 
-                  text: 'text-pink-300', 
-                  border: 'border-pink-400/30', 
+                'bg-pink-500': {
+                  bg: 'from-pink-500 to-rose-600',
+                  light: 'from-pink-50/10 to-rose-100/10',
+                  text: 'text-pink-300',
+                  border: 'border-pink-400/30',
                   shadow: 'shadow-pink-500/25',
                   glow: 'shadow-pink-500/40'
                 },
-                'bg-green-500': { 
-                  bg: 'from-green-500 to-emerald-600', 
-                  light: 'from-green-50/10 to-emerald-100/10', 
-                  text: 'text-green-300', 
-                  border: 'border-green-400/30', 
+                'bg-green-500': {
+                  bg: 'from-green-500 to-emerald-600',
+                  light: 'from-green-50/10 to-emerald-100/10',
+                  text: 'text-green-300',
+                  border: 'border-green-400/30',
                   shadow: 'shadow-green-500/25',
                   glow: 'shadow-green-500/40'
                 },
-                'bg-orange-500': { 
-                  bg: 'from-orange-500 to-amber-600', 
-                  light: 'from-orange-50/10 to-amber-100/10', 
-                  text: 'text-orange-300', 
-                  border: 'border-orange-400/30', 
+                'bg-orange-500': {
+                  bg: 'from-orange-500 to-amber-600',
+                  light: 'from-orange-50/10 to-amber-100/10',
+                  text: 'text-orange-300',
+                  border: 'border-orange-400/30',
                   shadow: 'shadow-orange-500/25',
                   glow: 'shadow-orange-500/40'
                 }
@@ -1390,9 +1387,9 @@ export default function BarangayPortal() {
                 <div className="group relative">
                   {/* Main Facility Card - Bigger Photos */}
                   <div className={`relative bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border-2 ${colorSet.border} hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2`}>
-                    
+
                     {/* Image Section - Much Bigger */}
-                    <div 
+                    <div
                       className="relative h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden"
                       onTouchStart={handleTouchStart}
                       onTouchMove={handleTouchMove}
@@ -1401,23 +1398,22 @@ export default function BarangayPortal() {
                       {facility.images.map((image, imgIndex) => (
                         <div
                           key={imgIndex}
-                          className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-                            currentImageIndex === imgIndex 
-                              ? 'opacity-100 scale-100' 
+                          className={`absolute inset-0 transition-all duration-700 ease-in-out ${currentImageIndex === imgIndex
+                              ? 'opacity-100 scale-100'
                               : 'opacity-0 scale-105'
-                          }`}
+                            }`}
                         >
-                          <img 
-                            src={image} 
+                          <img
+                            src={image}
                             alt={`${facility.name} ${imgIndex + 1}`}
                             className="w-full h-full object-cover"
                           />
                         </div>
                       ))}
-                      
+
                       {/* Enhanced Gradient Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                      
+
                       {/* Floating Icon Badge */}
                       <div className={`absolute top-6 left-6 w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br ${colorSet.bg} rounded-2xl flex items-center justify-center shadow-2xl ${colorSet.glow} backdrop-blur-sm transform group-hover:scale-110 transition-transform duration-300`}>
                         <Icon className="w-8 h-8 md:w-10 md:h-10 text-white" />
@@ -1429,11 +1425,10 @@ export default function BarangayPortal() {
                           {facility.images.map((_, dotIndex) => (
                             <div
                               key={dotIndex}
-                              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                                currentImageIndex === dotIndex 
-                                  ? 'bg-white scale-125' 
+                              className={`w-3 h-3 rounded-full transition-all duration-300 ${currentImageIndex === dotIndex
+                                  ? 'bg-white scale-125'
                                   : 'bg-white/60 hover:bg-white/80'
-                              }`}
+                                }`}
                             />
                           ))}
                         </div>
@@ -1454,7 +1449,7 @@ export default function BarangayPortal() {
                       {/* Enhanced Features */}
                       <div className="flex flex-wrap gap-2 md:gap-3">
                         {facility.features.map((feature, fIndex) => (
-                          <span 
+                          <span
                             key={fIndex}
                             className={`px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-white/30 shadow-sm hover:shadow-md transition-shadow`}
                           >
@@ -1474,9 +1469,9 @@ export default function BarangayPortal() {
             const currentFacilityIndex = facilityImageSlides['main'] || 0;
             const facility = facilities[currentFacilityIndex];
             const currentImageIndex = facilityImageSlides[currentFacilityIndex] || 0;
-            
+
             if (facility.images.length <= 1) return null;
-            
+
             return (
               <div className="mb-12 md:mb-16">
                 <div className="flex justify-center gap-3 md:gap-4 overflow-x-auto pb-4 pt-2 px-4">
@@ -1486,11 +1481,10 @@ export default function BarangayPortal() {
                       onClick={() => {
                         setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: imgIndex }));
                       }}
-                      className={`flex-shrink-0 w-20 h-16 md:w-28 md:h-20 rounded-xl overflow-hidden transition-all duration-300 ${
-                        currentImageIndex === imgIndex
+                      className={`flex-shrink-0 w-20 h-16 md:w-28 md:h-20 rounded-xl overflow-hidden transition-all duration-300 ${currentImageIndex === imgIndex
                           ? 'ring-4 ring-pink-400 ring-offset-2 shadow-xl scale-110'
                           : 'ring-2 ring-white/30 hover:ring-white/50 hover:scale-105 shadow-md'
-                      }`}
+                        }`}
                     >
                       <img
                         src={image}
@@ -1522,16 +1516,15 @@ export default function BarangayPortal() {
                 'bg-green-500': 'from-green-500 to-emerald-600',
                 'bg-orange-500': 'from-orange-500 to-amber-600'
               };
-              
+
               return (
                 <button
                   key={index}
                   onClick={() => setFacilityImageSlides(prev => ({ ...prev, main: index }))}
-                  className={`flex flex-col items-center gap-3 p-4 md:p-6 rounded-2xl transition-all duration-300 min-w-[100px] md:min-w-[120px] ${
-                    isActive 
-                      ? 'bg-white/20 backdrop-blur-sm shadow-xl scale-110 border-2 border-pink-400 transform -translate-y-2' 
+                  className={`flex flex-col items-center gap-3 p-4 md:p-6 rounded-2xl transition-all duration-300 min-w-[100px] md:min-w-[120px] ${isActive
+                      ? 'bg-white/20 backdrop-blur-sm shadow-xl scale-110 border-2 border-pink-400 transform -translate-y-2'
                       : 'bg-white/10 backdrop-blur-sm hover:bg-white/20 hover:shadow-lg border-2 border-transparent hover:scale-105'
-                  }`}
+                    }`}
                 >
                   <div className={`w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br ${colors[facility.color]} rounded-2xl flex items-center justify-center shadow-lg ${isActive ? 'shadow-xl' : ''}`}>
                     <Icon className="w-7 h-7 md:w-8 md:h-8 text-white" />
@@ -1549,33 +1542,33 @@ export default function BarangayPortal() {
 
 
       {/* Barangay Clearance Modal */}
-      <BarangayClearanceModal 
-        isOpen={showClearanceModal} 
-        onClose={() => setShowClearanceModal(false)} 
+      <BarangayClearanceModal
+        isOpen={showClearanceModal}
+        onClose={() => setShowClearanceModal(false)}
       />
 
       {/* Certificate of Indigency Modal */}
-      <IndigencyCertificateModal 
-        isOpen={showIndigencyModal} 
-        onClose={() => setShowIndigencyModal(false)} 
+      <IndigencyCertificateModal
+        isOpen={showIndigencyModal}
+        onClose={() => setShowIndigencyModal(false)}
       />
 
       {/* Barangay Residency Modal */}
-      <ResidencyCertificateModal 
-        isOpen={showResidencyModal} 
-        onClose={() => setShowResidencyModal(false)} 
+      <ResidencyCertificateModal
+        isOpen={showResidencyModal}
+        onClose={() => setShowResidencyModal(false)}
       />
 
       {/* Business Permit Modal */}
-      <BusinessPermitModal 
-        isOpen={showBusinessPermitModal} 
-        onClose={() => setShowBusinessPermitModal(false)} 
+      <BusinessPermitModal
+        isOpen={showBusinessPermitModal}
+        onClose={() => setShowBusinessPermitModal(false)}
       />
 
       {/* Educational Assistance Modal */}
-      <EducationalAssistanceModal 
-        isOpen={showEducationalAssistanceModal} 
-        onClose={() => setShowEducationalAssistanceModal(false)} 
+      <EducationalAssistanceModal
+        isOpen={showEducationalAssistanceModal}
+        onClose={() => setShowEducationalAssistanceModal(false)}
       />
 
       {/* Contact Section */}
@@ -1717,19 +1710,19 @@ export default function BarangayPortal() {
           <h3 className="text-2xl font-bold text-white mb-2">Barangay Officials</h3>
           <p className="text-blue-300">Meet our dedicated team serving Iba O' Este</p>
         </div>
-        
+
         {/* Photo - Full visibility without overlay */}
         <div className="relative">
-          <img 
-            src="/images/barangay-officials.jpg" 
-            alt="Barangay Iba O' Este Officials" 
+          <img
+            src="/images/barangay-officials.jpg"
+            alt="Barangay Iba O' Este Officials"
             className="w-full h-auto object-contain bg-gray-800"
             onError={(e) => {
               e.target.src = '/background.jpg';
             }}
           />
         </div>
-        
+
         {/* Text Section - Professional Leadership Introduction */}
         <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 py-16 px-4">
           <div className="max-w-6xl mx-auto">
@@ -1740,23 +1733,23 @@ export default function BarangayPortal() {
                 <span className="text-blue-200 font-semibold text-sm tracking-wide uppercase">Leadership Team</span>
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               </div>
-              
+
               <h4 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
                 Barangay Iba O' Este
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-green-400">
                   Leadership Team
                 </span>
               </h4>
-              
+
               <div className="w-32 h-1 bg-gradient-to-r from-blue-400 via-cyan-400 to-green-400 mx-auto mb-6 rounded-full"></div>
-              
+
               <p className="text-xl md:text-2xl text-blue-100 font-light leading-relaxed max-w-3xl mx-auto">
                 Working together for our community's progress and development
               </p>
             </div>
           </div>
         </div>
-        
+
         {/* Officials Details Section */}
         <div className="bg-gradient-to-br from-gray-50 to-blue-50 py-16 px-4">
           <div className="max-w-6xl mx-auto">
@@ -1769,7 +1762,7 @@ export default function BarangayPortal() {
                 Dedicated leaders committed to serving the community of Iba O' Este with integrity and excellence
               </p>
             </div>
-            
+
             {/* Officials Segregated by Position */}
             {officials.length > 0 ? (
               <div className="space-y-16">
@@ -1832,15 +1825,14 @@ export default function BarangayPortal() {
                         </div>
 
                         {/* Officials Grid for this section */}
-                        <div className={`grid gap-6 ${
-                          section.key === 'captain' ? 'grid-cols-1 max-w-md mx-auto' :
-                          section.key === 'sk_chairman' ? 'grid-cols-1 max-w-md mx-auto' :
-                          'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-                        }`}>
+                        <div className={`grid gap-6 ${section.key === 'captain' ? 'grid-cols-1 max-w-md mx-auto' :
+                            section.key === 'sk_chairman' ? 'grid-cols-1 max-w-md mx-auto' :
+                              'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                          }`}>
                           {section.officials.map((official, index) => {
                             const colors = [
                               'from-blue-600 to-indigo-700',
-                              'from-teal-600 to-green-700', 
+                              'from-teal-600 to-green-700',
                               'from-emerald-600 to-green-700',
                               'from-cyan-600 to-blue-700',
                               'from-green-600 to-emerald-700',
@@ -1856,7 +1848,7 @@ export default function BarangayPortal() {
                               'from-amber-600 to-orange-700',
                               'from-lime-600 to-green-700'
                             ];
-                            
+
                             // Use section-specific colors for consistency
                             let colorClass;
                             if (section.key === 'captain') {
@@ -1868,7 +1860,7 @@ export default function BarangayPortal() {
                             } else {
                               colorClass = colors[(index + 8) % colors.length];
                             }
-                            
+
                             const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
 
                             return (
@@ -1904,7 +1896,7 @@ export default function BarangayPortal() {
                 <p className="text-gray-500 text-lg">Loading officials...</p>
               </div>
             )}
-            
+
             {/* Contact Information */}
             <div className="mt-16 text-center">
               <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 max-w-2xl mx-auto">
@@ -1944,7 +1936,7 @@ export default function BarangayPortal() {
               {hotlines.map((hotline, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="text-sm font-medium text-gray-700">{hotline.name}</span>
-                  <a 
+                  <a
                     href={`tel:${hotline.number}`}
                     className="text-blue-600 font-semibold hover:text-blue-700 transition-colors"
                   >
@@ -1955,12 +1947,11 @@ export default function BarangayPortal() {
             </div>
           </div>
         )}
-        
+
         <button
           onClick={() => setShowHotlines(!showHotlines)}
-          className={`${
-            showHotlines ? 'bg-gray-600' : 'bg-red-600 hover:bg-red-700 animate-pulse'
-          } text-white p-4 rounded-full shadow-lg transition-all transform hover:scale-110`}       
+          className={`${showHotlines ? 'bg-gray-600' : 'bg-red-600 hover:bg-red-700 animate-pulse'
+            } text-white p-4 rounded-full shadow-lg transition-all transform hover:scale-110`}
         >
           {showHotlines ? <X className="w-6 h-6" /> : <Phone className="w-6 h-6" />}
         </button>
