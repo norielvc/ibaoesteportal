@@ -120,7 +120,7 @@ export default function VerifyPickupPage() {
           </p>
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-green-800">
-              <strong>Reference:</strong> {ref}<br>
+              <strong>Reference:</strong> {ref}<br />
               <strong>Picked up at:</strong> {formatDate(new Date())}
             </p>
           </div>
