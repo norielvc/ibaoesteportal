@@ -181,35 +181,35 @@ export default function QRScanHistoryPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
                 <History className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">QR Scan History</h1>
-                <p className="text-gray-600">View all scanned QR codes and their details</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">QR Scan History</h1>
+                <p className="text-sm text-gray-500">View and manage scanned QR codes</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => setIsClearModalOpen(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors border border-red-200 font-medium"
+                className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all border border-red-100 font-semibold text-sm shadow-sm"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>Clear Records</span>
+                <span>Clear</span>
               </button>
               <button
                 onClick={exportToCSV}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-semibold text-sm shadow-md shadow-emerald-500/20"
               >
                 <Download className="w-4 h-4" />
                 <span>Export CSV</span>
               </button>
               <button
                 onClick={loadScans}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold text-sm shadow-md shadow-blue-500/20"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Refresh</span>
@@ -219,84 +219,84 @@ export default function QRScanHistoryPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-blue-600" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+          <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
+                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Today's Scans</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.today}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <History className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Scans</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              <div className="mt-2 sm:mt-0 sm:ml-4">
+                <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Today's Scans</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.today}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Smartphone className="w-6 h-6 text-purple-600" />
+          <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-emerald-100">
+                <History className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Scanners</p>
-                <p className="text-2xl font-bold text-gray-900">{scans.length > 0 ? 1 : 0}</p>
+              <div className="mt-2 sm:mt-0 sm:ml-4">
+                <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Scans</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <AlertCircle className="w-6 h-6 text-red-600" />
+          <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-purple-100">
+                <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Duplicate Attempts</p>
-                <p className="text-2xl font-bold text-gray-900">{duplicates.length}</p>
+              <div className="mt-2 sm:mt-0 sm:ml-4">
+                <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Active Scanners</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{scans.length > 0 ? 1 : 0}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-red-100">
+                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+              </div>
+              <div className="mt-2 sm:mt-0 sm:ml-4">
+                <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Duplicates</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{duplicates.length}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
                 Search QR Data
               </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-blue-500 transition-colors" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by QR code content..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Scan content..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent outline-none transition-all text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
                 Filter by Date
               </label>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent outline-none transition-all text-sm"
               />
             </div>
 
@@ -307,7 +307,7 @@ export default function QRScanHistoryPage() {
                   setSelectedDate('');
                   setCurrentPage(1);
                 }}
-                className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-full px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 hover:text-gray-900 transition-all font-semibold text-sm border border-gray-200"
               >
                 Clear Filters
               </button>
@@ -316,26 +316,32 @@ export default function QRScanHistoryPage() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="border-b border-gray-100 bg-gray-50/50">
+            <nav className="flex px-2 sm:px-6 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setActiveTab('scans')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'scans'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                className={`flex-1 sm:flex-none py-4 px-4 sm:px-6 border-b-2 font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'scans'
+                  ? 'border-blue-600 text-blue-600 bg-blue-50/50'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
                   }`}
               >
-                All Scans ({scans.length})
+                All Scans
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === 'scans' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
+                  {stats.total}
+                </span>
               </button>
               <button
                 onClick={() => setActiveTab('duplicates')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'duplicates'
-                  ? 'border-red-500 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                className={`flex-1 sm:flex-none py-4 px-4 sm:px-6 border-b-2 font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'duplicates'
+                  ? 'border-red-600 text-red-600 bg-red-50/50'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
                   }`}
               >
-                Duplicate Attempts ({duplicates.length})
+                Duplicates
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === 'duplicates' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-600'}`}>
+                  {duplicates.length}
+                </span>
               </button>
             </nav>
           </div>
