@@ -219,7 +219,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-orange-600 to-orange-800 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -234,7 +234,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
 
           {notification && <div className="px-6 pt-4"><Notification type={notification.type} title={notification.title} message={notification.message} onClose={() => setNotification(null)} /></div>}
 
-          <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
+          <div className="flex-1 overflow-y-auto">
             {!showPreview ? (
               <form onSubmit={handleSubmit} className="p-6 space-y-6">
                 <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-3">
@@ -352,7 +352,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
             )}
           </div>
 
-          <div className="border-t bg-gray-50 px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end">
+          <div className="border-t bg-gray-50 px-6 py-4 sm:py-5 flex flex-col sm:flex-row gap-3 justify-end pb-10 sm:pb-5">
             {!showPreview && (
               <button type="submit" onClick={handleSubmit}
                 className="px-6 py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg">
@@ -375,7 +375,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
           <div className="flex min-h-screen items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowConfirmationPopup(false)} />
 
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
               {/* Popup Header */}
               <div className="bg-gradient-to-r from-orange-600 to-orange-800 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -391,7 +391,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
               </div>
 
               {/* PDF Preview */}
-              <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-4 bg-gray-100">
+              <div className="flex-1 overflow-y-auto p-4 bg-gray-100">
                 <div className="flex justify-center">
                   <ResidencyPreview
                     formData={formData}
@@ -404,7 +404,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
               </div>
 
               {/* Popup Actions */}
-              <div className="border-t bg-white px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end">
+              <div className="border-t bg-white px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end pb-10 sm:pb-4">
                 <button
                   type="button"
                   onClick={handleCustomizeForm}
@@ -480,7 +480,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
               </div>
 
               {/* Success Actions */}
-              <div className="border-t bg-gray-50 px-6 py-4">
+              <div className="border-t bg-gray-50 px-6 py-4 pb-10 sm:pb-4">
                 <button
                   onClick={() => {
                     setShowSuccessModal(false);

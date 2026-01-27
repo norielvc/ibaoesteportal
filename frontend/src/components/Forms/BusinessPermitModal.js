@@ -9,7 +9,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     businessAddress: '',
     businessPhone: '',
     businessEmail: '',
-    
+
     // Owner Information
     ownerFirstName: '',
     ownerLastName: '',
@@ -17,17 +17,17 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     ownerPhone: '',
     ownerEmail: '',
     ownerBirthdate: '',
-    
+
     // Business Details
     natureOfBusiness: '',
     capitalInvestment: '',
     numberOfEmployees: '',
     businessHours: '',
-    
+
     // Requirements
     dtiRegistration: '',
     birTin: '',
-    
+
     // Purpose
     purpose: ''
   });
@@ -50,12 +50,12 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
 
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
-      
+
       // Generate reference number
       const currentYear = new Date().getFullYear();
       const referenceResponse = await fetch(`${API_URL}/api/certificates/next-reference/BP`);
       let referenceNumber = `BP-${currentYear}-00001`;
-      
+
       if (referenceResponse.ok) {
         const refData = await referenceResponse.json();
         if (refData.success) {
@@ -82,7 +82,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
           type: 'success',
           message: `Business permit application submitted successfully! Reference Number: ${referenceNumber}`
         });
-        
+
         // Reset form after 3 seconds
         setTimeout(() => {
           setFormData({
@@ -114,10 +114,10 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="bg-white border-b border-gray-200 p-6 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -137,249 +137,252 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-8">
-          {/* Business Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Building className="w-5 h-5 text-purple-600" />
-              Business Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Business Name *</label>
-                <input
-                  type="text"
-                  name="businessName"
-                  value={formData.businessName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Enter business name"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Business Type *</label>
-                <select
-                  name="businessType"
-                  value={formData.businessType}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  required
-                >
-                  <option value="">Select business type</option>
-                  <option value="Retail">Retail</option>
-                  <option value="Restaurant">Restaurant</option>
-                  <option value="Service">Service</option>
-                  <option value="Manufacturing">Manufacturing</option>
-                  <option value="Wholesale">Wholesale</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Business Address *</label>
-                <input
-                  type="text"
-                  name="businessAddress"
-                  value={formData.businessAddress}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Complete business address"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Business Phone</label>
-                <input
-                  type="tel"
-                  name="businessPhone"
-                  value={formData.businessPhone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="09XX XXX XXXX"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Business Email</label>
-                <input
-                  type="email"
-                  name="businessEmail"
-                  value={formData.businessEmail}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="business@example.com"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Owner Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Owner Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                <input
-                  type="text"
-                  name="ownerFirstName"
-                  value={formData.ownerFirstName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="First name"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
-                <input
-                  type="text"
-                  name="ownerLastName"
-                  value={formData.ownerLastName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Last name"
-                  required
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Owner Address *</label>
-                <input
-                  type="text"
-                  name="ownerAddress"
-                  value={formData.ownerAddress}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Complete address"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                <input
-                  type="tel"
-                  name="ownerPhone"
-                  value={formData.ownerPhone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="09XX XXX XXXX"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                <input
-                  type="email"
-                  name="ownerEmail"
-                  value={formData.ownerEmail}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="owner@example.com"
-                />
+        {/* Form Body - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Business Information */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Building className="w-5 h-5 text-purple-600" />
+                Business Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Business Name *</label>
+                  <input
+                    type="text"
+                    name="businessName"
+                    value={formData.businessName}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Enter business name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Business Type *</label>
+                  <select
+                    name="businessType"
+                    value={formData.businessType}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    required
+                  >
+                    <option value="">Select business type</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Restaurant">Restaurant</option>
+                    <option value="Service">Service</option>
+                    <option value="Manufacturing">Manufacturing</option>
+                    <option value="Wholesale">Wholesale</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Business Address *</label>
+                  <input
+                    type="text"
+                    name="businessAddress"
+                    value={formData.businessAddress}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Complete business address"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Business Phone</label>
+                  <input
+                    type="tel"
+                    name="businessPhone"
+                    value={formData.businessPhone}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="09XX XXX XXXX"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Business Email</label>
+                  <input
+                    type="email"
+                    name="businessEmail"
+                    value={formData.businessEmail}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="business@example.com"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Business Details */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Business Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nature of Business *</label>
-                <textarea
-                  name="natureOfBusiness"
-                  value={formData.natureOfBusiness}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
-                  placeholder="Describe the nature of your business"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Capital Investment</label>
-                <input
-                  type="number"
-                  name="capitalInvestment"
-                  value={formData.capitalInvestment}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Amount in PHP"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Number of Employees</label>
-                <input
-                  type="number"
-                  name="numberOfEmployees"
-                  value={formData.numberOfEmployees}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Number of employees"
-                />
+            {/* Owner Information */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Owner Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+                  <input
+                    type="text"
+                    name="ownerFirstName"
+                    value={formData.ownerFirstName}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="First name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+                  <input
+                    type="text"
+                    name="ownerLastName"
+                    value={formData.ownerLastName}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Last name"
+                    required
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Owner Address *</label>
+                  <input
+                    type="text"
+                    name="ownerAddress"
+                    value={formData.ownerAddress}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Complete address"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                  <input
+                    type="tel"
+                    name="ownerPhone"
+                    value={formData.ownerPhone}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="09XX XXX XXXX"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    name="ownerEmail"
+                    value={formData.ownerEmail}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="owner@example.com"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Purpose */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Purpose of Application *</label>
-            <select
-              name="purpose"
-              value={formData.purpose}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-              required
-            >
-              <option value="">Select purpose</option>
-              <option value="New Business">New Business</option>
-              <option value="Renewal">Renewal</option>
-              <option value="Transfer of Location">Transfer of Location</option>
-              <option value="Change of Business Name">Change of Business Name</option>
-            </select>
-          </div>
+            {/* Business Details */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Business Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nature of Business *</label>
+                  <textarea
+                    name="natureOfBusiness"
+                    value={formData.natureOfBusiness}
+                    onChange={handleInputChange}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                    placeholder="Describe the nature of your business"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Capital Investment</label>
+                  <input
+                    type="number"
+                    name="capitalInvestment"
+                    value={formData.capitalInvestment}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Amount in PHP"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Number of Employees</label>
+                  <input
+                    type="number"
+                    name="numberOfEmployees"
+                    value={formData.numberOfEmployees}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Number of employees"
+                  />
+                </div>
+              </div>
+            </div>
 
-          {/* Status Messages */}
-          {submitStatus && (
-            <div className={`flex items-center gap-3 p-4 rounded-xl ${
-              submitStatus.type === 'success' 
-                ? 'bg-green-50 border border-green-200 text-green-800' 
+            {/* Purpose */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Purpose of Application *</label>
+              <select
+                name="purpose"
+                value={formData.purpose}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                required
+              >
+                <option value="">Select purpose</option>
+                <option value="New Business">New Business</option>
+                <option value="Renewal">Renewal</option>
+                <option value="Transfer of Location">Transfer of Location</option>
+                <option value="Change of Business Name">Change of Business Name</option>
+              </select>
+            </div>
+
+            {/* Status Messages */}
+            {submitStatus && (
+              <div className={`flex items-center gap-3 p-4 rounded-xl ${submitStatus.type === 'success'
+                ? 'bg-green-50 border border-green-200 text-green-800'
                 : 'bg-red-50 border border-red-200 text-red-800'
-            }`}>
-              {submitStatus.type === 'success' ? (
-                <CheckCircle className="w-5 h-5 flex-shrink-0" />
-              ) : (
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              )}
-              <span className="font-medium">{submitStatus.message}</span>
-            </div>
-          )}
+                }`}>
+                {submitStatus.type === 'success' ? (
+                  <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                )}
+                <span className="font-medium">{submitStatus.message}</span>
+              </div>
+            )}
 
-          {/* Submit Button */}
-          <div className="flex gap-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/25"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                'Submit Application'
-              )}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
+
+        {/* Footer - Fixed */}
+        <div className="border-t bg-gray-50 px-6 py-4 sm:py-5 flex flex-col sm:flex-row gap-3 justify-end pb-10 sm:pb-5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 sm:flex-none px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="flex-1 sm:flex-none px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/25"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              'Submit Application'
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
