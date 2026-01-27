@@ -78,7 +78,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
   const certificateRef = useRef(null);
   const [formData, setFormData] = useState({
     fullName: '', age: '', sex: '', civilStatus: '',
-    address: '', dateOfBirth: '', placeOfBirth: '', 
+    address: '', dateOfBirth: '', placeOfBirth: '',
     purpose: '', contactNumber: ''
   });
 
@@ -93,7 +93,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
     const savedOfficials = localStorage.getItem('barangayOfficials');
     if (savedOfficials) {
       const parsed = JSON.parse(savedOfficials);
-      setOfficials({ 
+      setOfficials({
         ...defaultOfficials, ...parsed,
         contactInfo: { ...defaultOfficials.contactInfo, ...parsed.contactInfo },
         headerInfo: { ...defaultOfficials.headerInfo, ...parsed.headerInfo },
@@ -254,7 +254,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
                     <span className="bg-orange-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
                     Personal Information
                   </h3>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
                     <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="e.g., JUAN DELA CRUZ"
@@ -374,7 +374,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
         <div className="fixed inset-0 z-60 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowConfirmationPopup(false)} />
-            
+
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
               {/* Popup Header */}
               <div className="bg-gradient-to-r from-orange-600 to-orange-800 px-6 py-4 flex items-center justify-between">
@@ -393,27 +393,27 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
               {/* PDF Preview */}
               <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-4 bg-gray-100">
                 <div className="flex justify-center">
-                  <ResidencyPreview 
-                    formData={formData} 
-                    referenceNumber={referenceNumber || 'PENDING'} 
-                    currentDate={currentDate} 
-                    officials={officials} 
-                    certificateRef={certificateRef} 
+                  <ResidencyPreview
+                    formData={formData}
+                    referenceNumber={referenceNumber || 'PENDING'}
+                    currentDate={currentDate}
+                    officials={officials}
+                    certificateRef={certificateRef}
                   />
                 </div>
               </div>
 
               {/* Popup Actions */}
               <div className="border-t bg-white px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={handleCustomizeForm}
                   className="px-6 py-2.5 border border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg font-medium flex items-center justify-center gap-2 shadow-sm">
                   <Eye className="w-5 h-5" />
                   Edit Information
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={handleProceedSubmission}
                   className="px-6 py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg">
                   <CheckCircle className="w-5 h-5" />
@@ -430,7 +430,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
         <div className="fixed inset-0 z-70 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
-            
+
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
               {/* Success Header */}
               <div className="bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-4 text-center">
@@ -481,7 +481,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
 
               {/* Success Actions */}
               <div className="border-t bg-gray-50 px-6 py-4">
-                <button 
+                <button
                   onClick={() => {
                     setShowSuccessModal(false);
                     resetForm();
@@ -503,7 +503,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
 }
 
 
-// Certificate Preview - A4 Size Layout
+// Certificate Preview - A4 Size Layout with Responsive Scaling
 function ResidencyPreview({ formData, referenceNumber, currentDate, officials, certificateRef }) {
   const logos = officials.logos || {};
   const headerStyle = officials.headerStyle || {};
@@ -515,191 +515,224 @@ function ResidencyPreview({ formData, referenceNumber, currentDate, officials, c
   const sidebarStyle = officials.sidebarStyle || {};
   const bodyStyle = officials.bodyStyle || {};
   const footerStyle = officials.footerStyle || {};
-  
+
+  const [scale, setScale] = useState(1);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        const targetWidth = 794; // A4 width at 96 DPI
+        if (containerWidth < targetWidth) {
+          setScale(containerWidth / targetWidth);
+        } else {
+          setScale(1);
+        }
+      }
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+
   const getFontClass = (font) => ({ 'default': '', 'serif': 'font-serif', 'sans': 'font-sans', 'mono': 'font-mono' }[font] || '');
 
   return (
-    <div className="p-1 flex justify-center print:p-0">
-      <div ref={certificateRef} className={`certificate-container bg-white shadow-lg print:shadow-none flex flex-col ${getFontClass(bodyStyle.fontFamily)}`} style={{ width: '794px', height: '1090px', padding: '15px', boxSizing: 'border-box' }}>
-        
-        {/* Header with Logos */}
-        <div className={`flex items-center justify-between pb-2 border-b-2 flex-shrink-0 ${getFontClass(headerStyle.fontFamily)}`} 
-          style={{ backgroundColor: headerStyle.bgColor, borderColor: headerStyle.borderColor }}>
-          <div className="flex-shrink-0" style={{ width: `${logos.logoSize || 70}px`, height: `${logos.logoSize || 70}px` }}>
-            {logos.leftLogo && <img src={logos.leftLogo} alt="Left Logo" className="w-full h-full object-contain" />}
-          </div>
-          <div className="text-center flex-1 px-4">
-            <p className={getFontClass(countryStyle.fontFamily)} style={{ color: countryStyle.color || '#4b5563', fontSize: `${countryStyle.size || 13}px`, fontWeight: countryStyle.fontWeight || 'normal', lineHeight: '1.3' }}>
-              {officials.headerInfo?.country || 'Republic of the Philippines'}
-            </p>
-            <p className={getFontClass(provinceStyle.fontFamily)} style={{ color: provinceStyle.color || '#4b5563', fontSize: `${provinceStyle.size || 13}px`, fontWeight: provinceStyle.fontWeight || 'normal', lineHeight: '1.3' }}>
-              {officials.headerInfo?.province || 'Province of Bulacan'}
-            </p>
-            <p className={getFontClass(municipalityStyle.fontFamily)} style={{ color: municipalityStyle.color || '#4b5563', fontSize: `${municipalityStyle.size || 13}px`, fontWeight: municipalityStyle.fontWeight || 'normal', lineHeight: '1.3' }}>
-              {officials.headerInfo?.municipality || 'Municipality of Calumpit'}
-            </p>
-            <p className={getFontClass(barangayNameStyle.fontFamily)} style={{ color: barangayNameStyle.color || '#1e40af', fontSize: `${barangayNameStyle.size || 22}px`, fontWeight: barangayNameStyle.fontWeight || 'bold', lineHeight: '1.3' }}>
-              {officials.headerInfo?.barangayName || 'BARANGAY IBA O\' ESTE'}
-            </p>
-            <p className={getFontClass(officeNameStyle.fontFamily)} style={{ color: officeNameStyle.color || '#6b7280', fontSize: `${officeNameStyle.size || 12}px`, fontWeight: officeNameStyle.fontWeight || 'normal', lineHeight: '1.3' }}>
-              {officials.headerInfo?.officeName || 'Office of the Punong Barangay'}
-            </p>
-          </div>
-          <div className="flex-shrink-0" style={{ width: `${logos.logoSize || 80}px`, height: `${logos.logoSize || 80}px` }}>
-            {logos.rightLogo && <img src={logos.rightLogo} alt="Right Logo" className="w-full h-full object-contain" />}
-          </div>
-        </div>
+    <div ref={containerRef} className="w-full flex justify-center overflow-hidden p-1 sm:p-4">
+      <div
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: 'top center',
+          width: '794px',
+          height: `${1090 * scale}px`, // Adjust parent height to prevent whitespace
+          minHeight: '1090px',
+          transition: 'transform 0.2s ease-out'
+        }}
+        className="flex-shrink-0"
+      >
+        <div ref={certificateRef} className={`certificate-container bg-white shadow-lg print:shadow-none flex flex-col ${getFontClass(bodyStyle.fontFamily)}`} style={{ width: '794px', height: '1090px', padding: '15px', boxSizing: 'border-box' }}>
 
-        <div className="flex flex-1 mt-2">
-          {/* Left Sidebar - Officials */}
-          <div className={`text-white p-4 flex-shrink-0 ${getFontClass(sidebarStyle.fontFamily)}`}
-            style={{ width: '220px', background: `linear-gradient(to bottom, ${sidebarStyle.bgColor || '#1e40af'}, ${sidebarStyle.gradientEnd || '#1e3a8a'})` }}>
-            <div className="text-center mb-4">
-              <p className="font-bold" style={{ fontSize: `${(sidebarStyle.titleSize || 16) + 4}px`, color: sidebarStyle.textColor }}>BARANGAY</p>
-              <p className="font-bold" style={{ fontSize: `${(sidebarStyle.titleSize || 16) + 4}px`, color: sidebarStyle.textColor }}>IBA O' ESTE</p>
+          {/* Header with Logos */}
+          <div className={`flex items-center justify-between pb-2 border-b-2 flex-shrink-0 ${getFontClass(headerStyle.fontFamily)}`}
+            style={{ backgroundColor: headerStyle.bgColor, borderColor: headerStyle.borderColor }}>
+            <div className="flex-shrink-0" style={{ width: `${logos.logoSize || 70}px`, height: `${logos.logoSize || 70}px` }}>
+              {logos.leftLogo && <img src={logos.leftLogo} alt="Left Logo" className="w-full h-full object-contain" />}
             </div>
-            
-            <div className="border-t pt-3" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-              <p className="font-bold mb-3" style={{ color: sidebarStyle.labelColor, fontSize: `${(sidebarStyle.titleSize || 13) + 2}px` }}>BARANGAY COUNCIL</p>
-              <div className="mb-3">
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Punong Barangay</p>
-                <p className="font-semibold" style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11) + 1}px` }}>{officials.chairman}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Kagawad</p>
-                {officials.councilors.map((c, i) => <p key={i} style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px`, lineHeight: '1.4' }}>{c}</p>)}
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>SK Chairman</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.skChairman}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Secretary</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.secretary}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Treasurer</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.treasurer}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Administrator</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.administrator}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Assistant Secretary</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.assistantSecretary}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Brgy. Asst. Administrator</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.assistantAdministrator}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Record Keeper</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.recordKeeper}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Clerk</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.clerk}</p>
-              </div>
+            <div className="text-center flex-1 px-4">
+              <p className={getFontClass(countryStyle.fontFamily)} style={{ color: countryStyle.color || '#4b5563', fontSize: `${countryStyle.size || 13}px`, fontWeight: countryStyle.fontWeight || 'normal', lineHeight: '1.3' }}>
+                {officials.headerInfo?.country || 'Republic of the Philippines'}
+              </p>
+              <p className={getFontClass(provinceStyle.fontFamily)} style={{ color: provinceStyle.color || '#4b5563', fontSize: `${provinceStyle.size || 13}px`, fontWeight: provinceStyle.fontWeight || 'normal', lineHeight: '1.3' }}>
+                {officials.headerInfo?.province || 'Province of Bulacan'}
+              </p>
+              <p className={getFontClass(municipalityStyle.fontFamily)} style={{ color: municipalityStyle.color || '#4b5563', fontSize: `${municipalityStyle.size || 13}px`, fontWeight: municipalityStyle.fontWeight || 'normal', lineHeight: '1.3' }}>
+                {officials.headerInfo?.municipality || 'Municipality of Calumpit'}
+              </p>
+              <p className={getFontClass(barangayNameStyle.fontFamily)} style={{ color: barangayNameStyle.color || '#1e40af', fontSize: `${barangayNameStyle.size || 22}px`, fontWeight: barangayNameStyle.fontWeight || 'bold', lineHeight: '1.3' }}>
+                {officials.headerInfo?.barangayName || 'BARANGAY IBA O\' ESTE'}
+              </p>
+              <p className={getFontClass(officeNameStyle.fontFamily)} style={{ color: officeNameStyle.color || '#6b7280', fontSize: `${officeNameStyle.size || 12}px`, fontWeight: officeNameStyle.fontWeight || 'normal', lineHeight: '1.3' }}>
+                {officials.headerInfo?.officeName || 'Office of the Punong Barangay'}
+              </p>
+            </div>
+            <div className="flex-shrink-0" style={{ width: `${logos.logoSize || 80}px`, height: `${logos.logoSize || 80}px` }}>
+              {logos.rightLogo && <img src={logos.rightLogo} alt="Right Logo" className="w-full h-full object-contain" />}
             </div>
           </div>
 
-          {/* Main Content - Certificate Body */}
-          <div className={`flex-1 p-6 flex flex-col ${getFontClass(bodyStyle.fontFamily)}`} style={{ backgroundColor: bodyStyle.bgColor }}>
-            {/* Title */}
-            <div className="text-center mb-6">
-              <h1 className="font-bold underline" style={{ color: '#16a34a', fontSize: `${bodyStyle.titleSize || 24}px` }}>
-                BARANGAY RESIDENCY CERTIFICATE
-              </h1>
+          <div className="flex flex-1 mt-2">
+            {/* Left Sidebar - Officials */}
+            <div className={`text-white p-4 flex-shrink-0 ${getFontClass(sidebarStyle.fontFamily)}`}
+              style={{ width: '220px', background: `linear-gradient(to bottom, ${sidebarStyle.bgColor || '#1e40af'}, ${sidebarStyle.gradientEnd || '#1e3a8a'})` }}>
+              <div className="text-center mb-4">
+                <p className="font-bold" style={{ fontSize: `${(sidebarStyle.titleSize || 16) + 4}px`, color: sidebarStyle.textColor }}>BARANGAY</p>
+                <p className="font-bold" style={{ fontSize: `${(sidebarStyle.titleSize || 16) + 4}px`, color: sidebarStyle.textColor }}>IBA O' ESTE</p>
+              </div>
+
+              <div className="border-t pt-3" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                <p className="font-bold mb-3" style={{ color: sidebarStyle.labelColor, fontSize: `${(sidebarStyle.titleSize || 13) + 2}px` }}>BARANGAY COUNCIL</p>
+                <div className="mb-3">
+                  <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Punong Barangay</p>
+                  <p className="font-semibold" style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11) + 1}px` }}>{officials.chairman}</p>
+                </div>
+                <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                  <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Kagawad</p>
+                  {officials.councilors.map((c, i) => <p key={i} style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px`, lineHeight: '1.4' }}>{c}</p>)}
+                </div>
+                <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                  <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>SK Chairman</p>
+                  <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.skChairman}</p>
+                </div>
+                <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                  <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Secretary</p>
+                  <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.secretary}</p>
+                </div>
+                <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                  <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Treasurer</p>
+                  <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.treasurer}</p>
+                </div>
+                <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                  <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Administrator</p>
+                  <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.administrator}</p>
+                </div>
+                <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                  <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Assistant Secretary</p>
+                  <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.assistantSecretary}</p>
+                </div>
+                <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                  <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Brgy. Asst. Administrator</p>
+                  <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.assistantAdministrator}</p>
+                </div>
+                <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                  <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Record Keeper</p>
+                  <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.recordKeeper}</p>
+                </div>
+                <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                  <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Clerk</p>
+                  <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.clerk}</p>
+                </div>
+              </div>
             </div>
 
-            {/* Body Content */}
-            <div className="flex-1" style={{ color: bodyStyle.textColor, fontSize: `${bodyStyle.textSize || 14}px` }}>
-              <p className="font-bold mb-6">TO WHOM IT MAY CONCERN:</p>
-              
-              <p className="mb-6 text-justify leading-relaxed">
-                This is to certify that below mentioned person is a bona fide resident of this barangay as detailed below:
-              </p>
-
-              {/* Personal Details Table */}
-              <div className="mb-6 space-y-2">
-                <div className="flex">
-                  <span className="w-40 font-semibold">Name</span>
-                  <span className="mr-2">:</span>
-                  <span className="flex-1 font-bold underline">{formData.fullName?.toUpperCase() || '_________________'}</span>
-                </div>
-                <div className="flex">
-                  <span className="w-40 font-semibold">Age</span>
-                  <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.age || '_________________'}</span>
-                </div>
-                <div className="flex">
-                  <span className="w-40 font-semibold">Sex</span>
-                  <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.sex?.toUpperCase() || '_________________'}</span>
-                </div>
-                <div className="flex">
-                  <span className="w-40 font-semibold">Civil Status</span>
-                  <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.civilStatus?.toUpperCase() || '_________________'}</span>
-                </div>
-                <div className="flex">
-                  <span className="w-40 font-semibold">Residential Address</span>
-                  <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.address?.toUpperCase() || '_________________'}</span>
-                </div>
-                <div className="flex">
-                  <span className="w-40 font-semibold">Date of Birth</span>
-                  <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : '_________________'}</span>
-                </div>
-                <div className="flex">
-                  <span className="w-40 font-semibold">Place of Birth</span>
-                  <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.placeOfBirth?.toUpperCase() || '_________________'}</span>
-                </div>
+            {/* Main Content - Certificate Body */}
+            <div className={`flex-1 p-6 flex flex-col ${getFontClass(bodyStyle.fontFamily)}`} style={{ backgroundColor: bodyStyle.bgColor }}>
+              {/* Title */}
+              <div className="text-center mb-6">
+                <h1 className="font-bold underline" style={{ color: '#16a34a', fontSize: `${bodyStyle.titleSize || 24}px` }}>
+                  BARANGAY RESIDENCY CERTIFICATE
+                </h1>
               </div>
 
-              <p className="mb-4">
-                This certification is being issued upon the request of above mentioned person for below purpose(s):
-              </p>
+              {/* Body Content */}
+              <div className="flex-1" style={{ color: bodyStyle.textColor, fontSize: `${bodyStyle.textSize || 14}px` }}>
+                <p className="font-bold mb-6">TO WHOM IT MAY CONCERN:</p>
 
-              <p className="mb-8 font-semibold pl-4">
-                {formData.purpose?.toUpperCase() || '_________________________________'}
-              </p>
+                <p className="mb-6 text-justify leading-relaxed">
+                  This is to certify that below mentioned person is a bona fide resident of this barangay as detailed below:
+                </p>
 
-              <p className="mb-8">
-                Issued this <strong>{currentDate}</strong> at Barangay Iba O' Este, Calumpit, Bulacan.
-              </p>
+                {/* Personal Details Table */}
+                <div className="mb-6 space-y-2">
+                  <div className="flex">
+                    <span className="w-40 font-semibold">Name</span>
+                    <span className="mr-2">:</span>
+                    <span className="flex-1 font-bold underline">{formData.fullName?.toUpperCase() || '_________________'}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-40 font-semibold">Age</span>
+                    <span className="mr-2">:</span>
+                    <span className="flex-1">{formData.age || '_________________'}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-40 font-semibold">Sex</span>
+                    <span className="mr-2">:</span>
+                    <span className="flex-1">{formData.sex?.toUpperCase() || '_________________'}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-40 font-semibold">Civil Status</span>
+                    <span className="mr-2">:</span>
+                    <span className="flex-1">{formData.civilStatus?.toUpperCase() || '_________________'}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-40 font-semibold">Residential Address</span>
+                    <span className="mr-2">:</span>
+                    <span className="flex-1">{formData.address?.toUpperCase() || '_________________'}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-40 font-semibold">Date of Birth</span>
+                    <span className="mr-2">:</span>
+                    <span className="flex-1">{formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : '_________________'}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-40 font-semibold">Place of Birth</span>
+                    <span className="mr-2">:</span>
+                    <span className="flex-1">{formData.placeOfBirth?.toUpperCase() || '_________________'}</span>
+                  </div>
+                </div>
 
-              {/* Resident's Signature */}
-              <div className="mb-8">
-                <div className="w-64 border-b border-black"></div>
-                <p className="text-sm mt-1">Resident's Signature / Thumb Mark</p>
-              </div>
+                <p className="mb-4">
+                  This certification is being issued upon the request of above mentioned person for below purpose(s):
+                </p>
 
-              <p className="mb-12 font-semibold">TRULY YOURS,</p>
+                <p className="mb-8 font-semibold pl-4">
+                  {formData.purpose?.toUpperCase() || '_________________________________'}
+                </p>
 
-              {/* Chairman Signature */}
-              <div className="mt-auto">
-                <div className="w-64">
-                  <p className="font-bold text-lg border-b border-black pb-1">{officials.chairman}</p>
-                  <p className="text-sm">BARANGAY CHAIRMAN</p>
+                <p className="mb-8">
+                  Issued this <strong>{currentDate}</strong> at Barangay Iba O' Este, Calumpit, Bulacan.
+                </p>
+
+                {/* Resident's Signature */}
+                <div className="mb-8">
+                  <div className="w-64 border-b border-black"></div>
+                  <p className="text-sm mt-1">Resident's Signature / Thumb Mark</p>
+                </div>
+
+                <p className="mb-12 font-semibold">TRULY YOURS,</p>
+
+                {/* Chairman Signature */}
+                <div className="mt-auto">
+                  <div className="w-64">
+                    <p className="font-bold text-lg border-b border-black pb-1">{officials.chairman}</p>
+                    <p className="text-sm">BARANGAY CHAIRMAN</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className={`mt-auto pt-2 border-t text-center flex-shrink-0 ${getFontClass(footerStyle.fontFamily)}`}
-          style={{ backgroundColor: footerStyle.bgColor, borderColor: footerStyle.borderColor }}>
-          <p className="font-semibold" style={{ color: footerStyle.textColor, fontSize: `${footerStyle.textSize || 9}px` }}>
-            {officials.contactInfo?.address}
-          </p>
-          <p style={{ color: footerStyle.textColor, fontSize: `${footerStyle.textSize || 9}px` }}>
-            <strong>Contact:</strong> {officials.contactInfo?.contactPerson} | <strong>Tel:</strong> {officials.contactInfo?.telephone} | <strong>Email:</strong> {officials.contactInfo?.email}
-          </p>
+          {/* Footer */}
+          <div className={`mt-auto pt-2 border-t text-center flex-shrink-0 ${getFontClass(footerStyle.fontFamily)}`}
+            style={{ backgroundColor: footerStyle.bgColor, borderColor: footerStyle.borderColor }}>
+            <p className="font-semibold" style={{ color: footerStyle.textColor, fontSize: `${footerStyle.textSize || 9}px` }}>
+              {officials.contactInfo?.address}
+            </p>
+            <p style={{ color: footerStyle.textColor, fontSize: `${footerStyle.textSize || 9}px` }}>
+              <strong>Contact:</strong> {officials.contactInfo?.contactPerson} | <strong>Tel:</strong> {officials.contactInfo?.telephone} | <strong>Email:</strong> {officials.contactInfo?.email}
+            </p>
+          </div>
         </div>
       </div>
     </div>
