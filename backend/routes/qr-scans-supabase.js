@@ -11,7 +11,7 @@ const createQRScansTable = async () => {
       .from('qr_scans')
       .select('count(*)')
       .limit(1);
-    
+
     if (error && error.code === 'PGRST116') {
       console.log('📝 QR scans table does not exist, it needs to be created in Supabase dashboard');
       console.log('ℹ️  Please create the table manually or the API will not work');
@@ -153,8 +153,8 @@ router.post('/', authenticateToken, async (req, res) => {
           id: existingScan.id,
           scan_timestamp: existingScan.scan_timestamp,
           scanner_type: existingScan.scanner_type,
-          scanned_by: existingScan.users ? 
-            `${existingScan.users.first_name} ${existingScan.users.last_name}` : 
+          scanned_by: existingScan.users ?
+            `${existingScan.users.first_name} ${existingScan.users.last_name}` :
             'Unknown User',
           scanned_by_email: existingScan.users?.email || 'Unknown'
         },
@@ -224,7 +224,7 @@ router.get('/', authenticateToken, async (req, res) => {
       const startDate = new Date(date);
       const endDate = new Date(date);
       endDate.setDate(endDate.getDate() + 1);
-      
+
       query = query
         .gte('scan_timestamp', startDate.toISOString())
         .lt('scan_timestamp', endDate.toISOString());
@@ -301,28 +301,28 @@ router.get('/duplicates', authenticateToken, async (req, res) => {
     Object.keys(qrGroups).forEach(qrData => {
       if (qrGroups[qrData].length > 1) {
         // Sort by timestamp to get first and subsequent scans
-        const sortedScans = qrGroups[qrData].sort((a, b) => 
+        const sortedScans = qrGroups[qrData].sort((a, b) =>
           new Date(a.scan_timestamp) - new Date(b.scan_timestamp)
         );
-        
+
         const firstScan = sortedScans[0];
         const duplicateAttempts = sortedScans.slice(1);
-        
+
         duplicateAttempts.forEach(attempt => {
           duplicates.push({
             qr_data: qrData,
             original_scan: {
               id: firstScan.id,
               scan_timestamp: firstScan.scan_timestamp,
-              scanned_by: firstScan.users ? 
-                `${firstScan.users.first_name} ${firstScan.users.last_name}` : 
+              scanned_by: firstScan.users ?
+                `${firstScan.users.first_name} ${firstScan.users.last_name}` :
                 'Unknown User'
             },
             duplicate_attempt: {
               id: attempt.id,
               scan_timestamp: attempt.scan_timestamp,
-              scanned_by: attempt.users ? 
-                `${attempt.users.first_name} ${attempt.users.last_name}` : 
+              scanned_by: attempt.users ?
+                `${attempt.users.first_name} ${attempt.users.last_name}` :
                 'Unknown User',
               scanner_type: attempt.scanner_type
             },
@@ -339,6 +339,45 @@ router.get('/duplicates', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error in GET /qr-scans/duplicates:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// DELETE /api/qr-scans - Clear all scan history
+router.delete('/', authenticateToken, async (req, res) => {
+  try {
+    // Only allow admins to clear history (optional but recommended)
+    // if (req.user.role !== 'admin') {
+    //   return res.status(403).json({ success: false, error: 'Unauthorized' });
+    // }
+
+    console.log('🗑️ Clearing all QR scan history...');
+
+    const { error } = await supabase
+      .from('qr_scans')
+      .delete()
+      .neq('id', 0); // Delete all rows where id is not 0 (effectively all rows)
+
+    if (error) {
+      console.error('❌ Error clearing QR scans:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to clear scan history'
+      });
+    }
+
+    console.log('✅ QR scan history cleared successfully');
+
+    res.json({
+      success: true,
+      message: 'All scan history cleared successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Error in DELETE /qr-scans:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'

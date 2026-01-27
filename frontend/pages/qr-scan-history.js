@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { toast } from 'react-hot-toast';
 import Layout from '@/components/Layout/Layout';
-import { 
-  History, Search, Calendar, User, Clock, 
-  Smartphone, RefreshCw, Eye, Trash2, Download, CheckCircle, AlertCircle
+import {
+  History, Search, Calendar, User, Clock,
+  Smartphone, RefreshCw, Eye, Trash2, Download, CheckCircle, AlertCircle, X
 } from 'lucide-react';
 import { isAuthenticated, getAuthToken } from '@/lib/auth';
 
@@ -22,6 +23,8 @@ export default function QRScanHistoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [activeTab, setActiveTab] = useState('scans'); // 'scans' or 'duplicates'
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -40,7 +43,7 @@ export default function QRScanHistoryPage() {
       const response = await fetch(`${API_URL}/api/qr-scans/duplicates`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       const data = await response.json();
       if (data.success) {
         setDuplicates(data.data || []);
@@ -73,19 +76,19 @@ export default function QRScanHistoryPage() {
     try {
       setLoading(true);
       const token = getAuthToken();
-      
+
       const params = new URLSearchParams({
         page: currentPage,
         limit: 20
       });
-      
+
       if (searchTerm) params.append('qr_data', searchTerm);
       if (selectedDate) params.append('date', selectedDate);
 
       const response = await fetch(`${API_URL}/api/qr-scans?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       const data = await response.json();
       if (data.success) {
         setScans(data.data || []);
@@ -110,6 +113,45 @@ export default function QRScanHistoryPage() {
       return data.substring(0, 50) + '...';
     }
     return data;
+  };
+
+  const handleClearHistory = async () => {
+    try {
+      setClearing(true);
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/qr-scans`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Scan history cleared successfully', {
+          duration: 5000,
+          style: {
+            minWidth: '350px',
+            padding: '20px',
+            borderRadius: '16px',
+            background: '#FFFFFF',
+            color: '#1F2937',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            borderLeft: '6px solid #EF4444',
+            fontWeight: '600'
+          }
+        });
+        loadScans();
+        loadStats();
+        loadDuplicates();
+        setIsClearModalOpen(false);
+      } else {
+        toast.error(data.error || 'Failed to clear scan history');
+      }
+    } catch (err) {
+      console.error('Error clearing history:', err);
+      toast.error('Error connecting to server. Please try again.');
+    } finally {
+      setClearing(false);
+    }
   };
 
   const exportToCSV = () => {
@@ -152,6 +194,13 @@ export default function QRScanHistoryPage() {
             </div>
             <div className="flex items-center space-x-3">
               <button
+                onClick={() => setIsClearModalOpen(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors border border-red-200 font-medium"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Clear Records</span>
+              </button>
+              <button
                 onClick={exportToCSV}
                 className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
@@ -182,7 +231,7 @@ export default function QRScanHistoryPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -238,7 +287,7 @@ export default function QRScanHistoryPage() {
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Filter by Date
@@ -272,21 +321,19 @@ export default function QRScanHistoryPage() {
             <nav className="-mb-px flex space-x-8 px-6">
               <button
                 onClick={() => setActiveTab('scans')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'scans'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'scans'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 All Scans ({scans.length})
               </button>
               <button
                 onClick={() => setActiveTab('duplicates')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'duplicates'
-                    ? 'border-red-500 text-red-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'duplicates'
+                  ? 'border-red-500 text-red-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Duplicate Attempts ({duplicates.length})
               </button>
@@ -603,7 +650,88 @@ Device Info: ${JSON.stringify(scan.device_info, null, 2)}
             </div>
           )}
         </div>
+        {/* Clear History Confirmation Modal */}
+        {isClearModalOpen && (
+          <ClearHistoryModal
+            onClose={() => setIsClearModalOpen(false)}
+            onConfirm={handleClearHistory}
+            processing={clearing}
+          />
+        )}
       </div>
     </Layout>
+  );
+}
+
+// Clear History Confirmation Modal Component
+function ClearHistoryModal({ onClose, onConfirm, processing }) {
+  return (
+    <div className="fixed inset-0 z-[100] overflow-y-auto">
+      <div className="flex min-h-screen items-center justify-center p-4">
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
+          onClick={onClose}
+        />
+
+        {/* Modal content */}
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+          <div className="bg-red-600 px-6 py-4 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Trash2 className="w-5 h-5" />
+              Delete Scan Records
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors p-1"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="p-8">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="w-10 h-10 text-red-600" />
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-gray-900">Are you absolutely sure?</h4>
+                <p className="text-gray-500 mt-2">
+                  This action will permanently delete <span className="font-bold text-red-600">ALL scan records</span>.
+                  This data cannot be recovered once deleted.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-8">
+              <button
+                onClick={onClose}
+                disabled={processing}
+                className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                disabled={processing}
+                className="px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 active:scale-95 transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {processing ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    Clearing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-5 h-5" />
+                    Delete All
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
