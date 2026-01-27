@@ -11,8 +11,8 @@ export default function Settings() {
 
   const [settings, setSettings] = useState({
     // General
-    companyName: 'CompanyHub Inc.',
-    companyEmail: 'admin@companyhub.com',
+    companyName: 'Barangay Iba O\' Este',
+    companyEmail: 'admin@iba-o-este.gov.ph',
     timezone: 'UTC',
     language: 'en',
 
@@ -87,11 +87,10 @@ export default function Settings() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm transition ${
-                      activeTab === tab.id
-                        ? 'border-primary-600 text-primary-600'
-                        : 'border-transparent text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm transition ${activeTab === tab.id
+                      ? 'border-[#03254c] text-[#03254c]'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <Icon className="w-4 h-4" />

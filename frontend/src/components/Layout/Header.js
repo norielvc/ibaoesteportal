@@ -1,9 +1,9 @@
-import { Bell, Search, User, Settings, LogOut } from 'lucide-react';
+import { Bell, Search, User, Settings, LogOut, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { getUserData, logout } from '@/lib/auth';
 import { getInitials } from '@/lib/utils';
 
-export default function Header({ title, subtitle, onSearch, searchTerm }) {
+export default function Header({ title, subtitle, onSearch, searchTerm, onMenuClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const user = getUserData();
@@ -36,9 +36,17 @@ export default function Header({ title, subtitle, onSearch, searchTerm }) {
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-30">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
+        {/* Mobile Menu Toggle */}
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2 -ml-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+
         {/* Title section */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-semibold text-gray-900">
             {title}
           </h1>
@@ -67,7 +75,7 @@ export default function Header({ title, subtitle, onSearch, searchTerm }) {
 
           {/* Notifications */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg transition-colors"
             >
@@ -112,11 +120,11 @@ export default function Header({ title, subtitle, onSearch, searchTerm }) {
 
           {/* User menu */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
             >
-              <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#03254c] rounded-full flex items-center justify-center border border-white/20 shadow-sm">
                 <span className="text-sm font-medium text-white">
                   {getInitials(user?.firstName, user?.lastName)}
                 </span>
@@ -149,7 +157,7 @@ export default function Header({ title, subtitle, onSearch, searchTerm }) {
                   </button>
                 </div>
                 <div className="py-1 border-t border-gray-200">
-                  <button 
+                  <button
                     onClick={logout}
                     className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50"
                   >
@@ -165,8 +173,8 @@ export default function Header({ title, subtitle, onSearch, searchTerm }) {
 
       {/* Click outside to close dropdowns */}
       {(showUserMenu || showNotifications) && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => {
             setShowUserMenu(false);
             setShowNotifications(false);

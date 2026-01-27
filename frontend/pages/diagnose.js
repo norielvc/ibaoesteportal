@@ -82,7 +82,7 @@ export default function Diagnose() {
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>CompanyHub Diagnostics</h1>
+      <h1>Barangay Management System Diagnostics</h1>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ backgroundColor: '#f0f0f0' }}>
@@ -96,9 +96,9 @@ export default function Diagnose() {
             <tr key={index}>
               <td style={{ border: '1px solid #ddd', padding: '10px' }}>{diag.test}</td>
               <td style={{ border: '1px solid #ddd', padding: '10px' }}>{diag.result}</td>
-              <td style={{ 
-                border: '1px solid #ddd', 
-                padding: '10px', 
+              <td style={{
+                border: '1px solid #ddd',
+                padding: '10px',
                 textAlign: 'center',
                 backgroundColor: diag.status === 'pass' ? '#d4edda' : '#f8d7da',
                 color: diag.status === 'pass' ? '#155724' : '#721c24'

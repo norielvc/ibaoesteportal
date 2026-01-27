@@ -8,6 +8,7 @@ import { isAuthenticated } from '@/lib/auth';
 export default function Layout({ children, title, subtitle, requireAuth = true, onSearch, searchTerm }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (requireAuth && !isAuthenticated()) {
@@ -58,9 +59,18 @@ export default function Layout({ children, title, subtitle, requireAuth = true, 
 
       {requireAuth ? (
         <>
-          <Sidebar />
+          <Sidebar
+            isMobileMenuOpen={isMobileMenuOpen}
+            setIsMobileMenuOpen={setIsMobileMenuOpen}
+          />
           <div className="lg:pl-64">
-            <Header title={title} subtitle={subtitle} onSearch={onSearch} searchTerm={searchTerm} />
+            <Header
+              title={title}
+              subtitle={subtitle}
+              onSearch={onSearch}
+              searchTerm={searchTerm}
+              onMenuClick={() => setIsMobileMenuOpen(true)}
+            />
             <main className="p-6">
               {children}
             </main>

@@ -141,9 +141,8 @@ const mainMenuItems = [
   }
 ];
 
-export default function Sidebar({ className }) {
+export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOpen }) {
   const router = useRouter();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState({});
   const user = getUserData();
 
@@ -177,10 +176,10 @@ export default function Sidebar({ className }) {
     return true;
   });
 
-  const SidebarContent = () => (
+  const SidebarContent = ({ showClose }) => (
     <div className="flex flex-col h-full bg-[#03254c]">
       {/* Logo */}
-      <div className="flex items-center px-6 py-8 border-b border-white/10">
+      <div className="flex items-center justify-between px-6 py-8 border-b border-white/10">
         <div className="flex items-center">
           <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center mr-4 border border-white/20">
             <LayoutDashboard className="w-6 h-6 text-white" />
@@ -190,6 +189,14 @@ export default function Sidebar({ className }) {
             <p className="text-[10px] font-bold text-blue-300/80 uppercase tracking-[0.2em]">Management System</p>
           </div>
         </div>
+        {showClose && (
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -336,36 +343,32 @@ export default function Sidebar({ className }) {
 
   return (
     <>
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-lg bg-white shadow-lg border border-gray-200"
-        >
-          {isMobileMenuOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <Menu className="w-6 h-6" />
+      {/* Mobile sidebar overlay with sliding effect */}
+      <div className={cn(
+        "lg:hidden fixed inset-0 z-50 transition-all duration-500 overflow-hidden",
+        isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      )}>
+        {/* Backdrop */}
+        <div
+          className={cn(
+            "absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-500",
+            isMobileMenuOpen ? "opacity-100" : "opacity-0"
           )}
-        </button>
-      </div>
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
 
-      {/* Mobile sidebar overlay */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 flex">
-          <div
-            className="fixed inset-0 bg-gray-600 bg-opacity-75"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <div className="relative flex flex-col w-64 bg-white shadow-xl">
-            <SidebarContent />
-          </div>
+        {/* Sidebar Container */}
+        <div className={cn(
+          "absolute inset-y-0 left-0 w-[280px] bg-[#03254c] shadow-2xl transition-transform duration-500 ease-out flex flex-col",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        )}>
+          <SidebarContent showClose={true} />
         </div>
-      )}
+      </div>
 
       {/* Desktop sidebar */}
       <div className={cn("hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-[#03254c] border-r border-white/5", className)}>
-        <SidebarContent />
+        <SidebarContent showClose={false} />
       </div>
     </>
   );
