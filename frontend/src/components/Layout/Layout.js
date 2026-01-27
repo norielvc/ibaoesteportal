@@ -32,7 +32,7 @@ export default function Layout({ children, title, subtitle, requireAuth = true, 
   return (
     <div className="min-h-screen bg-gray-50">
       <Toaster
-        position="top-right"
+        position="bottom-right"
         toastOptions={{
           duration: 4000,
           style: {
@@ -55,7 +55,7 @@ export default function Layout({ children, title, subtitle, requireAuth = true, 
           },
         }}
       />
-      
+
       {requireAuth ? (
         <>
           <Sidebar />

@@ -116,20 +116,33 @@ router.get('/verify-ref', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing reference number' });
     }
 
-    const { data: request, error } = await supabase
+    // Get certificate request details
+    const { data: request, error: requestError } = await supabase
       .from('certificate_requests')
       .select('*')
       .eq('reference_number', ref)
       .single();
 
-    if (error || !request) {
+    if (requestError || !request) {
       return res.status(404).json({ success: false, message: 'Certificate not found' });
     }
 
+    // Also get the latest pickup record for this request
+    const { data: pickup, error: pickupError } = await supabase
+      .from('certificate_pickups')
+      .select('*')
+      .eq('request_id', request.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Even if no pickup record exists, we return the request
+    // The frontend should handle missing pickup info gracefully
     res.json({
       success: true,
       valid: true,
       request,
+      pickup: pickup || { expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() }, // Fallback expiry
       message: 'Valid certificate found'
     });
   } catch (error) {

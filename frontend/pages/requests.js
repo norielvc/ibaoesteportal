@@ -429,17 +429,7 @@ export default function RequestsPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {/* Quick Filter for Ready for Pickup */}
-              <button
-                onClick={() => setStatusFilter('ready')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${statusFilter === 'ready'
-                  ? 'bg-cyan-600 text-white shadow-md'
-                  : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'
-                  }`}
-              >
-                <FileCheck className="w-4 h-4" />
-                Ready for Pickup ({requests.filter(r => r.status === 'ready').length})
-              </button>
+
 
               {/* Search */}
               <div className="relative">
@@ -465,7 +455,7 @@ export default function RequestsPage() {
                   <option value="processing">Processing</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
-                  <option value="ready">Ready for Pickup</option>
+
                   <option value="released">Released</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -489,85 +479,7 @@ export default function RequestsPage() {
           </div>
         </div>
 
-        {/* Ready for Pickup Section */}
-        {filteredRequests.filter(req => ['ready', 'ready_for_pickup'].includes(req.status)).length > 0 && (
-          <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl shadow-sm border border-cyan-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center">
-                  <FileCheck className="w-6 h-6 text-cyan-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-cyan-900">Certificates Ready for Pickup</h2>
-                  <p className="text-cyan-700">These certificates have been approved and are ready for collection</p>
-                </div>
-              </div>
-              <div className="bg-cyan-100 px-4 py-2 rounded-lg">
-                <span className="text-cyan-800 font-bold text-lg">
-                  {filteredRequests.filter(req => ['ready', 'ready_for_pickup'].includes(req.status)).length}
-                </span>
-              </div>
-            </div>
 
-            <div className="grid gap-4">
-              {filteredRequests.filter(req => ['ready', 'ready_for_pickup'].includes(req.status)).map((request) => (
-                <div key={request.id} className="bg-white rounded-lg border border-cyan-200 p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-cyan-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{request.applicant_name || request.full_name}</p>
-                        <p className="text-sm text-gray-500">{getTypeLabel(request.certificate_type)}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="font-mono font-semibold text-cyan-600">{request.reference_number}</p>
-                        <p className="text-sm text-gray-500">{formatDate(request.updated_at)}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setSelectedRequest(request)}
-                          className="p-2 text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 rounded-lg transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="w-5 h-5" />
-                        </button>
-                        <a
-                          href={`/verify-pickup?ref=${request.reference_number}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 flex items-center gap-2 text-sm"
-                          title="Open Pickup Verification"
-                        >
-                          <Shield className="w-4 h-4" />
-                          Verify Pickup
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 p-4 bg-cyan-100 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-cyan-700 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-cyan-900 mb-1">Pickup Instructions</h3>
-                  <ul className="text-sm text-cyan-800 space-y-1">
-                    <li>• Certificates are ready for collection at the barangay office</li>
-                    <li>• Applicants should bring valid government-issued ID</li>
-                    <li>• Use "Verify Pickup" button to process certificate collection</li>
-                    <li>• Office hours: Monday to Friday, 8:00 AM - 5:00 PM</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Requests Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
