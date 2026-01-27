@@ -4,11 +4,66 @@ import { toast } from 'react-hot-toast';
 import Layout from '@/components/Layout/Layout';
 import {
   History, Search, Calendar, User, Clock,
-  Smartphone, RefreshCw, Eye, Trash2, Download, CheckCircle, AlertCircle, X
+  Smartphone, RefreshCw, Eye, Trash2, Download, CheckCircle, AlertCircle, X,
+  MapPin, Activity, HardDrive, Info
 } from 'lucide-react';
 import { isAuthenticated, getAuthToken } from '@/lib/auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+
+// Helper to parse complex QR scan data
+const parseQRData = (qrData) => {
+  if (!qrData) return { id: 'N/A', name: 'N/A', address: 'N/A', remarks: 'N/A' };
+
+  // If it's a URL, don't try to parse it as structured text
+  if (qrData.startsWith('http')) {
+    return { id: 'URL', name: 'N/A', address: 'N/A', remarks: 'N/A' };
+  }
+
+  // Pattern: ID (HXXXXX-FXXXXX)
+  const idMatch = qrData.match(/^H\d{5}-F\d{5}/);
+  const id = idMatch ? idMatch[0] : 'N/A';
+
+  let remaining = qrData.replace(id, '').trim();
+
+  // Pattern: Remarks (Starts with GOODS RECD)
+  const remarksStart = remaining.indexOf('GOODS RECD');
+  let remarks = 'N/A';
+  if (remarksStart !== -1) {
+    remarks = remaining.substring(remarksStart).trim();
+    remaining = remaining.substring(0, remarksStart).trim();
+  }
+
+  // Pattern: Address (Starts with SITIO, BLOCK, LOT, PUROK, PHASE, ST.)
+  const addressMarkers = ['SITIO', 'BLOCK', 'LOT', 'PUROK', 'PHASE', 'ST.', 'AVE.'];
+  let addressStart = -1;
+  const upperRemaining = remaining.toUpperCase();
+
+  for (const marker of addressMarkers) {
+    const termPos = upperRemaining.indexOf(marker);
+    if (termPos !== -1 && (addressStart === -1 || termPos < addressStart)) {
+      addressStart = termPos;
+    }
+  }
+
+  let name = 'N/A';
+  let address = 'N/A';
+
+  if (addressStart !== -1) {
+    name = remaining.substring(0, addressStart).trim();
+    address = remaining.substring(addressStart).trim();
+  } else {
+    // If no address marker found, might just be name + remarks
+    name = remaining || 'N/A';
+  }
+
+  return {
+    id,
+    name: name.replace(/\s+/g, ' '),
+    address: address.replace(/\s+/g, ' '),
+    remarks
+  };
+};
 
 export default function QRScanHistoryPage() {
   const router = useRouter();
@@ -25,6 +80,9 @@ export default function QRScanHistoryPage() {
   const [activeTab, setActiveTab] = useState('scans'); // 'scans' or 'duplicates'
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
+
+  const [selectedScan, setSelectedScan] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -155,14 +213,21 @@ export default function QRScanHistoryPage() {
   };
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Time', 'QR Data', 'Scanner Type', 'User'];
-    const csvData = scans.map(scan => [
-      new Date(scan.scan_timestamp).toLocaleDateString(),
-      new Date(scan.scan_timestamp).toLocaleTimeString(),
-      `"${scan.qr_data.replace(/"/g, '""')}"`,
-      scan.scanner_type,
-      scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'
-    ]);
+    const headers = ['Date', 'Time', 'Household-Family ID', 'Name', 'Address', 'Remarks', 'Raw QR Data', 'Scanner Type', 'User'];
+    const csvData = scans.map(scan => {
+      const parsed = parseQRData(scan.qr_data);
+      return [
+        new Date(scan.scan_timestamp).toLocaleDateString(),
+        new Date(scan.scan_timestamp).toLocaleTimeString(),
+        parsed.id,
+        `"${parsed.name.replace(/"/g, '""')}"`,
+        `"${parsed.address.replace(/"/g, '""')}"`,
+        `"${parsed.remarks.replace(/"/g, '""')}"`,
+        `"${scan.qr_data.replace(/"/g, '""')}"`,
+        scan.scanner_type,
+        scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'
+      ];
+    });
 
     const csvContent = [headers, ...csvData]
       .map(row => row.join(','))
@@ -370,13 +435,25 @@ export default function QRScanHistoryPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Scan Time
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          QR Code Data
+                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Household-Family ID
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Address
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Remarks
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Raw Data
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                           Scanner Type
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                           Scanned By
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -397,31 +474,43 @@ export default function QRScanHistoryPage() {
                               </div>
                             </div>
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm font-mono font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">
+                              {parseQRData(scan.qr_data).id}
+                            </span>
+                          </td>
                           <td className="px-6 py-4">
-                            <div className="text-sm text-gray-900 font-mono bg-gray-50 p-2 rounded">
-                              {formatQRData(scan.qr_data)}
+                            <div className="text-sm font-bold text-gray-900">
+                              {parseQRData(scan.qr_data).name}
                             </div>
-                            {scan.qr_data.length > 50 && (
-                              <button
-                                onClick={() => alert(scan.qr_data)}
-                                className="text-xs text-blue-600 hover:text-blue-800 mt-1"
-                              >
-                                View Full Data
-                              </button>
-                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-xs text-gray-600 max-w-[200px] truncate" title={parseQRData(scan.qr_data).address}>
+                              {parseQRData(scan.qr_data).address}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 border-l border-gray-50">
+                            <div className="text-xs text-emerald-600 font-semibold italic">
+                              {parseQRData(scan.qr_data).remarks}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-[10px] text-gray-400 font-mono bg-gray-50 p-2 rounded truncate max-w-[150px]">
+                              {scan.qr_data}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <Smartphone className="w-4 h-4 text-gray-400 mr-2" />
-                              <span className="text-sm text-gray-900 capitalize">
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${scan.scanner_type === 'mobile' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                                }`}>
                                 {scan.scanner_type}
                               </span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <User className="w-4 h-4 text-gray-400 mr-2" />
-                              <span className="text-sm text-gray-900">
+                              <User className="w-3.5 h-3.5 text-gray-400 mr-2" />
+                              <span className="text-sm text-gray-600">
                                 {scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
                               </span>
                             </div>
@@ -429,18 +518,13 @@ export default function QRScanHistoryPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button
                               onClick={() => {
-                                const details = `
-QR Code Data: ${scan.qr_data}
-Scan Time: ${formatDate(scan.scan_timestamp)}
-Scanner Type: ${scan.scanner_type}
-Scanned By: ${scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
-Device Info: ${JSON.stringify(scan.device_info, null, 2)}
-                                `.trim();
-                                alert(details);
+                                setSelectedScan(scan);
+                                setIsViewModalOpen(true);
                               }}
-                              className="text-blue-600 hover:text-blue-900 mr-3"
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="View Details"
                             >
-                              <Eye className="w-4 h-4" />
+                              <Eye className="w-5 h-5" />
                             </button>
                           </td>
                         </tr>
@@ -469,17 +553,17 @@ Device Info: ${JSON.stringify(scan.device_info, null, 2)}
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-red-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider">
-                          QR Code Data
+                        <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
+                          Household ID & Name
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
                           Original Scan
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
                           Duplicate Attempt
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider">
-                          Time Difference
+                        <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
+                          Status
                         </th>
                       </tr>
                     </thead>
@@ -487,26 +571,29 @@ Device Info: ${JSON.stringify(scan.device_info, null, 2)}
                       {duplicates.map((duplicate, index) => (
                         <tr key={index} className="hover:bg-red-50">
                           <td className="px-6 py-4">
-                            <div className="text-sm text-gray-900 font-mono bg-gray-50 p-2 rounded">
-                              {formatQRData(duplicate.qr_data)}
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-red-700">{parseQRData(duplicate.qr_data).id}</span>
+                              <span className="text-xs text-gray-900 font-medium">{parseQRData(duplicate.qr_data).name}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              <div className="font-medium">{duplicate.original_scan.scanned_by}</div>
+                            <div className="text-xs text-gray-900">
+                              <div className="font-semibold">{duplicate.original_scan.scanned_by}</div>
                               <div className="text-gray-500">{formatDate(duplicate.original_scan.scan_timestamp)}</div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              <div className="font-medium">{duplicate.duplicate_attempt.scanned_by}</div>
+                            <div className="text-xs text-gray-900 border-l-2 border-red-200 pl-3">
+                              <div className="font-semibold">{duplicate.duplicate_attempt.scanned_by}</div>
                               <div className="text-gray-500">{formatDate(duplicate.duplicate_attempt.scan_timestamp)}</div>
-                              <div className="text-xs text-red-600">Blocked - Duplicate</div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {Math.round(duplicate.time_difference / (1000 * 60))} minutes later
+                            <div className="flex flex-col">
+                              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full uppercase text-center">Blocked</span>
+                              <span className="text-[10px] text-gray-500 mt-1">
+                                {Math.round(duplicate.time_difference / (1000 * 60))} mins later
+                              </span>
                             </div>
                           </td>
                         </tr>
@@ -662,6 +749,125 @@ Device Info: ${JSON.stringify(scan.device_info, null, 2)}
           />
         )}
       </div>
+      {/* Scan Details Modal */}
+      {isViewModalOpen && selectedScan && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            <div className="px-8 py-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Info className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Scan Details</h3>
+                  <p className="text-blue-100 text-xs">Full information for record #{selectedScan.id}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsViewModalOpen(false)}
+                className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Information Section */}
+                <div className="space-y-6">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Household-Family ID</label>
+                    <div className="text-lg font-mono font-bold text-blue-600 flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-blue-600 mr-2 animate-pulse"></div>
+                      {parseQRData(selectedScan.qr_data).id}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Full Name</label>
+                    <div className="text-lg font-bold text-gray-900 flex items-center">
+                      <User className="w-5 h-5 text-gray-400 mr-2" />
+                      {parseQRData(selectedScan.qr_data).name}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Address Location</label>
+                    <div className="text-sm font-medium text-gray-700 flex items-start">
+                      <MapPin className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                      {parseQRData(selectedScan.qr_data).address}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Special Remarks</label>
+                    <div className="text-sm font-semibold italic text-emerald-600 bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
+                      "{parseQRData(selectedScan.qr_data).remarks}"
+                    </div>
+                  </div>
+                </div>
+
+                {/* Audit Section */}
+                <div className="space-y-6 bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Scan Timeline</label>
+                    <div className="flex items-center text-sm font-medium text-gray-900">
+                      <Clock className="w-4 h-4 text-blue-500 mr-2" />
+                      {new Date(selectedScan.scan_timestamp).toLocaleString('en-US', {
+                        dateStyle: 'full',
+                        timeStyle: 'medium'
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Captured By</label>
+                    <div className="flex items-center text-sm font-medium text-gray-900">
+                      <Activity className="w-4 h-4 text-purple-500 mr-2" />
+                      {selectedScan.users ? `${selectedScan.users.first_name} ${selectedScan.users.last_name}` : 'Unknown'}
+                    </div>
+                    <div className="text-[10px] text-gray-500 ml-6">{selectedScan.users?.email}</div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Device/Scanner Metadata</label>
+                    <div className="flex items-center text-sm font-medium text-gray-900">
+                      <Smartphone className="w-4 h-4 text-orange-500 mr-2" />
+                      <span className="capitalize">{selectedScan.scanner_type} Scanner</span>
+                    </div>
+                    <div className="mt-2 text-[10px] font-mono text-gray-400 bg-white p-3 rounded-xl border border-gray-200 overflow-hidden break-words">
+                      {selectedScan.device_info?.userAgent || 'Internal System Scan'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Raw Data Row */}
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Complete QR Encoded Data</label>
+                <div className="bg-gray-900 text-blue-200 p-4 rounded-2xl font-mono text-[11px] leading-relaxed break-all relative group overflow-hidden">
+                  <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="bg-white/10 text-white px-2 py-1 rounded text-[8px] uppercase font-bold">Verified Hash</span>
+                  </div>
+                  {selectedScan.qr_data}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => setIsViewModalOpen(false)}
+                className="px-8 py-2.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all active:scale-95"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

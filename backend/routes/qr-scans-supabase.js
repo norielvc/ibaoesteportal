@@ -128,6 +128,57 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
+    // Helper to parse complex QR scan data
+    const parseQRData = (data) => {
+      if (!data || typeof data !== 'string') return null;
+      if (data.startsWith('http')) return null;
+
+      // Pattern: ID (HXXXXX-FXXXXX)
+      const idMatch = data.match(/^H\d{5}-F\d{5}/);
+      const household_id = idMatch ? idMatch[0] : null;
+
+      let remaining = data.replace(household_id || '', '').trim();
+
+      // Pattern: Remarks (Starts with GOODS RECD)
+      const remarksStart = remaining.indexOf('GOODS RECD');
+      let remarks = null;
+      if (remarksStart !== -1) {
+        remarks = remaining.substring(remarksStart).trim();
+        remaining = remaining.substring(0, remarksStart).trim();
+      }
+
+      // Pattern: Address
+      const addressMarkers = ['SITIO', 'BLOCK', 'LOT', 'PUROK', 'PHASE', 'ST.', 'AVE.'];
+      let addressStart = -1;
+      const upperRemaining = remaining.toUpperCase();
+
+      for (const marker of addressMarkers) {
+        const termPos = upperRemaining.indexOf(marker);
+        if (termPos !== -1 && (addressStart === -1 || termPos < addressStart)) {
+          addressStart = termPos;
+        }
+      }
+
+      let name = null;
+      let address = null;
+
+      if (addressStart !== -1) {
+        name = remaining.substring(0, addressStart).trim();
+        address = remaining.substring(addressStart).trim();
+      } else {
+        name = remaining || null;
+      }
+
+      return {
+        household_id,
+        name: name ? name.replace(/\s+/g, ' ') : null,
+        address: address ? address.replace(/\s+/g, ' ') : null,
+        remarks
+      };
+    };
+
+    const parsedData = parseQRData(qr_data);
+
     // Check if this QR code has already been scanned
     const { data: existingScan, error: checkError } = await supabase
       .from('qr_scans')
@@ -172,7 +223,12 @@ router.post('/', authenticateToken, async (req, res) => {
           scanner_type: scanner_type || 'mobile',
           device_info: device_info || {},
           scanned_by: user_id,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          // Parsed fields for better reporting (must add columns to DB)
+          parsed_household_id: parsedData?.household_id,
+          parsed_name: parsedData?.name,
+          parsed_address: parsedData?.address,
+          parsed_remarks: parsedData?.remarks
         }
       ])
       .select()
@@ -232,7 +288,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
     // Filter by QR data if provided
     if (qr_data) {
-      query = query.ilike('qr_data', `%${qr_data}%`);
+      query = query.or(`qr_data.ilike.%${qr_data}%,parsed_household_id.ilike.%${qr_data}%,parsed_name.ilike.%${qr_data}%,parsed_address.ilike.%${qr_data}%,parsed_remarks.ilike.%${qr_data}%`);
     }
 
     // Apply pagination
