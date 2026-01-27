@@ -28,9 +28,6 @@ export default function BarangayPortal() {
     firstName: '', lastName: '', email: '', phone: '', message: ''
   });
 
-  // Animation states
-  const [animatedElements, setAnimatedElements] = useState(new Set());
-
   // Default events (fallback)
   const defaultNewsItems = [
     {
@@ -393,15 +390,20 @@ export default function BarangayPortal() {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('animate-in');
-          setAnimatedElements(prev => new Set([...prev, entry.target.id]));
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
         }
       });
     }, observerOptions);
 
-    // Observe all animatable elements
+    // Observe all animatable elements with lightweight setup
     const animatableElements = document.querySelectorAll('.animate-on-scroll');
-    animatableElements.forEach((el) => observer.observe(el));
+    animatableElements.forEach((el) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      observer.observe(el);
+    });
 
     return () => {
       animatableElements.forEach((el) => observer.unobserve(el));
@@ -1621,8 +1623,8 @@ export default function BarangayPortal() {
       </section>
 
 
-      {/* Barangay Officials Section - New Layout */}
-      <section id="officials" className="bg-gray-900 animate-on-scroll">
+      {/* Barangay Officials Section - Optimized */}
+      <section id="officials" className="bg-gray-900">
         <div className="text-center py-8">
           <h3 className="text-2xl font-bold text-white mb-2">Barangay Officials</h3>
           <p className="text-blue-300">Meet our dedicated team serving Iba O' Este</p>
@@ -1646,9 +1648,9 @@ export default function BarangayPortal() {
             {/* Leadership Header */}
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full mb-6">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                 <span className="text-blue-200 font-semibold text-sm tracking-wide uppercase">Leadership Team</span>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               </div>
 
               <h4 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
@@ -1781,7 +1783,7 @@ export default function BarangayPortal() {
                             const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
 
                             return (
-                              <div key={official.id || index} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                              <div key={official.id || index} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-200 overflow-hidden border border-gray-100">
                                 <div className={`bg-gradient-to-br ${colorClass} p-6 text-center`}>
                                   <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <span className="text-2xl font-bold text-white">{initials}</span>
@@ -1819,7 +1821,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-16 bg-gray-900 animate-on-scroll">
+      <section id="contact" className="py-16 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-white mb-2">Feel free to contact us</h2>
