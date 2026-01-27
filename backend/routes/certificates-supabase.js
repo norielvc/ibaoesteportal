@@ -18,7 +18,7 @@ const notifyNextStepApprovers = async (certificateType, referenceNumber, applica
 
     // Find the first step that requires email notification (staff_review)
     const nextStep = defaultWorkflow.find(step => step.status === 'staff_review');
-    
+
     if (nextStep && nextStep.sendEmail && nextStep.assignedUsers.length > 0) {
       // Get user details for assigned users
       const { data: users } = await supabase
@@ -51,31 +51,31 @@ const notifyNextStepApprovers = async (certificateType, referenceNumber, applica
 router.get('/next-reference/:type', async (req, res) => {
   try {
     const { type } = req.params;
-    
+
     // Map type to prefix
     const prefixMap = {
       'barangay_clearance': 'BC',
       'certificate_of_indigency': 'CI',
       'barangay_residency': 'BR'
     };
-    
+
     const prefix = prefixMap[type] || 'REF';
     const year = new Date().getFullYear();
-    
+
     // Get ALL records of this type for this year, ordered by reference_number descending
     const { data: records, error } = await supabase
       .from('certificate_requests')
       .select('reference_number')
       .eq('certificate_type', type)
       .order('reference_number', { ascending: false });
-    
+
     if (error) {
       console.error('Error fetching records:', error);
       throw error;
     }
-    
+
     let nextNumber = 1;
-    
+
     // Find the highest number from existing records for this year
     if (records && records.length > 0) {
       let maxNumber = 0;
@@ -92,13 +92,13 @@ router.get('/next-reference/:type', async (req, res) => {
       }
       nextNumber = maxNumber + 1;
     }
-    
+
     const referenceNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
-    
+
     console.log(`Next reference for ${type}: ${referenceNumber} (found ${records?.length || 0} records)`);
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       referenceNumber,
       nextNumber
     });
@@ -114,9 +114,9 @@ router.get('/next-reference/:type', async (req, res) => {
     const prefix = prefixMap[type] || 'REF';
     const year = new Date().getFullYear();
     const referenceNumber = `${prefix}-${year}-00001`;
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       referenceNumber,
       nextNumber: 1
     });
@@ -127,19 +127,19 @@ router.get('/next-reference/:type', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { type, status } = req.query;
-    
+
     let query = supabase
       .from('certificate_requests')
       .select('*')
       .order('created_at', { ascending: false });
-    
+
     if (type) query = query.eq('certificate_type', type);
     if (status) query = query.eq('status', status);
-    
+
     const { data, error } = await query;
-    
+
     if (error) throw error;
-    
+
     res.json({ success: true, certificates: data });
   } catch (error) {
     console.error('Error fetching certificates:', error);
@@ -155,10 +155,10 @@ router.get('/:id', async (req, res) => {
       .select('*')
       .eq('id', req.params.id)
       .single();
-    
+
     if (error) throw error;
     if (!data) return res.status(404).json({ success: false, message: 'Certificate not found' });
-    
+
     res.json({ success: true, data });
   } catch (error) {
     console.error('Error fetching certificate:', error);
@@ -176,14 +176,14 @@ router.post('/clearance', async (req, res) => {
 
     const year = new Date().getFullYear();
     const prefix = 'BC';
-    
+
     // Get ALL barangay_clearance records to find the highest number
     const { data: records } = await supabase
       .from('certificate_requests')
       .select('reference_number')
       .eq('certificate_type', 'barangay_clearance')
       .order('reference_number', { ascending: false });
-    
+
     let nextNumber = 1;
     if (records && records.length > 0) {
       let maxNumber = 0;
@@ -200,7 +200,7 @@ router.post('/clearance', async (req, res) => {
       }
       nextNumber = maxNumber + 1;
     }
-    
+
     const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
     console.log(`Creating clearance with reference: ${refNumber}`);
 
@@ -230,7 +230,7 @@ router.post('/clearance', async (req, res) => {
     const staffUserIds = [
       '9550a8b2-9e32-4f52-a260-52766afb49b1' // Noriel Cruz (as shown in UI)
     ];
-    
+
     for (const staffUserId of staffUserIds) {
       const { error: assignmentError } = await supabase
         .from('workflow_assignments')
@@ -242,7 +242,7 @@ router.post('/clearance', async (req, res) => {
           assigned_user_id: staffUserId,
           status: 'pending'
         }]);
-      
+
       if (assignmentError) {
         console.error('Failed to create workflow assignment:', assignmentError);
       }
@@ -251,8 +251,8 @@ router.post('/clearance', async (req, res) => {
     // Send email notifications to next step approvers
     notifyNextStepApprovers('barangay_clearance', refNumber, fullName, data.id);
 
-    res.status(201).json({ 
-      success: true, 
+    res.status(201).json({
+      success: true,
       message: 'Barangay Clearance request submitted successfully',
       data,
       referenceNumber: refNumber
@@ -273,14 +273,14 @@ router.post('/indigency', async (req, res) => {
 
     const year = new Date().getFullYear();
     const prefix = 'CI';
-    
+
     // Get ALL certificate_of_indigency records to find the highest number
     const { data: records } = await supabase
       .from('certificate_requests')
       .select('reference_number')
       .eq('certificate_type', 'certificate_of_indigency')
       .order('reference_number', { ascending: false });
-    
+
     let nextNumber = 1;
     if (records && records.length > 0) {
       let maxNumber = 0;
@@ -297,7 +297,7 @@ router.post('/indigency', async (req, res) => {
       }
       nextNumber = maxNumber + 1;
     }
-    
+
     const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
     console.log(`Creating indigency with reference: ${refNumber}`);
 
@@ -327,7 +327,7 @@ router.post('/indigency', async (req, res) => {
     const staffUserIds = [
       '9550a8b2-9e32-4f52-a260-52766afb49b1' // Noriel Cruz (as shown in UI)
     ];
-    
+
     for (const staffUserId of staffUserIds) {
       const { error: assignmentError } = await supabase
         .from('workflow_assignments')
@@ -339,7 +339,7 @@ router.post('/indigency', async (req, res) => {
           assigned_user_id: staffUserId,
           status: 'pending'
         }]);
-      
+
       if (assignmentError) {
         console.error('Failed to create workflow assignment:', assignmentError);
       }
@@ -348,8 +348,8 @@ router.post('/indigency', async (req, res) => {
     // Send email notifications to next step approvers
     notifyNextStepApprovers('certificate_of_indigency', refNumber, fullName, data.id);
 
-    res.status(201).json({ 
-      success: true, 
+    res.status(201).json({
+      success: true,
       message: 'Certificate of Indigency request submitted successfully',
       data,
       referenceNumber: refNumber
@@ -370,14 +370,14 @@ router.post('/residency', async (req, res) => {
 
     const year = new Date().getFullYear();
     const prefix = 'BR';
-    
+
     // Get ALL barangay_residency records to find the highest number
     const { data: records } = await supabase
       .from('certificate_requests')
       .select('reference_number')
       .eq('certificate_type', 'barangay_residency')
       .order('reference_number', { ascending: false });
-    
+
     let nextNumber = 1;
     if (records && records.length > 0) {
       let maxNumber = 0;
@@ -394,7 +394,7 @@ router.post('/residency', async (req, res) => {
       }
       nextNumber = maxNumber + 1;
     }
-    
+
     const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
     console.log(`Creating residency with reference: ${refNumber}`);
 
@@ -424,7 +424,7 @@ router.post('/residency', async (req, res) => {
     const staffUserIds = [
       '9550a8b2-9e32-4f52-a260-52766afb49b1' // Noriel Cruz (as shown in UI)
     ];
-    
+
     for (const staffUserId of staffUserIds) {
       const { error: assignmentError } = await supabase
         .from('workflow_assignments')
@@ -436,7 +436,7 @@ router.post('/residency', async (req, res) => {
           assigned_user_id: staffUserId,
           status: 'pending'
         }]);
-      
+
       if (assignmentError) {
         console.error('Failed to create workflow assignment:', assignmentError);
       }
@@ -445,8 +445,8 @@ router.post('/residency', async (req, res) => {
     // Send email notifications to next step approvers
     notifyNextStepApprovers('barangay_residency', refNumber, fullName, data.id);
 
-    res.status(201).json({ 
-      success: true, 
+    res.status(201).json({
+      success: true,
       message: 'Barangay Residency Certificate request submitted successfully',
       data,
       referenceNumber: refNumber
@@ -461,16 +461,29 @@ router.post('/residency', async (req, res) => {
 router.put('/:id/status', async (req, res) => {
   try {
     const { status, comment, action } = req.body;
-    const validStatuses = ['pending', 'submitted', 'processing', 'approved', 'rejected', 'ready_for_pickup', 'released', 'cancelled'];
-    
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status' });
+    console.log(`Updating status for request ${req.params.id}:`, { status, action, comment });
+
+    const validStatuses = [
+      'pending', 'submitted', 'processing', 'under_review',
+      'approved', 'rejected', 'returned', 'ready',
+      'ready_for_pickup', 'released', 'cancelled',
+      'staff_review', 'captain_approval', 'completed'
+    ];
+
+    if (status && !validStatuses.includes(status)) {
+      console.error('Invalid status received:', status);
+      return res.status(400).json({ success: false, message: `Invalid status: ${status}` });
     }
 
+    // Map status to allowed database values if necessary
+    let finalStatus = status;
+    if (status === 'approved') finalStatus = 'ready';
+    if (status === 'rejected') finalStatus = 'cancelled';
+
     // Build update object - only include fields that exist in the table
-    const updateData = { 
-      status, 
-      updated_at: new Date().toISOString() 
+    const updateData = {
+      status: finalStatus,
+      updated_at: new Date().toISOString()
     };
 
     // Try to update with all fields first, if it fails, update without optional fields
@@ -500,9 +513,9 @@ router.put('/:id/status', async (req, res) => {
       // If error is about missing column, try without optional fields
       if (innerError.message && innerError.message.includes('column')) {
         console.log('Retrying without optional columns...');
-        const basicUpdateData = { 
-          status, 
-          updated_at: new Date().toISOString() 
+        const basicUpdateData = {
+          status,
+          updated_at: new Date().toISOString()
         };
 
         const { data, error } = await supabase
@@ -548,7 +561,7 @@ router.get('/stats/summary', async (req, res) => {
     const { data: all, error: allError } = await supabase
       .from('certificate_requests')
       .select('certificate_type, status');
-    
+
     if (allError) throw allError;
 
     const stats = {

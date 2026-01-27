@@ -69,7 +69,7 @@ class CertificateGenerationService {
         .update({
           certificate_file_path: filePath,
           certificate_generated_at: new Date().toISOString(),
-          status: 'ready_for_pickup'
+          status: 'ready'
         })
         .eq('id', requestId);
 

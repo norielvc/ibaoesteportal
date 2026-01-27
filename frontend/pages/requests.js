@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout/Layout';
-import { 
+import {
   FileText, Search, Eye, CheckCircle, XCircle, RotateCcw,
   Clock, User, Calendar, ChevronDown, X, AlertTriangle,
   FileCheck, History, Filter, Shield, Printer, Download
@@ -31,7 +31,7 @@ export default function RequestsPage() {
     const user = getUserData();
     setCurrentUser(user);
     console.log('Current user loaded:', user);
-    
+
     // Load workflows from API first, then fallback to localStorage
     const loadWorkflows = async () => {
       try {
@@ -78,7 +78,7 @@ export default function RequestsPage() {
     setLoading(true);
     try {
       const token = getAuthToken();
-      
+
       // If viewing "My Assignments", use the workflow assignments API
       if (viewMode === 'assigned') {
         const response = await fetch(`${API_URL}/api/workflow-assignments/my-assignments`, {
@@ -110,26 +110,26 @@ export default function RequestsPage() {
     if (!currentUser) {
       return false;
     }
-    
+
     // Admin can see all
     if (currentUser.role === 'admin') return true;
-    
+
     // If we're in "My Assignments" view, all requests are already filtered to assigned ones
     if (viewMode === 'assigned') {
       return true;
     }
-    
+
     // For "All Requests" view, use the original workflow logic as fallback
     if (!workflows) {
       return false;
     }
-    
+
     // Get workflow for this certificate type - it's an array of steps directly
     const workflowSteps = workflows[request.certificate_type];
     if (!workflowSteps || !Array.isArray(workflowSteps) || workflowSteps.length === 0) {
       return false;
     }
-    
+
     // Determine current step index based on status
     const statusToStepIndex = {
       'pending': 1,      // Pending requests need Staff Review (step index 1)
@@ -137,23 +137,22 @@ export default function RequestsPage() {
       'processing': 2,   // Processing means staff approved, now needs Captain (step index 2)
       'staff_review': 1, // At staff review step
       'captain_approval': 2, // At captain approval step
-      'approved': 3,     // Approved, at ready step
       'ready': 3,        // Ready for pickup
       'ready_for_pickup': 3,
       'released': 4      // Released, final step
     };
-    
+
     const stepIndex = statusToStepIndex[request.status] || 0;
     const currentStep = workflowSteps[stepIndex];
-    
+
     if (!currentStep || !currentStep.requiresApproval) {
       return false;
     }
-    
+
     // Check if user is assigned to this step
     const userId = currentUser._id || currentUser.id;
     const assignedUsers = currentStep.assignedUsers || [];
-    
+
     return assignedUsers.some(assignedId => String(assignedId) === String(userId));
   };
 
@@ -161,7 +160,7 @@ export default function RequestsPage() {
   const getCurrentWorkflowStep = (request) => {
     const workflowSteps = workflows[request.certificate_type];
     if (!workflowSteps || !Array.isArray(workflowSteps)) return null;
-    
+
     // Status to step index mapping
     // pending = needs Staff Review (step 1)
     // processing = needs Captain Approval (step 2)
@@ -177,7 +176,7 @@ export default function RequestsPage() {
       'ready_for_pickup': 3,
       'released': 4      // Released, final step
     };
-    
+
     const index = statusToStepIndex[request.status] || 0;
     return workflowSteps[index] || null;
   };
@@ -198,7 +197,8 @@ export default function RequestsPage() {
       'approved': 'bg-green-100 text-green-800 border-green-200',
       'rejected': 'bg-red-100 text-red-800 border-red-200',
       'returned': 'bg-orange-100 text-orange-800 border-orange-200',
-      'ready_for_pickup': 'bg-cyan-100 text-cyan-800 border-cyan-200',
+      'ready': 'bg-green-100 text-green-800 border-green-200', // Make ready look like approved
+      'ready_for_pickup': 'bg-green-100 text-green-800 border-green-200',
       'released': 'bg-gray-100 text-gray-800 border-gray-200'
     };
     return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
@@ -239,7 +239,7 @@ export default function RequestsPage() {
   const getNextStatus = (currentStatus, action, request) => {
     if (action === 'reject') return 'rejected';
     if (action === 'return') return 'pending'; // Return to pending for revision
-    
+
     // For approve action, move to next workflow step
     if (action === 'approve') {
       const workflowSteps = workflows[request.certificate_type];
@@ -260,43 +260,61 @@ export default function RequestsPage() {
       const statusFlow = {
         'pending': 'processing',
         'submitted': 'processing',
-        'processing': 'approved',
+        'processing': 'ready', // Move directly to ready (captain approval)
         'approved': 'released',
         'ready': 'released',
         'ready_for_pickup': 'released'
       };
-      
-      return statusFlow[currentStatus] || 'approved';
+
+      return statusFlow[currentStatus] || 'ready';
     }
-    
-    return 'approved'; // fallback
+
+    if (action === 'reject') return 'cancelled';
+    if (action === 'return') return 'pending';
+
+    return 'ready'; // fallback
   };
 
   const submitAction = async () => {
     if (!selectedRequest || !actionType) return;
-    
+
     setProcessing(true);
     try {
       const token = getAuthToken();
       const newStatus = getNextStatus(selectedRequest.status, actionType, selectedRequest);
 
-      const response = await fetch(`${API_URL}/api/certificates/${selectedRequest.id}/status`, {
-        method: 'PUT',
+      let url = `${API_URL}/api/certificates/${selectedRequest.id}/status`;
+      let method = 'PUT';
+      let body = {
+        status: newStatus,
+        comment: actionComment,
+        action: actionType,
+        approvedBy: currentUser?.email
+      };
+
+      // If this is a workflow assignment, use the assignment-specific endpoint
+      // This is crucial for triggering post-approval workflows (certificate generation)
+      if (selectedRequest.workflow_assignment) {
+        console.log('Using workflow assignment update route');
+        url = `${API_URL}/api/workflow-assignments/${selectedRequest.workflow_assignment.id}/status`;
+        body = {
+          action: actionType,
+          comment: actionComment
+        };
+      }
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          status: newStatus,
-          comment: actionComment,
-          action: actionType,
-          approvedBy: currentUser?.email
-        })
+        body: JSON.stringify(body)
       });
 
       const data = await response.json();
       if (data.success) {
-        setRequests(prev => prev.map(r => 
+        setRequests(prev => prev.map(r =>
           r.id === selectedRequest.id ? { ...r, status: newStatus } : r
         ));
         setShowActionModal(false);
@@ -318,12 +336,13 @@ export default function RequestsPage() {
     if (viewMode === 'assigned' && !isUserAssignedToRequest(req)) {
       return false;
     }
-    
-    const matchesSearch = 
+
+    const matchesSearch =
       req.reference_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.applicant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'ready' ? ['ready', 'ready_for_pickup'].includes(req.status) : req.status === statusFilter);
     const matchesType = typeFilter === 'all' || req.certificate_type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -331,26 +350,26 @@ export default function RequestsPage() {
   // Count requests assigned to current user
   const [assignedCount, setAssignedCount] = useState(0);
   const [pendingActionCount, setPendingActionCount] = useState(0);
-  
+
   // Fetch assignment counts
   useEffect(() => {
     const fetchAssignmentCounts = async () => {
       if (!currentUser) return;
-      
+
       try {
         const token = getAuthToken();
         const response = await fetch(`${API_URL}/api/workflow-assignments/user/${currentUser._id || currentUser.id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        
+
         if (data.success) {
           const totalAssigned = data.count || 0;
-          const pendingActions = data.assignments?.filter(a => 
-            a.status === 'pending' && 
+          const pendingActions = data.assignments?.filter(a =>
+            a.status === 'pending' &&
             ['pending', 'processing'].includes(a.certificate_requests?.status)
           ).length || 0;
-          
+
           setAssignedCount(totalAssigned);
           setPendingActionCount(pendingActions);
         }
@@ -358,7 +377,7 @@ export default function RequestsPage() {
         console.error('Error fetching assignment counts:', error);
       }
     };
-    
+
     fetchAssignmentCounts();
   }, [currentUser]);
 
@@ -387,11 +406,10 @@ export default function RequestsPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewMode('assigned')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  viewMode === 'assigned' 
-                    ? 'bg-blue-600 text-white shadow-md' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${viewMode === 'assigned'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
               >
                 <User className="w-4 h-4" />
                 My Assignments ({assignedCount})
@@ -399,11 +417,10 @@ export default function RequestsPage() {
               {currentUser?.role === 'admin' && (
                 <button
                   onClick={() => setViewMode('all')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                    viewMode === 'all' 
-                      ? 'bg-blue-600 text-white shadow-md' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${viewMode === 'all'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
                 >
                   <Shield className="w-4 h-4" />
                   All Requests ({requests.length})
@@ -414,15 +431,14 @@ export default function RequestsPage() {
             <div className="flex flex-wrap gap-3">
               {/* Quick Filter for Ready for Pickup */}
               <button
-                onClick={() => setStatusFilter('ready_for_pickup')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  statusFilter === 'ready_for_pickup' 
-                    ? 'bg-cyan-600 text-white shadow-md' 
-                    : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'
-                }`}
+                onClick={() => setStatusFilter('ready')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${statusFilter === 'ready'
+                  ? 'bg-cyan-600 text-white shadow-md'
+                  : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'
+                  }`}
               >
                 <FileCheck className="w-4 h-4" />
-                Ready for Pickup ({requests.filter(r => r.status === 'ready_for_pickup').length})
+                Ready for Pickup ({requests.filter(r => r.status === 'ready').length})
               </button>
 
               {/* Search */}
@@ -449,7 +465,7 @@ export default function RequestsPage() {
                   <option value="processing">Processing</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
-                  <option value="ready_for_pickup">Ready for Pickup</option>
+                  <option value="ready">Ready for Pickup</option>
                   <option value="released">Released</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -474,7 +490,7 @@ export default function RequestsPage() {
         </div>
 
         {/* Ready for Pickup Section */}
-        {filteredRequests.filter(req => req.status === 'ready_for_pickup').length > 0 && (
+        {filteredRequests.filter(req => ['ready', 'ready_for_pickup'].includes(req.status)).length > 0 && (
           <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl shadow-sm border border-cyan-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -488,13 +504,13 @@ export default function RequestsPage() {
               </div>
               <div className="bg-cyan-100 px-4 py-2 rounded-lg">
                 <span className="text-cyan-800 font-bold text-lg">
-                  {filteredRequests.filter(req => req.status === 'ready_for_pickup').length}
+                  {filteredRequests.filter(req => ['ready', 'ready_for_pickup'].includes(req.status)).length}
                 </span>
               </div>
             </div>
-            
+
             <div className="grid gap-4">
-              {filteredRequests.filter(req => req.status === 'ready_for_pickup').map((request) => (
+              {filteredRequests.filter(req => ['ready', 'ready_for_pickup'].includes(req.status)).map((request) => (
                 <div key={request.id} className="bg-white rounded-lg border border-cyan-200 p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -535,7 +551,7 @@ export default function RequestsPage() {
                 </div>
               ))}
             </div>
-            
+
             <div className="mt-4 p-4 bg-cyan-100 rounded-lg">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-cyan-700 mt-0.5" />
@@ -567,7 +583,7 @@ export default function RequestsPage() {
                 {viewMode === 'assigned' ? 'No requests assigned to you' : 'No requests found'}
               </p>
               <p className="text-gray-400 text-sm mt-1">
-                {viewMode === 'assigned' 
+                {viewMode === 'assigned'
                   ? 'Requests will appear here when you are assigned as an approver'
                   : 'Try adjusting your filters'}
               </p>
@@ -590,7 +606,7 @@ export default function RequestsPage() {
                   {filteredRequests.map((request) => {
                     const currentStep = getCurrentWorkflowStep(request);
                     const canAct = canUserTakeAction(request);
-                    
+
                     return (
                       <tr key={request.id} className={`hover:bg-gray-50 transition-colors ${canAct ? 'bg-blue-50/30' : ''}`}>
                         <td className="px-6 py-4">
@@ -678,8 +694,8 @@ export default function RequestsPage() {
 
         {/* Request Details Modal */}
         {selectedRequest && !showActionModal && (
-          <RequestDetailsModal 
-            request={selectedRequest} 
+          <RequestDetailsModal
+            request={selectedRequest}
             onClose={() => setSelectedRequest(null)}
             onAction={handleAction}
             getStatusColor={getStatusColor}
@@ -716,8 +732,8 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
 
   if (showPdfPreview) {
     return (
-      <CertificatePreviewModal 
-        request={request} 
+      <CertificatePreviewModal
+        request={request}
         onClose={() => setShowPdfPreview(false)}
         onBack={() => setShowPdfPreview(false)}
         getTypeLabel={getTypeLabel}
@@ -729,7 +745,7 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-        
+
         <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 flex items-center justify-between">
@@ -940,7 +956,7 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-        
+
         <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
           <div className="p-6">
             {/* Icon */}
@@ -969,8 +985,8 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={3}
-                placeholder={actionType === 'approve' 
-                  ? 'Add any notes or comments...' 
+                placeholder={actionType === 'approve'
+                  ? 'Add any notes or comments...'
                   : 'Please provide a reason...'}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
               />
@@ -1069,7 +1085,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
       const parsed = JSON.parse(savedOfficials);
       setOfficials({ ...defaultOfficials, ...parsed });
     }
-    
+
     // Set current date
     const now = new Date();
     setCurrentDate(now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
@@ -1078,7 +1094,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
   const handlePrint = () => {
     const printContent = certificateRef.current;
     if (!printContent) return;
-    
+
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -1114,13 +1130,13 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
 
   const handleDownloadPDF = async () => {
     if (!certificateRef.current) return;
-    
+
     setIsDownloading(true);
-    
+
     try {
       const html2canvas = (await import('html2canvas')).default;
       const jsPDF = (await import('jspdf')).default;
-      
+
       const element = certificateRef.current;
       const canvas = await html2canvas(element, {
         scale: 2,
@@ -1128,14 +1144,14 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
         logging: false,
         backgroundColor: '#ffffff'
       });
-      
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
-      
+
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
@@ -1143,7 +1159,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
       const imgY = 10;
-      
+
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       pdf.save(`${request.reference_number}.pdf`);
     } catch (error) {
@@ -1161,7 +1177,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-indigo-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
             <div className="flex items-center gap-3">
-              <button 
+              <button
                 onClick={onBack}
                 className="text-white/80 hover:text-white p-2 hover:bg-white/10 rounded-lg mr-2"
               >
@@ -1176,14 +1192,14 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={handlePrint}
                 className="px-4 py-2 bg-white/20 text-white rounded-lg font-medium hover:bg-white/30 flex items-center gap-2"
               >
                 <Printer className="w-4 h-4" />
                 Print
               </button>
-              <button 
+              <button
                 onClick={handleDownloadPDF}
                 disabled={isDownloading}
                 className="px-4 py-2 bg-white text-purple-700 rounded-lg font-medium hover:bg-purple-50 flex items-center gap-2 disabled:opacity-50"
@@ -1199,7 +1215,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
 
           {/* Certificate Preview - Using exact same template as BarangayClearanceModal */}
           <div className="p-6 bg-gray-100 overflow-y-auto max-h-[calc(100vh-150px)]">
-            <ClearancePreviewForRequests 
+            <ClearancePreviewForRequests
               request={request}
               currentDate={currentDate}
               officials={officials}
@@ -1224,7 +1240,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
   const sidebarStyle = officials.sidebarStyle || {};
   const bodyStyle = officials.bodyStyle || {};
   const footerStyle = officials.footerStyle || {};
-  
+
   const getFontClass = (font) => ({ 'default': '', 'serif': 'font-serif', 'sans': 'font-sans', 'mono': 'font-mono' }[font] || '');
 
   // Map request data to formData format
@@ -1243,9 +1259,9 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
     <div className="p-1 flex justify-center print:p-0">
       {/* A4 Size Container */}
       <div ref={certificateRef} className={`certificate-container bg-white shadow-lg print:shadow-none flex flex-col ${getFontClass(bodyStyle.fontFamily)}`} style={{ width: '794px', height: '1090px', padding: '15px', boxSizing: 'border-box' }}>
-        
+
         {/* Header with Logos */}
-        <div className={`flex items-center justify-between pb-2 border-b-2 flex-shrink-0 ${getFontClass(headerStyle.fontFamily)}`} 
+        <div className={`flex items-center justify-between pb-2 border-b-2 flex-shrink-0 ${getFontClass(headerStyle.fontFamily)}`}
           style={{ backgroundColor: headerStyle.bgColor, borderColor: headerStyle.borderColor }}>
           <div className="flex-shrink-0" style={{ width: `${logos.logoSize || 70}px`, height: `${logos.logoSize || 70}px` }}>
             {logos.leftLogo && <img src={logos.leftLogo} alt="Left Logo" className="w-full h-full object-contain" />}
@@ -1280,7 +1296,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
               <p className="font-bold" style={{ fontSize: `${(sidebarStyle.titleSize || 16) + 4}px`, color: sidebarStyle.textColor }}>BARANGAY</p>
               <p className="font-bold" style={{ fontSize: `${(sidebarStyle.titleSize || 16) + 4}px`, color: sidebarStyle.textColor }}>IBA O' ESTE</p>
             </div>
-            
+
             <div className="border-t pt-3" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
               <p className="font-bold mb-3" style={{ color: sidebarStyle.labelColor, fontSize: `${(sidebarStyle.titleSize || 13) + 2}px` }}>BARANGAY COUNCIL</p>
               <div className="mb-3">
@@ -1338,7 +1354,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
             {/* Body Content */}
             <div className="flex-1" style={{ color: bodyStyle.textColor, fontSize: `${bodyStyle.textSize || 14}px` }}>
               <p className="font-bold mb-6">To Whom It May Concern:</p>
-              
+
               <p className="mb-6 text-justify leading-relaxed">
                 This is to certify that below mentioned person is a bona fide resident of this barangay and has no derogatory record as of date mentioned below:
               </p>

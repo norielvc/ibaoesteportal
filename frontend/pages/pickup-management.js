@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout/Layout';
-import { 
+import {
   FileCheck, Search, Eye, Calendar, User, Phone, MapPin,
   Shield, Clock, CheckCircle, AlertTriangle, QrCode,
   ExternalLink, RefreshCw, Package, History
@@ -17,7 +17,7 @@ export default function PickupManagementPage() {
   const [pickupRecords, setPickupRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ready_for_pickup');
+  const [statusFilter, setStatusFilter] = useState('ready');
   const [selectedCertificate, setSelectedCertificate] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -70,6 +70,7 @@ export default function PickupManagementPage() {
 
   const getStatusColor = (status) => {
     const colors = {
+      'ready': 'bg-cyan-100 text-cyan-800 border-cyan-200',
       'ready_for_pickup': 'bg-cyan-100 text-cyan-800 border-cyan-200',
       'released': 'bg-green-100 text-green-800 border-green-200',
       'expired': 'bg-red-100 text-red-800 border-red-200'
@@ -100,21 +101,22 @@ export default function PickupManagementPage() {
 
   // Filter certificates
   const filteredCertificates = certificates.filter(cert => {
-    const matchesSearch = 
+    const matchesSearch =
       cert.reference_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cert.applicant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cert.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || cert.status === statusFilter;
-    
+
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'ready' ? ['ready', 'ready_for_pickup'].includes(cert.status) : cert.status === statusFilter);
+
     return matchesSearch && matchesStatus;
   });
 
   // Get statistics
   const stats = {
-    readyForPickup: certificates.filter(c => c.status === 'ready_for_pickup').length,
+    readyForPickup: certificates.filter(c => ['ready', 'ready_for_pickup'].includes(c.status)).length,
     released: certificates.filter(c => c.status === 'released').length,
-    totalProcessed: certificates.filter(c => ['ready_for_pickup', 'released'].includes(c.status)).length
+    totalProcessed: certificates.filter(c => ['ready', 'ready_for_pickup', 'released'].includes(c.status)).length
   };
 
   return (
@@ -182,34 +184,31 @@ export default function PickupManagementPage() {
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setStatusFilter('ready_for_pickup')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  statusFilter === 'ready_for_pickup' 
-                    ? 'bg-cyan-600 text-white shadow-md' 
+                onClick={() => setStatusFilter('ready')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${statusFilter === 'ready'
+                    ? 'bg-cyan-600 text-white shadow-md'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 <Package className="w-4 h-4" />
                 Ready for Pickup ({stats.readyForPickup})
               </button>
               <button
                 onClick={() => setStatusFilter('released')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  statusFilter === 'released' 
-                    ? 'bg-green-600 text-white shadow-md' 
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${statusFilter === 'released'
+                    ? 'bg-green-600 text-white shadow-md'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 <CheckCircle className="w-4 h-4" />
                 Released ({stats.released})
               </button>
               <button
                 onClick={() => setStatusFilter('all')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  statusFilter === 'all' 
-                    ? 'bg-blue-600 text-white shadow-md' 
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${statusFilter === 'all'
+                    ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 <History className="w-4 h-4" />
                 All ({stats.totalProcessed})
@@ -244,7 +243,7 @@ export default function PickupManagementPage() {
               <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 font-medium">No certificates found</p>
               <p className="text-gray-400 text-sm mt-1">
-                {statusFilter === 'ready_for_pickup' 
+                {statusFilter === 'ready'
                   ? 'No certificates are currently ready for pickup'
                   : 'Try adjusting your filters'}
               </p>
@@ -304,8 +303,8 @@ export default function PickupManagementPage() {
                         >
                           <Eye className="w-5 h-5" />
                         </button>
-                        
-                        {certificate.status === 'ready_for_pickup' && (
+
+                        {certificate.status === 'ready' && (
                           <button
                             onClick={() => openPickupVerification(certificate.reference_number)}
                             className="px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 flex items-center gap-2"
@@ -316,7 +315,7 @@ export default function PickupManagementPage() {
                             <ExternalLink className="w-3 h-3" />
                           </button>
                         )}
-                        
+
                         {certificate.status === 'released' && (
                           <div className="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium flex items-center gap-2">
                             <CheckCircle className="w-4 h-4" />
@@ -334,8 +333,8 @@ export default function PickupManagementPage() {
 
         {/* Certificate Details Modal */}
         {selectedCertificate && (
-          <CertificateDetailsModal 
-            certificate={selectedCertificate} 
+          <CertificateDetailsModal
+            certificate={selectedCertificate}
             onClose={() => setSelectedCertificate(null)}
             getStatusColor={getStatusColor}
             getTypeLabel={getTypeLabel}
@@ -354,7 +353,7 @@ function CertificateDetailsModal({ certificate, onClose, getStatusColor, getType
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-        
+
         <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 flex items-center justify-between">
@@ -445,7 +444,7 @@ function CertificateDetailsModal({ certificate, onClose, getStatusColor, getType
             </div>
 
             {/* Pickup Instructions */}
-            {certificate.status === 'ready_for_pickup' && (
+            {certificate.status === 'ready' && (
               <div className="bg-cyan-50 rounded-xl p-4 border border-cyan-200">
                 <h3 className="font-semibold text-cyan-900 flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-5 h-5" />
@@ -463,7 +462,7 @@ function CertificateDetailsModal({ certificate, onClose, getStatusColor, getType
 
           {/* Footer Actions */}
           <div className="border-t bg-gray-50 px-6 py-4 flex gap-3 justify-end">
-            {certificate.status === 'ready_for_pickup' && (
+            {certificate.status === 'ready' && (
               <button
                 onClick={() => openPickupVerification(certificate.reference_number)}
                 className="px-6 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 flex items-center gap-2"

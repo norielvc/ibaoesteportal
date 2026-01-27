@@ -18,13 +18,15 @@ CREATE TABLE IF NOT EXISTS certificate_requests (
   
   -- Request Details
   purpose TEXT NOT NULL,
-  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'ready', 'released', 'cancelled')),
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'ready', 'ready_for_pickup', 'released', 'cancelled')),
   
   -- Administrative
   date_issued TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   date_released TIMESTAMP WITH TIME ZONE,
   processed_by UUID REFERENCES users(id),
   remarks TEXT,
+  certificate_file_path TEXT,
+  certificate_generated_at TIMESTAMP WITH TIME ZONE,
   
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

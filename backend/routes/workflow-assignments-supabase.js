@@ -168,7 +168,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       if (assignment.step_id === 2) { // Staff review -> Captain approval
         newRequestStatus = 'processing';
       } else if (assignment.step_id === 3) { // Captain approval -> Ready for pickup
-        newRequestStatus = 'approved';
+        newRequestStatus = 'ready';
         
         // 🎯 CAPTAIN APPROVAL COMPLETE - TRIGGER POST-APPROVAL WORKFLOW
         console.log(`🎉 Captain approved request ${assignment.certificate_requests.reference_number}`);
@@ -184,7 +184,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       }
     } else if (action === 'reject') {
       newStatus = 'completed';
-      newRequestStatus = 'rejected';
+      newRequestStatus = 'cancelled'; // Changed from 'rejected' to match DB constraint
     } else if (action === 'return') {
       newStatus = 'completed';
       newRequestStatus = 'pending'; // Return to previous step
@@ -339,8 +339,8 @@ async function processPostApprovalWorkflow(requestId, requestData) {
         step_name: 'Post-Approval Processing',
         action: 'completed',
         performed_by: 'system',
-        previous_status: 'approved',
-        new_status: 'ready_for_pickup',
+        previous_status: 'ready',
+        new_status: 'ready',
         comments: `Certificate generated and QR code created. Ready for pickup.`
       }]);
 
@@ -365,8 +365,8 @@ async function processPostApprovalWorkflow(requestId, requestData) {
         step_name: 'Post-Approval Processing',
         action: 'failed',
         performed_by: 'system',
-        previous_status: 'approved',
-        new_status: 'approved',
+        previous_status: 'ready',
+        new_status: 'ready',
         comments: `Post-approval workflow failed: ${error.message}`
       }]);
 
