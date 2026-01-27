@@ -182,38 +182,13 @@ export default function QRScanHistoryPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
-                <History className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">QR Scan History</h1>
-                <p className="text-sm text-gray-500">View and manage scanned QR codes</p>
-              </div>
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
+              <History className="w-6 h-6 text-blue-600" />
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setIsClearModalOpen(true)}
-                className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all border border-red-100 font-semibold text-sm shadow-sm"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Clear</span>
-              </button>
-              <button
-                onClick={exportToCSV}
-                className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-semibold text-sm shadow-md shadow-emerald-500/20"
-              >
-                <Download className="w-4 h-4" />
-                <span>Export CSV</span>
-              </button>
-              <button
-                onClick={loadScans}
-                className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold text-sm shadow-md shadow-blue-500/20"
-              >
-                <RefreshCw className="w-4 h-4" />
-                <span>Refresh</span>
-              </button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">QR Scan History</h1>
+              <p className="text-sm text-gray-500">View and manage scanned QR codes</p>
             </div>
           </div>
         </div>
@@ -270,8 +245,8 @@ export default function QRScanHistoryPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
                 Search QR Data
@@ -299,19 +274,41 @@ export default function QRScanHistoryPage() {
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent outline-none transition-all text-sm"
               />
             </div>
+          </div>
 
-            <div className="flex items-end">
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedDate('');
-                  setCurrentPage(1);
-                }}
-                className="w-full px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 hover:text-gray-900 transition-all font-semibold text-sm border border-gray-200"
-              >
-                Clear Filters
-              </button>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedDate('');
+                setCurrentPage(1);
+              }}
+              className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 hover:text-gray-900 transition-all font-bold text-sm border border-gray-200"
+            >
+              <X className="w-4 h-4" />
+              <span>Clear Filters</span>
+            </button>
+            <button
+              onClick={() => setIsClearModalOpen(true)}
+              className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all border border-red-100 font-bold text-sm"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Clear History</span>
+            </button>
+            <button
+              onClick={exportToCSV}
+              className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 font-bold text-sm"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export CSV</span>
+            </button>
+            <button
+              onClick={loadScans}
+              className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all border border-blue-100 font-bold text-sm"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Refresh List</span>
+            </button>
           </div>
         </div>
 
