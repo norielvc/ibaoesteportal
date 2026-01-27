@@ -402,6 +402,38 @@ router.get('/duplicates', authenticateToken, async (req, res) => {
   }
 });
 
+// DELETE /api/qr-scans/:id - Delete a specific scan record
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`🗑️ Deleting QR scan ID: ${id}`);
+
+    const { error } = await supabase
+      .from('qr_scans')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error deleting QR scan:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to delete scan record'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Scan record deleted successfully'
+    });
+  } catch (error) {
+    console.error('❌ Error in DELETE /qr-scans/:id:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
 // DELETE /api/qr-scans - Clear all scan history
 router.delete('/', authenticateToken, async (req, res) => {
   try {

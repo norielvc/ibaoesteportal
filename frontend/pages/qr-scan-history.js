@@ -83,6 +83,36 @@ export default function QRScanHistoryPage() {
 
   const [selectedScan, setSelectedScan] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const handleDeleteScan = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this specific scan record?')) return;
+
+    try {
+      setDeletingId(id);
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/qr-scans/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Record deleted successfully');
+        setIsViewModalOpen(false);
+        loadScans();
+        loadStats();
+        loadDuplicates();
+      } else {
+        toast.error(data.error || 'Failed to delete record');
+      }
+    } catch (err) {
+      console.error('Error deleting scan:', err);
+      toast.error('System error occurred');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -752,7 +782,7 @@ Device Info: ${JSON.stringify(scan.device_info, null, 2)}
       {/* Scan Details Modal */}
       {isViewModalOpen && selectedScan && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
             <div className="px-8 py-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -760,96 +790,117 @@ Device Info: ${JSON.stringify(scan.device_info, null, 2)}
                   <Info className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Scan Details</h3>
-                  <p className="text-blue-100 text-xs">Full information for record #{selectedScan.id}</p>
+                  <h3 className="text-xl font-bold">Scan Record Details</h3>
+                  <p className="text-blue-100 text-xs tracking-tight">Viewing full metadata for Database UUID: {selectedScan.id}</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsViewModalOpen(false)}
                 className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+                disabled={deletingId === selectedScan.id}
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Information Section */}
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Household-Family ID</label>
-                    <div className="text-lg font-mono font-bold text-blue-600 flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-blue-600 mr-2 animate-pulse"></div>
-                      {parseQRData(selectedScan.qr_data).id}
+            <div className="p-10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                {/* Left Side: Primary Information */}
+                <div className="lg:col-span-7 space-y-8">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Household-Family ID</label>
+                      <div className="text-xl font-mono font-black text-blue-700 flex items-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-blue-600 mr-2.5 animate-pulse"></div>
+                        {parseQRData(selectedScan.qr_data).id}
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Scanner Type</label>
+                      <div className="text-lg font-bold text-gray-800 flex items-center">
+                        <Smartphone className="w-5 h-5 text-gray-400 mr-2.5" />
+                        <span className="capitalize">{selectedScan.scanner_type}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Full Name</label>
-                    <div className="text-lg font-bold text-gray-900 flex items-center">
-                      <User className="w-5 h-5 text-gray-400 mr-2" />
+                  <div className="bg-white p-7 rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Principal Beneficiary Name</label>
+                    <div className="text-2xl font-black text-gray-900 flex items-center">
+                      <div className="w-10 h-10 bg-blue-100 rounded-2xl flex items-center justify-center mr-4">
+                        <User className="w-6 h-6 text-blue-600" />
+                      </div>
                       {parseQRData(selectedScan.qr_data).name}
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Address Location</label>
-                    <div className="text-sm font-medium text-gray-700 flex items-start">
-                      <MapPin className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                      {parseQRData(selectedScan.qr_data).address}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Special Remarks</label>
-                    <div className="text-sm font-semibold italic text-emerald-600 bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
-                      "{parseQRData(selectedScan.qr_data).remarks}"
+                  <div className="bg-white p-7 rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Registered Address</label>
+                    <div className="text-base font-semibold text-gray-700 flex items-start">
+                      <div className="w-10 h-10 bg-red-50 rounded-2xl flex items-center justify-center mr-4 flex-shrink-0">
+                        <MapPin className="w-6 h-6 text-red-500" />
+                      </div>
+                      <div className="pt-2">
+                        {parseQRData(selectedScan.qr_data).address}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Audit Section */}
-                <div className="space-y-6 bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Scan Timeline</label>
-                    <div className="flex items-center text-sm font-medium text-gray-900">
-                      <Clock className="w-4 h-4 text-blue-500 mr-2" />
-                      {new Date(selectedScan.scan_timestamp).toLocaleString('en-US', {
-                        dateStyle: 'full',
-                        timeStyle: 'medium'
-                      })}
+                {/* Right Side: Audit & Secondary Details */}
+                <div className="lg:col-span-5 space-y-6">
+                  <div className="bg-emerald-50 p-7 rounded-3xl border border-emerald-100 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-100/50 rounded-full -mr-12 -mt-12"></div>
+                    <label className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest block mb-3">Status/Remarks</label>
+                    <p className="text-base font-bold italic text-emerald-800 leading-relaxed">
+                      "{parseQRData(selectedScan.qr_data).remarks}"
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50/80 p-7 rounded-3xl border border-gray-200">
+                    <div className="space-y-6">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-100">
+                          <Clock className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase block">Scan Timestamp</label>
+                          <p className="text-sm font-bold text-gray-900">{new Date(selectedScan.scan_timestamp).toLocaleString()}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-100">
+                          <Activity className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase block">Authorized Staff</label>
+                          <p className="text-sm font-bold text-gray-900">{selectedScan.users ? `${selectedScan.users.first_name} ${selectedScan.users.last_name}` : 'Unknown'}</p>
+                          <p className="text-[10px] text-gray-500 font-medium">{selectedScan.users?.email}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Captured By</label>
-                    <div className="flex items-center text-sm font-medium text-gray-900">
-                      <Activity className="w-4 h-4 text-purple-500 mr-2" />
-                      {selectedScan.users ? `${selectedScan.users.first_name} ${selectedScan.users.last_name}` : 'Unknown'}
-                    </div>
-                    <div className="text-[10px] text-gray-500 ml-6">{selectedScan.users?.email}</div>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Device/Scanner Metadata</label>
-                    <div className="flex items-center text-sm font-medium text-gray-900">
-                      <Smartphone className="w-4 h-4 text-orange-500 mr-2" />
-                      <span className="capitalize">{selectedScan.scanner_type} Scanner</span>
-                    </div>
-                    <div className="mt-2 text-[10px] font-mono text-gray-400 bg-white p-3 rounded-xl border border-gray-200 overflow-hidden break-words">
-                      {selectedScan.device_info?.userAgent || 'Internal System Scan'}
-                    </div>
+                  <div className="p-5 bg-orange-50/30 rounded-3xl border border-orange-100">
+                    <label className="text-[10px] font-bold text-orange-700 uppercase tracking-widest block mb-2 flex items-center">
+                      <Info className="w-3 h-3 mr-1" />
+                      Device Platform
+                    </label>
+                    <p className="text-[10px] font-mono text-gray-500 line-clamp-2">
+                      {selectedScan.device_info?.userAgent || 'No Agent Detected'}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Raw Data Row */}
-              <div className="mt-8 pt-6 border-t border-gray-100">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Complete QR Encoded Data</label>
-                <div className="bg-gray-900 text-blue-200 p-4 rounded-2xl font-mono text-[11px] leading-relaxed break-all relative group overflow-hidden">
-                  <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="bg-white/10 text-white px-2 py-1 rounded text-[8px] uppercase font-bold">Verified Hash</span>
+              {/* Raw Data Section */}
+              <div className="mt-10 pt-8 border-t border-gray-100">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Complete Encoded Payload</label>
+                <div className="bg-gray-900 text-blue-300 p-6 rounded-3xl font-mono text-xs leading-relaxed break-all shadow-inner relative group">
+                  <div className="absolute top-4 right-4 flex space-x-2">
+                    <span className="px-3 py-1 bg-white/10 rounded-full text-[8px] font-black uppercase text-white backdrop-blur-md border border-white/20">SHA-256 Verified Scan</span>
                   </div>
                   {selectedScan.qr_data}
                 </div>
@@ -857,10 +908,26 @@ Device Info: ${JSON.stringify(scan.device_info, null, 2)}
             </div>
 
             {/* Modal Footer */}
-            <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 flex justify-end">
+            <div className="px-10 py-7 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <button
+                onClick={() => handleDeleteScan(selectedScan.id)}
+                disabled={deletingId === selectedScan.id}
+                className="w-full sm:w-auto px-8 py-3 bg-red-50 text-red-600 rounded-2xl font-bold text-sm hover:bg-red-100 transition-all active:scale-95 flex items-center justify-center space-x-2 border border-red-100"
+              >
+                {deletingId === selectedScan.id ? (
+                  <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete Record</span>
+                  </>
+                )}
+              </button>
+
               <button
                 onClick={() => setIsViewModalOpen(false)}
-                className="px-8 py-2.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all active:scale-95"
+                disabled={deletingId === selectedScan.id}
+                className="w-full sm:w-auto px-12 py-3 bg-gray-900 text-white rounded-2xl font-bold text-sm hover:bg-gray-800 transition-all active:scale-95 shadow-lg shadow-gray-200"
               >
                 Close Details
               </button>
