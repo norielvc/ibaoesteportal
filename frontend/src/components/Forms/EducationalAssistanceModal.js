@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { X, GraduationCap, User, MapPin, Phone, Award, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, GraduationCap, User, MapPin, Phone, Award, FileText, AlertCircle, CheckCircle, Pen } from 'lucide-react';
+import SignatureInput from '../UI/SignatureInput';
 
 export default function EducationalAssistanceModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
@@ -25,6 +26,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
   const [referenceNumber, setReferenceNumber] = useState('');
+  const [signature, setSignature] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -49,6 +51,13 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate signature
+    if (!signature) {
+      setSubmitStatus('error');
+      return;
+    }
+    
     setIsSubmitting(true);
     setSubmitStatus(null);
 
@@ -59,7 +68,8 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
         ...formData,
         fullAddress: generateFullAddress(),
         age: parseInt(formData.age),
-        gwa: formData.gwa ? parseFloat(formData.gwa) : null
+        gwa: formData.gwa ? parseFloat(formData.gwa) : null,
+        signature: signature // Include signature data
       };
 
       const response = await fetch(`${API_URL}/api/educational-assistance`, {
@@ -82,6 +92,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
           cellphoneNumber: '', yearGrade: '', schoolToAttend: '', schoolAttending: '',
           academicAwards: '', gwa: ''
         });
+        setSignature(null);
       } else {
         setSubmitStatus('error');
         console.error('Submission error:', result.message);
@@ -444,6 +455,28 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
               </div>
             </div>
 
+            {/* Digital Signature */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-4">
+                <Pen className="w-5 h-5 text-orange-600" />
+                <h3 className="text-lg font-semibold text-gray-800">Digital Signature</h3>
+              </div>
+
+              <SignatureInput
+                onSignatureChange={setSignature}
+                label="Applicant's Signature"
+                required={true}
+              />
+
+              <div className="mt-3 text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="font-medium text-yellow-800 mb-1">Important:</p>
+                <p className="text-yellow-700">
+                  By providing your digital signature, you certify that all information provided is true and accurate. 
+                  This signature has the same legal effect as a handwritten signature.
+                </p>
+              </div>
+            </div>
+
           </form>
         </div>
 
@@ -460,7 +493,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
           <button
             type="submit"
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !signature}
             className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
           >
             {isSubmitting ? (

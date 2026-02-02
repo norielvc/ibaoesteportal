@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Settings Page Signature Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 30px;
+        }
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            color: #03254c;
+            border-bottom-color: #03254c;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .signature-section {
+            background: #f9fafb;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        .signature-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 4px;
+        }
+        .signature-tab {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .signature-tab.active {
+            background: white;
+            color: #007bff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .signature-canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: crosshair;
+            background: white;
+            display: block;
+            margin: 0 auto;
+        }
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #03254c;
+            background-color: #f8f9fa;
+        }
+        .controls {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .btn {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #03254c;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #02203d;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .signature-list {
+            margin-top: 24px;
+        }
+        .signature-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: white;
+        }
+        .signature-item.default {
+            border-color: #03254c;
+            background: #f0f9ff;
+        }
+        .signature-preview {
+            width: 96px;
+            height: 48px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        .signature-info h4 {
+            margin: 0 0 4px 0;
+            font-weight: 500;
+        }
+        .signature-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 500;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+        .badge-default {
+            background: #03254c;
+            color: white;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .hidden {
+            display: none;
+        }
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+        .info-box h4 {
+            margin: 0 0 8px 0;
+            color: #1e40af;
+            font-weight: 600;
+        }
+        .info-box ul {
+            margin: 0;
+            padding-left: 16px;
+            color: #1e40af;
+        }
+        .info-box li {
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ Settings - E-Signature Integration</h1>
+        <p>Test the signature functionality integrated into the settings page.</p>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchMainTab('general')">General</button>
+            <button class="tab" onclick="switchMainTab('signatures')">🖊️ Signatures</button>
+            <button class="tab" onclick="switchMainTab('security')">Security</button>
+        </div>
+
+        <!-- General Tab -->
+        <div id="general-tab" class="tab-content active">
+            <h3>General Settings</h3>
+            <p>This would contain general system settings...</p>
+        </div>
+
+        <!-- Signatures Tab -->
+        <div id="signatures-tab" class="tab-content">
+            <h3>Digital Signature Management</h3>
+            
+            <!-- Create New Signature -->
+            <div class="signature-section">
+                <h4>Create New Signature</h4>
+                
+                <!-- Signature Method Tabs -->
+                <div class="signature-tabs">
+                    <button class="signature-tab active" onclick="switchSignatureTab('draw')">✏️ Draw Signature</button>
+                    <button class="signature-tab" onclick="switchSignatureTab('upload')">📁 Upload Image</button>
+                </div>
+
+                <!-- Draw Signature Tab -->
+                <div id="draw-signature" class="signature-method">
+                    <canvas id="signatureCanvas" class="signature-canvas" width="600" height="200"></canvas>
+                    <div class="controls">
+                        <button class="btn btn-secondary" onclick="clearSignature()">🔄 Clear</button>
+                        <button class="btn btn-primary" onclick="saveSignature()" disabled id="saveBtn">💾 Save Signature</button>
+                    </div>
+                    <p style="text-align: center; color: #666; font-size: 12px; margin-top: 10px;">
+                        Sign above using your mouse or finger
+                    </p>
+                </div>
+
+                <!-- Upload Signature Tab -->
+                <div id="upload-signature" class="signature-method hidden">
+                    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                        <div>
+                            <p>📁 Click to upload or drag and drop</p>
+                            <p style="color: #666; font-size: 12px;">PNG or JPEG up to 1MB</p>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/png,image/jpeg" style="display: none;" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+
+            <!-- Saved Signatures -->
+            <div class="signature-list">
+                <h4>Saved Signatures (<span id="signatureCount">2</span>)</h4>
+                
+                <!-- Sample Signature 1 -->
+                <div class="signature-item default">
+                    <div style="display: flex; align-items: center;">
+                        <div class="signature-preview">
+                            <span style="font-style: italic; color: #666;">John Doe</span>
+                        </div>
+                        <div class="signature-info">
+                            <h4>
+                                Signature 1
+                                <span class="badge badge-default">Default</span>
+                            </h4>
+                            <p>Created January 15, 2024</p>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-sm btn-secondary" onclick="togglePreview(1)">👁️ Preview</button>
+                        <button class="btn btn-sm btn-secondary" onclick="deleteSignature(1)">🗑️ Delete</button>
+                    </div>
+                </div>
+
+                <!-- Sample Signature 2 -->
+                <div class="signature-item">
+                    <div style="display: flex; align-items: center;">
+                        <div class="signature-preview">
+                            <span style="font-style: italic; color: #666;">J. Doe</span>
+                        </div>
+                        <div class="signature-info">
+                            <h4>Signature 2</h4>
+                            <p>Created January 10, 2024</p>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-sm btn-primary" onclick="setDefault(2)">Set Default</button>
+                        <button class="btn btn-sm btn-secondary" onclick="togglePreview(2)">👁️ Preview</button>
+                        <button class="btn btn-sm btn-secondary" onclick="deleteSignature(2)">🗑️ Delete</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h4>🛡️ About Digital Signatures</h4>
+                <ul>
+                    <li>Your signatures are securely stored and encrypted</li>
+                    <li>Default signature will be used automatically in forms</li>
+                    <li>You can create multiple signatures for different purposes</li>
+                    <li>Signatures are legally binding for barangay documents</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Security Tab -->
+        <div id="security-tab" class="tab-content">
+            <h3>Security Settings</h3>
+            <p>This would contain security-related settings...</p>
+        </div>
+    </div>
+
+    <script>
+        let canvas, ctx;
+        let isDrawing = false;
+        let hasSignature = false;
+        let signatureData = null;
+        let currentSignatureMethod = 'draw';
+
+        // Initialize canvas
+        document.addEventListener('DOMContentLoaded', function() {
+            canvas = document.getElementById('signatureCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Set up canvas
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Clear canvas with white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Mouse events
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            // Touch events for mobile
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+            
+            // Prevent scrolling when touching the canvas
+            canvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+            });
+            canvas.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            });
+        });
+
+        function switchMainTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show/hide tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active');
+        }
+
+        function switchSignatureTab(method) {
+            currentSignatureMethod = method;
+            
+            // Update tab buttons
+            document.querySelectorAll('.signature-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show/hide method content
+            document.getElementById('draw-signature').classList.toggle('hidden', method !== 'draw');
+            document.getElementById('upload-signature').classList.toggle('hidden', method !== 'upload');
+            
+            // Reset signature when switching methods
+            resetSignature();
+        }
+
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const coords = getCoordinates(e);
+            ctx.beginPath();
+            ctx.moveTo(coords.x, coords.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const coords = getCoordinates(e);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+            
+            hasSignature = true;
+            document.getElementById('saveBtn').disabled = false;
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                            e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        function clearSignature() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            resetSignature();
+        }
+
+        function resetSignature() {
+            hasSignature = false;
+            signatureData = null;
+            document.getElementById('saveBtn').disabled = true;
+        }
+
+        function saveSignature() {
+            if (currentSignatureMethod === 'draw' && hasSignature) {
+                signatureData = canvas.toDataURL('image/png');
+                alert('Signature saved! In the real app, this would be sent to the server.');
+                console.log('Signature data:', signatureData);
+                
+                // Update signature count
+                const count = parseInt(document.getElementById('signatureCount').textContent);
+                document.getElementById('signatureCount').textContent = count + 1;
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Validate file
+            if (!file.type.match(/^image\/(png|jpeg|jpg)$/)) {
+                alert('Please select a PNG or JPEG image file.');
+                return;
+            }
+            
+            if (file.size > 1024 * 1024) {
+                alert('File size must be less than 1MB.');
+                return;
+            }
+            
+            // Read file
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                signatureData = e.target.result;
+                hasSignature = true;
+                alert('Signature uploaded! In the real app, this would be sent to the server.');
+                console.log('Signature data:', signatureData);
+                
+                // Update signature count
+                const count = parseInt(document.getElementById('signatureCount').textContent);
+                document.getElementById('signatureCount').textContent = count + 1;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function togglePreview(id) {
+            alert(`Preview signature ${id} (functionality would show/hide signature preview)`);
+        }
+
+        function setDefault(id) {
+            alert(`Set signature ${id} as default (functionality would update default signature)`);
+        }
+
+        function deleteSignature(id) {
+            if (confirm(`Are you sure you want to delete signature ${id}?`)) {
+                alert(`Signature ${id} deleted (functionality would remove from server)`);
+                
+                // Update signature count
+                const count = parseInt(document.getElementById('signatureCount').textContent);
+                document.getElementById('signatureCount').textContent = Math.max(0, count - 1);
+            }
+        }
+
+        // Drag and drop functionality
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#03254c';
+            this.style.backgroundColor = '#f0f9ff';
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ddd';
+            this.style.backgroundColor = 'white';
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ddd';
+            this.style.backgroundColor = 'white';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                handleFileUpload({ target: { files: files } });
+            }
+        });
+    </script>
+</body>
+</html>

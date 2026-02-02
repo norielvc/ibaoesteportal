@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Signature API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Signature API Test</h1>
+    <p>Test the signature API endpoints to debug issues.</p>
+
+    <div class="test-section">
+        <h3>1. Test Authentication</h3>
+        <p>First, you need to login to get a token.</p>
+        <input type="email" id="email" placeholder="Email" value="admin@iba-o-este.gov.ph">
+        <input type="password" id="password" placeholder="Password" value="admin123">
+        <button class="btn" onclick="testLogin()">Login</button>
+        <div id="loginResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Test Get Signatures</h3>
+        <button class="btn" onclick="testGetSignatures()">Get Signatures</button>
+        <div id="getResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Test Save Signature</h3>
+        <button class="btn" onclick="testSaveSignature()">Save Test Signature</button>
+        <div id="saveResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Current Token</h3>
+        <button class="btn" onclick="showToken()">Show Current Token</button>
+        <div id="tokenResult" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5005';
+        let authToken = localStorage.getItem('token');
+
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${isError ? 'error' : 'success'}`;
+            element.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.token) {
+                    authToken = data.token;
+                    localStorage.setItem('token', authToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showResult('loginResult', `✅ Login successful!\nToken: ${authToken.substring(0, 50)}...\nUser: ${data.user.firstName} ${data.user.lastName}`);
+                } else {
+                    showResult('loginResult', `❌ Login failed: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult('loginResult', `❌ Network error: ${error.message}`, true);
+            }
+        }
+
+        async function testGetSignatures() {
+            if (!authToken) {
+                showResult('getResult', '❌ Please login first', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/user/signatures`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let resultText = `✅ Get signatures successful!\nFound ${data.signatures.length} signatures:\n\n`;
+                    
+                    data.signatures.forEach((sig, index) => {
+                        resultText += `Signature ${index + 1}:\n`;
+                        resultText += `- Name: ${sig.name}\n`;
+                        resultText += `- Created: ${new Date(sig.created_at).toLocaleString()}\n`;
+                        resultText += `- Has Data: ${sig.signature_data ? 'Yes' : 'No'}\n`;
+                        resultText += `- Data Length: ${sig.signature_data ? sig.signature_data.length : 0} chars\n\n`;
+                    });
+                    
+                    showResult('getResult', resultText);
+                    
+                    // Show signature previews
+                    if (data.signatures.length > 0) {
+                        const previewDiv = document.createElement('div');
+                        previewDiv.innerHTML = '<h4>Signature Previews:</h4>';
+                        
+                        data.signatures.forEach((sig, index) => {
+                            if (sig.signature_data) {
+                                const imgDiv = document.createElement('div');
+                                imgDiv.style.marginTop = '10px';
+                                imgDiv.innerHTML = `
+                                    <p><strong>${sig.name}:</strong></p>
+                                    <img src="${sig.signature_data}" alt="Signature ${index + 1}" 
+                                         style="max-width: 300px; height: 60px; object-fit: contain; border: 1px solid #ddd; background: white;" />
+                                `;
+                                previewDiv.appendChild(imgDiv);
+                            }
+                        });
+                        
+                        document.getElementById('getResult').appendChild(previewDiv);
+                    }
+                } else {
+                    showResult('getResult', `❌ Get signatures failed: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult('getResult', `❌ Network error: ${error.message}`, true);
+            }
+        }
+
+        async function testSaveSignature() {
+            if (!authToken) {
+                showResult('saveResult', '❌ Please login first', true);
+                return;
+            }
+
+            // Create a simple test signature (base64 encoded 1x1 pixel PNG)
+            const testSignature = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77zgAAAABJRU5ErkJggg==';
+
+            try {
+                const response = await fetch(`${API_URL}/api/user/signatures`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        signatureData: testSignature,
+                        name: 'Test Signature',
+                        isDefault: true
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('saveResult', `✅ Save signature successful!\n${JSON.stringify(data, null, 2)}`);
+                } else {
+                    showResult('saveResult', `❌ Save signature failed: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult('saveResult', `❌ Network error: ${error.message}`, true);
+            }
+        }
+
+        function showToken() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token) {
+                showResult('tokenResult', `Current Token: ${token.substring(0, 100)}...\n\nUser Data: ${user}`);
+            } else {
+                showResult('tokenResult', '❌ No token found. Please login first.', true);
+            }
+        }
+
+        // Auto-load token on page load
+        window.onload = function() {
+            if (authToken) {
+                showResult('tokenResult', `Token loaded from localStorage: ${authToken.substring(0, 50)}...`);
+            }
+        };
+    </script>
+</body>
+</html>

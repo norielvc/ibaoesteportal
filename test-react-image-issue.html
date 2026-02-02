@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Image Issue Test</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { border: 2px solid #ddd; padding: 20px; margin: 20px 0; }
+        .image-container { border: 1px solid #ccc; padding: 10px; margin: 10px 0; background: white; }
+    </style>
+</head>
+<body>
+    <h1>🧪 React Image Rendering Test</h1>
+    
+    <div class="test-container">
+        <h3>1. Plain HTML Image (Control Test)</h3>
+        <div class="image-container">
+            <img id="plainImage" alt="Plain HTML test" style="max-width: 200px; max-height: 100px; border: 1px solid red;" />
+        </div>
+        <div id="plainResult">Loading...</div>
+    </div>
+
+    <div class="test-container">
+        <h3>2. React Component Image</h3>
+        <div id="reactContainer"></div>
+    </div>
+
+    <div class="test-container">
+        <h3>3. Fetch Real Signature Data</h3>
+        <button onclick="fetchAndTestRealSignature()">Fetch Real Signature</button>
+        <div id="realSignatureResult"></div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function TestImageComponent({ signatureData, title }) {
+            const [loadStatus, setLoadStatus] = useState('loading');
+            const [error, setError] = useState(null);
+
+            const handleLoad = () => {
+                console.log(`✅ React image loaded: ${title}`);
+                setLoadStatus('success');
+            };
+
+            const handleError = (e) => {
+                console.error(`❌ React image failed: ${title}`, e);
+                setLoadStatus('error');
+                setError(e.message || 'Unknown error');
+            };
+
+            if (!signatureData) {
+                return <div>No signature data provided</div>;
+            }
+
+            return (
+                <div className="image-container">
+                    <img
+                        src={signatureData}
+                        alt={title}
+                        style={{ maxWidth: '200px', maxHeight: '100px', border: '1px solid blue' }}
+                        onLoad={handleLoad}
+                        onError={handleError}
+                    />
+                    <div style={{ marginTop: '10px', fontSize: '14px' }}>
+                        Status: {loadStatus === 'success' ? '✅ Loaded' : 
+                                loadStatus === 'error' ? '❌ Failed' : '🔄 Loading...'}
+                        {error && <div style={{ color: 'red' }}>Error: {error}</div>}
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [testSignature, setTestSignature] = useState(null);
+
+            useEffect(() => {
+                // Set a test signature
+                const testData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77zgAAAABJRU5ErkJggg==';
+                setTestSignature(testData);
+            }, []);
+
+            return (
+                <div>
+                    <TestImageComponent 
+                        signatureData={testSignature} 
+                        title="React Test Image"
+                    />
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('reactContainer'));
+    </script>
+
+    <script>
+        // Test plain HTML image
+        const plainImg = document.getElementById('plainImage');
+        const testSignature = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77zgAAAABJRU5ErkJggg==';
+        
+        plainImg.onload = () => {
+            document.getElementById('plainResult').innerHTML = '✅ Plain HTML image loaded successfully';
+        };
+        
+        plainImg.onerror = (e) => {
+            document.getElementById('plainResult').innerHTML = '❌ Plain HTML image failed to load';
+            console.error('Plain image error:', e);
+        };
+        
+        plainImg.src = testSignature;
+
+        // Function to fetch real signature data
+        async function fetchAndTestRealSignature() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                document.getElementById('realSignatureResult').innerHTML = '❌ No auth token found. Please login in another tab first.';
+                return;
+            }
+
+            try {
+                document.getElementById('realSignatureResult').innerHTML = '🔄 Fetching real signature...';
+                
+                const response = await fetch('http://localhost:5005/api/user/signatures', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.signatures.length > 0) {
+                    const realSignature = data.signatures[0];
+                    
+                    let html = `
+                        <div style="margin: 10px 0;">
+                            <h4>Real Signature Test: ${realSignature.name}</h4>
+                            <p>Data length: ${realSignature.signature_data.length}</p>
+                            
+                            <div class="image-container">
+                                <img 
+                                    src="${realSignature.signature_data}" 
+                                    alt="Real signature"
+                                    style="max-width: 300px; max-height: 150px; border: 1px solid green;"
+                                    onload="this.nextElementSibling.innerHTML = '✅ Real signature loaded successfully';"
+                                    onerror="this.nextElementSibling.innerHTML = '❌ Real signature failed to load'; console.error('Real signature error');"
+                                />
+                                <div>Loading...</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('realSignatureResult').innerHTML = html;
+                } else {
+                    document.getElementById('realSignatureResult').innerHTML = '❌ No signatures found';
+                }
+            } catch (error) {
+                document.getElementById('realSignatureResult').innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

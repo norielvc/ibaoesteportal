@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Signature Preview</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .signature-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: white;
+        }
+        .signature-item.default {
+            border-color: #03254c;
+            background: #f0f9ff;
+        }
+        .signature-preview {
+            width: 96px;
+            height: 48px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            overflow: hidden;
+        }
+        .signature-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .signature-info h4 {
+            margin: 0 0 4px 0;
+            font-weight: 500;
+        }
+        .signature-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 500;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+        .badge-default {
+            background: #03254c;
+            color: white;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #03254c;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #02203d;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .large-preview {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .large-preview img {
+            max-width: 400px;
+            max-height: 120px;
+            object-fit: contain;
+            border: 1px solid #ddd;
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖊️ Signature Preview Test</h1>
+        <p>Test how signature previews should look in the settings page.</p>
+
+        <div style="margin: 20px 0;">
+            <button class="btn btn-primary" onclick="loadSignatures()">Load My Signatures</button>
+            <button class="btn btn-secondary" onclick="createTestSignatures()">Create Test Signatures</button>
+        </div>
+
+        <div id="loginSection" style="margin: 20px 0; padding: 20px; background: #f0f9ff; border-radius: 8px;">
+            <h3>Login First:</h3>
+            <input type="email" id="email" placeholder="Email" value="admin@iba-o-este.gov.ph" style="margin-right: 10px; padding: 8px;">
+            <input type="password" id="password" placeholder="Password" value="admin123" style="margin-right: 10px; padding: 8px;">
+            <button class="btn btn-primary" onclick="login()">Login</button>
+            <div id="loginResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Saved Signatures (<span id="signatureCount">0</span>)</h2>
+        <div id="signaturesList">
+            <p style="text-align: center; color: #666; padding: 40px;">
+                Click "Load My Signatures" to see your saved signatures
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Sample Preview Layout</h2>
+        <p>This shows how signature previews should look:</p>
+        
+        <!-- Sample Signature 1 -->
+        <div class="signature-item default">
+            <div style="display: flex; align-items: center;">
+                <div class="signature-preview">
+                    <canvas id="sampleCanvas1" width="96" height="48"></canvas>
+                </div>
+                <div class="signature-info">
+                    <h4>
+                        My Main Signature
+                        <span class="badge badge-default">Default</span>
+                    </h4>
+                    <p>Created February 2, 2026</p>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-sm btn-secondary" onclick="togglePreview('sample1')">👁️ Preview</button>
+                <button class="btn btn-sm btn-secondary">🗑️ Delete</button>
+            </div>
+        </div>
+        <div id="sample1-preview" class="large-preview" style="display: none;">
+            <h5>Large Preview:</h5>
+            <canvas id="sampleCanvas1Large" width="400" height="120"></canvas>
+        </div>
+
+        <!-- Sample Signature 2 -->
+        <div class="signature-item">
+            <div style="display: flex; align-items: center;">
+                <div class="signature-preview">
+                    <canvas id="sampleCanvas2" width="96" height="48"></canvas>
+                </div>
+                <div class="signature-info">
+                    <h4>Alternative Signature</h4>
+                    <p>Created January 28, 2026</p>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-sm btn-primary">Set Default</button>
+                <button class="btn btn-sm btn-secondary" onclick="togglePreview('sample2')">👁️ Preview</button>
+                <button class="btn btn-sm btn-secondary">🗑️ Delete</button>
+            </div>
+        </div>
+        <div id="sample2-preview" class="large-preview" style="display: none;">
+            <h5>Large Preview:</h5>
+            <canvas id="sampleCanvas2Large" width="400" height="120"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5005';
+        let authToken = localStorage.getItem('token');
+
+        // Draw sample signatures
+        function drawSampleSignatures() {
+            // Sample 1 - cursive style
+            const canvas1 = document.getElementById('sampleCanvas1');
+            const ctx1 = canvas1.getContext('2d');
+            ctx1.fillStyle = 'white';
+            ctx1.fillRect(0, 0, 96, 48);
+            ctx1.strokeStyle = '#000';
+            ctx1.lineWidth = 1.5;
+            ctx1.beginPath();
+            ctx1.moveTo(10, 30);
+            ctx1.quadraticCurveTo(25, 15, 40, 25);
+            ctx1.quadraticCurveTo(55, 35, 70, 20);
+            ctx1.quadraticCurveTo(85, 30, 86, 25);
+            ctx1.stroke();
+
+            // Large version
+            const canvasLarge1 = document.getElementById('sampleCanvas1Large');
+            const ctxLarge1 = canvasLarge1.getContext('2d');
+            ctxLarge1.fillStyle = 'white';
+            ctxLarge1.fillRect(0, 0, 400, 120);
+            ctxLarge1.strokeStyle = '#000';
+            ctxLarge1.lineWidth = 3;
+            ctxLarge1.beginPath();
+            ctxLarge1.moveTo(50, 70);
+            ctxLarge1.quadraticCurveTo(120, 30, 180, 60);
+            ctxLarge1.quadraticCurveTo(240, 90, 300, 40);
+            ctxLarge1.quadraticCurveTo(350, 70, 370, 60);
+            ctxLarge1.stroke();
+
+            // Sample 2 - simple style
+            const canvas2 = document.getElementById('sampleCanvas2');
+            const ctx2 = canvas2.getContext('2d');
+            ctx2.fillStyle = 'white';
+            ctx2.fillRect(0, 0, 96, 48);
+            ctx2.strokeStyle = '#000';
+            ctx2.lineWidth = 1.5;
+            ctx2.beginPath();
+            ctx2.moveTo(15, 24);
+            ctx2.lineTo(35, 20);
+            ctx2.lineTo(55, 28);
+            ctx2.lineTo(75, 22);
+            ctx2.stroke();
+
+            // Large version
+            const canvasLarge2 = document.getElementById('sampleCanvas2Large');
+            const ctxLarge2 = canvasLarge2.getContext('2d');
+            ctxLarge2.fillStyle = 'white';
+            ctxLarge2.fillRect(0, 0, 400, 120);
+            ctxLarge2.strokeStyle = '#000';
+            ctxLarge2.lineWidth = 3;
+            ctxLarge2.beginPath();
+            ctxLarge2.moveTo(70, 60);
+            ctxLarge2.lineTo(150, 50);
+            ctxLarge2.lineTo(230, 70);
+            ctxLarge2.lineTo(310, 55);
+            ctxLarge2.stroke();
+        }
+
+        function togglePreview(id) {
+            const preview = document.getElementById(id + '-preview');
+            if (preview.style.display === 'none') {
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.token) {
+                    authToken = data.token;
+                    localStorage.setItem('token', authToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    document.getElementById('loginResult').innerHTML = '✅ Login successful!';
+                    document.getElementById('loginResult').className = 'result success';
+                    document.getElementById('loginResult').style.display = 'block';
+                } else {
+                    document.getElementById('loginResult').innerHTML = `❌ Login failed: ${data.message}`;
+                    document.getElementById('loginResult').className = 'result error';
+                    document.getElementById('loginResult').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = `❌ Network error: ${error.message}`;
+                document.getElementById('loginResult').className = 'result error';
+                document.getElementById('loginResult').style.display = 'block';
+            }
+        }
+
+        async function loadSignatures() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/user/signatures`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    displaySignatures(data.signatures, data.defaultSignatureId);
+                } else {
+                    alert(`Failed to load signatures: ${data.message}`);
+                }
+            } catch (error) {
+                alert(`Network error: ${error.message}`);
+            }
+        }
+
+        function displaySignatures(signatures, defaultId) {
+            const container = document.getElementById('signaturesList');
+            document.getElementById('signatureCount').textContent = signatures.length;
+
+            if (signatures.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No signatures found. Create some signatures first!</p>';
+                return;
+            }
+
+            let html = '';
+            signatures.forEach((sig, index) => {
+                const isDefault = sig.id === defaultId;
+                html += `
+                    <div class="signature-item ${isDefault ? 'default' : ''}">
+                        <div style="display: flex; align-items: center;">
+                            <div class="signature-preview">
+                                ${sig.signature_data ? 
+                                    `<img src="${sig.signature_data}" alt="Signature" />` : 
+                                    '<span style="color: #999;">No preview</span>'
+                                }
+                            </div>
+                            <div class="signature-info">
+                                <h4>
+                                    ${sig.name}
+                                    ${isDefault ? '<span class="badge badge-default">Default</span>' : ''}
+                                </h4>
+                                <p>Created ${new Date(sig.created_at).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            ${!isDefault ? '<button class="btn btn-sm btn-primary">Set Default</button>' : ''}
+                            <button class="btn btn-sm btn-secondary" onclick="toggleRealPreview('${sig.id}')">👁️ Preview</button>
+                            <button class="btn btn-sm btn-secondary">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    ${sig.signature_data ? `
+                        <div id="preview-${sig.id}" class="large-preview" style="display: none;">
+                            <h5>Large Preview:</h5>
+                            <img src="${sig.signature_data}" alt="Large signature preview" />
+                        </div>
+                    ` : ''}
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function toggleRealPreview(id) {
+            const preview = document.getElementById(`preview-${id}`);
+            if (preview) {
+                preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function createTestSignatures() {
+            alert('This would create test signatures. Use the main settings page to create real signatures.');
+        }
+
+        // Initialize
+        window.onload = function() {
+            drawSampleSignatures();
+            if (authToken) {
+                document.getElementById('loginResult').innerHTML = '✅ Already logged in';
+                document.getElementById('loginResult').className = 'result success';
+                document.getElementById('loginResult').style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>

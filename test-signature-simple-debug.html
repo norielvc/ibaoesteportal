@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Signature Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-box {
+            border: 2px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .signature-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            background: white;
+            display: inline-block;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        .error { color: red; background: #ffe6e6; padding: 10px; margin: 10px 0; }
+        .success { color: green; background: #e6ffe6; padding: 10px; margin: 10px 0; }
+        .info { color: blue; background: #e6f3ff; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Simple Signature Debug</h1>
+    
+    <div class="test-box">
+        <h3>Step 1: Login</h3>
+        <input type="email" id="email" placeholder="Email" value="admin@iba-o-este.gov.ph" style="padding: 8px; margin: 5px;">
+        <input type="password" id="password" placeholder="Password" value="admin123" style="padding: 8px; margin: 5px;">
+        <button class="btn" onclick="login()">Login</button>
+        <div id="loginStatus"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>Step 2: Fetch Signatures</h3>
+        <button class="btn" onclick="fetchSignatures()">Get Signatures</button>
+        <div id="fetchStatus"></div>
+        <div id="signatureList"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>Step 3: Test Known Good Image</h3>
+        <p>Testing with a minimal PNG to verify browser can display data URLs:</p>
+        <div class="signature-container">
+            <img 
+                src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77zgAAAABJRU5ErkJggg==" 
+                alt="Test 1x1 pixel"
+                style="width: 50px; height: 50px; border: 1px solid red;"
+                onload="document.getElementById('testResult').innerHTML = '✅ Browser can display data URLs'"
+                onerror="document.getElementById('testResult').innerHTML = '❌ Browser cannot display data URLs - this is the problem!'"
+            />
+        </div>
+        <div id="testResult" class="info">Testing...</div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5005';
+        let authToken = localStorage.getItem('token');
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            document.getElementById('loginStatus').innerHTML = '<div class="info">🔄 Logging in...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.token) {
+                    authToken = data.token;
+                    localStorage.setItem('token', authToken);
+                    document.getElementById('loginStatus').innerHTML = '<div class="success">✅ Login successful!</div>';
+                } else {
+                    document.getElementById('loginStatus').innerHTML = `<div class="error">❌ Login failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('loginStatus').innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchSignatures() {
+            if (!authToken) {
+                document.getElementById('fetchStatus').innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            document.getElementById('fetchStatus').innerHTML = '<div class="info">🔄 Fetching signatures...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/user/signatures`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    document.getElementById('fetchStatus').innerHTML = `<div class="success">✅ Found ${data.signatures.length} signatures</div>`;
+                    
+                    let html = '';
+                    data.signatures.forEach((sig, index) => {
+                        const dataLength = sig.signature_data ? sig.signature_data.length : 0;
+                        const isValidFormat = sig.signature_data && sig.signature_data.startsWith('data:image/') && sig.signature_data.includes('base64,');
+                        
+                        html += `
+                            <div style="border: 1px solid #ccc; margin: 15px 0; padding: 15px; border-radius: 5px;">
+                                <h4>📝 ${sig.name}</h4>
+                                <p><strong>Created:</strong> ${new Date(sig.created_at).toLocaleDateString()}</p>
+                                <p><strong>Data Length:</strong> ${dataLength} characters</p>
+                                <p><strong>Valid Format:</strong> ${isValidFormat ? '✅ Yes' : '❌ No'}</p>
+                                
+                                ${sig.signature_data ? `
+                                    <div style="margin: 10px 0;">
+                                        <p><strong>Preview Test:</strong></p>
+                                        <div class="signature-container">
+                                            <img 
+                                                src="${sig.signature_data}" 
+                                                alt="Signature ${index + 1}"
+                                                style="max-width: 300px; max-height: 100px; border: 1px solid #999;"
+                                                onload="this.nextElementSibling.innerHTML = '✅ Image loaded successfully'; this.nextElementSibling.className = 'success';"
+                                                onerror="this.style.display='none'; this.nextElementSibling.innerHTML = '❌ Image failed to load'; this.nextElementSibling.className = 'error'; this.nextElementSibling.style.display='block';"
+                                            />
+                                            <div style="display: none;"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <details style="margin: 10px 0;">
+                                        <summary style="cursor: pointer; color: blue;">🔍 Show Data URL (first 200 chars)</summary>
+                                        <div style="background: #f5f5f5; padding: 10px; margin: 10px 0; font-family: monospace; word-break: break-all; font-size: 11px;">
+                                            ${sig.signature_data.substring(0, 200)}...
+                                        </div>
+                                    </details>
+                                ` : '<p style="color: #999;">No signature data</p>'}
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('signatureList').innerHTML = html;
+                } else {
+                    document.getElementById('fetchStatus').innerHTML = `<div class="error">❌ Failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('fetchStatus').innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-login if token exists
+        if (authToken) {
+            document.getElementById('loginStatus').innerHTML = '<div class="success">✅ Already logged in</div>';
+        }
+    </script>
+</body>
+</html>

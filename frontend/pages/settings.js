@@ -1,13 +1,27 @@
-import { useState } from 'react';
-import { Settings as SettingsIcon, Save, AlertCircle, CheckCircle, Lock, Bell, Shield, Database } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings as SettingsIcon, Save, AlertCircle, CheckCircle, Lock, Bell, Shield, Database, Pen, Upload, Eye, EyeOff, Trash2 } from 'lucide-react';
 import Layout from '@/components/Layout/Layout';
-import { getUserData, logout } from '@/lib/auth';
+import { getUserData, logout, getAuthToken } from '@/lib/auth';
+import SignatureInput from '@/components/UI/SignatureInput';
+import SignatureImage from '@/components/UI/SignatureImage';
+import SignatureDebugger from '@/components/UI/SignatureDebugger';
 
 export default function Settings() {
   const user = getUserData();
   const [activeTab, setActiveTab] = useState('general');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Signature management state
+  const [signatures, setSignatures] = useState([]);
+  const [newSignature, setNewSignature] = useState(null);
+  const [defaultSignatureId, setDefaultSignatureId] = useState(null);
+  const [loadingSignatures, setLoadingSignatures] = useState(false);
+  const [savingSignature, setSavingSignature] = useState(false);
+  const [showPreview, setShowPreview] = useState({});
+
+  // API Configuration
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
   const [settings, setSettings] = useState({
     // General
@@ -46,9 +60,190 @@ export default function Settings() {
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
+  // Signature management functions
+  const fetchSignatures = async () => {
+    if (!user) {
+      console.log('No user found, skipping signature fetch');
+      return;
+    }
+    
+    setLoadingSignatures(true);
+    try {
+      const token = getAuthToken();
+      console.log('Fetching signatures with token:', token ? 'Token exists' : 'No token');
+      
+      const response = await fetch(`${API_URL}/api/user/signatures`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Fetch signatures response status:', response.status);
+      const data = await response.json();
+      console.log('Fetch signatures response data:', data);
+      
+      if (data.success) {
+        setSignatures(data.signatures || []);
+        setDefaultSignatureId(data.defaultSignatureId);
+        setSuccessMessage(`Loaded ${data.signatures?.length || 0} signatures`);
+        setTimeout(() => setSuccessMessage(''), 3000);
+        
+        // Debug: Log signature data to check structure
+        console.log('Loaded signatures:', data.signatures);
+        if (data.signatures && data.signatures.length > 0) {
+          console.log('First signature structure:', data.signatures[0]);
+          console.log('Signature data field:', data.signatures[0].signature_data ? 'Present' : 'Missing');
+          
+          // Validate signature data format
+          data.signatures.forEach((sig, index) => {
+            if (sig.signature_data) {
+              const isValidDataURL = sig.signature_data.startsWith('data:image/');
+              const hasBase64 = sig.signature_data.includes('base64,');
+              console.log(`Signature ${index + 1} validation:`, {
+                name: sig.name,
+                dataLength: sig.signature_data.length,
+                isValidDataURL,
+                hasBase64,
+                dataStart: sig.signature_data.substring(0, 50)
+              });
+            }
+          });
+        }
+      } else {
+        setErrorMessage(data.message || 'Failed to load signatures');
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Error fetching signatures:', error);
+      setErrorMessage(`Network error: ${error.message}`);
+      setTimeout(() => setErrorMessage(''), 3000);
+    } finally {
+      setLoadingSignatures(false);
+    }
+  };
+
+  const saveSignature = async () => {
+    if (!newSignature) {
+      setErrorMessage('Please create a signature first');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+
+    console.log('Saving signature, user:', user);
+    console.log('Signature data length:', newSignature.length);
+
+    setSavingSignature(true);
+    try {
+      const token = getAuthToken();
+      console.log('Save signature with token:', token ? 'Token exists' : 'No token');
+      
+      const response = await fetch(`${API_URL}/api/user/signatures`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          signatureData: newSignature,
+          name: `Signature ${signatures.length + 1}`,
+          isDefault: signatures.length === 0
+        })
+      });
+
+      console.log('Save signature response status:', response.status);
+      const data = await response.json();
+      console.log('Save signature response data:', data);
+      
+      if (data.success) {
+        setNewSignature(null);
+        fetchSignatures();
+        setSuccessMessage('Signature saved successfully!');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setErrorMessage(data.message || 'Failed to save signature');
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      setErrorMessage(`Network error: ${error.message}`);
+      setTimeout(() => setErrorMessage(''), 3000);
+    } finally {
+      setSavingSignature(false);
+    }
+  };
+
+  const deleteSignature = async (signatureId) => {
+    if (!confirm('Are you sure you want to delete this signature?')) return;
+
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/user/signatures/${signatureId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        fetchSignatures();
+        setSuccessMessage('Signature deleted successfully!');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setErrorMessage(data.message || 'Failed to delete signature');
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Error deleting signature:', error);
+      setErrorMessage('Failed to delete signature');
+      setTimeout(() => setErrorMessage(''), 3000);
+    }
+  };
+
+  const setDefaultSignature = async (signatureId) => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/user/signatures/${signatureId}/default`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setDefaultSignatureId(signatureId);
+        setSuccessMessage('Default signature updated!');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Error setting default signature:', error);
+      setErrorMessage('Failed to update default signature');
+      setTimeout(() => setErrorMessage(''), 3000);
+    }
+  };
+
+  const togglePreview = (signatureId) => {
+    setShowPreview(prev => ({
+      ...prev,
+      [signatureId]: !prev[signatureId]
+    }));
+  };
+
+  // Load signatures when signatures tab is active
+  useEffect(() => {
+    if (activeTab === 'signatures' && user) {
+      fetchSignatures();
+    }
+  }, [activeTab, user]);
+
   const tabs = [
     { id: 'general', label: 'General', icon: SettingsIcon },
     { id: 'security', label: 'Security', icon: Lock },
+    { id: 'signatures', label: 'Signatures', icon: Pen },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'data', label: 'Data & Backup', icon: Database }
   ];
@@ -215,6 +410,170 @@ export default function Settings() {
                     />
                     <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                   </label>
+                </div>
+              </div>
+            )}
+
+            {/* Signatures Settings */}
+            {activeTab === 'signatures' && (
+              <div className="space-y-6">
+                {/* Create New Signature */}
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Signature</h3>
+                  
+                  <SignatureInput
+                    onSignatureChange={setNewSignature}
+                    label="Your Digital Signature"
+                    required={false}
+                  />
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={saveSignature}
+                      disabled={!newSignature || savingSignature}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#03254c] text-white rounded-lg hover:bg-[#02203d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {savingSignature ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      {savingSignature ? 'Saving...' : 'Save Signature'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Saved Signatures */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Saved Signatures ({signatures.length})
+                  </h3>
+
+                  {loadingSignatures ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#03254c]"></div>
+                    </div>
+                  ) : signatures.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                      <Pen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p>No signatures saved yet</p>
+                      <p className="text-sm">Create your first signature above</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {signatures.map((signature) => (
+                        <div
+                          key={signature.id}
+                          className={`border rounded-lg p-4 ${
+                            signature.id === defaultSignatureId
+                              ? 'border-[#03254c] bg-blue-50'
+                              : 'border-gray-200 bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="flex-shrink-0">
+                                {/* Always show a small preview */}
+                                <div className="w-24 h-12 border border-gray-200 rounded bg-white overflow-hidden">
+                                  <SignatureImage
+                                    signatureData={signature.signature_data}
+                                    alt={`Signature: ${signature.name}`}
+                                    className="w-full h-full"
+                                    onLoadSuccess={() => console.log('✅ Signature loaded:', signature.name)}
+                                    onLoadError={() => console.error('❌ Signature failed:', signature.name)}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-900">
+                                  {signature.name}
+                                  {signature.id === defaultSignatureId && (
+                                    <span className="ml-2 px-2 py-1 text-xs bg-[#03254c] text-white rounded-full">
+                                      Default
+                                    </span>
+                                  )}
+                                </h4>
+                                <p className="text-sm text-gray-500">
+                                  Created {new Date(signature.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => togglePreview(signature.id)}
+                                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                                title={showPreview[signature.id] ? 'Hide large preview' : 'Show large preview'}
+                              >
+                                {showPreview[signature.id] ? (
+                                  <EyeOff className="w-4 h-4" />
+                                ) : (
+                                  <Eye className="w-4 h-4" />
+                                )}
+                              </button>
+
+                              {signature.id !== defaultSignatureId && (
+                                <button
+                                  onClick={() => setDefaultSignature(signature.id)}
+                                  className="px-3 py-1 text-sm text-[#03254c] hover:bg-blue-50 rounded transition-colors"
+                                >
+                                  Set Default
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => deleteSignature(signature.id)}
+                                className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                                title="Delete signature"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {/* Large preview when toggled */}
+                          {showPreview[signature.id] && signature.signature_data && (
+                            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                              <h5 className="text-sm font-medium text-gray-700 mb-2">Large Preview:</h5>
+                              <div className="border border-gray-300 rounded bg-white p-4 inline-block">
+                                <SignatureImage
+                                  signatureData={signature.signature_data}
+                                  alt={`Large preview: ${signature.name}`}
+                                  className="max-w-md max-h-32"
+                                  onLoadSuccess={() => console.log('✅ Large preview loaded:', signature.name)}
+                                  onLoadError={() => console.error('❌ Large preview failed:', signature.name)}
+                                />
+                              </div>
+                              
+                              {/* Debug information */}
+                              <div className="mt-4">
+                                <SignatureDebugger 
+                                  signatureData={signature.signature_data}
+                                  name={signature.name}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-800">
+                      <h4 className="font-semibold mb-1">About Digital Signatures</h4>
+                      <ul className="space-y-1 text-blue-700">
+                        <li>• Your signatures are securely stored and encrypted</li>
+                        <li>• Default signature will be used automatically in forms</li>
+                        <li>• You can create multiple signatures for different purposes</li>
+                        <li>• Signatures are legally binding for barangay documents</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

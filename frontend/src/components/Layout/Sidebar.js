@@ -136,6 +136,12 @@ const mainMenuItems = [
         href: '/settings',
         icon: Settings,
         description: 'Configuration'
+      },
+      {
+        name: 'Signature Settings',
+        href: '/signature-settings',
+        icon: FileText,
+        description: 'Manage signatures'
       }
     ]
   }

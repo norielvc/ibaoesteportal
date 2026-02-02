@@ -3,7 +3,13 @@ import { Html, Head, Main, NextScript } from 'next/document';
 export default function Document() {
   return (
     <Html lang="en">
-      <Head />
+      <Head>
+        {/* Allow data URLs for signature images */}
+        <meta 
+          httpEquiv="Content-Security-Policy" 
+          content="img-src 'self' data: blob: https:; object-src 'none';" 
+        />
+      </Head>
       <body>
         <Main />
         <NextScript />
