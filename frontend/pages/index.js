@@ -12,6 +12,11 @@ import BusinessPermitModal from '@/components/Forms/BusinessPermitModal';
 import EducationalAssistanceModal from '@/components/Forms/EducationalAssistanceModal';
 
 export default function BarangayPortal() {
+  // Version Check Log
+  useEffect(() => {
+    console.log('🚀 Barangay Portal Loaded: Version 2.1 (Synced Officials)');
+  }, []);
+
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
