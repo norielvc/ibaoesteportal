@@ -120,6 +120,9 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
       }
     }));
 
+    // Sort by certificate request creation date (newest first)
+    requests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
     res.json({
       success: true,
       certificates: requests,
