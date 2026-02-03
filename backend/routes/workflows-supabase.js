@@ -40,27 +40,32 @@ const defaultWorkflows = {
   ]
 };
 
-// Load workflows from file
-const loadWorkflows = () => {
+// Helper to get workflows from DB
+const getWorkflowsFromDB = async () => {
   try {
-    if (fs.existsSync(WORKFLOWS_FILE)) {
-      const data = fs.readFileSync(WORKFLOWS_FILE, 'utf8');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error loading workflows:', error);
-  }
-  return defaultWorkflows;
-};
+    const { data, error } = await supabase
+      .from('workflow_configurations')
+      .select('*');
 
-// Save workflows to file
-const saveWorkflowsToFile = (workflows) => {
-  try {
-    fs.writeFileSync(WORKFLOWS_FILE, JSON.stringify(workflows, null, 2));
-    return true;
+    if (error) throw error;
+
+    const workflows = {};
+    // Initialize with defaults
+    Object.keys(defaultWorkflows).forEach(key => {
+      workflows[key] = defaultWorkflows[key];
+    });
+
+    if (data && data.length > 0) {
+      data.forEach(config => {
+        if (config.workflow_config && config.workflow_config.steps) {
+          workflows[config.certificate_type] = config.workflow_config.steps;
+        }
+      });
+    }
+    return workflows;
   } catch (error) {
-    console.error('Error saving workflows:', error);
-    return false;
+    console.error('Error fetching workflows from DB:', error);
+    return defaultWorkflows;
   }
 };
 
@@ -71,8 +76,8 @@ const saveWorkflowsToFile = (workflows) => {
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const workflows = loadWorkflows();
-    console.log('Workflows loaded:', Object.keys(workflows));
+    const workflows = await getWorkflowsFromDB();
+    console.log('Workflows loaded from DB:', Object.keys(workflows));
 
     res.status(200).json({
       success: true,
@@ -103,16 +108,28 @@ router.put('/', authenticateToken, requireAdmin, async (req, res) => {
       });
     }
 
-    const saved = saveWorkflowsToFile(workflows);
+    // Save each workflow type to database
+    const promises = Object.keys(workflows).map(async (certType) => {
+      const steps = workflows[certType];
 
-    if (!saved) {
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to save workflows'
-      });
-    }
+      const { error } = await supabase
+        .from('workflow_configurations')
+        .upsert([{
+          certificate_type: certType,
+          workflow_config: { steps: steps },
+          is_active: true,
+          updated_at: new Date().toISOString()
+        }], { onConflict: 'certificate_type' });
 
-    console.log('Workflows saved successfully');
+      if (error) {
+        console.error(`Error saving workflow for ${certType}:`, error);
+        throw error;
+      }
+    });
+
+    await Promise.all(promises);
+
+    console.log('Workflows saved to DB successfully');
 
     res.status(200).json({
       success: true,
@@ -136,8 +153,8 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
   try {
     console.log('=== SYNCING WORKFLOW ASSIGNMENTS WITH UI CONFIGURATION ===');
 
-    // Load current workflows from file
-    const workflows = loadWorkflows();
+    // Load current workflows from DB
+    const workflows = await getWorkflowsFromDB();
 
     // Get all users to find the correct IDs
     const { data: users, error: usersError } = await supabase
