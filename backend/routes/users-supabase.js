@@ -53,6 +53,7 @@ router.get('/', requireAdmin, async (req, res) => {
       email: user.email,
       role: user.role,
       status: user.status,
+      position: user.position,
       avatar: user.avatar,
       lastLogin: user.last_login,
       loginCount: user.login_count,
@@ -100,6 +101,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
       email: user.email,
       role: user.role,
       status: user.status,
+      position: user.position,
       avatar: user.avatar,
       lastLogin: user.last_login,
       loginCount: user.login_count,
@@ -127,7 +129,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
  */
 router.post('/', requireAdmin, validateUserCreation, async (req, res) => {
   try {
-    const { firstName, lastName, email, password, role = 'user', status = 'active' } = req.body;
+    const { firstName, lastName, email, password, role = 'user', status = 'active', position = '' } = req.body;
 
     // Check if user already exists
     const { data: existingUser } = await supabase
@@ -155,7 +157,8 @@ router.post('/', requireAdmin, validateUserCreation, async (req, res) => {
         last_name: lastName,
         password_hash: hashedPassword,
         role,
-        status
+        status,
+        position
       }])
       .select()
       .single();
@@ -174,6 +177,7 @@ router.post('/', requireAdmin, validateUserCreation, async (req, res) => {
       email: newUser.email,
       role: newUser.role,
       status: newUser.status,
+      position: newUser.position,
       avatar: newUser.avatar,
       lastLogin: newUser.last_login,
       loginCount: newUser.login_count,
@@ -233,7 +237,7 @@ router.put('/:id/reset-password', requireAdmin, async (req, res) => {
     // Update password
     const { error: updateError } = await supabase
       .from('users')
-      .update({ 
+      .update({
         password_hash: hashedPassword,
         updated_at: new Date().toISOString()
       })
@@ -266,7 +270,7 @@ router.put('/:id/reset-password', requireAdmin, async (req, res) => {
  */
 router.put('/:id', requireAdmin, async (req, res) => {
   try {
-    const { firstName, lastName, email, password, role, status } = req.body;
+    const { firstName, lastName, email, password, role, status, position } = req.body;
     const userId = req.params.id;
 
     // Check if user exists
@@ -307,6 +311,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
     if (password) updateData.password_hash = await bcrypt.hash(password, 12);
     if (role) updateData.role = role;
     if (status) updateData.status = status;
+    if (position !== undefined) updateData.position = position;
     updateData.updated_at = new Date().toISOString();
 
     // Update user
@@ -331,6 +336,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
       email: updatedUser.email,
       role: updatedUser.role,
       status: updatedUser.status,
+      position: updatedUser.position,
       avatar: updatedUser.avatar,
       lastLogin: updatedUser.last_login,
       loginCount: updatedUser.login_count,

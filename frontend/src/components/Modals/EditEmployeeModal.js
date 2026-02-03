@@ -6,6 +6,7 @@ export default function EditEmployeeModal({ employee, onClose, onSubmit }) {
     firstName: '',
     lastName: '',
     email: '',
+    position: '',
     role: 'user',
     status: 'active'
   });
@@ -18,6 +19,7 @@ export default function EditEmployeeModal({ employee, onClose, onSubmit }) {
         firstName: employee.firstName || '',
         lastName: employee.lastName || '',
         email: employee.email || '',
+        position: employee.position || '',
         role: employee.role || 'user',
         status: employee.status || 'active'
       });
@@ -52,7 +54,7 @@ export default function EditEmployeeModal({ employee, onClose, onSubmit }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -135,6 +137,19 @@ export default function EditEmployeeModal({ employee, onClose, onSubmit }) {
             {errors.email && (
               <p className="text-sm text-red-600 mt-1">{errors.email}</p>
             )}
+          </div>
+
+          {/* Position */}
+          <div>
+            <label className="label">Position</label>
+            <input
+              type="text"
+              name="position"
+              value={formData.position}
+              onChange={handleChange}
+              placeholder="e.g., Barangay Secretary, Clerk, Staff"
+              className="input"
+            />
           </div>
 
           {/* Role */}

@@ -9,6 +9,7 @@ export default function AddEmployeeModal({ onClose, onSubmit }) {
     email: '',
     password: '',
     confirmPassword: '',
+    position: '',
     role: 'user',
     status: 'active'
   });
@@ -50,7 +51,7 @@ export default function AddEmployeeModal({ onClose, onSubmit }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -135,6 +136,19 @@ export default function AddEmployeeModal({ onClose, onSubmit }) {
             {errors.email && (
               <p className="text-sm text-red-600 mt-1">{errors.email}</p>
             )}
+          </div>
+
+          {/* Position */}
+          <div>
+            <label className="label">Position</label>
+            <input
+              type="text"
+              name="position"
+              value={formData.position}
+              onChange={handleChange}
+              placeholder="e.g., Barangay Secretary, Clerk, Staff"
+              className="input"
+            />
           </div>
 
           {/* Password */}
