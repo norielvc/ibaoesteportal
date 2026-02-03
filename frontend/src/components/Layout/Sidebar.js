@@ -20,7 +20,8 @@ import {
   History,
   ChevronDown,
   ChevronRight,
-  Package
+  Package,
+  PenTool
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout, getUserData } from '@/lib/auth';
@@ -43,6 +44,12 @@ const mainMenuItems = [
     href: '/pickup-management',
     icon: Package,
     description: 'Certificate pickups'
+  },
+  {
+    name: 'My Signature',
+    href: '/signature-settings',
+    icon: PenTool,
+    description: 'Manage your signature'
   },
   {
     name: 'QR Scanner',
@@ -136,12 +143,6 @@ const mainMenuItems = [
         href: '/settings',
         icon: Settings,
         description: 'Configuration'
-      },
-      {
-        name: 'Signature Settings',
-        href: '/signature-settings',
-        icon: FileText,
-        description: 'Manage signatures'
       }
     ]
   }
