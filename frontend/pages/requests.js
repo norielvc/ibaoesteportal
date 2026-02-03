@@ -1235,7 +1235,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
             }}>
             <div className="flex-1 space-y-4 text-center mt-6">
               {/* Captain's Portrait */}
-              <div className="mb-2 mx-auto overflow-hidden rounded-lg shadow-md border-2 border-blue-900" style={{ width: '100px', height: '120px' }}>
+              <div className="mb-2 mx-auto overflow-hidden rounded-lg" style={{ width: '100px', height: '120px' }}>
                 {logos.captainImage ? (
                   <img src={logos.captainImage} alt="Captain" className="w-full h-full object-cover" />
                 ) : (
@@ -1255,21 +1255,6 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                     <p key={i} className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.bgColor || '#1e40af' }}>{c}</p>
                   ))}
                 </div>
-              </div>
-
-              <div>
-                <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>SK CHAIRPERSON</p>
-                <p className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.bgColor || '#1e40af' }}>{officials.skChairman}</p>
-              </div>
-
-              <div>
-                <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>BARANGAY SECRETARY</p>
-                <p className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.bgColor || '#1e40af' }}>{officials.secretary}</p>
-              </div>
-
-              <div>
-                <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>BARANGAY TREASURER</p>
-                <p className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.bgColor || '#1e40af' }}>{officials.treasurer}</p>
               </div>
             </div>
           </div>
