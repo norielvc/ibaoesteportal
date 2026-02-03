@@ -701,24 +701,24 @@ export default function OfficialsPage() {
                 <div className="text-center mb-4">
                   <p className="mb-1 text-xs" style={{
                     color: officials.sidebarStyle?.labelColor,
-                    fontWeight: officials.sidebarStyle?.titleWeight || 'bold'
+                    fontWeight: officials.sidebarStyle?.titleWeight === 'normal' ? '400' : officials.sidebarStyle?.titleWeight === 'medium' ? '500' : officials.sidebarStyle?.titleWeight === 'bold' ? '700' : officials.sidebarStyle?.titleWeight === 'extrabold' ? '800' : '700'
                   }}>PUNONG BARANGAY</p>
                   <p style={{
                     fontSize: `${officials.sidebarStyle?.textSize || 13}px`,
-                    fontWeight: officials.sidebarStyle?.nameWeight || 'bold'
+                    fontWeight: officials.sidebarStyle?.nameWeight === 'normal' ? '400' : officials.sidebarStyle?.nameWeight === 'medium' ? '500' : officials.sidebarStyle?.nameWeight === 'semibold' ? '600' : officials.sidebarStyle?.nameWeight === 'bold' ? '700' : officials.sidebarStyle?.nameWeight === 'extrabold' ? '800' : '700'
                   }}>{officials.chairman}</p>
                 </div>
 
                 <div className="text-center">
                   <p className="mb-1 text-xs" style={{
                     color: officials.sidebarStyle?.labelColor,
-                    fontWeight: officials.sidebarStyle?.titleWeight || 'bold'
+                    fontWeight: officials.sidebarStyle?.titleWeight === 'normal' ? '400' : officials.sidebarStyle?.titleWeight === 'medium' ? '500' : officials.sidebarStyle?.titleWeight === 'bold' ? '700' : officials.sidebarStyle?.titleWeight === 'extrabold' ? '800' : '700'
                   }}>SANGGUNIANG BARANGAY MEMBERS</p>
                   <div className="space-y-1">
                     {officials.councilors?.slice(0, 3).map((c, i) => (
                       <p key={i} style={{
                         fontSize: `${(officials.sidebarStyle?.textSize || 11) - 2}px`,
-                        fontWeight: officials.sidebarStyle?.nameWeight === 'bold' ? 'semibold' : officials.sidebarStyle?.nameWeight || 'semibold'
+                        fontWeight: officials.sidebarStyle?.nameWeight === 'normal' ? '400' : officials.sidebarStyle?.nameWeight === 'medium' ? '500' : officials.sidebarStyle?.nameWeight === 'semibold' ? '600' : officials.sidebarStyle?.nameWeight === 'bold' ? '700' : officials.sidebarStyle?.nameWeight === 'extrabold' ? '800' : '700'
                       }}>{c}</p>
                     ))}
                     <p className="text-xs opacity-50">...</p>
