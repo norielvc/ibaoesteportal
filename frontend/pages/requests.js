@@ -1443,27 +1443,37 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                 This certification is being issued upon the request of above mentioned person for below purpose(s):
               </p>
 
-              <p className="mb-8 font-semibold pl-4">
-                {formData.purpose || '_________________________________'}
-              </p>
+              <div className="mb-8 pl-4 min-h-[8em]">
+                <p className="font-semibold whitespace-pre-wrap leading-relaxed">
+                  {formData.purpose || '_________________________________\n\n\n\n'}
+                </p>
+              </div>
 
-              <p className="mb-8">
+              <p className="mb-12">
                 Issued this <strong>{currentDate}</strong> at Barangay Iba O' Este, Calumpit, Bulacan.
               </p>
 
               {/* Resident's Signature */}
-              <div className="mb-8">
+              <div className="mb-12">
+                <div className="h-16"></div> {/* Space for 3-4 lines signature */}
                 <div className="w-64 border-b border-black"></div>
                 <p className="text-sm mt-1">Resident's Signature / Thumb Mark</p>
               </div>
 
-              <p className="mb-12 font-semibold">TRULY YOURS,</p>
+              <p className="mb-8 font-semibold">TRULY YOURS,</p>
 
-              {/* Chairman Signature */}
-              <div className="mt-auto">
-                <div className="w-64">
-                  <p className="font-bold text-lg border-b border-black pb-1">{officials.chairman}</p>
-                  <p className="text-sm">BARANGAY CHAIRMAN</p>
+              {/* Signatures Grid */}
+              <div className="mt-8 flex justify-between items-end w-full pr-4">
+                {/* Secretary Signature */}
+                <div className="w-48 text-center bg-transparent">
+                  <p className="font-bold text-base uppercase whitespace-nowrap">{officials.secretary}</p>
+                  <p className="text-xs">Barangay Secretary</p>
+                </div>
+
+                {/* Chairman Signature */}
+                <div className="w-48 text-center bg-transparent">
+                  <p className="font-bold text-base uppercase whitespace-nowrap">{officials.chairman}</p>
+                  <p className="text-sm">Punong Barangay</p>
                 </div>
               </div>
             </div>
