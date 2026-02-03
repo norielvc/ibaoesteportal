@@ -18,11 +18,17 @@ const mapOfficialsToConfig = (officials) => {
     else if (o.position_type === 'treasurer') config.treasurer = o.name;
     else if (o.position_type === 'sk_chairman') config.skChairman = o.name;
     else if (o.position_type === 'kagawad') {
-      // Assuming order_index 0-6 maps to councilors indices
-      // Adjust index to be 0-based if DB is 1-based (DB is likely 1-7 for kagawads)
-      // Let's assume order_index follows the creation order or explicit index
-      const idx = (o.order_index || 1) - 1; // Map 1->0, 2->1
-      if (idx >= 0 && idx < 7) config.councilors[idx] = o.name;
+      // Parse "Kagawad 1", "Kagawad 2" etc. to determine index
+      const match = o.position.match(/Kagawad\s+(\d+)/i);
+      if (match) {
+        const idx = parseInt(match[1], 10) - 1; // "Kagawad 1" -> 0
+        if (idx >= 0 && idx < 7) config.councilors[idx] = o.name;
+      } else {
+        // Fallback: Use order_index if position name doesn't match
+        // Kagawads usually start at order_index 5 in our seed data
+        const idx = (o.order_index || 5) - 5;
+        if (idx >= 0 && idx < 7) config.councilors[idx] = o.name;
+      }
     }
     // Staff mappings
     else if (o.position === 'Administrator') config.administrator = o.name; // Map by specific position name for staff if type is generic 'staff'
