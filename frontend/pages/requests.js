@@ -137,9 +137,10 @@ export default function RequestsPage() {
       'processing': 2,   // Processing means staff approved, now needs Captain (step index 2)
       'staff_review': 1, // At staff review step
       'captain_approval': 2, // At captain approval step
-      'ready': 3,        // Ready for pickup
-      'ready_for_pickup': 3,
-      'released': 4      // Released, final step
+      'oic_review': 3,   // NEW: Needs OIC processing (step index 3)
+      'ready': 4,        // Ready for pickup
+      'ready_for_pickup': 4,
+      'released': 5      // Released, final step
     };
 
     const stepIndex = statusToStepIndex[request.status] || 0;
@@ -162,19 +163,16 @@ export default function RequestsPage() {
     if (!workflowSteps || !Array.isArray(workflowSteps)) return null;
 
     // Status to step index mapping
-    // pending = needs Staff Review (step 1)
-    // processing = needs Captain Approval (step 2)
-    // approved = at Ready step (step 3)
     const statusToStepIndex = {
-      'pending': 1,      // Pending requests need Staff Review (step index 1)
-      'submitted': 1,    // Same as pending
-      'processing': 2,   // Processing means staff approved, now needs Captain (step index 2)
-      'staff_review': 1, // At staff review step
-      'captain_approval': 2, // At captain approval step
-      'approved': 3,     // Approved, at ready step
-      'ready': 3,        // Ready for pickup
-      'ready_for_pickup': 3,
-      'released': 4      // Released, final step
+      'pending': 1,
+      'submitted': 1,
+      'processing': 2,
+      'staff_review': 1,
+      'captain_approval': 2,
+      'oic_review': 3,
+      'ready': 4,
+      'ready_for_pickup': 4,
+      'released': 5
     };
 
     const index = statusToStepIndex[request.status] || 0;
@@ -194,10 +192,11 @@ export default function RequestsPage() {
       'submitted': 'bg-blue-100 text-blue-800 border-blue-200',
       'under_review': 'bg-purple-100 text-purple-800 border-purple-200',
       'processing': 'bg-purple-100 text-purple-800 border-purple-200',
+      'oic_review': 'bg-indigo-100 text-indigo-800 border-indigo-200', // Color for Releasing Team step
       'approved': 'bg-green-100 text-green-800 border-green-200',
       'rejected': 'bg-red-100 text-red-800 border-red-200',
       'returned': 'bg-orange-100 text-orange-800 border-orange-200',
-      'ready': 'bg-green-100 text-green-800 border-green-200', // Make ready look like approved
+      'ready': 'bg-green-100 text-green-800 border-green-200',
       'ready_for_pickup': 'bg-green-100 text-green-800 border-green-200',
       'released': 'bg-gray-100 text-gray-800 border-gray-200'
     };
@@ -243,24 +242,13 @@ export default function RequestsPage() {
     // For approve action, move to next workflow step
     if (action === 'approve') {
       const workflowSteps = workflows[request.certificate_type];
-      if (!workflowSteps || !Array.isArray(workflowSteps)) {
-        // Fallback to simple status progression if no workflow
-        const statusFlow = {
-          'pending': 'processing',
-          'processing': 'approved',
-          'approved': 'released'
-        };
-        return statusFlow[currentStatus] || 'approved';
-      }
 
       // Status progression:
-      // pending -> processing (staff approved, moves to captain)
-      // processing -> approved (captain approved, moves to ready)
-      // approved -> released (released to applicant)
       const statusFlow = {
         'pending': 'processing',
         'submitted': 'processing',
-        'processing': 'ready', // Move directly to ready (captain approval)
+        'processing': 'oic_review', // After Captain, go to OIC
+        'oic_review': 'ready',      // After OIC, go to Ready
         'approved': 'released',
         'ready': 'released',
         'ready_for_pickup': 'released'
@@ -272,7 +260,7 @@ export default function RequestsPage() {
     if (action === 'reject') return 'cancelled';
     if (action === 'return') return 'pending';
 
-    return 'ready'; // fallback
+    return 'ready';
   };
 
   const submitAction = async () => {

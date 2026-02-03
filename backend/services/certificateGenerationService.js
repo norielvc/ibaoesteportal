@@ -3,100 +3,196 @@ const path = require('path');
 const { supabase } = require('./supabaseClient');
 
 class CertificateGenerationService {
-  constructor() {
-    this.certificatesDir = path.join(__dirname, '../generated-certificates');
-    this.ensureCertificatesDirectory();
-  }
-
-  ensureCertificatesDirectory() {
-    if (!fs.existsSync(this.certificatesDir)) {
-      fs.mkdirSync(this.certificatesDir, { recursive: true });
+    constructor() {
+        this.certificatesDir = path.join(__dirname, '../generated-certificates');
+        this.ensureCertificatesDirectory();
     }
-  }
 
-  async generateCertificate(requestId) {
-    try {
-      console.log(`Generating certificate for request ID: ${requestId}`);
-
-      // Get certificate request details
-      const { data: request, error: requestError } = await supabase
-        .from('certificate_requests')
-        .select('*')
-        .eq('id', requestId)
-        .single();
-
-      if (requestError) throw requestError;
-      if (!request) throw new Error('Certificate request not found');
-
-      // Get barangay officials data
-      const { data: officials, error: officialsError } = await supabase
-        .from('officials')
-        .select('*')
-        .eq('is_active', true)
-        .single();
-
-      if (officialsError) {
-        console.warn('No officials data found, using defaults');
-      }
-
-      // Generate certificate content based on type
-      let certificateContent;
-      switch (request.certificate_type) {
-        case 'barangay_clearance':
-          certificateContent = this.generateBarangayClearanceContent(request, officials);
-          break;
-        case 'certificate_of_indigency':
-          certificateContent = this.generateIndigencyContent(request, officials);
-          break;
-        case 'barangay_residency':
-          certificateContent = this.generateResidencyContent(request, officials);
-          break;
-        default:
-          throw new Error(`Unknown certificate type: ${request.certificate_type}`);
-      }
-
-      // Generate unique filename
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `${request.reference_number}_${timestamp}.html`;
-      const filePath = path.join(this.certificatesDir, filename);
-
-      // Save certificate to file
-      fs.writeFileSync(filePath, certificateContent);
-
-      // Update database with certificate info
-      const { error: updateError } = await supabase
-        .from('certificate_requests')
-        .update({
-          certificate_file_path: filePath,
-          certificate_generated_at: new Date().toISOString(),
-          status: 'ready'
-        })
-        .eq('id', requestId);
-
-      if (updateError) throw updateError;
-
-      console.log(`Certificate generated successfully: ${filename}`);
-      return {
-        success: true,
-        filePath,
-        filename,
-        referenceNumber: request.reference_number
-      };
-
-    } catch (error) {
-      console.error('Error generating certificate:', error);
-      throw error;
+    ensureCertificatesDirectory() {
+        if (!fs.existsSync(this.certificatesDir)) {
+            fs.mkdirSync(this.certificatesDir, { recursive: true });
+        }
     }
-  }
 
-  generateBarangayClearanceContent(request, officials) {
-    const currentDate = new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    // Helper to fetch and map configuration
+    async getBarangayConfig() {
+        // 1. Fetch Officials
+        const { data: officialsRows } = await supabase
+            .from('barangay_officials')
+            .select('*')
+            .eq('is_active', true)
+            .order('order_index', { ascending: true });
 
-    return `
+        // 2. Fetch Settings
+        const { data: settingsRow } = await supabase
+            .from('barangay_settings')
+            .select('value')
+            .eq('key', 'certificate_settings')
+            .single();
+
+        const settings = settingsRow?.value || {}; // Contains headerInfo, logos, styles etc.
+
+        // Map officials to simple keys
+        const officials = {
+            chairman: 'ALEXANDER C. MANIO', // Fallback
+            secretary: 'ROYCE ANN C. GALVEZ',
+            treasurer: 'MA. LUZ S. REYES',
+            // ... map others if needed
+        };
+
+        if (officialsRows) {
+            officialsRows.forEach(o => {
+                if (o.position_type === 'captain') officials.chairman = o.name;
+                else if (o.position_type === 'secretary') officials.secretary = o.name;
+                else if (o.position_type === 'treasurer') officials.treasurer = o.name;
+            });
+        }
+
+        return {
+            officials,
+            ...settings, // headerInfo, logos, styles (headerStyle, countryStyle, etc)
+            // Ensure defaults if settings are empty
+            headerInfo: settings.headerInfo || {
+                country: 'Republic of the Philippines',
+                province: 'Province of Bulacan',
+                municipality: 'Municipality of Calumpit',
+                barangayName: "BARANGAY IBA O' ESTE",
+                officeName: 'Office of the Punong Barangay'
+            },
+            styles: {
+                headerStyle: settings.headerStyle || { borderColor: '#1e40af', bgColor: '#ffffff' },
+                countryStyle: settings.countryStyle || { color: '#666', size: 14 },
+                provinceStyle: settings.provinceStyle || { color: '#666', size: 14 },
+                municipalityStyle: settings.municipalityStyle || { color: '#666', size: 14 },
+                barangayNameStyle: settings.barangayNameStyle || { color: '#1e40af', size: 24, fontWeight: 'bold' },
+                officeNameStyle: settings.officeNameStyle || { color: '#888', size: 12 },
+                bodyStyle: settings.bodyStyle || { textColor: '#000000', titleColor: '#16a34a' },
+                footerStyle: settings.footerStyle || { textColor: '#666666', borderColor: '#ddd' }
+            },
+            logos: settings.logos || { logoSize: 80 }
+        };
+    }
+
+    async generateCertificate(requestId) {
+        try {
+            console.log(`Generating certificate for request ID: ${requestId}`);
+
+            // Get certificate request details
+            const { data: request, error: requestError } = await supabase
+                .from('certificate_requests')
+                .select('*')
+                .eq('id', requestId)
+                .single();
+
+            if (requestError) throw requestError;
+            if (!request) throw new Error('Certificate request not found');
+
+            // Get dynamic configuration
+            const config = await this.getBarangayConfig();
+
+            // Generate certificate content based on type
+            let certificateContent;
+            switch (request.certificate_type) {
+                case 'barangay_clearance':
+                    certificateContent = this.generateBarangayClearanceContent(request, config);
+                    break;
+                case 'certificate_of_indigency':
+                    certificateContent = this.generateIndigencyContent(request, config);
+                    break;
+                case 'barangay_residency':
+                    certificateContent = this.generateResidencyContent(request, config);
+                    break;
+                default:
+                    throw new Error(`Unknown certificate type: ${request.certificate_type}`);
+            }
+
+            // Generate unique filename
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `${request.reference_number}_${timestamp}.html`;
+            const filePath = path.join(this.certificatesDir, filename);
+
+            // Save certificate to file
+            fs.writeFileSync(filePath, certificateContent);
+
+            // Update database with certificate info
+            const { error: updateError } = await supabase
+                .from('certificate_requests')
+                .update({
+                    certificate_file_path: filePath,
+                    certificate_generated_at: new Date().toISOString(),
+                    status: 'ready'
+                })
+                .eq('id', requestId);
+
+            if (updateError) throw updateError;
+
+            console.log(`Certificate generated successfully: ${filename}`);
+            return {
+                success: true,
+                filePath,
+                filename,
+                referenceNumber: request.reference_number
+            };
+
+        } catch (error) {
+            console.error('Error generating certificate:', error);
+            throw error;
+        }
+    }
+
+    // Common Header Generator
+    generateHeader(config) {
+        const { headerInfo, logos, styles } = config;
+        // Handle base64 or path for logos. Ideally, convert paths to absolute or base64 if needed for PDF rendering tools.
+        // Since this saves as HTML, relative paths might fail if opened elsewhere. 
+        // Assuming 'logos.leftLogo' is a URL/Path. User uploads dataURL in frontend, so it's likely base64 data:image/...
+
+        const leftLogoSrc = logos.leftLogo || '';
+        const rightLogoSrc = logos.rightLogo || '';
+        const size = logos.logoSize || 80;
+
+        return `
+        <div class="header" style="border-bottom: 3px solid ${styles.headerStyle.borderColor}; background-color: ${styles.headerStyle.bgColor};">
+            <div class="logo-section">
+                <div class="logo" style="width: ${size}px; height: ${size}px;">
+                    ${leftLogoSrc ? `<img src="${leftLogoSrc}" style="width: 100%; height: 100%; object-fit: contain;">` : ''}
+                </div>
+                <div class="header-text">
+                    <div class="country" style="color: ${styles.countryStyle.color}; font-size: ${styles.countryStyle.size}px; font-weight: ${styles.countryStyle.fontWeight}">${headerInfo.country}</div>
+                    <div class="province" style="color: ${styles.provinceStyle.color}; font-size: ${styles.provinceStyle.size}px; font-weight: ${styles.provinceStyle.fontWeight}">${headerInfo.province}</div>
+                    <div class="municipality" style="color: ${styles.municipalityStyle.color}; font-size: ${styles.municipalityStyle.size}px; font-weight: ${styles.municipalityStyle.fontWeight}">${headerInfo.municipality}</div>
+                    <div class="barangay-name" style="color: ${styles.barangayNameStyle.color}; font-size: ${styles.barangayNameStyle.size}px; font-weight: ${styles.barangayNameStyle.fontWeight}">${headerInfo.barangayName}</div>
+                    <div class="office-name" style="color: ${styles.officeNameStyle.color}; font-size: ${styles.officeNameStyle.size}px; font-weight: ${styles.officeNameStyle.fontWeight}">${headerInfo.officeName}</div>
+                </div>
+                <div class="logo" style="width: ${size}px; height: ${size}px;">
+                     ${rightLogoSrc ? `<img src="${rightLogoSrc}" style="width: 100%; height: 100%; object-fit: contain;">` : ''}
+                </div>
+            </div>
+        </div>
+      `;
+    }
+
+    generateFooter(request, config) {
+        const { styles, contactInfo } = config;
+        return `
+        <div class="footer" style="color: ${styles.footerStyle.textColor}; border-top: 1px solid ${styles.footerStyle.borderColor}; background-color: ${styles.footerStyle.bgColor};">
+            <div>${contactInfo?.address || ''}</div>
+            <div>Reference No: <strong>${request.reference_number}</strong> | Generated on: ${new Date().toLocaleString()}</div>
+            <div>This is a computer-generated certificate. Verify authenticity by scanning the QR code.</div>
+        </div>
+      `;
+    }
+
+    generateBarangayClearanceContent(request, config) {
+        const { officials, styles } = config;
+        const currentDate = new Date().toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        // Default title color if not set in bodyStyle (fallback)
+        const titleColor = styles.bodyStyle.titleColor || '#16a34a';
+
+        return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -105,17 +201,11 @@ class CertificateGenerationService {
     <title>Barangay Clearance - ${request.reference_number}</title>
     <style>
         @page { size: A4; margin: 20mm; }
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.4; }
-        .header { text-align: center; border-bottom: 3px solid #1e40af; padding-bottom: 20px; margin-bottom: 30px; }
+        body { font-family: ${styles.bodyStyle.fontFamily !== 'default' ? styles.bodyStyle.fontFamily : 'Arial, sans-serif'}; margin: 0; padding: 20px; line-height: 1.4; color: ${styles.bodyStyle.textColor}; background-color: ${styles.bodyStyle.bgColor}; }
+        .header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; }
         .logo-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logo { width: 80px; height: 80px; }
         .header-text { flex: 1; text-align: center; }
-        .country { font-size: 14px; color: #666; }
-        .province { font-size: 14px; color: #666; }
-        .municipality { font-size: 14px; color: #666; }
-        .barangay-name { font-size: 24px; font-weight: bold; color: #1e40af; margin: 10px 0; }
-        .office-name { font-size: 12px; color: #888; }
-        .title { text-align: center; font-size: 28px; font-weight: bold; color: #16a34a; margin: 30px 0; text-decoration: underline; }
+        .title { text-align: center; font-size: 28px; font-weight: bold; color: ${titleColor}; margin: 30px 0; text-decoration: underline; }
         .content { margin: 30px 0; }
         .greeting { font-weight: bold; margin-bottom: 20px; }
         .body-text { text-align: justify; margin-bottom: 20px; }
@@ -127,7 +217,7 @@ class CertificateGenerationService {
         .signature-box { text-align: center; width: 200px; }
         .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 50px; }
         .signature-label { font-size: 12px; }
-        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+        .footer { margin-top: 40px; text-align: center; font-size: 10px; padding-top: 10px; }
         .qr-section { position: absolute; top: 20px; right: 20px; text-align: center; }
         .qr-code { width: 80px; height: 80px; border: 1px solid #ddd; }
     </style>
@@ -138,21 +228,9 @@ class CertificateGenerationService {
         <div style="font-size: 8px; margin-top: 5px;">${request.reference_number}</div>
     </div>
 
-    <div class="header">
-        <div class="logo-section">
-            <div class="logo"></div>
-            <div class="header-text">
-                <div class="country">Republic of the Philippines</div>
-                <div class="province">Province of Bulacan</div>
-                <div class="municipality">Municipality of Calumpit</div>
-                <div class="barangay-name">BARANGAY IBA O' ESTE</div>
-                <div class="office-name">Office of the Punong Barangay</div>
-            </div>
-            <div class="logo"></div>
-        </div>
-    </div>
+    ${this.generateHeader(config)}
 
-    <div class="title">BARANGAY CLEARANCE CERTIFICATE</div>
+    <div class="title" style="color: ${titleColor}">BARANGAY CLEARANCE CERTIFICATE</div>
 
     <div class="content">
         <div class="greeting">To Whom It May Concern:</div>
@@ -163,30 +241,12 @@ class CertificateGenerationService {
         </div>
 
         <div class="details">
-            <div class="detail-row">
-                <div class="detail-label">Name:</div>
-                <div class="detail-value">${request.full_name}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Age:</div>
-                <div class="detail-value">${request.age}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Sex:</div>
-                <div class="detail-value">${request.sex}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Civil Status:</div>
-                <div class="detail-value">${request.civil_status}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Address:</div>
-                <div class="detail-value">${request.address}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Purpose:</div>
-                <div class="detail-value">${request.purpose}</div>
-            </div>
+            <div class="detail-row"><div class="detail-label">Name:</div><div class="detail-value">${request.full_name}</div></div>
+            <div class="detail-row"><div class="detail-label">Age:</div><div class="detail-value">${request.age}</div></div>
+            <div class="detail-row"><div class="detail-label">Sex:</div><div class="detail-value">${request.sex}</div></div>
+            <div class="detail-row"><div class="detail-label">Civil Status:</div><div class="detail-value">${request.civil_status}</div></div>
+            <div class="detail-row"><div class="detail-label">Address:</div><div class="detail-value">${request.address}</div></div>
+            <div class="detail-row"><div class="detail-label">Purpose:</div><div class="detail-value">${request.purpose}</div></div>
         </div>
 
         <div class="body-text">
@@ -195,7 +255,7 @@ class CertificateGenerationService {
         </div>
 
         <div class="body-text">
-            Issued this <strong>${currentDate}</strong> at Barangay Iba O' Este, Calumpit, Bulacan.
+            Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName}, ${config.headerInfo.municipality}, ${config.headerInfo.province}.
         </div>
     </div>
 
@@ -203,36 +263,30 @@ class CertificateGenerationService {
         <div class="signature-box">
             <div class="signature-line"></div>
             <div class="signature-label">
-                <strong>${officials?.secretary || 'ROYCE ANN C. GALVEZ'}</strong><br>
+                <strong>${officials.secretary}</strong><br>
                 Barangay Secretary
             </div>
         </div>
         <div class="signature-box">
             <div class="signature-line"></div>
             <div class="signature-label">
-                <strong>${officials?.chairman || 'ALEXANDER C. MANIO'}</strong><br>
+                <strong>${officials.chairman}</strong><br>
                 Punong Barangay
             </div>
         </div>
     </div>
 
-    <div class="footer">
-        <div>Reference No: <strong>${request.reference_number}</strong></div>
-        <div>Generated on: ${new Date().toLocaleString()}</div>
-        <div>This is a computer-generated certificate. Verify authenticity by scanning the QR code.</div>
-    </div>
+    ${this.generateFooter(request, config)}
 </body>
 </html>`;
-  }
+    }
 
-  generateIndigencyContent(request, officials) {
-    const currentDate = new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    generateIndigencyContent(request, config) {
+        const { officials, styles, headerInfo } = config;
+        const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const titleColor = styles.bodyStyle.titleColor || '#16a34a';
 
-    return `
+        return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -241,17 +295,11 @@ class CertificateGenerationService {
     <title>Certificate of Indigency - ${request.reference_number}</title>
     <style>
         @page { size: A4; margin: 20mm; }
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.4; }
-        .header { text-align: center; border-bottom: 3px solid #1e40af; padding-bottom: 20px; margin-bottom: 30px; }
+        body { font-family: ${styles.bodyStyle.fontFamily !== 'default' ? styles.bodyStyle.fontFamily : 'Arial, sans-serif'}; margin: 0; padding: 20px; line-height: 1.4; color: ${styles.bodyStyle.textColor}; background-color: ${styles.bodyStyle.bgColor}; }
+        .header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; }
         .logo-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logo { width: 80px; height: 80px; }
         .header-text { flex: 1; text-align: center; }
-        .country { font-size: 14px; color: #666; }
-        .province { font-size: 14px; color: #666; }
-        .municipality { font-size: 14px; color: #666; }
-        .barangay-name { font-size: 24px; font-weight: bold; color: #1e40af; margin: 10px 0; }
-        .office-name { font-size: 12px; color: #888; }
-        .title { text-align: center; font-size: 28px; font-weight: bold; color: #16a34a; margin: 30px 0; text-decoration: underline; }
+        .title { text-align: center; font-size: 28px; font-weight: bold; color: ${titleColor}; margin: 30px 0; text-decoration: underline; }
         .content { margin: 30px 0; }
         .greeting { font-weight: bold; margin-bottom: 20px; }
         .body-text { text-align: justify; margin-bottom: 20px; }
@@ -263,7 +311,7 @@ class CertificateGenerationService {
         .signature-box { text-align: center; width: 200px; }
         .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 50px; }
         .signature-label { font-size: 12px; }
-        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+        .footer { margin-top: 40px; text-align: center; font-size: 10px; padding-top: 10px; }
         .qr-section { position: absolute; top: 20px; right: 20px; text-align: center; }
         .qr-code { width: 80px; height: 80px; border: 1px solid #ddd; }
     </style>
@@ -274,21 +322,9 @@ class CertificateGenerationService {
         <div style="font-size: 8px; margin-top: 5px;">${request.reference_number}</div>
     </div>
 
-    <div class="header">
-        <div class="logo-section">
-            <div class="logo"></div>
-            <div class="header-text">
-                <div class="country">Republic of the Philippines</div>
-                <div class="province">Province of Bulacan</div>
-                <div class="municipality">Municipality of Calumpit</div>
-                <div class="barangay-name">BARANGAY IBA O' ESTE</div>
-                <div class="office-name">Office of the Punong Barangay</div>
-            </div>
-            <div class="logo"></div>
-        </div>
-    </div>
+    ${this.generateHeader(config)}
 
-    <div class="title">CERTIFICATE OF INDIGENCY</div>
+    <div class="title" style="color: ${titleColor}">CERTIFICATE OF INDIGENCY</div>
 
     <div class="content">
         <div class="greeting">To Whom It May Concern:</div>
@@ -300,30 +336,12 @@ class CertificateGenerationService {
         </div>
 
         <div class="details">
-            <div class="detail-row">
-                <div class="detail-label">Name:</div>
-                <div class="detail-value">${request.full_name}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Age:</div>
-                <div class="detail-value">${request.age}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Sex:</div>
-                <div class="detail-value">${request.sex}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Civil Status:</div>
-                <div class="detail-value">${request.civil_status}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Address:</div>
-                <div class="detail-value">${request.address}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Purpose:</div>
-                <div class="detail-value">${request.purpose}</div>
-            </div>
+            <div class="detail-row"><div class="detail-label">Name:</div><div class="detail-value">${request.full_name}</div></div>
+            <div class="detail-row"><div class="detail-label">Age:</div><div class="detail-value">${request.age}</div></div>
+            <div class="detail-row"><div class="detail-label">Sex:</div><div class="detail-value">${request.sex}</div></div>
+            <div class="detail-row"><div class="detail-label">Civil Status:</div><div class="detail-value">${request.civil_status}</div></div>
+            <div class="detail-row"><div class="detail-label">Address:</div><div class="detail-value">${request.address}</div></div>
+            <div class="detail-row"><div class="detail-label">Purpose:</div><div class="detail-value">${request.purpose}</div></div>
         </div>
 
         <div class="body-text">
@@ -332,7 +350,7 @@ class CertificateGenerationService {
         </div>
 
         <div class="body-text">
-            Issued this <strong>${currentDate}</strong> at Barangay Iba O' Este, Calumpit, Bulacan.
+            Issued this <strong>${currentDate}</strong> at ${headerInfo.barangayName}, ${headerInfo.municipality}, ${headerInfo.province}.
         </div>
     </div>
 
@@ -340,36 +358,30 @@ class CertificateGenerationService {
         <div class="signature-box">
             <div class="signature-line"></div>
             <div class="signature-label">
-                <strong>${officials?.secretary || 'ROYCE ANN C. GALVEZ'}</strong><br>
+                <strong>${officials.secretary}</strong><br>
                 Barangay Secretary
             </div>
         </div>
         <div class="signature-box">
             <div class="signature-line"></div>
             <div class="signature-label">
-                <strong>${officials?.chairman || 'ALEXANDER C. MANIO'}</strong><br>
+                <strong>${officials.chairman}</strong><br>
                 Punong Barangay
             </div>
         </div>
     </div>
 
-    <div class="footer">
-        <div>Reference No: <strong>${request.reference_number}</strong></div>
-        <div>Generated on: ${new Date().toLocaleString()}</div>
-        <div>This is a computer-generated certificate. Verify authenticity by scanning the QR code.</div>
-    </div>
+    ${this.generateFooter(request, config)}
 </body>
 </html>`;
-  }
+    }
 
-  generateResidencyContent(request, officials) {
-    const currentDate = new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    generateResidencyContent(request, config) {
+        const { officials, styles, headerInfo } = config;
+        const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const titleColor = styles.bodyStyle.titleColor || '#16a34a';
 
-    return `
+        return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -378,17 +390,11 @@ class CertificateGenerationService {
     <title>Barangay Residency Certificate - ${request.reference_number}</title>
     <style>
         @page { size: A4; margin: 20mm; }
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.4; }
-        .header { text-align: center; border-bottom: 3px solid #1e40af; padding-bottom: 20px; margin-bottom: 30px; }
+        body { font-family: ${styles.bodyStyle.fontFamily !== 'default' ? styles.bodyStyle.fontFamily : 'Arial, sans-serif'}; margin: 0; padding: 20px; line-height: 1.4; color: ${styles.bodyStyle.textColor}; background-color: ${styles.bodyStyle.bgColor}; }
+        .header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; }
         .logo-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logo { width: 80px; height: 80px; }
         .header-text { flex: 1; text-align: center; }
-        .country { font-size: 14px; color: #666; }
-        .province { font-size: 14px; color: #666; }
-        .municipality { font-size: 14px; color: #666; }
-        .barangay-name { font-size: 24px; font-weight: bold; color: #1e40af; margin: 10px 0; }
-        .office-name { font-size: 12px; color: #888; }
-        .title { text-align: center; font-size: 28px; font-weight: bold; color: #16a34a; margin: 30px 0; text-decoration: underline; }
+        .title { text-align: center; font-size: 28px; font-weight: bold; color: ${titleColor}; margin: 30px 0; text-decoration: underline; }
         .content { margin: 30px 0; }
         .greeting { font-weight: bold; margin-bottom: 20px; }
         .body-text { text-align: justify; margin-bottom: 20px; }
@@ -400,7 +406,7 @@ class CertificateGenerationService {
         .signature-box { text-align: center; width: 200px; }
         .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 50px; }
         .signature-label { font-size: 12px; }
-        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+        .footer { margin-top: 40px; text-align: center; font-size: 10px; padding-top: 10px; }
         .qr-section { position: absolute; top: 20px; right: 20px; text-align: center; }
         .qr-code { width: 80px; height: 80px; border: 1px solid #ddd; }
     </style>
@@ -411,21 +417,9 @@ class CertificateGenerationService {
         <div style="font-size: 8px; margin-top: 5px;">${request.reference_number}</div>
     </div>
 
-    <div class="header">
-        <div class="logo-section">
-            <div class="logo"></div>
-            <div class="header-text">
-                <div class="country">Republic of the Philippines</div>
-                <div class="province">Province of Bulacan</div>
-                <div class="municipality">Municipality of Calumpit</div>
-                <div class="barangay-name">BARANGAY IBA O' ESTE</div>
-                <div class="office-name">Office of the Punong Barangay</div>
-            </div>
-            <div class="logo"></div>
-        </div>
-    </div>
+    ${this.generateHeader(config)}
 
-    <div class="title">CERTIFICATE OF RESIDENCY</div>
+    <div class="title" style="color: ${titleColor}">CERTIFICATE OF RESIDENCY</div>
 
     <div class="content">
         <div class="greeting">To Whom It May Concern:</div>
@@ -433,34 +427,16 @@ class CertificateGenerationService {
         <div class="body-text">
             This is to certify that <strong>${request.full_name}</strong>, of legal age, 
             ${request.sex}, ${request.civil_status}, is a bonafide resident of 
-            ${request.address}, Barangay Iba O' Este, Calumpit, Bulacan.
+            ${request.address}, ${headerInfo.barangayName}, ${headerInfo.municipality}, ${headerInfo.province}.
         </div>
 
         <div class="details">
-            <div class="detail-row">
-                <div class="detail-label">Name:</div>
-                <div class="detail-value">${request.full_name}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Age:</div>
-                <div class="detail-value">${request.age}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Sex:</div>
-                <div class="detail-value">${request.sex}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Civil Status:</div>
-                <div class="detail-value">${request.civil_status}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Address:</div>
-                <div class="detail-value">${request.address}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Purpose:</div>
-                <div class="detail-value">${request.purpose}</div>
-            </div>
+            <div class="detail-row"><div class="detail-label">Name:</div><div class="detail-value">${request.full_name}</div></div>
+            <div class="detail-row"><div class="detail-label">Age:</div><div class="detail-value">${request.age}</div></div>
+            <div class="detail-row"><div class="detail-label">Sex:</div><div class="detail-value">${request.sex}</div></div>
+            <div class="detail-row"><div class="detail-label">Civil Status:</div><div class="detail-value">${request.civil_status}</div></div>
+            <div class="detail-row"><div class="detail-label">Address:</div><div class="detail-value">${request.address}</div></div>
+            <div class="detail-row"><div class="detail-label">Purpose:</div><div class="detail-value">${request.purpose}</div></div>
         </div>
 
         <div class="body-text">
@@ -469,7 +445,7 @@ class CertificateGenerationService {
         </div>
 
         <div class="body-text">
-            Issued this <strong>${currentDate}</strong> at Barangay Iba O' Este, Calumpit, Bulacan.
+            Issued this <strong>${currentDate}</strong> at ${headerInfo.barangayName}, ${headerInfo.municipality}, ${headerInfo.province}.
         </div>
     </div>
 
@@ -477,33 +453,29 @@ class CertificateGenerationService {
         <div class="signature-box">
             <div class="signature-line"></div>
             <div class="signature-label">
-                <strong>${officials?.secretary || 'ROYCE ANN C. GALVEZ'}</strong><br>
+                <strong>${officials.secretary}</strong><br>
                 Barangay Secretary
             </div>
         </div>
         <div class="signature-box">
             <div class="signature-line"></div>
             <div class="signature-label">
-                <strong>${officials?.chairman || 'ALEXANDER C. MANIO'}</strong><br>
+                <strong>${officials.chairman}</strong><br>
                 Punong Barangay
             </div>
         </div>
     </div>
 
-    <div class="footer">
-        <div>Reference No: <strong>${request.reference_number}</strong></div>
-        <div>Generated on: ${new Date().toLocaleString()}</div>
-        <div>This is a computer-generated certificate. Verify authenticity by scanning the QR code.</div>
-    </div>
+    ${this.generateFooter(request, config)}
 </body>
 </html>`;
-  }
+    }
 
-  generateQRCodeSVG(text) {
-    // Simple QR code placeholder - in production, use a proper QR code library
-    const encoded = Buffer.from(`VERIFY:${text}`).toString('base64');
-    return encoded;
-  }
+    generateQRCodeSVG(text) {
+        // Simple QR code placeholder - in production, use a proper QR code library
+        const encoded = Buffer.from(`VERIFY:${text}`).toString('base64');
+        return encoded;
+    }
 }
 
 module.exports = new CertificateGenerationService();

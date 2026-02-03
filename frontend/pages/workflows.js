@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout/Layout';
-import { 
-  GitBranch, Plus, Edit2, Trash2, Save, X, ChevronRight, 
+import {
+  GitBranch, Plus, Edit2, Trash2, Save, X, ChevronRight,
   CheckCircle, Clock, UserCheck, FileText, AlertCircle,
-  ArrowUp, ArrowDown, GripVertical, Settings, Eye, Users, Mail
+  ArrowUp, ArrowDown, GripVertical, Settings, Eye, Users, Mail, Shield
 } from 'lucide-react';
 import { isAuthenticated, getUserData, getAuthToken } from '@/lib/auth';
 // API Configuration
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const MASTER_WORKFLOW_ID = 'master_certificate_flow';
 
 // Certificate types
 const certificateTypes = [
@@ -22,8 +23,8 @@ const defaultSteps = [
   { id: 1, name: 'Submitted', description: 'Application received', status: 'pending', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
   { id: 2, name: 'Staff Review', description: 'Being reviewed by assigned staff', status: 'staff_review', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
   { id: 3, name: 'Barangay Captain Approval', description: 'Awaiting Barangay Captain approval', status: 'captain_approval', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-  { id: 4, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
-  { id: 5, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
+  { id: 5, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
+  { id: 6, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
 ];
 
 const iconOptions = [
@@ -44,12 +45,12 @@ const getIcon = (iconName) => {
 export default function WorkflowsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [selectedCertificate, setSelectedCertificate] = useState('barangay_clearance');
+  const [selectedCertificate, setSelectedCertificate] = useState(MASTER_WORKFLOW_ID);
   const [workflows, setWorkflows] = useState({});
   const [editingStep, setEditingStep] = useState(null);
   const [showAddStep, setShowAddStep] = useState(false);
   const [notification, setNotification] = useState(null);
-  const [newStep, setNewStep] = useState({ name: '', description: '', status: '', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false });
+  const [newStep, setNewStep] = useState({ name: '', description: '', status: '', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false, officialRole: '' });
   const [users, setUsers] = useState([]);
   const [showAssignModal, setShowAssignModal] = useState(null);
   const [syncing, setSyncing] = useState(false);
@@ -106,9 +107,17 @@ export default function WorkflowsPage() {
       });
       const data = await response.json();
       if (data.success && data.data && Object.keys(data.data).length > 0) {
-        setWorkflows(data.data);
-        // Also save to localStorage as backup
-        localStorage.setItem('certificateWorkflows', JSON.stringify(data.data));
+        const data_workflows = data.data;
+        if (data_workflows[MASTER_WORKFLOW_ID]) {
+          setWorkflows(data_workflows);
+        } else {
+          // Migrate old per-cert data to master
+          const firstCertId = certificateTypes[0].id;
+          const masterWorkflow = data_workflows[firstCertId] || defaultSteps;
+          const migrated = { [MASTER_WORKFLOW_ID]: masterWorkflow };
+          setWorkflows(migrated);
+          // Sync back to DB in next save if needed
+        }
         console.log('Workflows loaded from database');
         return;
       }
@@ -119,21 +128,36 @@ export default function WorkflowsPage() {
     // Fallback to localStorage
     const saved = localStorage.getItem('certificateWorkflows');
     if (saved) {
-      setWorkflows(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      // If saved workflows are still per-certificate (old format), migrate to master format
+      if (parsed[MASTER_WORKFLOW_ID]) {
+        setWorkflows(parsed);
+      } else {
+        const firstCertId = certificateTypes[0].id;
+        const masterWorkflow = parsed[firstCertId] || defaultSteps;
+        const initial = { [MASTER_WORKFLOW_ID]: masterWorkflow };
+        setWorkflows(initial);
+        localStorage.setItem('certificateWorkflows', JSON.stringify(initial));
+      }
     } else {
-      const initial = {};
-      certificateTypes.forEach(cert => {
-        initial[cert.id] = JSON.parse(JSON.stringify(defaultSteps));
-      });
+      // Create initial state using default steps
+      const initial = { [MASTER_WORKFLOW_ID]: JSON.parse(JSON.stringify(defaultSteps)) };
       setWorkflows(initial);
       localStorage.setItem('certificateWorkflows', JSON.stringify(initial));
     }
   };
 
   const saveWorkflows = async (updated) => {
-    setWorkflows(updated);
-    localStorage.setItem('certificateWorkflows', JSON.stringify(updated));
-    
+    // Force sync: apply the same workflow steps to ALL certificate types
+    const masterSteps = updated[MASTER_WORKFLOW_ID] || [];
+    const unifiedWorkflows = {};
+    certificateTypes.forEach(cert => {
+      unifiedWorkflows[cert.id] = JSON.parse(JSON.stringify(masterSteps));
+    });
+
+    setWorkflows({ [MASTER_WORKFLOW_ID]: masterSteps }); // Update local state with just the master
+    localStorage.setItem('certificateWorkflows', JSON.stringify({ [MASTER_WORKFLOW_ID]: masterSteps })); // Save master to local storage
+
     // Also save to API (database) so other users can access
     try {
       const token = getAuthToken();
@@ -143,7 +167,7 @@ export default function WorkflowsPage() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ workflows: updated })
+        body: JSON.stringify({ workflows: unifiedWorkflows })
       });
       const data = await response.json();
       if (data.success) {
@@ -168,7 +192,7 @@ export default function WorkflowsPage() {
           'Content-Type': 'application/json'
         }
       });
-      
+
       const data = await response.json();
       if (data.success) {
         showNotificationMsg('success', `Workflow assignments synced! Created ${data.data.totalAssignments} assignments across ${data.data.updatedSteps} steps.`);
@@ -192,7 +216,10 @@ export default function WorkflowsPage() {
     setTimeout(() => setNotification(null), type === 'success' ? 5000 : 3000);
   };
 
-  const getCurrentSteps = () => workflows[selectedCertificate] || [];
+  const getCurrentSteps = () => workflows[MASTER_WORKFLOW_ID] || [];
+
+  // Filter out the automatic Releasing Team step from the main management list
+  const getVisibleSteps = () => getCurrentSteps().filter(s => s.status !== 'oic_review');
 
   const handleAddStep = () => {
     if (!newStep.name || !newStep.status) {
@@ -202,7 +229,7 @@ export default function WorkflowsPage() {
     const steps = getCurrentSteps();
     const updated = {
       ...workflows,
-      [selectedCertificate]: [...steps, { ...newStep, id: Date.now(), assignedUsers: [] }]
+      [MASTER_WORKFLOW_ID]: [...steps, { ...newStep, id: Date.now(), assignedUsers: [] }]
     };
     saveWorkflows(updated);
     setNewStep({ name: '', description: '', status: '', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false });
@@ -213,7 +240,41 @@ export default function WorkflowsPage() {
     const steps = getCurrentSteps();
     const updated = {
       ...workflows,
-      [selectedCertificate]: steps.map(s => s.id === stepId ? { ...s, assignedUsers: selectedUserIds } : s)
+      [MASTER_WORKFLOW_ID]: steps.map(s => s.id === stepId ? { ...s, assignedUsers: selectedUserIds } : s)
+    };
+    saveWorkflows(updated);
+    setShowAssignModal(null);
+  };
+
+  const handleAssignReleasingTeam = (certId, stepId, selectedUserIds) => {
+    let certSteps = workflows[certId] || [];
+
+    // Check if the releasing step exists
+    const releasingStepIndex = certSteps.findIndex(s => s.status === 'oic_review');
+
+    let updatedSteps;
+    if (releasingStepIndex !== -1) {
+      // Update existing step
+      updatedSteps = certSteps.map(s => s.status === 'oic_review' ? { ...s, assignedUsers: selectedUserIds } : s);
+    } else {
+      // Step missing (user might have deleted it), recreate it as the automatic last step
+      const newReleasingStep = {
+        id: Date.now(),
+        name: 'Releasing Team',
+        description: 'Processing approved certificate',
+        status: 'oic_review',
+        icon: 'Settings',
+        autoApprove: false,
+        assignedUsers: selectedUserIds,
+        requiresApproval: true,
+        sendEmail: true
+      };
+      updatedSteps = [...certSteps, newReleasingStep];
+    }
+
+    const updated = {
+      ...workflows,
+      [selectedCertificate]: updatedSteps
     };
     saveWorkflows(updated);
     setShowAssignModal(null);
@@ -266,7 +327,14 @@ export default function WorkflowsPage() {
   }
 
   const currentCert = certificateTypes.find(c => c.id === selectedCertificate);
-  const steps = getCurrentSteps();
+  const visibleSteps = getVisibleSteps();
+  const allSteps = getCurrentSteps();
+  // Ensure preview always shows Releasing Team at the end if it exists
+  const previewSteps = [...allSteps].sort((a, b) => {
+    if (a.status === 'oic_review') return 1;
+    if (b.status === 'oic_review') return -1;
+    return 0;
+  });
 
   return (
     <Layout>
@@ -309,72 +377,68 @@ export default function WorkflowsPage() {
 
         {/* Notification */}
         {notification && (
-          <div className={`p-4 rounded-lg flex items-center gap-2 ${
-            notification.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 
+          <div className={`p-4 rounded-lg flex items-center gap-2 ${notification.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
             notification.type === 'warning' ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
-            'bg-red-50 text-red-800 border border-red-200'
-          }`}>
-            {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : 
-             notification.type === 'warning' ? <AlertCircle className="w-5 h-5" /> :
-             <AlertCircle className="w-5 h-5" />}
+              'bg-red-50 text-red-800 border border-red-200'
+            }`}>
+            {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> :
+              notification.type === 'warning' ? <AlertCircle className="w-5 h-5" /> :
+                <AlertCircle className="w-5 h-5" />}
             {notification.message}
           </div>
         )}
 
-        {/* Certificate Type Selector */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-3">Select Certificate Type</label>
-          <div className="flex flex-wrap gap-3">
-            {certificateTypes.map(cert => (
-              <button
-                key={cert.id}
-                onClick={() => setSelectedCertificate(cert.id)}
-                className="px-4 py-2 rounded-lg font-medium transition-all"
-                style={{
-                  backgroundColor: selectedCertificate === cert.id 
-                    ? (cert.color === 'blue' ? '#2563eb' : cert.color === 'green' ? '#16a34a' : '#ea580c')
-                    : (cert.color === 'blue' ? '#dbeafe' : cert.color === 'green' ? '#dcfce7' : '#ffedd5'),
-                  color: selectedCertificate === cert.id ? 'white' : (cert.color === 'blue' ? '#1d4ed8' : cert.color === 'green' ? '#15803d' : '#c2410c')
-                }}
-              >
-                {cert.name}
-              </button>
-            ))}
-          </div>
+        {/* Unified Workflow Header */}
+        <div className="bg-blue-600 rounded-xl shadow-md border border-blue-700 p-6 text-white text-center">
+          <h2 className="text-xl font-bold flex items-center justify-center gap-2">
+            <Settings className="w-6 h-6" />
+            Unified Certificate Workflow
+          </h2>
+          <p className="text-blue-100 mt-2 text-sm">
+            Changes made here are automatically applied to <b>Barangay Clearance</b>, <b>Indigency</b>, and <b>Residency</b>.
+          </p>
         </div>
 
-        {/* Workflow Steps */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
+        {/* Workflow Title */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 border-b pb-4 mb-4">Master Workflow Steps</h2>
+          <p className="text-xs text-gray-400 italic mb-4">These steps define the standard process for all certificates in the system.</p>
+        </div>
+
+        {/* Unified Workflow Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-6 border-b border-gray-200 bg-gray-50/50">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">{currentCert?.name} Workflow</h2>
-                <p className="text-sm text-gray-500 mt-1">{steps.length} steps configured</p>
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                  Approval & Releasing Flow
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">{visibleSteps.length} approval steps + 1 automatic releasing phase</p>
               </div>
               <button
                 onClick={() => setShowAddStep(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm"
               >
-                <Plus className="w-4 h-4" /> Add Step
+                <Plus className="w-4 h-4" /> Add Approval Step
               </button>
             </div>
           </div>
 
           {/* Steps List */}
           <div className="p-6 space-y-4">
-            {steps.map((step, index) => {
+            {visibleSteps.map((step, index) => {
               const StepIcon = getIcon(step.icon);
               const isEditing = editingStep === step.id;
 
               return (
                 <div key={step.id} className="relative">
-                  {index < steps.length - 1 && (
+                  {index < visibleSteps.length - 1 && (
                     <div className="absolute left-6 top-20 w-0.5 h-6 bg-gray-300"></div>
                   )}
 
-                  <div className={`flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${
-                    isEditing ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}>
+                  <div className={`flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${isEditing ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}>
                     {/* Reorder Buttons - Left Side */}
                     <div className="flex flex-col gap-1">
                       <button
@@ -387,7 +451,7 @@ export default function WorkflowsPage() {
                       </button>
                       <button
                         onClick={() => handleMoveStep(step.id, 'down')}
-                        disabled={index === steps.length - 1}
+                        disabled={index === visibleSteps.length - 1}
                         className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move Down"
                       >
@@ -428,9 +492,14 @@ export default function WorkflowsPage() {
                                 <Mail className="w-3 h-3" /> Email Notify
                               </span>
                             )}
+                            {step.officialRole && (
+                              <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full border border-purple-200">
+                                {step.officialRole}
+                              </span>
+                            )}
                           </div>
                           <p className="text-sm text-gray-500 mt-1">{step.description}</p>
-                          
+
                           {/* Assigned Users Section */}
                           {step.requiresApproval && (
                             <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -493,23 +562,79 @@ export default function WorkflowsPage() {
               );
             })}
 
-            {steps.length === 0 && (
+            {visibleSteps.length === 0 && (
               <div className="text-center py-12 text-gray-500">
                 <GitBranch className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                <p>No workflow steps configured</p>
+                <p>No extra workflow steps configured</p>
                 <button onClick={() => setShowAddStep(true)} className="mt-4 text-blue-600 hover:underline">
-                  Add your first step
+                  Add an approval step
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* Workflow Preview */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Workflow Preview</h3>
+        {/* Unified Releasing Team Table */}
+        <div className="z-10 mt-8 mb-4 bg-white rounded-xl shadow-2xl border-2 border-blue-500 overflow-hidden transform transition-all">
+          <div className="p-4 bg-blue-600 border-b border-blue-700">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Shield className="w-5 h-5" />
+              Releasing Team (Global)
+            </h2>
+            <p className="text-xs text-blue-100 mt-0.5">Assigned users will handle the final processing for <b>ALL</b> certificate types.</p>
+          </div>
+          <div className="p-6">
+            {(() => {
+              const masterSteps = getCurrentSteps();
+              const captainIndex = masterSteps.findIndex(s => s.status === 'captain_approval');
+              const releasingStep = masterSteps.find(s =>
+                s.status === 'oic_review' ||
+                s.name?.toLowerCase().includes('releasing')
+              ) || (captainIndex !== -1 && captainIndex < masterSteps.length - 1 ? masterSteps[captainIndex + 1] : null);
+
+              return (
+                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div>
+                    <h4 className="font-bold text-gray-900">Assigned Releasing Officers</h4>
+                    <p className="text-xs text-gray-500">Only these users can print and release certificates.</p>
+                  </div>
+
+                  <div className="flex-1 flex justify-center px-4">
+                    {releasingStep && releasingStep.assignedUsers && releasingStep.assignedUsers.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {releasingStep.assignedUsers.map(userId => {
+                          const user = users.find(u => (u._id === userId || u.id === userId));
+                          return user ? (
+                            <span key={userId} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs border border-blue-200 font-bold">
+                              <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px]">
+                                {user.firstName?.charAt(0)}
+                              </div>
+                              {user.firstName} {user.lastName}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400 italic bg-gray-100 px-4 py-1 rounded-lg border border-dashed border-gray-300">No members assigned yet</span>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setShowAssignModal({ certId: selectedCertificate, stepId: releasingStep?.id || 'new_releasing' })}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-lg transition-all active:scale-95"
+                  >
+                    Assign Team Members
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Workflow Preview (Standard Approval Flow)</h3>
           <div className="flex items-center gap-2 overflow-x-auto pb-4">
-            {steps.map((step, index) => {
+            {previewSteps.map((step, index) => {
               const StepIcon = getIcon(step.icon);
               return (
                 <div key={step.id} className="flex items-center">
@@ -520,12 +645,15 @@ export default function WorkflowsPage() {
                     <p className="text-xs font-medium text-gray-700 mt-2 text-center">{step.name}</p>
                     {step.requiresApproval && <span className="text-[10px] text-orange-600">Approval</span>}
                   </div>
-                  {index < steps.length - 1 && <ChevronRight className="w-5 h-5 text-gray-400 mx-1" />}
+                  {index < previewSteps.length - 1 && <ChevronRight className="w-5 h-5 text-gray-400 mx-1" />}
                 </div>
               );
             })}
           </div>
         </div>
+
+        {/* Spacer */}
+        <div className="h-4"></div>
 
         {/* Add Step Modal */}
         {showAddStep && (
@@ -535,7 +663,7 @@ export default function WorkflowsPage() {
             onAdd={handleAddStep}
             onClose={() => {
               setShowAddStep(false);
-              setNewStep({ name: '', description: '', status: '', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false });
+              setNewStep({ name: '', description: '', status: '', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false, officialRole: '' });
             }}
           />
         )}
@@ -543,9 +671,18 @@ export default function WorkflowsPage() {
         {/* Assign Users Modal */}
         {showAssignModal && (
           <AssignUsersModal
-            step={getCurrentSteps().find(s => s.id === showAssignModal)}
+            step={showAssignModal.certId
+              ? (workflows[MASTER_WORKFLOW_ID] || []).find(s => s.id === showAssignModal.stepId)
+              : getCurrentSteps().find(s => s.id === showAssignModal)
+            }
             users={users}
-            onSave={(selectedUserIds) => handleAssignUsers(showAssignModal, selectedUserIds)}
+            onSave={(selectedUserIds) => {
+              if (showAssignModal.certId) {
+                handleAssignReleasingTeam(showAssignModal.certId, showAssignModal.stepId, selectedUserIds);
+              } else {
+                handleAssignUsers(showAssignModal, selectedUserIds);
+              }
+            }}
             onClose={() => setShowAssignModal(null)}
           />
         )}
@@ -614,6 +751,36 @@ function EditStepForm({ step, onSave, onCancel }) {
             <Mail className="w-3 h-3" /> Send Email
           </span>
         </label>
+        <div className="flex flex-col gap-2 mt-2">
+          <label className="text-xs font-semibold text-gray-500 uppercase">Designated Official Role (Optional)</label>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              'Brgy. Captain', 'Brgy. Secretary', 'Brgy. Kagawad', 'Brgy. Treasurer',
+              'SK Chairman', 'SK Kagawad', 'Brgy. Admin', 'Brgy. Clerk'
+            ].map((role) => (
+              <label key={role} className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
+                <input
+                  type="radio"
+                  name="officialRole"
+                  checked={form.officialRole === role}
+                  onChange={() => setForm({ ...form, officialRole: role })}
+                  className="w-4 h-4 text-blue-600 rounded-full focus:ring-blue-500"
+                />
+                <span className="text-gray-700">{role}</span>
+              </label>
+            ))}
+            <label className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
+              <input
+                type="radio"
+                name="officialRole"
+                checked={!form.officialRole}
+                onChange={() => setForm({ ...form, officialRole: '' })}
+                className="w-4 h-4 text-gray-500 rounded-full focus:ring-gray-400"
+              />
+              <span className="text-gray-500 italic">None</span>
+            </label>
+          </div>
+        </div>
       </div>
       <div className="flex gap-2">
         <button
@@ -709,6 +876,38 @@ function AddStepModal({ newStep, setNewStep, onAdd, onClose }) {
             </label>
             <p className="text-xs text-green-600 mt-1 ml-6">Notify assigned users when request reaches this step</p>
           </div>
+
+          <div className="pt-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Designated Official Role (Optional)</label>
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1">
+              {[
+                'Brgy. Captain', 'Brgy. Secretary', 'Brgy. Kagawad', 'Brgy. Treasurer',
+                'SK Chairman', 'SK Kagawad', 'Brgy. Admin', 'Brgy. Clerk'
+              ].map((role) => (
+                <label key={role} className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
+                  <input
+                    type="radio"
+                    name="newStepOfficialRole"
+                    checked={newStep.officialRole === role}
+                    onChange={() => setNewStep({ ...newStep, officialRole: role })}
+                    className="w-4 h-4 text-blue-600 rounded-full focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">{role}</span>
+                </label>
+              ))}
+              <label className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
+                <input
+                  type="radio"
+                  name="newStepOfficialRole"
+                  checked={!newStep.officialRole}
+                  onChange={() => setNewStep({ ...newStep, officialRole: '' })}
+                  className="w-4 h-4 text-gray-500 rounded-full focus:ring-gray-400"
+                />
+                <span className="text-gray-500 italic">None</span>
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Select if this step requires action from a specific official.</p>
+          </div>
         </div>
         <div className="flex gap-3 mt-6">
           <button
@@ -735,22 +934,24 @@ function AssignUsersModal({ step, users, onSave, onClose }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const toggleUser = (userId) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
+    setSelectedUsers(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
   };
 
-  // Filter users based on search query
+  // Filter users based on search query and only show active accounts
   const filteredUsers = users.filter(user => {
     const query = searchQuery.toLowerCase();
-    return (
+    const isActive = user.status === 'active' || !user.status; // Default to active if status is missing
+    const matchesSearch = (
       user.firstName?.toLowerCase().includes(query) ||
       user.lastName?.toLowerCase().includes(query) ||
       user.email?.toLowerCase().includes(query) ||
       user.role?.toLowerCase().includes(query)
     );
+    return isActive && matchesSearch;
   });
 
   return (
@@ -759,8 +960,8 @@ function AssignUsersModal({ step, users, onSave, onClose }) {
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[80vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Assign Approvers</h3>
-            <p className="text-sm text-gray-500">Step: <span className="font-medium text-blue-600">{step?.name}</span></p>
+            <h3 className="text-lg font-semibold text-gray-900">Assign User Accounts</h3>
+            <p className="text-xs text-gray-500">Only verified accounts can be assigned to Releasing Team.</p>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg">
             <X className="w-5 h-5 text-gray-500" />
@@ -788,7 +989,7 @@ function AssignUsersModal({ step, users, onSave, onClose }) {
             </button>
           )}
         </div>
-        
+
         <div className="flex-1 overflow-y-auto">
           {filteredUsers.length > 0 ? (
             <div className="space-y-2">
@@ -800,27 +1001,23 @@ function AssignUsersModal({ step, users, onSave, onClose }) {
                   <div
                     key={userId}
                     onClick={() => toggleUser(userId)}
-                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                      isSelected ? 'bg-blue-50 border-2 border-blue-500' : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
-                    }`}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-2 border-blue-500' : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                      }`}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
-                      isSelected ? 'bg-blue-600' : 'bg-gray-400'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${isSelected ? 'bg-blue-600' : 'bg-gray-400'
+                      }`}>
                       {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">{user.firstName} {user.lastName}</p>
                       <p className="text-sm text-gray-500">{user.email}</p>
-                      <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${
-                        user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
+                      <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
+                        }`}>
                         {user.role}
                       </span>
                     </div>
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      isSelected ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
-                    }`}>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                      }`}>
                       {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
                     </div>
                   </div>

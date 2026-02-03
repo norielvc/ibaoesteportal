@@ -10,7 +10,7 @@ router.get('/user/:userId', authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
     const { status } = req.query; // Optional status filter
-    
+
     let query = supabase
       .from('workflow_assignments')
       .select(`
@@ -27,17 +27,17 @@ router.get('/user/:userId', authenticateToken, async (req, res) => {
         )
       `)
       .eq('assigned_user_id', userId);
-    
+
     if (status) {
       query = query.eq('status', status);
     }
-    
+
     const { data, error } = await query.order('created_at', { ascending: false });
-    
+
     if (error) throw error;
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       assignments: data || [],
       count: data?.length || 0
     });
@@ -51,7 +51,7 @@ router.get('/user/:userId', authenticateToken, async (req, res) => {
 router.get('/user/:userId/request/:requestId', authenticateToken, async (req, res) => {
   try {
     const { userId, requestId } = req.params;
-    
+
     const { data, error } = await supabase
       .from('workflow_assignments')
       .select('*')
@@ -59,13 +59,13 @@ router.get('/user/:userId/request/:requestId', authenticateToken, async (req, re
       .eq('request_id', requestId)
       .eq('status', 'pending')
       .single();
-    
+
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
       throw error;
     }
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       isAssigned: !!data,
       assignment: data || null
     });
@@ -80,7 +80,7 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
   try {
     const userId = req.user._id; // From auth token (note: using _id not id)
     const { status = 'pending' } = req.query;
-    
+
     const { data, error } = await supabase
       .from('workflow_assignments')
       .select(`
@@ -105,9 +105,9 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
       .eq('assigned_user_id', userId)
       .eq('status', status)
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
-    
+
     // Transform data to match expected format
     const requests = data.map(assignment => ({
       ...assignment.certificate_requests,
@@ -119,9 +119,9 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
         status: assignment.status
       }
     }));
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       certificates: requests,
       count: requests.length
     });
@@ -137,7 +137,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
     const { assignmentId } = req.params;
     const { action, comment } = req.body; // action: 'approve', 'reject', 'return'
     const userId = req.user._id;
-    
+
     // Get the assignment
     const { data: assignment, error: fetchError } = await supabase
       .from('workflow_assignments')
@@ -147,41 +147,101 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       `)
       .eq('id', assignmentId)
       .single();
-    
+
     if (fetchError) throw fetchError;
     if (!assignment) {
       return res.status(404).json({ success: false, message: 'Assignment not found' });
     }
-    
+
     // Check if user is authorized to update this assignment
     if (assignment.assigned_user_id !== userId && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Not authorized to update this assignment' });
     }
-    
+
     let newStatus = 'completed';
     let newRequestStatus = assignment.certificate_requests.status;
-    
+
+    // Get workflow configuration for this request type
+    const { data: workflowConfig, error: configError } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', assignment.request_type)
+      .single();
+
+    let steps = [];
+    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
+      steps = workflowConfig.workflow_config.steps;
+    } else {
+      // Fallback or error handling if no config found
+      console.warn(`No workflow config found for ${assignment.request_type}, using basic logic not supported yet.`);
+      // We could try to load from file here if needed, but DB should be synced
+    }
+
+    // Find current step index
+    // Note: step_id is stored as string in DB for large IDs, but might be number in JSON
+    const currentStepIndex = steps.findIndex(s => s.id.toString() === assignment.step_id.toString());
+    const currentStep = steps[currentStepIndex];
+    let nextStep = null;
+
     // Determine new status based on action
     if (action === 'approve') {
       newStatus = 'completed';
-      // Move to next step in workflow
-      if (assignment.step_id === 2) { // Staff review -> Captain approval
-        newRequestStatus = 'processing';
-      } else if (assignment.step_id === 3) { // Captain approval -> Ready for pickup
-        newRequestStatus = 'ready';
-        
-        // 🎯 CAPTAIN APPROVAL COMPLETE - TRIGGER POST-APPROVAL WORKFLOW
-        console.log(`🎉 Captain approved request ${assignment.certificate_requests.reference_number}`);
-        
-        // Start post-approval process asynchronously (don't block the response)
-        setImmediate(async () => {
-          try {
-            await processPostApprovalWorkflow(assignment.request_id, assignment.certificate_requests);
-          } catch (error) {
-            console.error('Error in post-approval workflow:', error);
+
+      if (currentStepIndex !== -1 && currentStepIndex < steps.length - 1) {
+        // Move to NEXT defined step
+        nextStep = steps[currentStepIndex + 1];
+
+        // Map step status to request status
+        // If next step is 'oic_review', request status becomes 'oic_review'
+        // If next step is 'captain_approval', request status becomes 'processing' (legacy mapping) or 'captain_approval'
+
+        // For Releasing Team status (oic_review)
+        if (nextStep.status === 'oic_review') {
+          newRequestStatus = 'oic_review';
+        } else if (nextStep.status === 'captain_approval') {
+          newRequestStatus = 'processing'; // Or 'captain_approval' if frontend supports it
+        } else if (nextStep.status === 'ready' || nextStep.status === 'released') {
+          newRequestStatus = 'ready';
+        } else {
+          newRequestStatus = 'processing'; // Default for intermediate steps
+        }
+
+        // Check if next step is the FINAL step (Ready for Pickup / Released with no approvers)
+        if (!nextStep.requiresApproval || nextStep.status === 'ready' || nextStep.status === 'released') {
+          // 🎯 FLOW COMPLETE - TRIGGER POST-APPROVAL WORKFLOW
+          console.log(`🎉 Workflow reached final/auto step: ${nextStep.name}`);
+
+          // If manual "Releasing Team" is the step before this, then we trigger here??
+          // Actually, if the NEXT step is Releasing Team, we just assign them.
+          // If THIS step was Releasing Team (oic_review) and we Approved, THEN we go to Ready.
+
+          if (currentStep.status === 'oic_review') {
+            // We just finished Releasing Team review
+            newRequestStatus = 'ready';
+            setImmediate(async () => {
+              try {
+                await processPostApprovalWorkflow(assignment.request_id, assignment.certificate_requests);
+              } catch (error) {
+                console.error('Error in post-approval workflow:', error);
+              }
+            });
+          } else if (nextStep.status === 'ready') {
+            // If we skipped Releasing Team or it wasn't there
+            setImmediate(async () => {
+              try {
+                await processPostApprovalWorkflow(assignment.request_id, assignment.certificate_requests);
+              } catch (error) {
+                console.error('Error in post-approval workflow:', error);
+              }
+            });
           }
-        });
+        }
+
+      } else {
+        // No more steps
+        newRequestStatus = 'ready';
       }
+
     } else if (action === 'reject') {
       newStatus = 'completed';
       newRequestStatus = 'cancelled'; // Changed from 'rejected' to match DB constraint
@@ -189,7 +249,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       newStatus = 'completed';
       newRequestStatus = 'pending'; // Return to previous step
     }
-    
+
     // Update assignment status
     const { error: updateError } = await supabase
       .from('workflow_assignments')
@@ -198,9 +258,9 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
         completed_at: new Date().toISOString()
       })
       .eq('id', assignmentId);
-    
+
     if (updateError) throw updateError;
-    
+
     // Update certificate request status
     const { error: requestUpdateError } = await supabase
       .from('certificate_requests')
@@ -209,39 +269,50 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
         updated_at: new Date().toISOString()
       })
       .eq('id', assignment.request_id);
-    
+
     if (requestUpdateError) throw requestUpdateError;
-    
+
     // Create next step assignments if approved
-    if (action === 'approve') {
-      let nextStepAssignments = [];
-      
-      if (assignment.step_id === 2) {
-        // Staff approved -> Create captain assignments
-        nextStepAssignments = [
-          'd165bf34-2a6e-4a33-8f13-a2e9868f28f6' // John Doe (as shown in UI)
-        ];
-        
-        for (const captainId of nextStepAssignments) {
-          const { error: assignError } = await supabase
+    if (action === 'approve' && nextStep) {
+      console.log(`Creating assignments for next step: ${nextStep.name} (ID: ${nextStep.id})`);
+
+      const nextStepAssignments = nextStep.assignedUsers || [];
+
+      if (nextStepAssignments.length > 0) {
+        for (const userId of nextStepAssignments) {
+          // Check if assignment already exists to avoid duplicates
+          const { data: existing } = await supabase
             .from('workflow_assignments')
-            .insert([{
-              request_id: assignment.request_id,
-              request_type: assignment.request_type,
-              step_id: 3,
-              step_name: 'Barangay Captain Approval',
-              assigned_user_id: captainId,
-              status: 'pending'
-            }]);
-          
-          if (assignError) {
-            console.error('Failed to create captain assignment:', assignError);
+            .select('id')
+            .eq('request_id', assignment.request_id)
+            .eq('step_id', nextStep.id.toString())
+            .eq('assigned_user_id', userId)
+            .single();
+
+          if (!existing) {
+            const { error: assignError } = await supabase
+              .from('workflow_assignments')
+              .insert([{
+                request_id: assignment.request_id,
+                request_type: assignment.request_type,
+                step_id: nextStep.id.toString(),
+                step_name: nextStep.name,
+                assigned_user_id: userId,
+                status: 'pending'
+              }]);
+
+            if (assignError) {
+              console.error(`Failed to create assignment for user ${userId}:`, assignError);
+            } else {
+              console.log(` Assigned ${userId} to ${nextStep.name}`);
+            }
           }
         }
+      } else {
+        console.log(`Warning: Next step ${nextStep.name} has no assigned users.`);
       }
-      // Note: Step 3 (Captain approval) -> Step 4 (Ready) doesn't need assignments
     }
-    
+
     // Log workflow history
     const { error: historyError } = await supabase
       .from('workflow_history')
@@ -256,14 +327,14 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
         new_status: newRequestStatus,
         comments: comment
       }]);
-    
+
     // Don't fail if history logging fails
     if (historyError) {
       console.error('Failed to log workflow history:', historyError);
     }
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: `Request ${action}d successfully`,
       newStatus: newRequestStatus
     });
@@ -277,7 +348,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
 router.get('/history/:requestId', authenticateToken, async (req, res) => {
   try {
     const { requestId } = req.params;
-    
+
     const { data, error } = await supabase
       .from('workflow_history')
       .select(`
@@ -290,11 +361,11 @@ router.get('/history/:requestId', authenticateToken, async (req, res) => {
       `)
       .eq('request_id', requestId)
       .order('created_at', { ascending: true });
-    
+
     if (error) throw error;
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       history: data || []
     });
   } catch (error) {
@@ -306,12 +377,12 @@ router.get('/history/:requestId', authenticateToken, async (req, res) => {
 // 🎯 POST-APPROVAL WORKFLOW FUNCTION
 async function processPostApprovalWorkflow(requestId, requestData) {
   console.log(`🚀 Starting post-approval workflow for ${requestData.reference_number}`);
-  
+
   try {
     // Step 1: Generate Certificate
     console.log('📄 Step 1: Generating certificate...');
     const certificateResult = await certificateGenerationService.generateCertificate(requestId);
-    
+
     if (certificateResult.success) {
       console.log(`✅ Certificate generated: ${certificateResult.filename}`);
     } else {
@@ -321,7 +392,7 @@ async function processPostApprovalWorkflow(requestId, requestData) {
     // Step 2: Generate Pickup QR Code
     console.log('🔗 Step 2: Generating pickup QR code...');
     const qrResult = await qrCodeService.generatePickupQRCode(requestId);
-    
+
     if (qrResult.success) {
       console.log(`✅ Pickup QR code generated: ${qrResult.pickupToken}`);
     } else {
@@ -345,7 +416,7 @@ async function processPostApprovalWorkflow(requestId, requestData) {
       }]);
 
     console.log(`🎉 Post-approval workflow completed for ${requestData.reference_number}`);
-    
+
     return {
       success: true,
       certificate: certificateResult,
@@ -354,7 +425,7 @@ async function processPostApprovalWorkflow(requestId, requestData) {
 
   } catch (error) {
     console.error(`❌ Post-approval workflow failed for ${requestData.reference_number}:`, error);
-    
+
     // Log the error but don't fail the main approval process
     await supabase
       .from('workflow_history')

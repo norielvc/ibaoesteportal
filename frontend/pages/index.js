@@ -278,42 +278,42 @@ export default function BarangayPortal() {
 
       // Get current hour for weather logic
       const hour = now.getHours();
-      
+
       // Dynamic weather based on time of day
       let weather;
       if (hour >= 6 && hour < 12) {
         // Morning (6 AM - 12 PM)
-        weather = { 
-          icon: Sun, 
-          text: 'Morning, 28°C', 
-          color: 'text-yellow-400' 
+        weather = {
+          icon: Sun,
+          text: 'Morning, 28°C',
+          color: 'text-yellow-400'
         };
       } else if (hour >= 12 && hour < 18) {
         // Afternoon (12 PM - 6 PM)
-        weather = { 
-          icon: Sun, 
-          text: 'Afternoon, 31°C', 
-          color: 'text-orange-400' 
+        weather = {
+          icon: Sun,
+          text: 'Afternoon, 31°C',
+          color: 'text-orange-400'
         };
       } else if (hour >= 18 && hour < 21) {
         // Evening (6 PM - 9 PM)
-        weather = { 
-          icon: Cloud, 
-          text: 'Evening, 26°C', 
-          color: 'text-blue-300' 
+        weather = {
+          icon: Cloud,
+          text: 'Evening, 26°C',
+          color: 'text-blue-300'
         };
       } else {
         // Night (9 PM - 6 AM)
-        weather = { 
-          icon: Moon, 
-          text: 'Night, 24°C', 
-          color: 'text-blue-200' 
+        weather = {
+          icon: Moon,
+          text: 'Night, 24°C',
+          color: 'text-blue-200'
         };
       }
-      
+
       setWeatherInfo(weather);
     };
-    
+
     updateTimeAndWeather();
     const interval = setInterval(updateTimeAndWeather, 1000);
     return () => clearInterval(interval);
@@ -1789,7 +1789,16 @@ export default function BarangayPortal() {
                                     <span className="text-2xl font-bold text-white">{initials}</span>
                                   </div>
                                   <h3 className="text-xl font-bold text-white mb-1">
-                                    {official.position.includes('Kagawad') ? 'Kagawad' : official.position}
+                                    {(() => {
+                                      const pos = official.position;
+                                      if (pos.includes('Kagawad')) return 'Brgy. Kagawad';
+                                      if (['Secretary', 'Treasurer', 'Administrator', 'Clerk', 'Record Keeper'].includes(pos)) return `Brgy. ${pos}`;
+                                      if (pos === 'Barangay Keeper') return 'Brgy. Record Keeper';
+                                      if (['Assistant Secretary', 'Assistant Administrator'].includes(pos)) {
+                                        return pos.replace('Assistant', 'Asst. Brgy.');
+                                      }
+                                      return pos;
+                                    })()}
                                   </h3>
                                   {official.committee && (
                                     <p className="text-white/80 text-sm">{official.committee}</p>

@@ -467,7 +467,7 @@ router.put('/:id/status', async (req, res) => {
       'pending', 'submitted', 'processing', 'under_review',
       'approved', 'rejected', 'returned', 'ready',
       'ready_for_pickup', 'released', 'cancelled',
-      'staff_review', 'captain_approval', 'completed'
+      'staff_review', 'captain_approval', 'oic_review', 'completed'
     ];
 
     if (status && !validStatuses.includes(status)) {

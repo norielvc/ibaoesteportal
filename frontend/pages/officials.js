@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout/Layout';
 import { Save, Users, UserCog, Shield, Award, Edit2, Check, X, AlertCircle, CheckCircle, MapPin, Phone, Mail, Building, FileText, Globe, Palette, Image, Type, Upload, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { getAuthToken } from '@/lib/auth';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
 // Default officials data
 const defaultOfficials = {
@@ -91,31 +94,48 @@ export default function OfficialsPage() {
   const [notification, setNotification] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('officials');
+  const [isSaving, setIsSaving] = useState(false);
   const leftLogoRef = useRef(null);
   const rightLogoRef = useRef(null);
   const captainImageRef = useRef(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('barangayOfficials');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setOfficials({
-        ...defaultOfficials,
-        ...parsed,
-        contactInfo: { ...defaultOfficials.contactInfo, ...parsed.contactInfo },
-        headerInfo: { ...defaultOfficials.headerInfo, ...parsed.headerInfo },
-        logos: { ...defaultOfficials.logos, ...parsed.logos },
-        headerStyle: { ...defaultOfficials.headerStyle, ...parsed.headerStyle },
-        countryStyle: { ...defaultOfficials.countryStyle, ...parsed.countryStyle },
-        provinceStyle: { ...defaultOfficials.provinceStyle, ...parsed.provinceStyle },
-        municipalityStyle: { ...defaultOfficials.municipalityStyle, ...parsed.municipalityStyle },
-        barangayNameStyle: { ...defaultOfficials.barangayNameStyle, ...parsed.barangayNameStyle },
-        officeNameStyle: { ...defaultOfficials.officeNameStyle, ...parsed.officeNameStyle },
-        sidebarStyle: { ...defaultOfficials.sidebarStyle, ...parsed.sidebarStyle },
-        bodyStyle: { ...defaultOfficials.bodyStyle, ...parsed.bodyStyle },
-        footerStyle: { ...defaultOfficials.footerStyle, ...parsed.footerStyle }
-      });
-    }
+    // Fetch from API
+    const fetchConfig = async () => {
+      try {
+        const token = getAuthToken();
+        const res = await fetch(`${API_URL}/api/officials/config`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await res.json();
+
+        if (data.success && data.data) {
+          // Merge API data with defaults to ensure all fields exist
+          setOfficials(prev => ({
+            ...prev,
+            ...data.data,
+            // Deep merge essential nested objects if they exist in data.data
+            contactInfo: { ...prev.contactInfo, ...(data.data.contactInfo || {}) },
+            headerInfo: { ...prev.headerInfo, ...(data.data.headerInfo || {}) },
+            logos: { ...prev.logos, ...(data.data.logos || {}) },
+            headerStyle: { ...prev.headerStyle, ...(data.data.headerStyle || {}) },
+            sidebarStyle: { ...prev.sidebarStyle, ...(data.data.sidebarStyle || {}) },
+            bodyStyle: { ...prev.bodyStyle, ...(data.data.bodyStyle || {}) },
+            footerStyle: { ...prev.footerStyle, ...(data.data.footerStyle || {}) },
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load officials config', error);
+        // Fallback to local storage if API fails
+        const saved = localStorage.getItem('barangayOfficials');
+        if (saved) {
+          setOfficials(prev => ({ ...prev, ...JSON.parse(saved) }));
+        }
+      }
+    };
+    fetchConfig();
   }, []);
 
   useEffect(() => {
@@ -178,17 +198,41 @@ export default function OfficialsPage() {
     setNotification({ type: 'success', message: `${side.charAt(0).toUpperCase() + side.slice(1)} image removed` });
   };
 
-  const saveAllChanges = () => {
-    localStorage.setItem('barangayOfficials', JSON.stringify(officials));
-    setHasChanges(false);
-    setNotification({ type: 'success', message: 'All changes saved!' });
+  const saveAllChanges = async () => {
+    setIsSaving(true);
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_URL}/api/officials/config`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(officials)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setHasChanges(false);
+        setNotification({ type: 'success', message: 'All changes saved to database!' });
+        // Also save to local storage as backup
+        localStorage.setItem('barangayOfficials', JSON.stringify(officials));
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      console.error('Failed to save', error);
+      setNotification({ type: 'error', message: 'Failed to save changes' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const resetToDefault = () => {
-    setOfficials(defaultOfficials);
-    localStorage.removeItem('barangayOfficials');
-    setHasChanges(false);
-    setNotification({ type: 'success', message: 'Reset to default values' });
+    if (confirm('Are you sure? This will revert all changes.')) {
+      setOfficials(defaultOfficials);
+      setHasChanges(true);
+      setNotification({ type: 'success', message: 'Reset to default values. Click Save to apply.' });
+    }
   };
 
   const EditableField = ({ label, field, value, icon: Icon, placeholder = '' }) => {
@@ -303,26 +347,32 @@ export default function OfficialsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <EditableField label="Punong Barangay" field="chairman" value={officials.chairman} icon={Shield} />
-              <EditableField label="Secretary" field="secretary" value={officials.secretary} icon={UserCog} />
-              <EditableField label="Treasurer" field="treasurer" value={officials.treasurer} icon={Award} />
-              <EditableField label="SK Chairman" field="skChairman" value={officials.skChairman} icon={Users} />
             </div>
 
             <div className="bg-gray-50 rounded-2xl p-6 border">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-blue-600" />Kagawad</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {officials.councilors.map((c, i) => <EditableField key={i} label={`Kagawad ${i + 1}`} field={`councilor_${i}`} value={c} icon={UserCog} />)}
+                {officials.councilors.map((c, i) => <EditableField key={i} label="Brgy. Kagawad" field={`councilor_${i}`} value={c} icon={UserCog} />)}
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-2xl p-6 border">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-blue-600" />SK Chairman</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <EditableField label="SK Chairman" field="skChairman" value={officials.skChairman} icon={Users} />
               </div>
             </div>
 
             <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Building className="w-5 h-5 text-blue-600" />Staff</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <EditableField label="Administrator" field="administrator" value={officials.administrator} icon={UserCog} />
-                <EditableField label="Asst. Secretary" field="assistantSecretary" value={officials.assistantSecretary} icon={UserCog} />
-                <EditableField label="Asst. Administrator" field="assistantAdministrator" value={officials.assistantAdministrator} icon={UserCog} />
-                <EditableField label="Record Keeper" field="recordKeeper" value={officials.recordKeeper} icon={UserCog} />
-                <EditableField label="Clerk" field="clerk" value={officials.clerk} icon={UserCog} />
+                <EditableField label="Brgy. Secretary" field="secretary" value={officials.secretary} icon={UserCog} />
+                <EditableField label="Brgy. Treasurer" field="treasurer" value={officials.treasurer} icon={Award} />
+                <EditableField label="Brgy. Administrator" field="administrator" value={officials.administrator} icon={UserCog} />
+                <EditableField label="Asst. Brgy. Secretary" field="assistantSecretary" value={officials.assistantSecretary} icon={UserCog} />
+                <EditableField label="Asst. Brgy. Administrator" field="assistantAdministrator" value={officials.assistantAdministrator} icon={UserCog} />
+                <EditableField label="Brgy. Record Keeper" field="recordKeeper" value={officials.recordKeeper} icon={UserCog} />
+                <EditableField label="Brgy. Clerk" field="clerk" value={officials.clerk} icon={UserCog} />
               </div>
             </div>
 

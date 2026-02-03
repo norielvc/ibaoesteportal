@@ -19,24 +19,24 @@ if (!fs.existsSync(dataDir)) {
 const defaultWorkflows = {
   barangay_clearance: [
     { id: 1, name: 'Submitted', description: 'Application received', status: 'pending', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: true },
-    { id: 2, name: 'Under Review', description: 'Being reviewed by staff', status: 'processing', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
+    { id: 2, name: 'Staff Review', description: 'Being reviewed by staff', status: 'processing', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
     { id: 3, name: 'Barangay Captain Approval', description: 'Approved by authorized personnel', status: 'ready', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 4, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
-    { id: 5, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
+    { id: 5, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
+    { id: 6, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
   ],
   certificate_of_indigency: [
     { id: 1, name: 'Submitted', description: 'Application received', status: 'pending', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: true },
     { id: 2, name: 'Under Review', description: 'Being reviewed by staff', status: 'processing', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
     { id: 3, name: 'Barangay Captain Approval', description: 'Approved by authorized personnel', status: 'ready', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 4, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
-    { id: 5, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
+    { id: 5, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
+    { id: 6, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
   ],
   barangay_residency: [
     { id: 1, name: 'Submitted', description: 'Application received', status: 'pending', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: true },
     { id: 2, name: 'Under Review', description: 'Being reviewed by staff', status: 'processing', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
     { id: 3, name: 'Barangay Captain Approval', description: 'Approved by authorized personnel', status: 'ready', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 4, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
-    { id: 5, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
+    { id: 5, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
+    { id: 6, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
   ]
 };
 
@@ -198,10 +198,11 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
 
         if (validUserIds.length > 0) {
           // Delete existing assignments for this step and certificate type
+          // Note: We use string comparison for step_id to handle large IDs correctly
           const { error: deleteError } = await supabase
             .from('workflow_assignments')
             .delete()
-            .eq('step_id', step.id)
+            .eq('step_id', step.id.toString())
             .eq('request_type', certType);
 
           if (deleteError) {
@@ -213,25 +214,24 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
           // Get all requests of this type that should be at this step
           let requestsQuery = supabase
             .from('certificate_requests')
-            .select('*')
+            .select('id, reference_number, status')
             .eq('certificate_type', certType);
 
-          // Determine which requests should be at this step based on status
-          const statusToStepMapping = {
-            1: ['pending', 'submitted'], // Step 1: Submitted
-            2: ['pending', 'submitted'], // Step 2: Staff Review (pending requests need staff review)
-            3: ['processing'], // Step 3: Captain Approval (processing requests need captain approval)
-            4: ['ready'], // Step 4: Ready for Pickup
-            5: ['released'] // Step 5: Released
-          };
+          // Determine which requests should be at this step based on the step's status
+          // If the step status is 'oic_review', we look for requests in that status
+          // For legacy steps, we might need to map them.
+          const relevantStatuses = [step.status];
 
-          const relevantStatuses = statusToStepMapping[step.id];
-          if (relevantStatuses && relevantStatuses.length > 0) {
-            requestsQuery = requestsQuery.in('status', relevantStatuses);
-          } else {
-            console.log(`    No relevant statuses for step ${step.id}, skipping request assignment`);
-            continue;
+          // Special cases for initial steps
+          if (step.status === 'staff_review' || step.name.toLowerCase().includes('staff') || step.name.toLowerCase().includes('secretary')) {
+            relevantStatuses.push('pending', 'submitted', 'processing');
           }
+
+          if (step.status === 'Clerk_review') {
+            relevantStatuses.push('pending', 'submitted');
+          }
+
+          requestsQuery = requestsQuery.in('status', relevantStatuses);
 
           const { data: requests, error: requestsError } = await requestsQuery;
 
@@ -250,7 +250,7 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
                 .insert([{
                   request_id: request.id,
                   request_type: certType,
-                  step_id: step.id,
+                  step_id: step.id.toString(), // Ensure it's handled as a string for safety
                   step_name: step.name,
                   assigned_user_id: userId,
                   status: 'pending'
@@ -284,7 +284,7 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
             certificate_type: certType,
             workflow_config: { steps: workflowSteps },
             is_active: true
-          }]);
+          }], { onConflict: 'certificate_type' });
 
         if (configError) {
           console.error(`Error updating ${certType} workflow config:`, configError);
