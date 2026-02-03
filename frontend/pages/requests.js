@@ -1233,17 +1233,16 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
               borderRight: `2px solid ${sidebarStyle.bgColor || '#1e40af'}`, // Divider line
               color: sidebarStyle.bgColor || '#1e40af' // Text color matches theme blue
             }}>
-            <div className="text-center mb-6">
-              <div className="mb-2 mx-auto" style={{ width: '80px', height: '80px' }}>
-                <img src={logos.leftLogo} alt="Logo" className="w-full h-full object-contain" />
+            <div className="flex-1 space-y-4 text-center mt-6">
+              {/* Captain's Portrait */}
+              <div className="mb-2 mx-auto overflow-hidden rounded-lg shadow-md border-2 border-blue-900" style={{ width: '100px', height: '120px' }}>
+                {logos.captainImage ? (
+                  <img src={logos.captainImage} alt="Captain" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">No Photo</div>
+                )}
               </div>
-              <p className="font-bold tracking-widest" style={{ fontSize: '14px', color: '#000000' }}>REPUBLIC OF THE PHILIPPINES</p>
-              <p className="font-bold" style={{ fontSize: '12px', color: '#000000' }}>PROVINCE OF BULACAN</p>
-              <p className="font-bold" style={{ fontSize: '12px', color: '#000000' }}>MUNICIPALITY OF CALUMPIT</p>
-              <p className="font-extrabold mt-2" style={{ fontSize: '16px', color: sidebarStyle.bgColor || '#1e40af' }}>BARANGAY IBA O' ESTE</p>
-            </div>
 
-            <div className="flex-1 space-y-4 text-center">
               <div>
                 <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>PUNONG BARANGAY</p>
                 <p className="font-bold" style={{ fontSize: '13px', color: sidebarStyle.bgColor || '#1e40af' }}>{officials.chairman}</p>
