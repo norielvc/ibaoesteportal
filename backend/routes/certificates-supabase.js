@@ -218,7 +218,7 @@ router.post('/clearance', async (req, res) => {
         date_of_birth: dateOfBirth,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
-        status: 'pending',
+        status: 'staff_review',
         date_issued: new Date().toISOString()
       }])
       .select()
@@ -235,8 +235,8 @@ router.post('/clearance', async (req, res) => {
       .single();
 
     let staffUserIds = [];
-    let initialStepId = 2; // Default to legacy step 2
-    let initialStepName = 'Staff Review';
+    let initialStepId = 111;
+    let initialStepName = 'Review Request';
 
     if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
       const steps = workflowConfig.workflow_config.steps;
@@ -249,11 +249,11 @@ router.post('/clearance', async (req, res) => {
         staffUserIds = firstActionableStep.assignedUsers;
         initialStepId = firstActionableStep.id;
         initialStepName = firstActionableStep.name;
-        console.log(`Starting workflow at step: ${initialStepName} (ID: ${initialStepId})`);
+        console.log(`Starting clearance workflow at step: ${initialStepName} (ID: ${initialStepId})`);
       } else {
         // Fallback: If no actionable step found, use the very first assigned one or legacy
         console.warn('No actionable first step found in config, trying legacy fallback');
-        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 2);
+        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 111 || s.id === 2);
         if (fallbackStep) {
           staffUserIds = fallbackStep.assignedUsers || [];
           initialStepId = fallbackStep.id;
@@ -352,7 +352,7 @@ router.post('/indigency', async (req, res) => {
         date_of_birth: dateOfBirth,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
-        status: 'pending',
+        status: 'staff_review',
         date_issued: new Date().toISOString()
       }])
       .select()
@@ -369,8 +369,8 @@ router.post('/indigency', async (req, res) => {
       .single();
 
     let staffUserIds = [];
-    let initialStepId = 2; // Default to legacy step 2
-    let initialStepName = 'Staff Review';
+    let initialStepId = 111;
+    let initialStepName = 'Review Request';
 
     if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
       const steps = workflowConfig.workflow_config.steps;
@@ -385,7 +385,7 @@ router.post('/indigency', async (req, res) => {
         console.log(`Starting indigency workflow at step: ${initialStepName} (ID: ${initialStepId})`);
       } else {
         console.warn('No actionable first step found in config, trying legacy fallback');
-        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 2);
+        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 111 || s.id === 2);
         if (fallbackStep) {
           staffUserIds = fallbackStep.assignedUsers || [];
           initialStepId = fallbackStep.id;
@@ -484,7 +484,7 @@ router.post('/residency', async (req, res) => {
         date_of_birth: dateOfBirth,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
-        status: 'pending',
+        status: 'staff_review',
         date_issued: new Date().toISOString()
       }])
       .select()
@@ -501,8 +501,8 @@ router.post('/residency', async (req, res) => {
       .single();
 
     let staffUserIds = [];
-    let initialStepId = 2; // Default to legacy step 2
-    let initialStepName = 'Staff Review';
+    let initialStepId = 111;
+    let initialStepName = 'Review Request';
 
     if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
       const steps = workflowConfig.workflow_config.steps;
@@ -517,7 +517,7 @@ router.post('/residency', async (req, res) => {
         console.log(`Starting residency workflow at step: ${initialStepName} (ID: ${initialStepId})`);
       } else {
         console.warn('No actionable first step found in config, trying legacy fallback');
-        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 2);
+        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 111 || s.id === 2);
         if (fallbackStep) {
           staffUserIds = fallbackStep.assignedUsers || [];
           initialStepId = fallbackStep.id;

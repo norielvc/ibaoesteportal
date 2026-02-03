@@ -18,25 +18,22 @@ if (!fs.existsSync(dataDir)) {
 // Default workflows
 const defaultWorkflows = {
   barangay_clearance: [
-    { id: 1, name: 'Submitted', description: 'Application received', status: 'pending', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: true },
-    { id: 2, name: 'Staff Review', description: 'Being reviewed by staff', status: 'processing', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 3, name: 'Barangay Captain Approval', description: 'Approved by authorized personnel', status: 'ready', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 5, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
-    { id: 6, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
+    { id: 111, name: 'Review Request', description: 'Initial review of submitted requests', status: 'staff_review', icon: 'Eye', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
+    { id: 2, name: 'Barangay Secretary Approval', description: 'Awaiting Barangay Secretary approval', status: 'secretary_approval', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Secretary' },
+    { id: 3, name: 'Barangay Captain Approval', description: 'Awaiting Barangay Captain approval', status: 'captain_approval', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Captain' },
+    { id: 999, name: 'Releasing Team', description: 'Certificate is ready for release', status: 'oic_review', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true }
   ],
   certificate_of_indigency: [
-    { id: 1, name: 'Submitted', description: 'Application received', status: 'pending', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: true },
-    { id: 2, name: 'Under Review', description: 'Being reviewed by staff', status: 'processing', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 3, name: 'Barangay Captain Approval', description: 'Approved by authorized personnel', status: 'ready', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 5, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
-    { id: 6, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
+    { id: 111, name: 'Review Request', description: 'Initial review of submitted requests', status: 'staff_review', icon: 'Eye', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
+    { id: 2, name: 'Barangay Secretary Approval', description: 'Awaiting Barangay Secretary approval', status: 'secretary_approval', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Secretary' },
+    { id: 3, name: 'Barangay Captain Approval', description: 'Awaiting Barangay Captain approval', status: 'captain_approval', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Captain' },
+    { id: 999, name: 'Releasing Team', description: 'Certificate is ready for release', status: 'oic_review', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true }
   ],
   barangay_residency: [
-    { id: 1, name: 'Submitted', description: 'Application received', status: 'pending', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: true },
-    { id: 2, name: 'Under Review', description: 'Being reviewed by staff', status: 'processing', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 3, name: 'Barangay Captain Approval', description: 'Approved by authorized personnel', status: 'ready', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 5, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
-    { id: 6, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
+    { id: 111, name: 'Review Request', description: 'Initial review of submitted requests', status: 'staff_review', icon: 'Eye', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
+    { id: 2, name: 'Barangay Secretary Approval', description: 'Awaiting Barangay Secretary approval', status: 'secretary_approval', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Secretary' },
+    { id: 3, name: 'Barangay Captain Approval', description: 'Awaiting Barangay Captain approval', status: 'captain_approval', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Captain' },
+    { id: 999, name: 'Releasing Team', description: 'Certificate is ready for release', status: 'oic_review', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true }
   ]
 };
 
@@ -184,110 +181,100 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
     };
 
     for (const certType of certificateTypes) {
+      console.log(`\n--- Syncing ${certType} ---`);
       const workflowSteps = workflows[certType];
       if (!workflowSteps || !Array.isArray(workflowSteps)) {
         console.log(`No workflow found for ${certType}, skipping...`);
         continue;
       }
 
-      console.log(`\nProcessing ${certType} workflow...`);
+      // 1. CLEAR ALL PENDING ASSIGNMENTS for this type to ensure a clean state
+      // This is the most reliable way to handle deletions of users/steps
+      const { error: deleteError } = await supabase
+        .from('workflow_assignments')
+        .delete()
+        .eq('request_type', certType)
+        .eq('status', 'pending');
 
-      // Process each step that requires approval
-      for (const step of workflowSteps) {
-        if (!step.requiresApproval || !step.assignedUsers || step.assignedUsers.length === 0) {
-          continue;
+      if (deleteError) {
+        console.error(`Error clearing assignments for ${certType}:`, deleteError);
+        syncResults.errors.push(`Failed to clear existing assignments for ${certType}`);
+        continue;
+      }
+
+      // 2. Fetch all active requests of this type
+      const { data: requests, error: requestsError } = await supabase
+        .from('certificate_requests')
+        .select(`
+          id, 
+          reference_number, 
+          status,
+          certificate_type
+        `)
+        .eq('certificate_type', certType)
+        .in('status', ['pending', 'submitted', 'staff_review', 'processing', 'oic_review']);
+
+      if (requestsError) {
+        console.error(`Error fetching requests for ${certType}:`, requestsError);
+        syncResults.errors.push(`Failed to fetch requests for ${certType}`);
+        continue;
+      }
+
+      console.log(`Found ${requests?.length || 0} active requests for ${certType}`);
+
+      // 3. For each request, find its CORRECT step and create assignments
+      for (const request of requests || []) {
+        let currentStep = null;
+
+        // Determination based on status
+        if (request.status === 'staff_review' || request.status === 'pending' || request.status === 'submitted') {
+          // 🛡️ ENFORCED SEQUENTIAL FLOW: Initial requests ALWAYS go to the first step (index 0)
+          // which we forced to be the "Review Request Team" in the UI save logic.
+          currentStep = workflowSteps[0];
+        } else if (request.status === 'oic_review') {
+          // It's at the Releasing phase
+          currentStep = workflowSteps.find(s => s.status === 'oic_review');
+        } else if (request.status === 'processing') {
+          // It's in the middle approval flow
+          // find the first step that is NOT staff_review or oic_review
+          const approvalSteps = workflowSteps.filter(s => s.status !== 'staff_review' && s.status !== 'oic_review' && s.requiresApproval);
+
+          // To be precise, we should check history to see which steps are done, 
+          // but for now we assume the first approval step if it's "processing"
+          // In a multi-step approval, the status might stay "processing"
+          // but for simplicity in syncing, we target all users in the approval chain 
+          // that could potentially be next.
+
+          // Actually, let's just find the first defined approval step.
+          currentStep = approvalSteps[0];
         }
 
-        console.log(`  Step ${step.id}: ${step.name} - ${step.assignedUsers.length} assigned users`);
+        if (currentStep && currentStep.assignedUsers && currentStep.assignedUsers.length > 0) {
+          // Create assignments for all assigned users
+          for (const userId of currentStep.assignedUsers) {
+            const user = users.find(u => u.id === userId);
+            if (!user) continue;
 
-        // Validate that assigned user IDs exist in the database
-        const validUserIds = [];
-        for (const userId of step.assignedUsers) {
-          const user = users.find(u => u.id === userId);
-          if (user) {
-            validUserIds.push(userId);
-            console.log(`    ✅ ${user.first_name} ${user.last_name} (${user.id})`);
-          } else {
-            console.log(`    ❌ User ID ${userId} not found in database`);
-            syncResults.errors.push(`User ID ${userId} not found for step "${step.name}" in ${certType}`);
-          }
-        }
+            const { error: assignError } = await supabase
+              .from('workflow_assignments')
+              .insert([{
+                request_id: request.id,
+                request_type: certType,
+                step_id: currentStep.id.toString(),
+                step_name: currentStep.name,
+                assigned_user_id: userId,
+                status: 'pending'
+              }]);
 
-        if (validUserIds.length > 0) {
-          // Delete existing assignments for this step and certificate type
-          // Note: We use string comparison for step_id to handle large IDs correctly
-          const { error: deleteError } = await supabase
-            .from('workflow_assignments')
-            .delete()
-            .eq('step_id', step.id.toString())
-            .eq('request_type', certType);
-
-          if (deleteError) {
-            console.error(`    Error deleting existing assignments for step ${step.id}:`, deleteError);
-            syncResults.errors.push(`Failed to delete existing assignments for step "${step.name}" in ${certType}`);
-            continue;
-          }
-
-          // Get all requests of this type that should be at this step
-          let requestsQuery = supabase
-            .from('certificate_requests')
-            .select('id, reference_number, status')
-            .eq('certificate_type', certType);
-
-          // Determine which requests should be at this step based on the step's status
-          // If the step status is 'oic_review', we look for requests in that status
-          // For legacy steps, we might need to map them.
-          const relevantStatuses = [step.status];
-
-          // Special cases for initial steps
-          if (step.status === 'staff_review' || step.name.toLowerCase().includes('staff') || step.name.toLowerCase().includes('secretary')) {
-            relevantStatuses.push('pending', 'submitted', 'processing');
-          }
-
-          if (step.status === 'Clerk_review') {
-            relevantStatuses.push('pending', 'submitted');
-          }
-
-          requestsQuery = requestsQuery.in('status', relevantStatuses);
-
-          const { data: requests, error: requestsError } = await requestsQuery;
-
-          if (requestsError) {
-            console.error(`    Error fetching requests:`, requestsError);
-            syncResults.errors.push(`Failed to fetch requests for step "${step.name}" in ${certType}`);
-            continue;
-          }
-
-          // Create assignments for each valid user and relevant request
-          let assignmentCount = 0;
-          for (const request of requests || []) {
-            for (const userId of validUserIds) {
-              const { error: assignError } = await supabase
-                .from('workflow_assignments')
-                .insert([{
-                  request_id: request.id,
-                  request_type: certType,
-                  step_id: step.id.toString(), // Ensure it's handled as a string for safety
-                  step_name: step.name,
-                  assigned_user_id: userId,
-                  status: 'pending'
-                }]);
-
-              if (assignError) {
-                console.error(`    Failed to create assignment for ${request.reference_number}:`, assignError);
-                syncResults.errors.push(`Failed to create assignment for ${request.reference_number}`);
-              } else {
-                assignmentCount++;
-              }
+            if (assignError) {
+              console.error(`Failed to assign ${user.email} to ${request.reference_number}:`, assignError);
+            } else {
+              syncResults.totalAssignments++;
             }
           }
-
-          console.log(`    Created ${assignmentCount} assignments for ${requests?.length || 0} requests`);
-          syncResults.totalAssignments += assignmentCount;
         }
-
-        syncResults.updatedSteps++;
       }
+      syncResults.updatedSteps += workflowSteps.length;
     }
 
     // Update workflow configurations in database

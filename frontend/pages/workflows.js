@@ -20,11 +20,10 @@ const certificateTypes = [
 
 // Default workflow steps
 const defaultSteps = [
-  { id: 1, name: 'Submitted', description: 'Application received', status: 'pending', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
-  { id: 2, name: 'Staff Review', description: 'Being reviewed by assigned staff', status: 'staff_review', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-  { id: 3, name: 'Barangay Captain Approval', description: 'Awaiting Barangay Captain approval', status: 'captain_approval', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-  { id: 5, name: 'Ready for Pickup', description: 'Certificate is ready', status: 'ready', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false },
-  { id: 6, name: 'Released', description: 'Certificate released to applicant', status: 'released', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false }
+  { id: 111, name: 'Review Request', description: 'Initial review of submitted requests', status: 'staff_review', icon: 'Eye', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
+  { id: 2, name: 'Barangay Secretary Approval', description: 'Awaiting Barangay Secretary approval', status: 'secretary_approval', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Secretary' },
+  { id: 3, name: 'Barangay Captain Approval', description: 'Awaiting Barangay Captain approval', status: 'captain_approval', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Captain' },
+  { id: 999, name: 'Releasing Team', description: 'Certificate is ready for release', status: 'oic_review', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true }
 ];
 
 const iconOptions = [
@@ -149,7 +148,24 @@ export default function WorkflowsPage() {
 
   const saveWorkflows = async (updated) => {
     // Force sync: apply the same workflow steps to ALL certificate types
-    const masterSteps = updated[MASTER_WORKFLOW_ID] || [];
+    let masterSteps = updated[MASTER_WORKFLOW_ID] || [];
+
+    // 🛡️ RE-ORDERING LOGIC - ENSURE SEQUENTIAL FLOW
+    // 1. Review Request Team (Always First)
+    // 2. Custom Approval Steps (Middle)
+    // 3. Releasing Team (Always Last)
+    const staffReview = masterSteps.find(s => s.status === 'staff_review');
+    const oicReview = masterSteps.find(s => s.status === 'oic_review');
+    const middleSteps = masterSteps.filter(s => s.status !== 'staff_review' && s.status !== 'oic_review');
+
+    const orderedSteps = [];
+    // 🔒 NORMALIZE: staff_review is ALWAYS called "Review Request Team"
+    if (staffReview) orderedSteps.push({ ...staffReview, name: 'Review Request Team', requiresApproval: true });
+    orderedSteps.push(...middleSteps);
+    // 🔒 NORMALIZE: oic_review is ALWAYS called "Releasing Team"
+    if (oicReview) orderedSteps.push({ ...oicReview, name: 'Releasing Team', requiresApproval: true });
+
+    masterSteps = orderedSteps;
     const unifiedWorkflows = {};
     certificateTypes.forEach(cert => {
       unifiedWorkflows[cert.id] = JSON.parse(JSON.stringify(masterSteps));
@@ -218,8 +234,8 @@ export default function WorkflowsPage() {
 
   const getCurrentSteps = () => workflows[MASTER_WORKFLOW_ID] || [];
 
-  // Filter out the automatic Releasing Team step from the main management list
-  const getVisibleSteps = () => getCurrentSteps().filter(s => s.status !== 'oic_review');
+  // Filter out the automatic Releasing Team and Review Team steps from the main management list
+  const getVisibleSteps = () => getCurrentSteps().filter(s => s.status !== 'oic_review' && s.status !== 'staff_review');
 
   const handleAddStep = () => {
     if (!newStep.name || !newStep.status) {
@@ -274,7 +290,41 @@ export default function WorkflowsPage() {
 
     const updated = {
       ...workflows,
-      [selectedCertificate]: updatedSteps
+      [certId]: updatedSteps
+    };
+    saveWorkflows(updated);
+    setShowAssignModal(null);
+  };
+
+  const handleAssignReviewTeam = (certId, stepId, selectedUserIds) => {
+    let certSteps = workflows[certId] || [];
+
+    // Check if the review step exists
+    const reviewStepIndex = certSteps.findIndex(s => s.status === 'staff_review');
+
+    let updatedSteps;
+    if (reviewStepIndex !== -1) {
+      // Update existing step
+      updatedSteps = certSteps.map(s => s.status === 'staff_review' ? { ...s, assignedUsers: selectedUserIds } : s);
+    } else {
+      // Create new review step at the beginning
+      const newReviewStep = {
+        id: Date.now(),
+        name: 'Review Request Team',
+        description: 'Initial review of submitted requests',
+        status: 'staff_review',
+        icon: 'Eye',
+        autoApprove: false,
+        assignedUsers: selectedUserIds,
+        requiresApproval: true,
+        sendEmail: true
+      };
+      updatedSteps = [newReviewStep, ...certSteps];
+    }
+
+    const updated = {
+      ...workflows,
+      [certId]: updatedSteps
     };
     saveWorkflows(updated);
     setShowAssignModal(null);
@@ -301,12 +351,26 @@ export default function WorkflowsPage() {
   };
 
   const handleMoveStep = (stepId, direction) => {
-    const steps = [...getCurrentSteps()];
-    const index = steps.findIndex(s => s.id === stepId);
-    if ((direction === 'up' && index === 0) || (direction === 'down' && index === steps.length - 1)) return;
+    const allSteps = [...getCurrentSteps()];
+    const visibleSteps = allSteps.filter(s => s.status !== 'staff_review' && s.status !== 'oic_review');
+    const index = visibleSteps.findIndex(s => s.id === stepId);
+
+    if (index === -1) return; // Cannot move staff_review or oic_review via this method
+    if ((direction === 'up' && index === 0) || (direction === 'down' && index === visibleSteps.length - 1)) return;
+
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    [steps[index], steps[newIndex]] = [steps[newIndex], steps[index]];
-    const updated = { ...workflows, [selectedCertificate]: steps };
+    [visibleSteps[index], visibleSteps[newIndex]] = [visibleSteps[newIndex], visibleSteps[index]];
+
+    // Reconstruct allSteps with the new middle order
+    const staffReview = allSteps.find(s => s.status === 'staff_review');
+    const oicReview = allSteps.find(s => s.status === 'oic_review');
+
+    const updatedSteps = [];
+    if (staffReview) updatedSteps.push(staffReview);
+    updatedSteps.push(...visibleSteps);
+    if (oicReview) updatedSteps.push(oicReview);
+
+    const updated = { ...workflows, [MASTER_WORKFLOW_ID]: updatedSteps };
     saveWorkflows(updated);
   };
 
@@ -331,6 +395,8 @@ export default function WorkflowsPage() {
   const allSteps = getCurrentSteps();
   // Ensure preview always shows Releasing Team at the end if it exists
   const previewSteps = [...allSteps].sort((a, b) => {
+    if (a.status === 'staff_review') return -1;
+    if (b.status === 'staff_review') return 1;
     if (a.status === 'oic_review') return 1;
     if (b.status === 'oic_review') return -1;
     return 0;
@@ -405,7 +471,60 @@ export default function WorkflowsPage() {
           <p className="text-xs text-gray-400 italic mb-4">These steps define the standard process for all certificates in the system.</p>
         </div>
 
-        {/* Unified Workflow Section */}
+        {/* Review Request Team Table */}
+        <div className="z-10 mt-8 mb-4 bg-white rounded-xl shadow-2xl border-2 border-green-500 overflow-hidden transform transition-all">
+          <div className="p-4 bg-green-600 border-b border-green-700">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              Review Request Team (Global)
+            </h2>
+            <p className="text-xs text-green-100 mt-0.5">Assigned users will handle the initial review for <b>ALL</b> certificate types.</p>
+          </div>
+          <div className="p-6">
+            {(() => {
+              const allSteps = getCurrentSteps();
+              const reviewStep = allSteps.find(s => s.status === 'staff_review');
+
+              return (
+                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div>
+                    <h4 className="font-bold text-gray-900">Assigned Review Officers</h4>
+                    <p className="text-xs text-gray-500">These users are the first to receive and review submitted requests.</p>
+                  </div>
+
+                  <div className="flex-1 flex justify-center px-4">
+                    {reviewStep && reviewStep.assignedUsers && reviewStep.assignedUsers.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {reviewStep.assignedUsers.map(userId => {
+                          const user = users.find(u => (u._id === userId || u.id === userId));
+                          return user ? (
+                            <span key={userId} className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs border border-green-200 font-bold">
+                              <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center text-white text-[10px]">
+                                {user.firstName?.charAt(0)}
+                              </div>
+                              {user.firstName} {user.lastName}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400 italic bg-gray-100 px-4 py-1 rounded-lg border border-dashed border-gray-300">No members assigned yet</span>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setShowAssignModal({ certId: selectedCertificate, stepId: reviewStep?.id || 'new_review', type: 'review' })}
+                    className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold shadow-lg transition-all active:scale-95"
+                  >
+                    Assign Team Members
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* Approval & Releasing Flow Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200 bg-gray-50/50">
             <div className="flex items-center justify-between">
@@ -414,7 +533,7 @@ export default function WorkflowsPage() {
                   <Shield className="w-5 h-5 text-blue-600" />
                   Approval & Releasing Flow
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">{visibleSteps.length} approval steps + 1 automatic releasing phase</p>
+                <p className="text-sm text-gray-500 mt-1">1 initial review phase + {visibleSteps.length} approval steps + 1 releasing phase</p>
               </div>
               <button
                 onClick={() => setShowAddStep(true)}
@@ -678,7 +797,11 @@ export default function WorkflowsPage() {
             users={users}
             onSave={(selectedUserIds) => {
               if (showAssignModal.certId) {
-                handleAssignReleasingTeam(showAssignModal.certId, showAssignModal.stepId, selectedUserIds);
+                if (showAssignModal.type === 'review') {
+                  handleAssignReviewTeam(showAssignModal.certId, showAssignModal.stepId, selectedUserIds);
+                } else {
+                  handleAssignReleasingTeam(showAssignModal.certId, showAssignModal.stepId, selectedUserIds);
+                }
               } else {
                 handleAssignUsers(showAssignModal, selectedUserIds);
               }

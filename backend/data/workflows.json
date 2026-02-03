@@ -1,28 +1,24 @@
 {
   "barangay_clearance": [
     {
-      "name": "Brgy. Clerk Review",
-      "description": "The request is being review",
-      "status": "Clerk_review",
-      "icon": "Clock",
+      "id": 111,
+      "name": "Review Request Team",
+      "description": "Initial review of submitted requests",
+      "status": "staff_review",
+      "icon": "Eye",
       "autoApprove": false,
-      "assignedUsers": [
-        "d4d42f4f-7720-45a4-9044-d3e2f2ff8e4a"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
-      "sendEmail": true,
-      "id": 1770044419537
+      "sendEmail": true
     },
     {
       "id": 2,
-      "name": "Brgy. Secretary Approval",
-      "description": "Being reviewed by assigned staff",
-      "status": "staff_review",
+      "name": "Barangay Secretary Approval",
+      "description": "Awaiting Barangay Secretary approval",
+      "status": "secretary_approval",
       "icon": "Clock",
       "autoApprove": false,
-      "assignedUsers": [
-        "9550a8b2-9e32-4f52-a260-52766afb49b1"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
       "sendEmail": true,
       "officialRole": "Brgy. Secretary"
@@ -34,52 +30,43 @@
       "status": "captain_approval",
       "icon": "UserCheck",
       "autoApprove": false,
-      "assignedUsers": [
-        "2a6054aa-d73d-4f52-876f-efa95f77add9"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
       "sendEmail": true,
       "officialRole": "Brgy. Captain"
     },
     {
-      "id": 1770046654802,
+      "id": 999,
       "name": "Releasing Team",
-      "description": "Processing approved certificate",
+      "description": "Certificate is ready for release",
       "status": "oic_review",
-      "icon": "Settings",
+      "icon": "CheckCircle",
       "autoApprove": false,
-      "assignedUsers": [
-        "9550a8b2-9e32-4f52-a260-52766afb49b1",
-        "379898b5-06e9-43a7-b51d-213aec975825"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
       "sendEmail": true
     }
   ],
   "certificate_of_indigency": [
     {
-      "name": "Brgy. Clerk Review",
-      "description": "The request is being review",
-      "status": "Clerk_review",
-      "icon": "Clock",
+      "id": 111,
+      "name": "Review Request Team",
+      "description": "Initial review of submitted requests",
+      "status": "staff_review",
+      "icon": "Eye",
       "autoApprove": false,
-      "assignedUsers": [
-        "d4d42f4f-7720-45a4-9044-d3e2f2ff8e4a"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
-      "sendEmail": true,
-      "id": 1770044419537
+      "sendEmail": true
     },
     {
       "id": 2,
-      "name": "Brgy. Secretary Approval",
-      "description": "Being reviewed by assigned staff",
-      "status": "staff_review",
+      "name": "Barangay Secretary Approval",
+      "description": "Awaiting Barangay Secretary approval",
+      "status": "secretary_approval",
       "icon": "Clock",
       "autoApprove": false,
-      "assignedUsers": [
-        "9550a8b2-9e32-4f52-a260-52766afb49b1"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
       "sendEmail": true,
       "officialRole": "Brgy. Secretary"
@@ -91,52 +78,43 @@
       "status": "captain_approval",
       "icon": "UserCheck",
       "autoApprove": false,
-      "assignedUsers": [
-        "2a6054aa-d73d-4f52-876f-efa95f77add9"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
       "sendEmail": true,
       "officialRole": "Brgy. Captain"
     },
     {
-      "id": 1770046654802,
+      "id": 999,
       "name": "Releasing Team",
-      "description": "Processing approved certificate",
+      "description": "Certificate is ready for release",
       "status": "oic_review",
-      "icon": "Settings",
+      "icon": "CheckCircle",
       "autoApprove": false,
-      "assignedUsers": [
-        "9550a8b2-9e32-4f52-a260-52766afb49b1",
-        "379898b5-06e9-43a7-b51d-213aec975825"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
       "sendEmail": true
     }
   ],
   "barangay_residency": [
     {
-      "name": "Brgy. Clerk Review",
-      "description": "The request is being review",
-      "status": "Clerk_review",
-      "icon": "Clock",
+      "id": 111,
+      "name": "Review Request Team",
+      "description": "Initial review of submitted requests",
+      "status": "staff_review",
+      "icon": "Eye",
       "autoApprove": false,
-      "assignedUsers": [
-        "d4d42f4f-7720-45a4-9044-d3e2f2ff8e4a"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
-      "sendEmail": true,
-      "id": 1770044419537
+      "sendEmail": true
     },
     {
       "id": 2,
-      "name": "Brgy. Secretary Approval",
-      "description": "Being reviewed by assigned staff",
-      "status": "staff_review",
+      "name": "Barangay Secretary Approval",
+      "description": "Awaiting Barangay Secretary approval",
+      "status": "secretary_approval",
       "icon": "Clock",
       "autoApprove": false,
-      "assignedUsers": [
-        "9550a8b2-9e32-4f52-a260-52766afb49b1"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
       "sendEmail": true,
       "officialRole": "Brgy. Secretary"
@@ -148,24 +126,19 @@
       "status": "captain_approval",
       "icon": "UserCheck",
       "autoApprove": false,
-      "assignedUsers": [
-        "2a6054aa-d73d-4f52-876f-efa95f77add9"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
       "sendEmail": true,
       "officialRole": "Brgy. Captain"
     },
     {
-      "id": 1770046654802,
+      "id": 999,
       "name": "Releasing Team",
-      "description": "Processing approved certificate",
+      "description": "Certificate is ready for release",
       "status": "oic_review",
-      "icon": "Settings",
+      "icon": "CheckCircle",
       "autoApprove": false,
-      "assignedUsers": [
-        "9550a8b2-9e32-4f52-a260-52766afb49b1",
-        "379898b5-06e9-43a7-b51d-213aec975825"
-      ],
+      "assignedUsers": [],
       "requiresApproval": true,
       "sendEmail": true
     }

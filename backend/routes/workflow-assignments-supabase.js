@@ -147,7 +147,7 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
 
       let shouldShow = true;
 
-      if ((reqStatus === 'pending' || reqStatus === 'submitted') && steps.length > 0) {
+      if ((reqStatus === 'pending' || reqStatus === 'submitted' || reqStatus === 'staff_review') && steps.length > 0) {
         // For pending requests, only show assignments for the FIRST approval step
         const firstApprovalStep = steps.find(s => s.requiresApproval === true);
         if (firstApprovalStep) {
@@ -163,6 +163,7 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
             id: assignment.id,
             step_id: assignment.step_id,
             step_name: assignment.step_name,
+            assigned_user_id: assignment.assigned_user_id,
             assigned_at: assignment.assigned_at,
             status: assignment.status
           }
@@ -189,7 +190,7 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
 router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
   try {
     const { assignmentId } = req.params;
-    const { action, comment } = req.body; // action: 'approve', 'reject', 'return'
+    const { action, comment, signatureData } = req.body; // action: 'approve', 'reject', 'return'
     const userId = req.user._id;
 
     // Get the assignment
@@ -246,16 +247,8 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
         nextStep = steps[currentStepIndex + 1];
 
         // Map step status to VALID database request status
-        // Database only allows: pending, processing, ready, ready_for_pickup, released, cancelled
-        // All intermediate approval steps should use 'processing'
-        if (nextStep.status === 'oic_review') {
-          newRequestStatus = 'processing'; // Releasing Team - still processing until released
-        } else if (nextStep.status === 'ready' || nextStep.status === 'released') {
-          newRequestStatus = 'ready'; // Final ready status
-        } else {
-          // All other approval steps (clerk, secretary, captain) use 'processing'
-          newRequestStatus = 'processing';
-        }
+        // We now support expanded statuses: staff_review, secretary_approval, captain_approval, oic_review
+        newRequestStatus = nextStep.status;
 
         // Check if next step is the FINAL step (Ready for Pickup / Released with no approvers)
         if (!nextStep.requiresApproval || nextStep.status === 'ready' || nextStep.status === 'released') {
@@ -376,7 +369,9 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
         performed_by: userId,
         previous_status: assignment.certificate_requests.status,
         new_status: newRequestStatus,
-        comments: comment
+        comments: comment,
+        signature_data: signatureData,
+        official_role: currentStep?.officialRole
       }]);
 
     // Don't fail if history logging fails

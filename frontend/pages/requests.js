@@ -4,9 +4,10 @@ import Layout from '@/components/Layout/Layout';
 import {
   FileText, Search, Eye, CheckCircle, XCircle, RotateCcw,
   Clock, User, Calendar, ChevronDown, X, AlertTriangle,
-  FileCheck, History, Filter, Shield, Printer, Download
+  FileCheck, History, Filter, Shield, Printer, Download, PenTool
 } from 'lucide-react';
 import { getAuthToken, getUserData } from '@/lib/auth';
+import SignaturePad from '@/components/UI/SignaturePad';
 // API Configuration
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
@@ -25,6 +26,7 @@ export default function RequestsPage() {
   const [actionType, setActionType] = useState('');
   const [actionComment, setActionComment] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [userSignature, setUserSignature] = useState(null);
 
   // Load current user and workflows
   useEffect(() => {
@@ -65,7 +67,31 @@ export default function RequestsPage() {
 
     loadWorkflows();
     fetchRequests();
+    fetchUserSignature();
   }, []);
+
+  const fetchUserSignature = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/user/signatures`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success && data.signatures && data.signatures.length > 0) {
+        // Find default or use the first one
+        const defaultSig = data.signatures.find(s => s.id === data.defaultSignatureId) || data.signatures[0];
+        setUserSignature(defaultSig.signatureData);
+      }
+    } catch (error) {
+      console.error('Error fetching user signature:', error);
+    }
+  };
 
   // Re-fetch requests when view mode changes
   useEffect(() => {
@@ -107,76 +133,86 @@ export default function RequestsPage() {
 
   // Check if current user is assigned to approve a request at its current step
   const isUserAssignedToRequest = (request) => {
-    if (!currentUser) {
-      return false;
-    }
-
-    // Admin can see all
+    if (!currentUser) return false;
     if (currentUser.role === 'admin') return true;
 
-    // If we're in "My Assignments" view, all requests are already filtered to assigned ones
-    if (viewMode === 'assigned') {
-      return true;
+    // Use the workflow_assignment data attached by the backend if available
+    if (request.workflow_assignment) {
+      const assignedId = request.workflow_assignment.assigned_user_id || request.workflow_assignment.userId;
+      const currentUserId = currentUser._id || currentUser.id;
+      return String(assignedId) === String(currentUserId);
     }
 
-    // For "All Requests" view, use the original workflow logic as fallback
-    if (!workflows) {
-      return false;
+    // Fallback: Check based on current status and global workflows
+    if (!workflows) return false;
+    const workflowSteps = workflows[request.certificate_type] || workflows['master_workflow'];
+    if (!workflowSteps) return false;
+
+    let currentStep;
+    if (request.status === 'staff_review' || request.status === 'pending') {
+      currentStep = workflowSteps.find(s => s.status === 'staff_review');
+    } else if (request.status === 'oic_review') {
+      currentStep = workflowSteps.find(s => s.status === 'oic_review');
+    } else if (request.status === 'processing') {
+      // Find middle steps (approvals)
+      const approvalSteps = workflowSteps.filter(s => s.status !== 'staff_review' && s.status !== 'oic_review');
+      currentStep = approvalSteps[0]; // Assume first for now
     }
 
-    // Get workflow for this certificate type - it's an array of steps directly
-    const workflowSteps = workflows[request.certificate_type];
-    if (!workflowSteps || !Array.isArray(workflowSteps) || workflowSteps.length === 0) {
-      return false;
-    }
-
-    // Determine current step index based on status
-    const statusToStepIndex = {
-      'pending': 1,      // Pending requests need Staff Review (step index 1)
-      'submitted': 1,    // Same as pending
-      'processing': 2,   // Processing means staff approved, now needs Captain (step index 2)
-      'staff_review': 1, // At staff review step
-      'captain_approval': 2, // At captain approval step
-      'oic_review': 3,   // NEW: Needs OIC processing (step index 3)
-      'ready': 4,        // Ready for pickup
-      'ready_for_pickup': 4,
-      'released': 5      // Released, final step
-    };
-
-    const stepIndex = statusToStepIndex[request.status] || 0;
-    const currentStep = workflowSteps[stepIndex];
-
-    if (!currentStep || !currentStep.requiresApproval) {
-      return false;
-    }
-
-    // Check if user is assigned to this step
+    if (!currentStep) return false;
     const userId = currentUser._id || currentUser.id;
-    const assignedUsers = currentStep.assignedUsers || [];
-
-    return assignedUsers.some(assignedId => String(assignedId) === String(userId));
+    return (currentStep.assignedUsers || []).some(id => String(id) === String(userId));
   };
 
   // Get the current workflow step for a request
   const getCurrentWorkflowStep = (request) => {
-    const workflowSteps = workflows[request.certificate_type];
-    if (!workflowSteps || !Array.isArray(workflowSteps)) return null;
+    // 🛡️ ENFORCED SEQUENTIAL FLOW: Initial requests ALWAYS go to the first step
+    const currentStatus = (request.status || 'pending').toLowerCase();
+    const workflowSteps = workflows[request.certificate_type] || Object.values(workflows)[0];
 
-    // Status to step index mapping
-    const statusToStepIndex = {
-      'pending': 1,
-      'submitted': 1,
-      'processing': 2,
-      'staff_review': 1,
-      'captain_approval': 2,
-      'oic_review': 3,
-      'ready': 4,
-      'ready_for_pickup': 4,
-      'released': 5
-    };
+    // DEBUG: Log what we're working with
+    if (request.reference_number === filteredRequests[0]?.reference_number) {
+      console.log('🔍 DEBUG getCurrentWorkflowStep:', {
+        ref: request.reference_number,
+        status: currentStatus,
+        certType: request.certificate_type,
+        hasWorkflowSteps: !!workflowSteps,
+        firstStepName: workflowSteps?.[0]?.name,
+        allStepNames: workflowSteps?.map(s => s.name)
+      });
+    }
 
-    const index = statusToStepIndex[request.status] || 0;
-    return workflowSteps[index] || null;
+    if (workflowSteps && Array.isArray(workflowSteps) && ['pending', 'submitted', 'staff_review'].includes(currentStatus)) {
+      return workflowSteps[0];
+    }
+
+    // 1. Prioritize explicit assignment data from the backend
+    if (request.workflow_assignment && request.workflow_assignment.step_name) {
+      return { name: request.workflow_assignment.step_name };
+    }
+
+    // 2. Fallback to status-based search
+    // Note: workflowSteps and currentStatus are already defined above
+
+    // Special case: if processing, we might be at secretary or captain
+    // This part is hard to guess without assignment data, but we look for the first step
+    // that is NOT staff_review and not oic_review
+    if (currentStatus === 'processing') {
+      const activeStep = workflowSteps.find(s =>
+        s.status !== 'staff_review' &&
+        s.status !== 'oic_review' &&
+        s.requiresApproval
+      );
+      return activeStep || workflowSteps[1] || null;
+    }
+
+    // Find the step that matches the target status
+    const matchingStep = workflowSteps.find(s =>
+      s.status?.toLowerCase() === targetStepStatus ||
+      s.name?.toLowerCase().includes(targetStepStatus.replace('_', ' '))
+    );
+
+    return matchingStep || workflowSteps[0] || null;
   };
 
   // Check if user can take action on request
@@ -189,6 +225,7 @@ export default function RequestsPage() {
   const getStatusColor = (status) => {
     const colors = {
       'pending': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'staff_review': 'bg-green-100 text-green-800 border-green-200',
       'submitted': 'bg-blue-100 text-blue-800 border-blue-200',
       'under_review': 'bg-purple-100 text-purple-800 border-purple-200',
       'processing': 'bg-purple-100 text-purple-800 border-purple-200',
@@ -246,6 +283,7 @@ export default function RequestsPage() {
       // Status progression:
       const statusFlow = {
         'pending': 'processing',
+        'staff_review': 'processing',
         'submitted': 'processing',
         'processing': 'oic_review', // After Captain, go to OIC
         'oic_review': 'ready',      // After OIC, go to Ready
@@ -263,7 +301,7 @@ export default function RequestsPage() {
     return 'ready';
   };
 
-  const submitAction = async () => {
+  const submitAction = async (signatureData = null) => {
     if (!selectedRequest || !actionType) return;
 
     setProcessing(true);
@@ -277,17 +315,17 @@ export default function RequestsPage() {
         status: newStatus,
         comment: actionComment,
         action: actionType,
-        approvedBy: currentUser?.email
+        approvedBy: currentUser?.email,
+        signatureData: signatureData
       };
 
       // If this is a workflow assignment, use the assignment-specific endpoint
-      // This is crucial for triggering post-approval workflows (certificate generation)
       if (selectedRequest.workflow_assignment) {
-        console.log('Using workflow assignment update route');
         url = `${API_URL}/api/workflow-assignments/${selectedRequest.workflow_assignment.id}/status`;
         body = {
           action: actionType,
-          comment: actionComment
+          comment: actionComment,
+          signatureData: signatureData
         };
       }
 
@@ -330,7 +368,9 @@ export default function RequestsPage() {
       req.applicant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' ||
-      (statusFilter === 'ready' ? ['ready', 'ready_for_pickup'].includes(req.status) : req.status === statusFilter);
+      (statusFilter === 'pending' ? ['pending', 'staff_review', 'submitted'].includes(req.status) :
+        statusFilter === 'ready' ? ['ready', 'ready_for_pickup'].includes(req.status) :
+          req.status === statusFilter);
     const matchesType = typeFilter === 'all' || req.certificate_type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -341,33 +381,15 @@ export default function RequestsPage() {
 
   // Fetch assignment counts
   useEffect(() => {
-    const fetchAssignmentCounts = async () => {
-      if (!currentUser) return;
+    const visibleAssigned = requests.filter(r => isUserAssignedToRequest(r));
+    setAssignedCount(visibleAssigned.length);
 
-      try {
-        const token = getAuthToken();
-        const response = await fetch(`${API_URL}/api/workflow-assignments/user/${currentUser._id || currentUser.id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
+    const pending = visibleAssigned.filter(r =>
+      ['staff_review', 'processing', 'oic_review', 'pending'].includes(r.status)
+    ).length;
 
-        if (data.success) {
-          const totalAssigned = data.count || 0;
-          const pendingActions = data.assignments?.filter(a =>
-            a.status === 'pending' &&
-            ['pending', 'processing'].includes(a.certificate_requests?.status)
-          ).length || 0;
-
-          setAssignedCount(totalAssigned);
-          setPendingActionCount(pendingActions);
-        }
-      } catch (error) {
-        console.error('Error fetching assignment counts:', error);
-      }
-    };
-
-    fetchAssignmentCounts();
-  }, [currentUser]);
+    setPendingActionCount(pending);
+  }, [requests, viewMode, currentUser]);
 
   return (
     <Layout>
@@ -439,11 +461,12 @@ export default function RequestsPage() {
                   className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
                 >
                   <option value="all">All Status</option>
+                  <option value="staff_review">Staff Review</option>
                   <option value="pending">Pending</option>
                   <option value="processing">Processing</option>
+                  <option value="oic_review">Releasing Team</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
-
                   <option value="released">Released</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -556,7 +579,7 @@ export default function RequestsPage() {
                             >
                               <Eye className="w-5 h-5" />
                             </button>
-                            {canAct && ['pending', 'processing'].includes(request.status) && (
+                            {canAct && ['pending', 'processing', 'staff_review'].includes(request.status) && (
                               <>
                                 <button
                                   onClick={() => handleAction(request, 'approve')}
@@ -616,6 +639,8 @@ export default function RequestsPage() {
             onSubmit={submitAction}
             onClose={() => { setShowActionModal(false); setSelectedRequest(null); }}
             processing={processing}
+            currentStep={getCurrentWorkflowStep(selectedRequest)}
+            userSignature={userSignature}
           />
         )}
       </div>
@@ -786,7 +811,7 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
           </div>
 
           {/* Footer Actions */}
-          {canAct && ['pending', 'processing'].includes(request.status) && (
+          {canAct && ['pending', 'processing', 'staff_review'].includes(request.status) && (
             <div className="border-t bg-gray-50 px-6 py-4 flex gap-3 justify-end">
               <button
                 onClick={() => onAction(request, 'return')}
@@ -818,7 +843,18 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
 }
 
 // Action Modal Component
-function ActionModal({ request, actionType, comment, setComment, onSubmit, onClose, processing }) {
+function ActionModal({ request, actionType, comment, setComment, onSubmit, onClose, processing, currentStep, userSignature }) {
+  const [useEsign, setUseEsign] = useState(false);
+  const [tempSignature, setTempSignature] = useState(null);
+  const [showSignPad, setShowSignPad] = useState(false);
+
+  // Initialize esign preference
+  useEffect(() => {
+    if (userSignature && actionType === 'approve') {
+      setUseEsign(true);
+    }
+  }, [userSignature, actionType]);
+
   const config = {
     approve: {
       title: 'Approve Request',
@@ -851,6 +887,9 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
 
   const cfg = config[actionType];
   const Icon = cfg.icon;
+
+  const isEsignRole = currentStep && currentStep.officialRole && currentStep.officialRole !== 'None';
+  const canUseEsign = actionType === 'approve' && isEsignRole && userSignature;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -892,6 +931,74 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
               />
             </div>
 
+            {/* Signature Section - Unified and Clear */}
+            {canUseEsign && (
+              <div className="mb-6 border-t pt-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-semibold text-gray-900">E-signature Approval</span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={useEsign}
+                      onChange={() => setUseEsign(!useEsign)}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                {useEsign && (
+                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="text-xs font-medium text-blue-600 flex items-center gap-1 uppercase tracking-wider">
+                        Signing as: {currentStep.officialRole}
+                      </p>
+                      <button
+                        onClick={() => setShowSignPad(!showSignPad)}
+                        className="text-xs text-blue-700 hover:underline font-medium"
+                      >
+                        {showSignPad ? 'Cancel' : 'Draw New'}
+                      </button>
+                    </div>
+
+                    {!showSignPad ? (
+                      <div className="bg-white rounded-lg h-24 flex items-center justify-center border border-blue-200 relative group">
+                        <img
+                          src={tempSignature || userSignature}
+                          alt="Signature Preview"
+                          className="max-h-full max-w-full object-contain p-2"
+                        />
+                        <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/5 transition-colors pointer-events-none rounded-lg" />
+                      </div>
+                    ) : (
+                      <div className="bg-white rounded-lg overflow-hidden border border-blue-200">
+                        <SignaturePad
+                          onSignatureChange={(sig) => setTempSignature(sig)}
+                          height={120}
+                          label=""
+                        />
+                        <div className="bg-blue-100 p-2 text-center">
+                          <button
+                            onClick={() => setShowSignPad(false)}
+                            disabled={!tempSignature}
+                            className="text-xs font-bold text-blue-700 hover:text-blue-900"
+                          >
+                            USE THIS SIGNATURE
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-gray-500 mt-2 text-center text-italic">
+                      By approving, your digital signature will be attached to the official document.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex gap-3">
               <button
@@ -902,8 +1009,8 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
                 Cancel
               </button>
               <button
-                onClick={onSubmit}
-                disabled={processing || (actionType !== 'approve' && !comment.trim())}
+                onClick={() => onSubmit(useEsign ? (tempSignature || userSignature) : null)}
+                disabled={processing || (actionType !== 'approve' && !comment.trim()) || (useEsign && !tempSignature && !userSignature)}
                 className={`flex-1 px-4 py-3 text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 ${cfg.buttonBg}`}
               >
                 {processing ? (
@@ -913,8 +1020,8 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
                   </>
                 ) : (
                   <>
-                    <Icon className="w-4 h-4" />
-                    {cfg.buttonText}
+                    {useEsign ? <PenTool className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                    {useEsign ? 'Sign & Approve' : cfg.buttonText}
                   </>
                 )}
               </button>
@@ -976,7 +1083,26 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
   const certificateRef = useRef(null);
   const [officials, setOfficials] = useState(defaultOfficials);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [history, setHistory] = useState([]);
   const [currentDate, setCurrentDate] = useState('');
+
+  const fetchHistory = async () => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/workflow-assignments/history/${request.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setHistory(data.history || []);
+      }
+    } catch (error) {
+      console.error('Error fetching history:', error);
+    }
+  };
 
   useEffect(() => {
     // Fetch officials from API for real-time sync
@@ -1020,6 +1146,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
     };
 
     fetchOfficials();
+    fetchHistory();
 
     // Set current date
     const now = new Date();
@@ -1155,6 +1282,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
               currentDate={currentDate}
               officials={officials}
               certificateRef={certificateRef}
+              history={history}
             />
           </div>
         </div>
@@ -1164,7 +1292,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
 }
 
 // Certificate Preview Component - Exact copy from BarangayClearanceModal
-function ClearancePreviewForRequests({ request, currentDate, officials, certificateRef }) {
+function ClearancePreviewForRequests({ request, currentDate, officials, certificateRef, history = [] }) {
   const logos = officials.logos || {};
   const headerStyle = officials.headerStyle || {};
   const countryStyle = officials.countryStyle || {};
@@ -1315,10 +1443,16 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
             {/* Body Content */}
             <div className="flex-1 relative z-10" style={{ color: bodyStyle.textColor, fontSize: `${bodyStyle.textSize || 14}px` }}>
-              <p className="font-bold mb-6">To Whom It May Concern:</p>
+              <p className="font-bold mb-6">TO WHOM IT MAY CONCERN:</p>
 
               <p className="mb-6 text-justify leading-relaxed">
-                This is to certify that below mentioned person is a bona fide resident of this barangay and has no derogatory record as of date mentioned below:
+                {request.certificate_type === 'barangay_clearance' ?
+                  'This is to certify that below mentioned person is a bona fide resident of this barangay and has no derogatory record as of date mentioned below:' :
+                  request.certificate_type === 'certificate_of_indigency' ?
+                    <span>This is to certify that below mentioned person is a bona fide resident and their family belongs to the "<strong>Indigent Families</strong>" of this barangay as of date mentioned below. Further certifying that their income is not enough to sustain and support their basic needs:</span> :
+                    request.certificate_type === 'barangay_residency' ?
+                      'This is to certify that below mentioned person is a bona fide resident of this barangay as detailed below:' :
+                      'This is to certify that:'}
               </p>
 
               {/* Personal Details Table */}
@@ -1326,7 +1460,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                 <div className="flex">
                   <span className="w-40 font-semibold">Name</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1 font-bold underline">{formData.fullName || '_________________'}</span>
+                  <span className="flex-1 font-bold underline">{formData.fullName?.toUpperCase() || '_________________'}</span>
                 </div>
                 <div className="flex">
                   <span className="w-40 font-semibold">Age</span>
@@ -1336,27 +1470,27 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                 <div className="flex">
                   <span className="w-40 font-semibold">Sex</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.sex || '_________________'}</span>
+                  <span className="flex-1">{formData.sex?.toUpperCase() || '_________________'}</span>
                 </div>
                 <div className="flex">
                   <span className="w-40 font-semibold">Civil Status</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.civilStatus || '_________________'}</span>
+                  <span className="flex-1">{formData.civilStatus?.toUpperCase() || '_________________'}</span>
                 </div>
                 <div className="flex">
                   <span className="w-40 font-semibold">Residential Address</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.address || '_________________'}</span>
+                  <span className="flex-1">{formData.address?.toUpperCase() || '_________________'}</span>
                 </div>
                 <div className="flex">
                   <span className="w-40 font-semibold">Date of Birth</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '_________________'}</span>
+                  <span className="flex-1">{formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : '_________________'}</span>
                 </div>
                 <div className="flex">
                   <span className="w-40 font-semibold">Place of Birth</span>
                   <span className="mr-2">:</span>
-                  <span className="flex-1">{formData.placeOfBirth || '_________________'}</span>
+                  <span className="flex-1">{formData.placeOfBirth?.toUpperCase() || '_________________'}</span>
                 </div>
               </div>
 
@@ -1374,29 +1508,65 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                 Issued this <strong>{currentDate}</strong> at Barangay Iba O' Este, Calumpit, Bulacan.
               </p>
 
-              {/* Resident's Signature */}
-              <div className="mb-12">
-                <div className="h-16"></div> {/* Space for 3-4 lines signature */}
-                <div className="w-64 border-b border-black"></div>
-                <p className="text-sm mt-1">Resident's Signature / Thumb Mark</p>
-              </div>
+              {/* Signature Logic */}
+              {(() => {
+                const secretaryHistory = history?.find(h =>
+                  h.action === 'approve' &&
+                  (h.step_name?.toLowerCase().includes('secretary') || h.officialRole === 'Brgy. Secretary' || h.official_role === 'Brgy. Secretary') &&
+                  h.signature_data
+                );
+                const captainHistory = history?.find(h =>
+                  h.action === 'approve' &&
+                  (h.step_name?.toLowerCase().includes('captain') || h.step_name?.toLowerCase().includes('chairman') || h.officialRole === 'Brgy. Captain' || h.official_role === 'Brgy. Captain') &&
+                  h.signature_data
+                );
 
-              <p className="mb-8 font-semibold">TRULY YOURS,</p>
+                return (
+                  <>
+                    {/* Resident's Signature */}
+                    <div className="mb-12">
+                      <div className="h-16"></div> {/* Space for 3-4 lines signature */}
+                      <div className="w-64 border-b border-black"></div>
+                      <p className="text-sm mt-1">Resident's Signature / Thumb Mark</p>
+                    </div>
 
-              {/* Signatures Grid */}
-              <div className="mt-8 flex justify-between items-end w-full pr-4">
-                {/* Secretary Signature */}
-                <div className="w-48 text-center bg-transparent">
-                  <p className="font-bold text-base uppercase whitespace-nowrap">{officials.secretary}</p>
-                  <p className="text-xs">Barangay Secretary</p>
-                </div>
+                    <p className="mb-8 font-semibold">TRULY YOURS,</p>
 
-                {/* Chairman Signature */}
-                <div className="w-48 text-center bg-transparent">
-                  <p className="font-bold text-base uppercase whitespace-nowrap">{officials.chairman}</p>
-                  <p className="text-sm">Punong Barangay</p>
-                </div>
-              </div>
+                    {/* Signatures Grid */}
+                    <div className="mt-8 flex justify-between items-end w-full pr-4">
+                      {/* Secretary Signature */}
+                      <div className="w-48 text-center bg-transparent relative">
+                        {secretaryHistory && (
+                          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-40 h-20 pointer-events-none">
+                            <img
+                              src={secretaryHistory.signature_data}
+                              alt="Secretary Signature"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        )}
+                        <p className="font-bold text-base uppercase whitespace-nowrap border-t border-black pt-1">{officials.secretary}</p>
+                        <p className="text-xs">Barangay Secretary</p>
+                      </div>
+
+                      {/* Chairman Signature */}
+                      <div className="w-48 text-center bg-transparent relative">
+                        {captainHistory && (
+                          <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-24 pointer-events-none">
+                            <img
+                              src={captainHistory.signature_data}
+                              alt="Chairman Signature"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        )}
+                        <p className="font-bold text-base uppercase whitespace-nowrap border-t border-black pt-1">{officials.chairman}</p>
+                        <p className="text-sm">Punong Barangay</p>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -1411,7 +1581,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
             <strong>Contact:</strong> {officials.contactInfo?.contactPerson} | <strong>Tel:</strong> {officials.contactInfo?.telephone} | <strong>Email:</strong> {officials.contactInfo?.email}
           </p>
         </div>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }
