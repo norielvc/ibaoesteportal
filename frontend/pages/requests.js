@@ -1197,7 +1197,12 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
         {/* Header with Logos */}
         <div className={`flex items-center justify-between pb-2 border-b-2 flex-shrink-0 ${getFontClass(headerStyle.fontFamily)}`}
-          style={{ backgroundColor: headerStyle.bgColor, borderColor: headerStyle.borderColor }}>
+          style={{
+            backgroundColor: headerStyle.bgColor,
+            borderColor: headerStyle.borderColor,
+            paddingLeft: `${headerStyle.logoSpacing || 0}px`,
+            paddingRight: `${headerStyle.logoSpacing || 0}px`
+          }}>
           <div className="flex-shrink-0" style={{ width: `${logos.logoSize || 70}px`, height: `${logos.logoSize || 70}px` }}>
             {logos.leftLogo && <img src={logos.leftLogo} alt="Left Logo" className="w-full h-full object-contain" />}
           </div>

@@ -597,13 +597,19 @@ export default function OfficialsPage() {
                 <ColorPicker label="Background" value={officials.headerStyle?.bgColor || '#ffffff'} onChange={updateStyle} section="headerStyle" field="bgColor" />
                 <ColorPicker label="Border Color" value={officials.headerStyle?.borderColor || '#1e40af'} onChange={updateStyle} section="headerStyle" field="borderColor" />
                 <FontSelect label="Default Font" value={officials.headerStyle?.fontFamily || 'default'} onChange={updateStyle} section="headerStyle" field="fontFamily" />
+                <SizeSlider label="Logo Spacing" value={officials.headerStyle?.logoSpacing || 0} onChange={updateStyle} section="headerStyle" field="logoSpacing" min={0} max={200} />
               </div>
             </div>
 
             {/* Header Preview */}
             <div className="bg-white rounded-2xl p-6 border">
               <h3 className="font-bold text-gray-900 mb-4">Header Preview</h3>
-              <div className="border-2 rounded-xl p-4" style={{ backgroundColor: officials.headerStyle?.bgColor, borderColor: officials.headerStyle?.borderColor }}>
+              <div className="border-2 rounded-xl p-4" style={{
+                backgroundColor: officials.headerStyle?.bgColor,
+                borderColor: officials.headerStyle?.borderColor,
+                paddingLeft: `${(officials.headerStyle?.logoSpacing || 0) + 16}px`,
+                paddingRight: `${(officials.headerStyle?.logoSpacing || 0) + 16}px`
+              }}>
                 <div className="flex items-center justify-between">
                   <div style={{ width: `${officials.logos?.logoSize || 80}px`, height: `${officials.logos?.logoSize || 80}px` }} className="bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                     {officials.logos?.leftLogo ? <img src={officials.logos.leftLogo} className="w-full h-full object-contain" alt="Left" /> : <Image className="w-8 h-8 text-gray-400" />}
