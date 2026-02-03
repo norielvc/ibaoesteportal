@@ -226,10 +226,39 @@ router.post('/clearance', async (req, res) => {
 
     if (error) throw error;
 
-    // Create initial workflow assignments for staff (step 2: Under Review)
-    const staffUserIds = [
-      '9550a8b2-9e32-4f52-a260-52766afb49b1' // Noriel Cruz (as shown in UI)
-    ];
+    // Create initial workflow assignments based on configuration
+    // Fetch workflow config for this type
+    const { data: workflowConfig } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', 'barangay_clearance')
+      .single();
+
+    let staffUserIds = [];
+    let initialStepId = 2; // Default to legacy step 2
+    let initialStepName = 'Staff Review';
+
+    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
+      // Find the first approval step (usually after 'pending' if pending is a step, or the first step)
+      // Assuming 'pending' is step 0, so looking for step 1 or 'staff_review'
+      const steps = workflowConfig.workflow_config.steps;
+
+      // Try to find specific 'staff_review' step, or use the second step (index 1)
+      const firstApprovalStep = steps.find(s => s.status === 'staff_review' || s.id === 2) || steps[1]; // Index 1 because 0 is usually 'pending'
+
+      if (firstApprovalStep && firstApprovalStep.assignedUsers && firstApprovalStep.assignedUsers.length > 0) {
+        staffUserIds = firstApprovalStep.assignedUsers;
+        initialStepId = firstApprovalStep.id;
+        initialStepName = firstApprovalStep.name;
+        console.log(`Using configured workflow assignments for step: ${initialStepName}`);
+      }
+    }
+
+    // Fallback if no config found (Legacy hardcoded)
+    if (staffUserIds.length === 0) {
+      console.log('Using fallback hardcoded staff assignment');
+      staffUserIds = ['9550a8b2-9e32-4f52-a260-52766afb49b1']; // Noriel Cruz
+    }
 
     for (const staffUserId of staffUserIds) {
       const { error: assignmentError } = await supabase
@@ -237,8 +266,8 @@ router.post('/clearance', async (req, res) => {
         .insert([{
           request_id: data.id,
           request_type: 'barangay_clearance',
-          step_id: 2, // Step 2: Staff Review
-          step_name: 'Staff Review',
+          step_id: initialStepId,
+          step_name: initialStepName,
           assigned_user_id: staffUserId,
           status: 'pending'
         }]);
