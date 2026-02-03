@@ -979,12 +979,47 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
   const [currentDate, setCurrentDate] = useState('');
 
   useEffect(() => {
-    // Load officials from localStorage
-    const savedOfficials = localStorage.getItem('barangayOfficials');
-    if (savedOfficials) {
-      const parsed = JSON.parse(savedOfficials);
-      setOfficials({ ...defaultOfficials, ...parsed });
-    }
+    // Fetch officials from API for real-time sync
+    const fetchOfficials = async () => {
+      try {
+        const token = getAuthToken();
+        const response = await fetch(`${API_URL}/api/officials/config`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          // Merge with defaults to ensure structure
+          setOfficials(prev => ({ ...defaultOfficials, ...data.data }));
+
+          // Also update localStorage to keep it fresh
+          localStorage.setItem('barangayOfficials', JSON.stringify({ ...defaultOfficials, ...data.data }));
+        } else {
+          // Fallback to localStorage
+          loadFromLocalStorage();
+        }
+      } catch (error) {
+        console.error('Error fetching officials config:', error);
+        loadFromLocalStorage();
+      }
+    };
+
+    const loadFromLocalStorage = () => {
+      const savedOfficials = localStorage.getItem('barangayOfficials');
+      if (savedOfficials) {
+        try {
+          const parsed = JSON.parse(savedOfficials);
+          setOfficials(prev => ({ ...defaultOfficials, ...parsed }));
+        } catch (e) {
+          console.error('Error parsing saved officials', e);
+        }
+      }
+    };
+
+    fetchOfficials();
 
     // Set current date
     const now = new Date();
