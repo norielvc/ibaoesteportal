@@ -811,29 +811,59 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
           </div>
 
           {/* Footer Actions */}
-          {canAct && ['pending', 'processing', 'staff_review'].includes(request.status) && (
-            <div className="border-t bg-gray-50 px-6 py-4 flex gap-3 justify-end">
-              <button
-                onClick={() => onAction(request, 'return')}
-                className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg font-medium hover:bg-orange-200 flex items-center gap-2"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Send Back
-              </button>
-              <button
-                onClick={() => onAction(request, 'reject')}
-                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 flex items-center gap-2"
-              >
-                <XCircle className="w-4 h-4" />
-                Reject
-              </button>
-              <button
-                onClick={() => onAction(request, 'approve')}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                Approve
-              </button>
+          {canAct && ['pending', 'processing', 'staff_review', 'secretary_approval', 'captain_approval'].includes(request.status) && (
+            <div className="border-t bg-gray-50 px-6 py-4">
+              {/* Review Request Team - Verification step */}
+              {currentStep?.status === 'staff_review' ? (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <p className="text-sm text-blue-800">
+                      <span className="font-semibold">Review Task:</span> Verify that the request is valid and the resident is legitimate for <span className="font-semibold">{getTypeLabel(request.certificate_type)}</span>.
+                    </p>
+                  </div>
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => onAction(request, 'reject')}
+                      className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 flex items-center gap-2"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Not Legitimate
+                    </button>
+                    <button
+                      onClick={() => onAction(request, 'approve')}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Verify & Forward
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Approval Steps - Secretary, Captain */
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => onAction(request, 'return')}
+                    className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg font-medium hover:bg-orange-200 flex items-center gap-2"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Send Back
+                  </button>
+                  <button
+                    onClick={() => onAction(request, 'reject')}
+                    className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 flex items-center gap-2"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Reject
+                  </button>
+                  <button
+                    onClick={() => onAction(request, 'approve')}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center gap-2"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Approve
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -855,8 +885,19 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
     }
   }, [userSignature, actionType]);
 
+  // Dynamic config based on current step
+  const isReviewStep = currentStep?.status === 'staff_review';
+
   const config = {
-    approve: {
+    approve: isReviewStep ? {
+      title: 'Verify & Forward Request',
+      description: 'I confirm that the resident is legitimate and the request is valid.',
+      icon: CheckCircle,
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+      buttonBg: 'bg-blue-600 hover:bg-blue-700',
+      buttonText: 'Verify & Forward'
+    } : {
       title: 'Approve Request',
       description: 'Are you sure you want to approve this certificate request?',
       icon: CheckCircle,
@@ -865,7 +906,15 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
       buttonBg: 'bg-green-600 hover:bg-green-700',
       buttonText: 'Approve Request'
     },
-    reject: {
+    reject: isReviewStep ? {
+      title: 'Mark as Not Legitimate',
+      description: 'Please provide a reason why this request is not legitimate.',
+      icon: XCircle,
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-600',
+      buttonBg: 'bg-red-600 hover:bg-red-700',
+      buttonText: 'Reject Request'
+    } : {
       title: 'Reject Request',
       description: 'Please provide a reason for rejecting this request.',
       icon: XCircle,

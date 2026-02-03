@@ -201,6 +201,31 @@ export default function WorkflowsPage() {
     setSyncing(true);
     try {
       const token = getAuthToken();
+
+      // FIRST: Save the current workflows to database (including assignedUsers)
+      const masterSteps = workflows[MASTER_WORKFLOW_ID] || [];
+      const unifiedWorkflows = {};
+      certificateTypes.forEach(cert => {
+        unifiedWorkflows[cert.id] = JSON.parse(JSON.stringify(masterSteps));
+      });
+
+      // Save workflows to DB first
+      const saveResponse = await fetch(`${API_URL}/api/workflows`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ workflows: unifiedWorkflows })
+      });
+
+      if (!saveResponse.ok) {
+        throw new Error('Failed to save workflows to database');
+      }
+
+      console.log('Workflows saved to DB, now syncing assignments...');
+
+      // THEN: Sync assignments (reads from DB)
       const response = await fetch(`${API_URL}/api/workflows/sync-assignments`, {
         method: 'POST',
         headers: {
