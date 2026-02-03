@@ -239,18 +239,26 @@ router.post('/clearance', async (req, res) => {
     let initialStepName = 'Staff Review';
 
     if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
-      // Find the first approval step (usually after 'pending' if pending is a step, or the first step)
-      // Assuming 'pending' is step 0, so looking for step 1 or 'staff_review'
       const steps = workflowConfig.workflow_config.steps;
 
-      // Try to find specific 'staff_review' step, or use the second step (index 1)
-      const firstApprovalStep = steps.find(s => s.status === 'staff_review' || s.id === 2) || steps[1]; // Index 1 because 0 is usually 'pending'
+      // Find the first step that requires approval (First 2nd Approver, etc sequence)
+      // We look for the first step in the array that is actionable
+      const firstActionableStep = steps.find(s => s.requiresApproval === true);
 
-      if (firstApprovalStep && firstApprovalStep.assignedUsers && firstApprovalStep.assignedUsers.length > 0) {
-        staffUserIds = firstApprovalStep.assignedUsers;
-        initialStepId = firstApprovalStep.id;
-        initialStepName = firstApprovalStep.name;
-        console.log(`Using configured workflow assignments for step: ${initialStepName}`);
+      if (firstActionableStep && firstActionableStep.assignedUsers && firstActionableStep.assignedUsers.length > 0) {
+        staffUserIds = firstActionableStep.assignedUsers;
+        initialStepId = firstActionableStep.id;
+        initialStepName = firstActionableStep.name;
+        console.log(`Starting workflow at step: ${initialStepName} (ID: ${initialStepId})`);
+      } else {
+        // Fallback: If no actionable step found, use the very first assigned one or legacy
+        console.warn('No actionable first step found in config, trying legacy fallback');
+        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 2);
+        if (fallbackStep) {
+          staffUserIds = fallbackStep.assignedUsers || [];
+          initialStepId = fallbackStep.id;
+          initialStepName = fallbackStep.name;
+        }
       }
     }
 
