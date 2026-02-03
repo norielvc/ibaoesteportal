@@ -1276,7 +1276,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                 <p className="text-xs mb-1" style={{
                   color: sidebarStyle.labelColor || '#000000',
                   fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>SK CHAIRPERSON</p>
+                }}>SK CHAIRMAN</p>
                 <p style={{
                   fontSize: '11px',
                   color: sidebarStyle.textColor || '#000000',
@@ -1288,7 +1288,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                 <p className="text-xs mb-1" style={{
                   color: sidebarStyle.labelColor || '#000000',
                   fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>BARANGAY SECRETARY</p>
+                }}>BRGY. SECRETARY</p>
                 <p style={{
                   fontSize: '11px',
                   color: sidebarStyle.textColor || '#000000',
@@ -1300,7 +1300,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                 <p className="text-xs mb-1" style={{
                   color: sidebarStyle.labelColor || '#000000',
                   fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>BARANGAY TREASURER</p>
+                }}>BRGY. TREASURER</p>
                 <p style={{
                   fontSize: '11px',
                   color: sidebarStyle.textColor || '#000000',
@@ -1312,7 +1312,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                 <p className="text-xs mb-1" style={{
                   color: sidebarStyle.labelColor || '#000000',
                   fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>BARANGAY ADMINISTRATOR</p>
+                }}>BRGY. ADMINISTRATOR</p>
                 <p style={{
                   fontSize: '11px',
                   color: sidebarStyle.textColor || '#000000',
