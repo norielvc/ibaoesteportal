@@ -1229,9 +1229,9 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
           <div className={`p-4 flex-shrink-0 flex flex-col ${getFontClass(sidebarStyle.fontFamily)}`}
             style={{
               width: '240px',
-              backgroundColor: '#ffffff', // White background
-              borderRight: `2px solid ${sidebarStyle.bgColor || '#1e40af'}`, // Divider line
-              color: sidebarStyle.bgColor || '#1e40af' // Text color matches theme blue
+              background: `linear-gradient(to bottom, ${sidebarStyle.bgColor || '#ffffff'}, ${sidebarStyle.gradientEnd || sidebarStyle.bgColor || '#ffffff'})`,
+              borderRight: `2px solid ${sidebarStyle.labelColor || sidebarStyle.textColor || '#000000'}`,
+              color: sidebarStyle.textColor || '#000000'
             }}>
             <div className="flex-1 space-y-4 text-center mt-6">
               {/* Captain's Portrait */}
@@ -1244,15 +1244,15 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
               </div>
 
               <div>
-                <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>PUNONG BARANGAY</p>
-                <p className="font-bold" style={{ fontSize: '13px', color: sidebarStyle.bgColor || '#1e40af' }}>{officials.chairman}</p>
+                <p className="font-bold text-xs mb-1" style={{ color: sidebarStyle.labelColor || '#000000' }}>PUNONG BARANGAY</p>
+                <p className="font-bold" style={{ fontSize: '13px', color: sidebarStyle.textColor || '#000000' }}>{officials.chairman}</p>
               </div>
 
               <div>
-                <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>SANGGUNIANG BARANGAY MEMBERS</p>
+                <p className="font-bold text-xs mb-1" style={{ color: sidebarStyle.labelColor || '#000000' }}>SANGGUNIANG BARANGAY MEMBERS</p>
                 <div className="space-y-1">
                   {officials.councilors?.map((c, i) => (
-                    <p key={i} className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.bgColor || '#1e40af' }}>{c}</p>
+                    <p key={i} className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.textColor || '#000000' }}>{c}</p>
                   ))}
                 </div>
               </div>
