@@ -1225,64 +1225,56 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
         <div className="flex flex-1 mt-2">
           {/* Left Sidebar - Officials */}
-          <div className={`text-white p-4 flex-shrink-0 ${getFontClass(sidebarStyle.fontFamily)}`}
-            style={{ width: '220px', background: `linear-gradient(to bottom, ${sidebarStyle.bgColor || '#1e40af'}, ${sidebarStyle.gradientEnd || '#1e3a8a'})` }}>
-            <div className="text-center mb-4">
-              <p className="font-bold" style={{ fontSize: `${(sidebarStyle.titleSize || 16) + 4}px`, color: sidebarStyle.textColor }}>BARANGAY</p>
-              <p className="font-bold" style={{ fontSize: `${(sidebarStyle.titleSize || 16) + 4}px`, color: sidebarStyle.textColor }}>IBA O' ESTE</p>
+          {/* Left Sidebar - Officials */}
+          <div className={`p-4 flex-shrink-0 flex flex-col ${getFontClass(sidebarStyle.fontFamily)}`}
+            style={{
+              width: '240px',
+              backgroundColor: '#ffffff', // White background
+              borderRight: `2px solid ${sidebarStyle.bgColor || '#1e40af'}`, // Divider line
+              color: sidebarStyle.bgColor || '#1e40af' // Text color matches theme blue
+            }}>
+            <div className="text-center mb-6">
+              <div className="mb-2 mx-auto" style={{ width: '80px', height: '80px' }}>
+                <img src={logos.leftLogo} alt="Logo" className="w-full h-full object-contain" />
+              </div>
+              <p className="font-bold tracking-widest" style={{ fontSize: '14px', color: '#000000' }}>REPUBLIC OF THE PHILIPPINES</p>
+              <p className="font-bold" style={{ fontSize: '12px', color: '#000000' }}>PROVINCE OF BULACAN</p>
+              <p className="font-bold" style={{ fontSize: '12px', color: '#000000' }}>MUNICIPALITY OF CALUMPIT</p>
+              <p className="font-extrabold mt-2" style={{ fontSize: '16px', color: sidebarStyle.bgColor || '#1e40af' }}>BARANGAY IBA O' ESTE</p>
             </div>
 
-            <div className="border-t pt-3" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-              <p className="font-bold mb-3" style={{ color: sidebarStyle.labelColor, fontSize: `${(sidebarStyle.titleSize || 13) + 2}px` }}>BARANGAY COUNCIL</p>
-              <div className="mb-3 text-center">
-                <div className="mb-2 w-[140px] aspect-[3/4] mx-auto rounded-lg overflow-hidden border-2 border-white/20 shadow-inner bg-black/10">
-                  <img
-                    src={logos.captainImage || '/images/brgycaptain.png'}
-                    alt="Punong Barangay"
-                    className="w-full h-full object-cover"
-                  />
+            <div className="flex-1 space-y-4 text-center">
+              <div>
+                <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>PUNONG BARANGAY</p>
+                <p className="font-bold" style={{ fontSize: '13px', color: sidebarStyle.bgColor || '#1e40af' }}>{officials.chairman}</p>
+              </div>
+
+              <div>
+                <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>SANGGUNIANG BARANGAY MEMBERS</p>
+                <div className="space-y-1">
+                  {officials.councilors?.map((c, i) => (
+                    <p key={i} className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.bgColor || '#1e40af' }}>{c}</p>
+                  ))}
                 </div>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Punong Barangay</p>
-                <p className="font-semibold" style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11) + 1}px` }}>{officials.chairman}</p>
               </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Kagawad</p>
-                {officials.councilors?.map((c, i) => <p key={i} style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px`, lineHeight: '1.4' }}>{c}</p>)}
+
+              <div>
+                <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>SK CHAIRPERSON</p>
+                <p className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.bgColor || '#1e40af' }}>{officials.skChairman}</p>
               </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>SK Chairman</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.skChairman}</p>
+
+              <div>
+                <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>BARANGAY SECRETARY</p>
+                <p className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.bgColor || '#1e40af' }}>{officials.secretary}</p>
               </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Secretary</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.secretary}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Treasurer</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.treasurer}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Administrator</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.administrator}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Assistant Secretary</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.assistantSecretary}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Brgy. Asst. Administrator</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.assistantAdministrator}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Record Keeper</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.recordKeeper}</p>
-              </div>
-              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
-                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Clerk</p>
-                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.clerk}</p>
+
+              <div>
+                <p className="font-bold text-xs mb-1" style={{ color: '#000000' }}>BARANGAY TREASURER</p>
+                <p className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.bgColor || '#1e40af' }}>{officials.treasurer}</p>
               </div>
             </div>
           </div>
+
 
           {/* Main Content - Certificate Body */}
           <div className={`flex-1 p-6 flex flex-col relative ${getFontClass(bodyStyle.fontFamily)}`} style={{ backgroundColor: bodyStyle.bgColor }}>
@@ -1393,7 +1385,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
             <strong>Contact:</strong> {officials.contactInfo?.contactPerson} | <strong>Tel:</strong> {officials.contactInfo?.telephone} | <strong>Email:</strong> {officials.contactInfo?.email}
           </p>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
