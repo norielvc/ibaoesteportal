@@ -1271,6 +1271,42 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                   ))}
                 </div>
               </div>
+
+              <div>
+                <p className="text-xs mb-1" style={{
+                  color: sidebarStyle.labelColor || '#000000',
+                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
+                }}>SK CHAIRPERSON</p>
+                <p style={{
+                  fontSize: '11px',
+                  color: sidebarStyle.textColor || '#000000',
+                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
+                }}>{officials.skChairman}</p>
+              </div>
+
+              <div>
+                <p className="text-xs mb-1" style={{
+                  color: sidebarStyle.labelColor || '#000000',
+                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
+                }}>BARANGAY SECRETARY</p>
+                <p style={{
+                  fontSize: '11px',
+                  color: sidebarStyle.textColor || '#000000',
+                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
+                }}>{officials.secretary}</p>
+              </div>
+
+              <div>
+                <p className="text-xs mb-1" style={{
+                  color: sidebarStyle.labelColor || '#000000',
+                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
+                }}>BARANGAY TREASURER</p>
+                <p style={{
+                  fontSize: '11px',
+                  color: sidebarStyle.textColor || '#000000',
+                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
+                }}>{officials.treasurer}</p>
+              </div>
             </div>
           </div>
 
