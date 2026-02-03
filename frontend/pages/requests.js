@@ -1229,148 +1229,64 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
         </div>
 
         <div className="flex flex-1 mt-2">
-          {/* Left Sidebar - Officials */}
-          {/* Left Sidebar - Officials */}
-          <div className={`p-4 flex-shrink-0 flex flex-col ${getFontClass(sidebarStyle.fontFamily)}`}
-            style={{
-              width: '240px',
-              background: `linear-gradient(to bottom, ${sidebarStyle.bgColor || '#ffffff'}, ${sidebarStyle.gradientEnd || sidebarStyle.bgColor || '#ffffff'})`,
-              borderRight: `2px solid ${sidebarStyle.labelColor || sidebarStyle.textColor || '#000000'}`,
-              color: sidebarStyle.textColor || '#000000',
-              letterSpacing: sidebarStyle.letterSpacing === 'tighter' ? '-0.05em' : sidebarStyle.letterSpacing === 'wide' ? '0.025em' : sidebarStyle.letterSpacing === 'widest' ? '0.1em' : 'normal'
-            }}>
-            <div className="flex-1 space-y-4 text-center mt-6">
-              {/* Captain's Portrait */}
-              <div className="mb-2 mx-auto overflow-hidden rounded-lg" style={{ width: '100px', height: '120px' }}>
-                {logos.captainImage ? (
-                  <img src={logos.captainImage} alt="Captain" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">No Photo</div>
-                )}
-              </div>
+          {/* Left Sidebar - Officials - MAXIMIZED spacing */}
+          <div className={`text-white p-4 flex-shrink-0 ${getFontClass(sidebarStyle.fontFamily)}`}
+            style={{ width: '220px', background: `linear-gradient(to bottom, ${sidebarStyle.bgColor || '#1e40af'}, ${sidebarStyle.gradientEnd || '#1e3a8a'})` }}>
+            <div className="text-center mb-4">
+              <p className="font-bold" style={{ fontSize: `${(sidebarStyle.titleSize || 16) + 4}px`, color: sidebarStyle.textColor }}>BARANGAY</p>
+              <p className="font-bold" style={{ fontSize: `${(sidebarStyle.titleSize || 16) + 4}px`, color: sidebarStyle.textColor }}>IBA O' ESTE</p>
+            </div>
 
-              <div>
-                <p className="text-xs mb-1" style={{
-                  color: sidebarStyle.labelColor || '#000000',
-                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>PUNONG BARANGAY</p>
-                <p style={{
-                  fontSize: '13px',
-                  color: sidebarStyle.textColor || '#000000',
-                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
-                }}>{officials.chairman}</p>
+            <div className="border-t pt-3" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+              <p className="font-bold mb-3" style={{ color: sidebarStyle.labelColor, fontSize: `${(sidebarStyle.titleSize || 13) + 2}px` }}>BARANGAY COUNCIL</p>
+              <div className="mb-3 text-center">
+                <div
+                  className="mb-2 w-[140px] h-[186px] mx-auto rounded-lg border-2 border-white/20 shadow-inner bg-black/10"
+                  style={{
+                    backgroundImage: `url(${logos.captainImage || '/images/brgycaptain.png'})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                  }}
+                />
+                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Punong Barangay</p>
+                <p className="font-semibold" style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11) + 1}px` }}>{officials.chairman}</p>
               </div>
-
-              <div>
-                <p className="text-xs mb-1" style={{
-                  color: sidebarStyle.labelColor || '#000000',
-                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>SANGGUNIANG BARANGAY MEMBERS</p>
-                <div className="space-y-1">
-                  {officials.councilors?.map((c, i) => (
-                    <p key={i} style={{
-                      fontSize: '11px',
-                      color: sidebarStyle.textColor || '#000000',
-                      fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
-                    }}>{c}</p>
-                  ))}
-                </div>
+              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Kagawad</p>
+                {officials.councilors?.map((c, i) => <p key={i} style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px`, lineHeight: '1.4' }}>{c}</p>)}
               </div>
-
-              <div>
-                <p className="text-xs mb-1" style={{
-                  color: sidebarStyle.labelColor || '#000000',
-                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>SK CHAIRMAN</p>
-                <p style={{
-                  fontSize: '11px',
-                  color: sidebarStyle.textColor || '#000000',
-                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
-                }}>{officials.skChairman}</p>
+              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>SK Chairman</p>
+                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.skChairman}</p>
               </div>
-
-              <div>
-                <p className="text-xs mb-1" style={{
-                  color: sidebarStyle.labelColor || '#000000',
-                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>BRGY. SECRETARY</p>
-                <p style={{
-                  fontSize: '11px',
-                  color: sidebarStyle.textColor || '#000000',
-                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
-                }}>{officials.secretary}</p>
+              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Secretary</p>
+                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.secretary}</p>
               </div>
-
-              <div>
-                <p className="text-xs mb-1" style={{
-                  color: sidebarStyle.labelColor || '#000000',
-                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>BRGY. TREASURER</p>
-                <p style={{
-                  fontSize: '11px',
-                  color: sidebarStyle.textColor || '#000000',
-                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
-                }}>{officials.treasurer}</p>
+              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Treasurer</p>
+                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.treasurer}</p>
               </div>
-
-              <div>
-                <p className="text-xs mb-1" style={{
-                  color: sidebarStyle.labelColor || '#000000',
-                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>BRGY. ADMINISTRATOR</p>
-                <p style={{
-                  fontSize: '11px',
-                  color: sidebarStyle.textColor || '#000000',
-                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
-                }}>{officials.administrator}</p>
+              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Administrator</p>
+                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.administrator}</p>
               </div>
-
-              <div>
-                <p className="text-xs mb-1" style={{
-                  color: sidebarStyle.labelColor || '#000000',
-                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>ASST. BRGY. SECRETARY</p>
-                <p style={{
-                  fontSize: '11px',
-                  color: sidebarStyle.textColor || '#000000',
-                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
-                }}>{officials.assistantSecretary}</p>
+              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Assistant Secretary</p>
+                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.assistantSecretary}</p>
               </div>
-
-              <div>
-                <p className="text-xs mb-1" style={{
-                  color: sidebarStyle.labelColor || '#000000',
-                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>ASST. BRGY. ADMINISTRATOR</p>
-                <p style={{
-                  fontSize: '11px',
-                  color: sidebarStyle.textColor || '#000000',
-                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
-                }}>{officials.assistantAdministrator}</p>
+              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Brgy. Asst. Administrator</p>
+                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.assistantAdministrator}</p>
               </div>
-
-              <div>
-                <p className="text-xs mb-1" style={{
-                  color: sidebarStyle.labelColor || '#000000',
-                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>BRGY. RECORD KEEPER</p>
-                <p style={{
-                  fontSize: '11px',
-                  color: sidebarStyle.textColor || '#000000',
-                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
-                }}>{officials.recordKeeper}</p>
+              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Record Keeper</p>
+                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.recordKeeper}</p>
               </div>
-
-              <div>
-                <p className="text-xs mb-1" style={{
-                  color: sidebarStyle.labelColor || '#000000',
-                  fontWeight: sidebarStyle.titleWeight === 'normal' ? '400' : sidebarStyle.titleWeight === 'medium' ? '500' : sidebarStyle.titleWeight === 'bold' ? '700' : sidebarStyle.titleWeight === 'extrabold' ? '800' : '700'
-                }}>BRGY. CLERK</p>
-                <p style={{
-                  fontSize: '11px',
-                  color: sidebarStyle.textColor || '#000000',
-                  fontWeight: sidebarStyle.nameWeight === 'normal' ? '400' : sidebarStyle.nameWeight === 'medium' ? '500' : sidebarStyle.nameWeight === 'semibold' ? '600' : sidebarStyle.nameWeight === 'bold' ? '700' : sidebarStyle.nameWeight === 'extrabold' ? '800' : '700'
-                }}>{officials.clerk}</p>
+              <div className="border-t py-2" style={{ borderColor: `${sidebarStyle.bgColor}88` }}>
+                <p style={{ color: `${sidebarStyle.labelColor}cc`, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>Barangay Clerk</p>
+                <p style={{ color: sidebarStyle.textColor, fontSize: `${(sidebarStyle.textSize || 11)}px` }}>{officials.clerk}</p>
               </div>
             </div>
           </div>

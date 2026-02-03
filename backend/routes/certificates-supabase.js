@@ -360,10 +360,45 @@ router.post('/indigency', async (req, res) => {
 
     if (error) throw error;
 
-    // Create initial workflow assignments for staff (step 2: Under Review)
-    const staffUserIds = [
-      '9550a8b2-9e32-4f52-a260-52766afb49b1' // Noriel Cruz (as shown in UI)
-    ];
+    // Create initial workflow assignments based on configuration
+    // Fetch workflow config for this type
+    const { data: workflowConfig } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', 'certificate_of_indigency')
+      .single();
+
+    let staffUserIds = [];
+    let initialStepId = 2; // Default to legacy step 2
+    let initialStepName = 'Staff Review';
+
+    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
+      const steps = workflowConfig.workflow_config.steps;
+
+      // Find the first step that requires approval
+      const firstActionableStep = steps.find(s => s.requiresApproval === true);
+
+      if (firstActionableStep && firstActionableStep.assignedUsers && firstActionableStep.assignedUsers.length > 0) {
+        staffUserIds = firstActionableStep.assignedUsers;
+        initialStepId = firstActionableStep.id;
+        initialStepName = firstActionableStep.name;
+        console.log(`Starting indigency workflow at step: ${initialStepName} (ID: ${initialStepId})`);
+      } else {
+        console.warn('No actionable first step found in config, trying legacy fallback');
+        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 2);
+        if (fallbackStep) {
+          staffUserIds = fallbackStep.assignedUsers || [];
+          initialStepId = fallbackStep.id;
+          initialStepName = fallbackStep.name;
+        }
+      }
+    }
+
+    // Fallback if no config found (Legacy hardcoded)
+    if (staffUserIds.length === 0) {
+      console.log('Using fallback hardcoded staff assignment for indigency');
+      staffUserIds = ['9550a8b2-9e32-4f52-a260-52766afb49b1']; // Noriel Cruz
+    }
 
     for (const staffUserId of staffUserIds) {
       const { error: assignmentError } = await supabase
@@ -371,8 +406,8 @@ router.post('/indigency', async (req, res) => {
         .insert([{
           request_id: data.id,
           request_type: 'certificate_of_indigency',
-          step_id: 2, // Step 2: Staff Review
-          step_name: 'Staff Review',
+          step_id: initialStepId,
+          step_name: initialStepName,
           assigned_user_id: staffUserId,
           status: 'pending'
         }]);
@@ -457,10 +492,45 @@ router.post('/residency', async (req, res) => {
 
     if (error) throw error;
 
-    // Create initial workflow assignments for staff (step 2: Under Review)
-    const staffUserIds = [
-      '9550a8b2-9e32-4f52-a260-52766afb49b1' // Noriel Cruz (as shown in UI)
-    ];
+    // Create initial workflow assignments based on configuration
+    // Fetch workflow config for this type
+    const { data: workflowConfig } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', 'barangay_residency')
+      .single();
+
+    let staffUserIds = [];
+    let initialStepId = 2; // Default to legacy step 2
+    let initialStepName = 'Staff Review';
+
+    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
+      const steps = workflowConfig.workflow_config.steps;
+
+      // Find the first step that requires approval
+      const firstActionableStep = steps.find(s => s.requiresApproval === true);
+
+      if (firstActionableStep && firstActionableStep.assignedUsers && firstActionableStep.assignedUsers.length > 0) {
+        staffUserIds = firstActionableStep.assignedUsers;
+        initialStepId = firstActionableStep.id;
+        initialStepName = firstActionableStep.name;
+        console.log(`Starting residency workflow at step: ${initialStepName} (ID: ${initialStepId})`);
+      } else {
+        console.warn('No actionable first step found in config, trying legacy fallback');
+        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 2);
+        if (fallbackStep) {
+          staffUserIds = fallbackStep.assignedUsers || [];
+          initialStepId = fallbackStep.id;
+          initialStepName = fallbackStep.name;
+        }
+      }
+    }
+
+    // Fallback if no config found (Legacy hardcoded)
+    if (staffUserIds.length === 0) {
+      console.log('Using fallback hardcoded staff assignment for residency');
+      staffUserIds = ['9550a8b2-9e32-4f52-a260-52766afb49b1']; // Noriel Cruz
+    }
 
     for (const staffUserId of staffUserIds) {
       const { error: assignmentError } = await supabase
@@ -468,8 +538,8 @@ router.post('/residency', async (req, res) => {
         .insert([{
           request_id: data.id,
           request_type: 'barangay_residency',
-          step_id: 2, // Step 2: Staff Review
-          step_name: 'Staff Review',
+          step_id: initialStepId,
+          step_name: initialStepName,
           assigned_user_id: staffUserId,
           status: 'pending'
         }]);

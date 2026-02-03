@@ -108,17 +108,68 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
 
     if (error) throw error;
 
-    // Transform data to match expected format
-    const requests = data.map(assignment => ({
-      ...assignment.certificate_requests,
-      workflow_assignment: {
-        id: assignment.id,
-        step_id: assignment.step_id,
-        step_name: assignment.step_name,
-        assigned_at: assignment.assigned_at,
-        status: assignment.status
+    // Fetch all workflow configurations for filtering
+    const { data: allConfigs } = await supabase
+      .from('workflow_configurations')
+      .select('certificate_type, workflow_config');
+
+    const configMap = {};
+    if (allConfigs) {
+      allConfigs.forEach(c => {
+        if (c.workflow_config && c.workflow_config.steps) {
+          configMap[c.certificate_type] = c.workflow_config.steps;
+        }
+      });
+    }
+
+    // Transform data and STRICTLY filter by step order
+    const requests = data.reduce((acc, assignment) => {
+      const request = assignment.certificate_requests;
+      if (!request) return acc;
+
+      const stepId = assignment.step_id;
+      const reqStatus = request.status || 'pending';
+      const certType = request.certificate_type;
+
+      // Get workflow steps for this certificate type
+      const steps = configMap[certType] || [];
+
+      // Find the index of this assignment's step in the workflow
+      const assignmentStepIndex = steps.findIndex(s => String(s.id) === String(stepId));
+
+      // FILTER LOGIC:
+      // Since we only query for assignments with status='pending', 
+      // and the workflow creates assignments sequentially (next step only after current step is approved),
+      // all returned assignments should be valid for the user to act on.
+      // 
+      // Extra safety: For pending/submitted requests, only show if assignment is for first approval step
+      // This handles legacy data where assignments might have been pre-created
+
+      let shouldShow = true;
+
+      if ((reqStatus === 'pending' || reqStatus === 'submitted') && steps.length > 0) {
+        // For pending requests, only show assignments for the FIRST approval step
+        const firstApprovalStep = steps.find(s => s.requiresApproval === true);
+        if (firstApprovalStep) {
+          shouldShow = String(stepId) === String(firstApprovalStep.id);
+        }
       }
-    }));
+      // For processing/other statuses, show all pending assignments (they were created when it was their turn)
+
+      if (shouldShow) {
+        acc.push({
+          ...request,
+          workflow_assignment: {
+            id: assignment.id,
+            step_id: assignment.step_id,
+            step_name: assignment.step_name,
+            assigned_at: assignment.assigned_at,
+            status: assignment.status
+          }
+        });
+      }
+      return acc;
+    }, []);
 
     // Sort by certificate request creation date (newest first)
     requests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -194,19 +245,16 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
         // Move to NEXT defined step
         nextStep = steps[currentStepIndex + 1];
 
-        // Map step status to request status
-        // If next step is 'oic_review', request status becomes 'oic_review'
-        // If next step is 'captain_approval', request status becomes 'processing' (legacy mapping) or 'captain_approval'
-
-        // For Releasing Team status (oic_review)
+        // Map step status to VALID database request status
+        // Database only allows: pending, processing, ready, ready_for_pickup, released, cancelled
+        // All intermediate approval steps should use 'processing'
         if (nextStep.status === 'oic_review') {
-          newRequestStatus = 'oic_review';
-        } else if (nextStep.status === 'captain_approval') {
-          newRequestStatus = 'processing'; // Or 'captain_approval' if frontend supports it
+          newRequestStatus = 'processing'; // Releasing Team - still processing until released
         } else if (nextStep.status === 'ready' || nextStep.status === 'released') {
-          newRequestStatus = 'ready';
+          newRequestStatus = 'ready'; // Final ready status
         } else {
-          newRequestStatus = 'processing'; // Default for intermediate steps
+          // All other approval steps (clerk, secretary, captain) use 'processing'
+          newRequestStatus = 'processing';
         }
 
         // Check if next step is the FINAL step (Ready for Pickup / Released with no approvers)
