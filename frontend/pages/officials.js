@@ -644,28 +644,84 @@ export default function OfficialsPage() {
                 <SizeSlider label="Title Size" value={officials.sidebarStyle?.titleSize || 14} onChange={updateStyle} section="sidebarStyle" field="titleSize" min={10} max={24} />
                 <SizeSlider label="Text Size" value={officials.sidebarStyle?.textSize || 11} onChange={updateStyle} section="sidebarStyle" field="textSize" min={8} max={16} />
                 <FontSelect label="Font" value={officials.sidebarStyle?.fontFamily || 'default'} onChange={updateStyle} section="sidebarStyle" field="fontFamily" />
+
+                <div className="bg-white rounded-xl border border-gray-200 p-3">
+                  <label className="text-xs font-medium text-gray-600 block mb-2">Title Weight</label>
+                  <select value={officials.sidebarStyle?.titleWeight || 'bold'} onChange={(e) => updateStyle('sidebarStyle', 'titleWeight', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg">
+                    <option value="normal">Normal</option>
+                    <option value="medium">Medium</option>
+                    <option value="bold">Bold</option>
+                    <option value="extrabold">Extra Bold</option>
+                  </select>
+                </div>
+
+                <div className="bg-white rounded-xl border border-gray-200 p-3">
+                  <label className="text-xs font-medium text-gray-600 block mb-2">Name Weight</label>
+                  <select value={officials.sidebarStyle?.nameWeight || 'bold'} onChange={(e) => updateStyle('sidebarStyle', 'nameWeight', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg">
+                    <option value="normal">Normal</option>
+                    <option value="medium">Medium</option>
+                    <option value="semibold">Semi Bold</option>
+                    <option value="bold">Bold</option>
+                  </select>
+                </div>
+
+                <div className="bg-white rounded-xl border border-gray-200 p-3">
+                  <label className="text-xs font-medium text-gray-600 block mb-2">Letter Spacing</label>
+                  <select value={officials.sidebarStyle?.letterSpacing || 'normal'} onChange={(e) => updateStyle('sidebarStyle', 'letterSpacing', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg">
+                    <option value="tighter">Tighter</option>
+                    <option value="normal">Normal</option>
+                    <option value="wide">Wide</option>
+                    <option value="widest">Widest</option>
+                  </select>
+                </div>
               </div>
             </div>
 
             {/* Sidebar Preview */}
+            {/* Sidebar Preview */}
             <div className="bg-white rounded-2xl p-6 border">
               <h3 className="font-bold text-gray-900 mb-4">Sidebar Preview</h3>
-              <div className="w-56 rounded-lg p-4 text-white" style={{ background: `linear-gradient(to bottom, ${officials.sidebarStyle?.bgColor}, ${officials.sidebarStyle?.gradientEnd})` }}>
-                <p className="font-bold text-center mb-3" style={{ fontSize: `${(officials.sidebarStyle?.titleSize || 14) + 4}px` }}>BARANGAY<br />IBA O' ESTE</p>
-                <div className="border-t border-white/30 pt-3">
-                  <p className="font-bold mb-2" style={{ color: officials.sidebarStyle?.labelColor, fontSize: `${(officials.sidebarStyle?.titleSize || 14) + 1}px` }}>BARANGAY COUNCIL</p>
-                  <div className="mb-2 w-[140px] aspect-[3/4] mx-auto rounded-lg overflow-hidden border-2 border-white/20 shadow-inner bg-black/10">
-                    <img
-                      src={officials.logos?.captainImage || '/images/brgycaptain.png'}
-                      alt="Punong Barangay"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <p style={{ color: `${officials.sidebarStyle?.labelColor}cc`, fontSize: `${officials.sidebarStyle?.textSize || 11}px` }}>Punong Barangay</p>
-                  <p className="font-semibold" style={{ color: officials.sidebarStyle?.textColor, fontSize: `${(officials.sidebarStyle?.textSize || 11) + 1}px` }}>{officials.chairman}</p>
-                  <div className="border-t border-white/30 mt-2 pt-2">
-                    <p style={{ color: `${officials.sidebarStyle?.labelColor}cc`, fontSize: `${officials.sidebarStyle?.textSize || 11}px` }}>Kagawad</p>
-                    <p style={{ color: officials.sidebarStyle?.textColor, fontSize: `${officials.sidebarStyle?.textSize || 11}px` }}>{officials.councilors[0]}</p>
+              <div className="w-56 overflow-hidden flex flex-col p-4"
+                style={{
+                  background: `linear-gradient(to bottom, ${officials.sidebarStyle?.bgColor}, ${officials.sidebarStyle?.gradientEnd})`,
+                  color: officials.sidebarStyle?.textColor,
+                  borderRight: `2px solid ${officials.sidebarStyle?.labelColor || officials.sidebarStyle?.textColor}`,
+                  letterSpacing: officials.sidebarStyle?.letterSpacing === 'tighter' ? '-0.05em' : officials.sidebarStyle?.letterSpacing === 'wide' ? '0.025em' : officials.sidebarStyle?.letterSpacing === 'widest' ? '0.1em' : 'normal'
+                }}>
+
+                {/* Captain Photo */}
+                <div className="mb-2 mx-auto overflow-hidden rounded-lg w-24 h-32 bg-gray-200 border-0">
+                  <img
+                    src={officials.logos?.captainImage || '/images/brgycaptain.png'}
+                    alt="Punong Barangay"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div className="text-center mb-4">
+                  <p className="mb-1 text-xs" style={{
+                    color: officials.sidebarStyle?.labelColor,
+                    fontWeight: officials.sidebarStyle?.titleWeight || 'bold'
+                  }}>PUNONG BARANGAY</p>
+                  <p style={{
+                    fontSize: `${officials.sidebarStyle?.textSize || 13}px`,
+                    fontWeight: officials.sidebarStyle?.nameWeight || 'bold'
+                  }}>{officials.chairman}</p>
+                </div>
+
+                <div className="text-center">
+                  <p className="mb-1 text-xs" style={{
+                    color: officials.sidebarStyle?.labelColor,
+                    fontWeight: officials.sidebarStyle?.titleWeight || 'bold'
+                  }}>SANGGUNIANG BARANGAY MEMBERS</p>
+                  <div className="space-y-1">
+                    {officials.councilors?.slice(0, 3).map((c, i) => (
+                      <p key={i} style={{
+                        fontSize: `${(officials.sidebarStyle?.textSize || 11) - 2}px`,
+                        fontWeight: officials.sidebarStyle?.nameWeight === 'bold' ? 'semibold' : officials.sidebarStyle?.nameWeight || 'semibold'
+                      }}>{c}</p>
+                    ))}
+                    <p className="text-xs opacity-50">...</p>
                   </div>
                 </div>
               </div>

@@ -1231,7 +1231,8 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
               width: '240px',
               background: `linear-gradient(to bottom, ${sidebarStyle.bgColor || '#ffffff'}, ${sidebarStyle.gradientEnd || sidebarStyle.bgColor || '#ffffff'})`,
               borderRight: `2px solid ${sidebarStyle.labelColor || sidebarStyle.textColor || '#000000'}`,
-              color: sidebarStyle.textColor || '#000000'
+              color: sidebarStyle.textColor || '#000000',
+              letterSpacing: sidebarStyle.letterSpacing === 'tighter' ? '-0.05em' : sidebarStyle.letterSpacing === 'wide' ? '0.025em' : sidebarStyle.letterSpacing === 'widest' ? '0.1em' : 'normal'
             }}>
             <div className="flex-1 space-y-4 text-center mt-6">
               {/* Captain's Portrait */}
@@ -1244,15 +1245,29 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
               </div>
 
               <div>
-                <p className="font-bold text-xs mb-1" style={{ color: sidebarStyle.labelColor || '#000000' }}>PUNONG BARANGAY</p>
-                <p className="font-bold" style={{ fontSize: '13px', color: sidebarStyle.textColor || '#000000' }}>{officials.chairman}</p>
+                <p className="text-xs mb-1" style={{
+                  color: sidebarStyle.labelColor || '#000000',
+                  fontWeight: sidebarStyle.titleWeight || 'bold'
+                }}>PUNONG BARANGAY</p>
+                <p style={{
+                  fontSize: '13px',
+                  color: sidebarStyle.textColor || '#000000',
+                  fontWeight: sidebarStyle.nameWeight || 'bold'
+                }}>{officials.chairman}</p>
               </div>
 
               <div>
-                <p className="font-bold text-xs mb-1" style={{ color: sidebarStyle.labelColor || '#000000' }}>SANGGUNIANG BARANGAY MEMBERS</p>
+                <p className="text-xs mb-1" style={{
+                  color: sidebarStyle.labelColor || '#000000',
+                  fontWeight: sidebarStyle.titleWeight || 'bold'
+                }}>SANGGUNIANG BARANGAY MEMBERS</p>
                 <div className="space-y-1">
                   {officials.councilors?.map((c, i) => (
-                    <p key={i} className="font-semibold" style={{ fontSize: '11px', color: sidebarStyle.textColor || '#000000' }}>{c}</p>
+                    <p key={i} style={{
+                      fontSize: '11px',
+                      color: sidebarStyle.textColor || '#000000',
+                      fontWeight: sidebarStyle.nameWeight === 'bold' ? 'semibold' : sidebarStyle.nameWeight || 'semibold'
+                    }}>{c}</p>
                   ))}
                 </div>
               </div>
