@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { X, GraduationCap, User, MapPin, Phone, Award, FileText, AlertCircle, CheckCircle, Pen } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, GraduationCap, User, MapPin, Phone, Award, FileText, AlertCircle, CheckCircle, Pen, Search } from 'lucide-react';
 import SignatureInput from '../UI/SignatureInput';
+import ResidentSearchModal from '../Modals/ResidentSearchModal';
 
 export default function EducationalAssistanceModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
@@ -20,8 +21,26 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
     schoolToAttend: '',
     schoolAttending: '',
     academicAwards: '',
-    gwa: ''
+    gwa: '',
+    residentId: null
   });
+
+  const [isResidentModalOpen, setIsResidentModalOpen] = useState(false);
+
+  const handleResidentSelect = (resident) => {
+    setFormData(prev => ({
+      ...prev,
+      firstName: resident.first_name || '',
+      middleName: resident.middle_name || '',
+      lastName: resident.last_name || '',
+      age: resident.age || '',
+      gender: resident.gender ? (resident.gender.charAt(0).toUpperCase() + resident.gender.slice(1).toLowerCase()) : '',
+      civilStatus: resident.civil_status ? (resident.civil_status.charAt(0).toUpperCase() + resident.civil_status.slice(1).toLowerCase()) : '',
+      cellphoneNumber: resident.contact_number || prev.cellphoneNumber,
+      residentId: resident.id
+    }));
+    setIsResidentModalOpen(false);
+  };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
@@ -51,13 +70,13 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate signature
     if (!signature) {
       setSubmitStatus('error');
       return;
     }
-    
+
     setIsSubmitting(true);
     setSubmitStatus(null);
 
@@ -134,11 +153,21 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
         {/* Form Body - Scrollable */}
         <div className="flex-1 overflow-y-auto">
           {/* Notification */}
-          <div className="p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-b">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-sm text-yellow-800 font-medium">
-                📞 KAMI PO AY MAKIKIPAG-UGNAYAN SA INYO KUNG KAYO PO AY KUWALIPIKADO.
+          <div className="p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-b space-y-3">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex gap-3 items-center">
+              <Phone className="w-5 h-5 text-orange-600 shrink-0" />
+              <p className="text-sm text-yellow-800 font-medium font-bold">
+                KAMI PO AY MAKIKIPAG-UGNAYAN SA INYO KUNG KAYO PO AY KUWALIPIKADO.
               </p>
+            </div>
+            <div className="bg-white/80 border border-orange-200 rounded-lg p-4 flex gap-3 items-start shadow-sm">
+              <AlertCircle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-black text-orange-700 uppercase tracking-widest mb-1">Census Requirement</p>
+                <p className="text-sm text-orange-900 leading-relaxed">
+                  Only residents registered in the <strong>latest census</strong> can request online. If you are not in the census, please coordinate with the Barangay Office.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -181,14 +210,19 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">𝐅𝐈𝐑𝐒𝐓 𝐍𝐀𝐌𝐄 *</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      readOnly
+                      onClick={() => setIsResidentModalOpen(true)}
+                      placeholder="CLICK HERE TO SEARCH..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer bg-blue-50 font-bold text-blue-700 pr-10"
+                      required
+                    />
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 w-4 h-4 cursor-pointer" onClick={() => setIsResidentModalOpen(true)} />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">𝐌𝐈𝐃𝐃𝐋𝐄 𝐍𝐀𝐌𝐄</label>
@@ -196,8 +230,9 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                     type="text"
                     name="middleName"
                     value={formData.middleName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                    disabled
+                    className="w-full px-3 py-2 border border-blue-300 rounded-lg bg-blue-50/50 text-gray-500"
                   />
                 </div>
                 <div>
@@ -206,8 +241,9 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                     type="text"
                     name="lastName"
                     value={formData.lastName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                    disabled
+                    className="w-full px-3 py-2 border border-blue-300 rounded-lg bg-blue-50/50 text-gray-500"
                     required
                   />
                 </div>
@@ -220,43 +256,35 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                     type="number"
                     name="age"
                     value={formData.age}
-                    onChange={handleInputChange}
-                    min="12"
-                    max="30"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                    disabled
+                    className="w-full px-3 py-2 border border-blue-300 rounded-lg bg-blue-50/50 text-gray-500"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">𝐆𝐄𝐍𝐃𝐄𝐑 *</label>
-                  <select
+                  <input
+                    type="text"
                     name="gender"
                     value={formData.gender}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                    disabled
+                    className="w-full px-3 py-2 border border-blue-300 rounded-lg bg-blue-50/50 text-gray-500"
                     required
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">𝐂𝐈𝐕𝐈𝐋 𝐒𝐓𝐀𝐓𝐔𝐒 *</label>
-                  <select
+                  <input
+                    type="text"
                     name="civilStatus"
                     value={formData.civilStatus}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                    disabled
+                    className="w-full px-3 py-2 border border-blue-300 rounded-lg bg-blue-50/50 text-gray-500"
                     required
-                  >
-                    <option value="">Select Status</option>
-                    <option value="Single">Single</option>
-                    <option value="Married">Married</option>
-                    <option value="Divorced">Divorced</option>
-                    <option value="Widowed">Widowed</option>
-                  </select>
+                  />
                 </div>
               </div>
             </div>
@@ -471,7 +499,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
               <div className="mt-3 text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <p className="font-medium text-yellow-800 mb-1">Important:</p>
                 <p className="text-yellow-700">
-                  By providing your digital signature, you certify that all information provided is true and accurate. 
+                  By providing your digital signature, you certify that all information provided is true and accurate.
                   This signature has the same legal effect as a handwritten signature.
                 </p>
               </div>
@@ -479,6 +507,13 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
 
           </form>
         </div>
+
+        {/* Resident Search Modal */}
+        <ResidentSearchModal
+          isOpen={isResidentModalOpen}
+          onClose={() => setIsResidentModalOpen(false)}
+          onSelect={handleResidentSelect}
+        />
 
         {/* Footer - Fixed */}
         <div className="border-t bg-gray-50 px-6 py-4 sm:py-5 flex flex-col sm:flex-row gap-3 justify-end pb-10 sm:pb-5">

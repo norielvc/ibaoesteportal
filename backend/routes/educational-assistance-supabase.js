@@ -6,9 +6,9 @@ const { supabase } = require('../services/supabaseClient');
 router.get('/', async (req, res) => {
   try {
     console.log('Fetching educational assistance applications...');
-    
+
     const { status, year_grade, limit = 50, offset = 0 } = req.query;
-    
+
     let query = supabase
       .from('educational_assistance')
       .select('*')
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
     if (status) {
       query = query.eq('application_status', status);
     }
-    
+
     if (year_grade) {
       query = query.eq('year_grade', year_grade);
     }
@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
     }
 
     console.log(`Found ${applications?.length || 0} applications`);
-    
+
     res.json({
       success: true,
       data: applications || [],
@@ -59,7 +59,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     console.log('Creating new educational assistance application...');
-    
+
     const {
       firstName,
       middleName,
@@ -78,12 +78,13 @@ router.post('/', async (req, res) => {
       schoolToAttend,
       schoolAttending,
       academicAwards,
-      gwa
+      gwa,
+      residentId
     } = req.body;
 
     // Validate required fields
-    if (!firstName || !lastName || !age || !gender || !civilStatus || !purok || 
-        !cellphoneNumber || !yearGrade || !schoolToAttend || !gwa) {
+    if (!firstName || !lastName || !age || !gender || !civilStatus || !purok ||
+      !cellphoneNumber || !yearGrade || !schoolToAttend || !gwa) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields'
@@ -160,8 +161,16 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Update resident contact number if residentId is provided
+    if (residentId && cellphoneNumber) {
+      await supabase
+        .from('residents')
+        .update({ contact_number: cellphoneNumber })
+        .eq('id', residentId);
+    }
+
     console.log('Application created successfully:', application.reference_number);
-    
+
     res.status(201).json({
       success: true,
       message: 'Application submitted successfully',
@@ -188,7 +197,7 @@ router.get('/:identifier', async (req, res) => {
   try {
     const { identifier } = req.params;
     console.log(`Fetching application: ${identifier}`);
-    
+
     let query = supabase
       .from('educational_assistance')
       .select('*');
@@ -231,7 +240,7 @@ router.patch('/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { status, notes, reviewedBy } = req.body;
-    
+
     console.log(`Updating application status: ${id} -> ${status}`);
 
     const validStatuses = ['pending', 'under_review', 'qualified', 'not_qualified', 'approved', 'rejected'];
@@ -285,7 +294,7 @@ router.patch('/:id/status', async (req, res) => {
 router.get('/stats/summary', async (req, res) => {
   try {
     console.log('Fetching application statistics...');
-    
+
     const { data: stats, error } = await supabase
       .from('educational_assistance')
       .select('application_status, year_grade')
@@ -317,7 +326,7 @@ router.get('/stats/summary', async (req, res) => {
     // Count recent applications (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+
     const { count: recentCount } = await supabase
       .from('educational_assistance')
       .select('*', { count: 'exact', head: true })

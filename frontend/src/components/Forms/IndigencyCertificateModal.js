@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download } from 'lucide-react';
+import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search } from 'lucide-react';
+import ResidentSearchModal from '../Modals/ResidentSearchModal';
 // API Configuration
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
@@ -76,11 +77,33 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
   const [currentDate, setCurrentDate] = useState('');
   const [referenceNumber, setReferenceNumber] = useState(''); // Will be set after submission
   const [submittedReferenceNumber, setSubmittedReferenceNumber] = useState(''); // For success display
+  const [isResidentModalOpen, setIsResidentModalOpen] = useState(false);
   const certificateRef = useRef(null);
+
+  const handleResidentSelect = (resident) => {
+    setFormData(prev => ({
+      ...prev,
+      fullName: resident.full_name,
+      age: resident.age || '',
+      gender: resident.gender || '',
+      civilStatus: resident.civil_status || '',
+      address: resident.residential_address || '',
+      dateOfBirth: resident.date_of_birth ? new Date(resident.date_of_birth).toISOString().split('T')[0] : '',
+      placeOfBirth: resident.place_of_birth || '',
+      contactNumber: resident.contact_number || prev.contactNumber,
+      residentId: resident.id
+    }));
+    setIsResidentModalOpen(false);
+    setNotification({
+      type: 'success',
+      title: 'Profile Found',
+      message: `${resident.full_name}'s details have been auto-filled.`
+    });
+  };
   const [formData, setFormData] = useState({
     fullName: '', age: '', gender: '', civilStatus: '',
     address: '', dateOfBirth: '', placeOfBirth: '',
-    purpose: '', contactNumber: ''
+    purpose: '', contactNumber: '', residentId: null
   });
 
   // Generate current date dynamically
@@ -148,6 +171,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
     setNotification({ type: 'info', title: 'Submitting...', message: 'Please wait while we process your application.' });
 
     try {
+      console.log('Submitting form with data:', formData);
       const response = await fetch(`${API_URL}/api/certificates/indigency`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -238,13 +262,13 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
           <div className="flex-1 overflow-y-auto">
             {!showPreview ? (
               <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-green-100 p-1.5 rounded-md"><Info className="w-4 h-4 text-green-600" /></div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Reference Number</label>
-                      <p className="text-sm text-gray-900">
-                        {referenceNumber || 'Will be assigned after submission'}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-green-100 p-2 rounded-lg shrink-0"><Info className="w-5 h-5 text-green-600" /></div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-black text-green-700 uppercase tracking-widest">Public Notice</p>
+                      <p className="text-sm text-green-800 leading-relaxed font-medium">
+                        Only residents registered in the <strong>latest census</strong> can request online. If you are not in the census, please coordinate with the Barangay Office for record updating.
                       </p>
                     </div>
                   </div>
@@ -257,21 +281,43 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                   </h3>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
-                    <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="e.g., JUAN DELA CRUZ"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 uppercase" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1 flex justify-between items-center">
+                      <span>Full Name <span className="text-red-500">*</span></span>
+                      <button
+                        type="button"
+                        onClick={() => setIsResidentModalOpen(true)}
+                        className="text-green-600 hover:text-green-700 text-xs font-semibold flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md transition-colors"
+                      >
+                        <Search className="w-3 h-3" /> Search Database
+                      </button>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={formData.fullName}
+                        readOnly
+                        onClick={() => setIsResidentModalOpen(true)}
+                        placeholder="CLICK HERE TO SEARCH RESIDENT..."
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 uppercase pr-10 cursor-pointer bg-gray-50 hover:bg-white transition-colors font-bold text-green-700"
+                      />
+                      <Search
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5 cursor-pointer"
+                        onClick={() => setIsResidentModalOpen(true)}
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Age <span className="text-red-500">*</span></label>
-                      <input type="number" name="age" value={formData.age} onChange={handleInputChange} min="1" max="120" placeholder="25"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" />
+                      <input type="number" name="age" value={formData.age} readOnly disabled
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 font-semibold" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Gender <span className="text-red-500">*</span></label>
-                      <select name="gender" value={formData.gender} onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 uppercase">
+                      <select name="gender" value={formData.gender} disabled
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 uppercase font-semibold appearance-none">
                         <option value="">Select...</option>
                         <option value="MALE">MALE</option>
                         <option value="FEMALE">FEMALE</option>
@@ -279,8 +325,8 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Civil Status <span className="text-red-500">*</span></label>
-                      <select name="civilStatus" value={formData.civilStatus} onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 uppercase">
+                      <select name="civilStatus" value={formData.civilStatus} disabled
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 uppercase font-semibold appearance-none">
                         <option value="">Select...</option>
                         <option value="SINGLE">SINGLE</option>
                         <option value="MARRIED">MARRIED</option>
@@ -293,20 +339,20 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth <span className="text-red-500">*</span></label>
-                      <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" />
+                      <input type="date" name="dateOfBirth" value={formData.dateOfBirth} readOnly disabled
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 font-semibold" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Place of Birth <span className="text-red-500">*</span></label>
-                      <input type="text" name="placeOfBirth" value={formData.placeOfBirth} onChange={handleInputChange} placeholder="e.g., Calumpit, Bulacan"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 uppercase" />
+                      <input type="text" name="placeOfBirth" value={formData.placeOfBirth} readOnly disabled
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 uppercase font-semibold" />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Residential Address <span className="text-red-500">*</span></label>
-                    <input type="text" name="address" value={formData.address} onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 uppercase" placeholder="" />
+                    <input type="text" name="address" value={formData.address} readOnly disabled
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 uppercase font-semibold" />
                   </div>
 
                   <div>
@@ -497,6 +543,12 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
           </div>
         </div>
       )}
+
+      <ResidentSearchModal
+        isOpen={isResidentModalOpen}
+        onClose={() => setIsResidentModalOpen(false)}
+        onSelect={handleResidentSelect}
+      />
 
       <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.3s ease-out; }`}</style>
     </div>

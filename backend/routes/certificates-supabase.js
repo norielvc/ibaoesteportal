@@ -171,7 +171,7 @@ router.post('/clearance', async (req, res) => {
   try {
     const {
       fullName, age, sex, civilStatus, address, contactNumber,
-      dateOfBirth, placeOfBirth, purpose
+      dateOfBirth, placeOfBirth, purpose, residentId
     } = req.body;
 
     const year = new Date().getFullYear();
@@ -225,6 +225,21 @@ router.post('/clearance', async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // Update resident contact number if residentId is provided
+    if (residentId && contactNumber) {
+      console.log(`[BC-Update] Attempting to update resident ${residentId} with contact: ${contactNumber}`);
+      const { error: updateError } = await supabase
+        .from('residents')
+        .update({ contact_number: contactNumber })
+        .eq('id', residentId);
+
+      if (updateError) {
+        console.error(`[BC-Update Error] Failed to update resident contact:`, updateError);
+      } else {
+        console.log(`[BC-Update] ✅ Successfully updated resident ${residentId}`);
+      }
+    }
 
     // Create initial workflow assignments based on configuration
     // Fetch workflow config for this type
@@ -303,9 +318,11 @@ router.post('/clearance', async (req, res) => {
 // Create new certificate request (Certificate of Indigency)
 router.post('/indigency', async (req, res) => {
   try {
+    console.log('--- INDIGENCY REQUEST START ---');
+    console.log('Body:', JSON.stringify(req.body, null, 2));
     const {
       fullName, age, gender, civilStatus, address, contactNumber,
-      dateOfBirth, placeOfBirth, purpose
+      dateOfBirth, placeOfBirth, purpose, residentId
     } = req.body;
 
     const year = new Date().getFullYear();
@@ -344,7 +361,7 @@ router.post('/indigency', async (req, res) => {
         reference_number: refNumber,
         certificate_type: 'certificate_of_indigency',
         full_name: fullName?.toUpperCase() || '',
-        age: parseInt(age),
+        age: parseInt(age) || null,
         sex: gender?.toUpperCase() || '',
         civil_status: civilStatus?.toUpperCase() || '',
         address: address?.toUpperCase() || '',
@@ -359,6 +376,21 @@ router.post('/indigency', async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // Update resident contact number if residentId is provided
+    if (residentId && contactNumber) {
+      console.log(`[CI-Update] Attempting to update resident ${residentId} with contact: ${contactNumber}`);
+      const { error: updateError } = await supabase
+        .from('residents')
+        .update({ contact_number: contactNumber })
+        .eq('id', residentId);
+
+      if (updateError) {
+        console.error(`[CI-Update Error] Failed to update resident contact:`, updateError);
+      } else {
+        console.log(`[CI-Update] ✅ Successfully updated resident ${residentId}`);
+      }
+    }
 
     // Create initial workflow assignments based on configuration
     // Fetch workflow config for this type
@@ -437,7 +469,7 @@ router.post('/residency', async (req, res) => {
   try {
     const {
       fullName, age, sex, civilStatus, address, contactNumber,
-      dateOfBirth, placeOfBirth, purpose
+      dateOfBirth, placeOfBirth, purpose, residentId
     } = req.body;
 
     const year = new Date().getFullYear();
@@ -491,6 +523,21 @@ router.post('/residency', async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // Update resident contact number if residentId is provided
+    if (residentId && contactNumber) {
+      console.log(`[BR-Update] Attempting to update resident ${residentId} with contact: ${contactNumber}`);
+      const { error: updateError } = await supabase
+        .from('residents')
+        .update({ contact_number: contactNumber })
+        .eq('id', residentId);
+
+      if (updateError) {
+        console.error(`[BR-Update Error] Failed to update resident contact:`, updateError);
+      } else {
+        console.log(`[BR-Update] ✅ Successfully updated resident ${residentId}`);
+      }
+    }
 
     // Create initial workflow assignments based on configuration
     // Fetch workflow config for this type

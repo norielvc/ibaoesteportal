@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, AlertCircle, CheckCircle, Lock, Bell, Shield, Database, Pen, Upload, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Settings as SettingsIcon, Save, AlertCircle, CheckCircle, Lock, Bell, Shield, Database, Pen, Upload, Eye, EyeOff, Trash2, Download, CheckCircle2 } from 'lucide-react';
+import Papa from 'papaparse';
 import Layout from '@/components/Layout/Layout';
-import { getUserData, logout, getAuthToken } from '@/lib/auth';
+import { getUserData, logout, getAuthToken, isAdmin } from '@/lib/auth';
 import SignatureInput from '@/components/UI/SignatureInput';
 import SignatureImage from '@/components/UI/SignatureImage';
 import SignatureDebugger from '@/components/UI/SignatureDebugger';
@@ -19,6 +20,11 @@ export default function Settings() {
   const [loadingSignatures, setLoadingSignatures] = useState(false);
   const [savingSignature, setSavingSignature] = useState(false);
   const [showPreview, setShowPreview] = useState({});
+
+  // Data Import state
+  const [importFile, setImportFile] = useState(null);
+  const [importPreview, setImportPreview] = useState([]);
+  const [isImporting, setIsImporting] = useState(false);
 
   // API Configuration
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
@@ -66,12 +72,12 @@ export default function Settings() {
       console.log('No user found, skipping signature fetch');
       return;
     }
-    
+
     setLoadingSignatures(true);
     try {
       const token = getAuthToken();
       console.log('Fetching signatures with token:', token ? 'Token exists' : 'No token');
-      
+
       const response = await fetch(`${API_URL}/api/user/signatures`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -82,19 +88,19 @@ export default function Settings() {
       console.log('Fetch signatures response status:', response.status);
       const data = await response.json();
       console.log('Fetch signatures response data:', data);
-      
+
       if (data.success) {
         setSignatures(data.signatures || []);
         setDefaultSignatureId(data.defaultSignatureId);
         setSuccessMessage(`Loaded ${data.signatures?.length || 0} signatures`);
         setTimeout(() => setSuccessMessage(''), 3000);
-        
+
         // Debug: Log signature data to check structure
         console.log('Loaded signatures:', data.signatures);
         if (data.signatures && data.signatures.length > 0) {
           console.log('First signature structure:', data.signatures[0]);
           console.log('Signature data field:', data.signatures[0].signature_data ? 'Present' : 'Missing');
-          
+
           // Validate signature data format
           data.signatures.forEach((sig, index) => {
             if (sig.signature_data) {
@@ -137,7 +143,7 @@ export default function Settings() {
     try {
       const token = getAuthToken();
       console.log('Save signature with token:', token ? 'Token exists' : 'No token');
-      
+
       const response = await fetch(`${API_URL}/api/user/signatures`, {
         method: 'POST',
         headers: {
@@ -154,7 +160,7 @@ export default function Settings() {
       console.log('Save signature response status:', response.status);
       const data = await response.json();
       console.log('Save signature response data:', data);
-      
+
       if (data.success) {
         setNewSignature(null);
         fetchSignatures();
@@ -247,6 +253,10 @@ export default function Settings() {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'data', label: 'Data & Backup', icon: Database }
   ];
+
+  if (isAdmin()) {
+    tabs.push({ id: 'import', label: 'Data Import', icon: Database });
+  }
 
   return (
     <Layout>
@@ -420,7 +430,7 @@ export default function Settings() {
                 {/* Create New Signature */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Signature</h3>
-                  
+
                   <SignatureInput
                     onSignatureChange={setNewSignature}
                     label="Your Digital Signature"
@@ -464,11 +474,10 @@ export default function Settings() {
                       {signatures.map((signature) => (
                         <div
                           key={signature.id}
-                          className={`border rounded-lg p-4 ${
-                            signature.id === defaultSignatureId
+                          className={`border rounded-lg p-4 ${signature.id === defaultSignatureId
                               ? 'border-[#03254c] bg-blue-50'
                               : 'border-gray-200 bg-white'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -530,7 +539,7 @@ export default function Settings() {
                               </button>
                             </div>
                           </div>
-                          
+
                           {/* Large preview when toggled */}
                           {showPreview[signature.id] && signature.signature_data && (
                             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
@@ -544,10 +553,10 @@ export default function Settings() {
                                   onLoadError={() => console.error('❌ Large preview failed:', signature.name)}
                                 />
                               </div>
-                              
+
                               {/* Debug information */}
                               <div className="mt-4">
-                                <SignatureDebugger 
+                                <SignatureDebugger
                                   signatureData={signature.signature_data}
                                   name={signature.name}
                                 />
@@ -652,6 +661,142 @@ export default function Settings() {
 
                 <button className="btn-secondary">
                   Backup Now
+                </button>
+              </div>
+            )}
+
+            {/* Data Import Settings */}
+            {activeTab === 'import' && (
+              <div className="space-y-6 max-w-2xl">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">Database Migration</h3>
+                    <p className="text-sm text-gray-600">Bulk upload resident records via CSV file</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const headers = ['last_name', 'first_name', 'middle_name', 'suffix', 'age', 'gender', 'civil_status', 'date_of_birth', 'place_of_birth', 'residential_address', 'contact_number'];
+                      const csvContent = headers.join(',') + '\n' + 'SALAZAR,CARLO,PADILLA,IV,57,FEMALE,SEPARATED,1968-04-19,BAGUIO,House No. 810C,09171234567';
+                      const blob = new Blob([csvContent], { type: 'text/csv' });
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'residents_template.csv';
+                      a.click();
+                    }}
+                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    <Download className="w-4 h-4" /> Template
+                  </button>
+                </div>
+
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50">
+                  <input
+                    type="file"
+                    id="csvUpload"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setImportFile(file);
+                        Papa.parse(file, {
+                          header: true,
+                          skipEmptyLines: true,
+                          complete: (results) => setImportPreview(results.data.slice(0, 5))
+                        });
+                      }
+                    }}
+                  />
+                  <label htmlFor="csvUpload" className="cursor-pointer flex flex-col items-center">
+                    <Upload className="w-12 h-12 text-gray-400 mb-3" />
+                    <span className="text-sm font-medium text-gray-900">
+                      {importFile ? importFile.name : 'Select CSV File'}
+                    </span>
+                    <span className="text-xs text-gray-500 mt-1">Excel-exported CSV files only</span>
+                  </label>
+                </div>
+
+                {importPreview.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-gray-800">Preview</h4>
+                      <button onClick={() => { setImportFile(null); setImportPreview([]); }} className="text-red-500">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Gender</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200 text-xs">
+                          {importPreview.map((row, i) => (
+                            <tr key={i}>
+                              <td className="px-4 py-2">{row.first_name || row['First Name']} {row.last_name || row['Last Name']}</td>
+                              <td className="px-4 py-2">{row.gender || row.Gender || row.sex}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (!importFile) return;
+                    setIsImporting(true);
+                    Papa.parse(importFile, {
+                      header: true,
+                      skipEmptyLines: true,
+                      complete: async (results) => {
+                        try {
+                          const mappedData = results.data.map(row => ({
+                            last_name: row.last_name || row['Last Name'] || row.lastName,
+                            first_name: row.first_name || row['First Name'] || row.firstName,
+                            middle_name: row.middle_name || row['Middle Name'] || '',
+                            suffix: row.suffix || row.Suffix || '',
+                            age: parseInt(row.age || row.Age) || null,
+                            gender: (row.gender || row.Gender || row.sex || '').toUpperCase(),
+                            civil_status: (row.civil_status || row['Civil Status'] || '').toUpperCase(),
+                            date_of_birth: row.date_of_birth || row['Date of Birth'],
+                            place_of_birth: row.place_of_birth || row['Place of Birth'],
+                            residential_address: row.residential_address || row['Residential Address'] || row.address,
+                            contact_number: row.contact_number || row['Contact Number'] || ''
+                          }));
+
+                          const res = await fetch(`${API_URL}/api/residents/bulk-insert`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ residents: mappedData })
+                          });
+
+                          const data = await res.json();
+                          if (data.success) {
+                            setSuccessMessage(data.message);
+                            setImportFile(null);
+                            setImportPreview([]);
+                          } else {
+                            setErrorMessage(data.message);
+                          }
+                        } catch (err) {
+                          setErrorMessage('Import failed: ' + err.message);
+                        } finally {
+                          setIsImporting(false);
+                          setTimeout(() => { setSuccessMessage(''); setErrorMessage(''); }, 5000);
+                        }
+                      }
+                    });
+                  }}
+                  disabled={!importFile || isImporting}
+                  className="btn-primary w-full flex justify-center items-center gap-2"
+                >
+                  {isImporting ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <CheckCircle2 className="w-4 h-4" />}
+                  {isImporting ? 'Importing...' : 'Start Database Migration'}
                 </button>
               </div>
             )}

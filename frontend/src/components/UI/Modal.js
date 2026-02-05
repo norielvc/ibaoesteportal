@@ -2,20 +2,20 @@ import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export default function Modal({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
   size = 'md',
-  showCloseButton = true 
+  showCloseButton = true
 }) {
   const sizeClasses = {
     sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    full: 'max-w-7xl',
+    md: 'max-w-xl',
+    lg: 'max-w-4xl',
+    xl: 'max-w-6xl',
+    full: 'max-w-screen-2xl',
   };
 
   useEffect(() => {
@@ -83,10 +83,10 @@ export default function Modal({
   );
 }
 
-export function ConfirmModal({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
+export function ConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
   title = 'Confirm Action',
   message = 'Are you sure you want to proceed?',
   confirmText = 'Confirm',
@@ -100,7 +100,7 @@ export function ConfirmModal({
       <div className="mb-6">
         <p className="text-gray-600">{message}</p>
       </div>
-      
+
       <div className="flex justify-end space-x-3">
         <button
           onClick={onClose}

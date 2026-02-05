@@ -138,7 +138,16 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
         </div>
 
         {/* Form Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 flex gap-3 items-start shadow-sm">
+            <AlertCircle className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-black text-purple-700 uppercase tracking-widest mb-1">Census Requirement</p>
+              <p className="text-sm text-purple-900 leading-relaxed font-medium">
+                Only residents registered in the <strong>latest census</strong> can request online. If you (the business owner) are not in the census, please coordinate with the Barangay Office.
+              </p>
+            </div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Business Information */}
             <div>

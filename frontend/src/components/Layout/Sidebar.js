@@ -103,6 +103,13 @@ const mainMenuItems = [
         icon: Calendar,
         adminOnly: true,
         description: 'Homepage events'
+      },
+      {
+        name: 'Residents Database',
+        href: '/residents',
+        icon: UserCog,
+        adminOnly: true,
+        description: 'View uploaded data'
       }
     ]
   },

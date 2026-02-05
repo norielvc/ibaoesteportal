@@ -20,6 +20,7 @@ const employeesQRRoutes = require('./routes/employees-qr-supabase');
 const qrScansRoutes = require('./routes/qr-scans-supabase');
 const pickupRoutes = require('./routes/pickup-supabase');
 const signatureRoutes = require('./routes/signatures');
+const residentRoutes = require('./routes/residents-supabase');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -47,10 +48,10 @@ app.use(helmet());
 
 // CORS configuration
 const allowedOrigins = [
-  'http://localhost:3000', 
+  'http://localhost:3000',
   'http://127.0.0.1:3000',
   'http://localhost:3001',
-  'http://127.0.0.1:3001', 
+  'http://127.0.0.1:3001',
   'http://localhost:3002',
   'http://127.0.0.1:3002',
   'http://localhost:3003',
@@ -74,7 +75,7 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
@@ -123,6 +124,7 @@ app.use('/api/employees', authenticateToken, employeesQRRoutes); // Employee QR 
 app.use('/api/qr-scans', authenticateToken, qrScansRoutes); // General QR scan tracking
 app.use('/api/pickup', pickupRoutes); // Certificate pickup verification (public)
 app.use('/api/user/signatures', signatureRoutes); // User signature management (authenticated)
+app.use('/api/residents', residentRoutes); // Residents database (public search)
 
 // 404 handler
 app.use('*', (req, res) => {
