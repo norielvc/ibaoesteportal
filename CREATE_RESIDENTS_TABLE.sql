@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS residents (
     place_of_birth TEXT,
     residential_address TEXT,
     contact_number TEXT,
+    pending_case BOOLEAN DEFAULT FALSE,
+    case_record_history TEXT DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

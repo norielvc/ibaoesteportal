@@ -56,7 +56,9 @@ export default function Residents() {
         date_of_birth: '',
         place_of_birth: '',
         residential_address: '',
-        contact_number: ''
+        contact_number: '',
+        pending_case: false,
+        case_record_history: ''
     });
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,7 +91,9 @@ export default function Residents() {
             date_of_birth: '',
             place_of_birth: '',
             residential_address: '',
-            contact_number: ''
+            contact_number: '',
+            pending_case: false,
+            case_record_history: ''
         });
         setSelectedResident(null);
         setIsFormModalOpen(true);
@@ -268,8 +272,13 @@ export default function Residents() {
                                                         {resident.last_name?.charAt(0)}
                                                     </div>
                                                     <div className="ml-4">
-                                                        <div className="text-sm font-bold text-gray-900 uppercase">
+                                                        <div className="text-sm font-bold text-gray-900 uppercase flex items-center gap-2">
                                                             {resident.last_name}, {resident.first_name} {resident.middle_name} {resident.suffix}
+                                                            {resident.pending_case && (
+                                                                <span className="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded-full border border-red-200 animate-pulse">
+                                                                    PENDING CASE
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
                                                             <Calendar className="w-3 h-3" /> Born: {resident.date_of_birth || 'N/A'}
@@ -452,7 +461,38 @@ export default function Residents() {
                                 </div>
                             </div>
 
-                            {/* Footer/Actions */}
+                            {/* Legal Records Section - Always show if viewing profile */}
+                            <div className={`mt-6 p-5 border rounded-2xl ${selectedResident.pending_case ? 'bg-red-50 border-red-100' : 'bg-gray-50 border-gray-100 shadow-sm'}`}>
+                                <p className={`text-[11px] font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${selectedResident.pending_case ? 'text-red-500' : 'text-gray-400'}`}>
+                                    <div className={`h-1.5 w-1.5 rounded-full ${selectedResident.pending_case ? 'bg-red-500' : 'bg-gray-500'}`}></div>
+                                    Official Legal Record & Case History
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                    <div className="md:col-span-1 border-r border-gray-200 pr-4">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight mb-2">Internal Status</p>
+                                        <div className={`inline-flex items-center px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border shadow-sm ${selectedResident.pending_case
+                                                ? 'bg-red-600 text-white border-red-700 animate-pulse'
+                                                : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                                            }`}>
+                                            {selectedResident.pending_case ? 'With Pending Case' : 'Cleansed / No Record'}
+                                        </div>
+                                    </div>
+
+                                    <div className="md:col-span-3">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight mb-2">Record Details / Remarks</p>
+                                        <div className={`p-4 rounded-xl border text-sm font-semibold min-h-[80px] ${selectedResident.pending_case
+                                                ? 'bg-white border-red-200 text-red-900'
+                                                : 'bg-white border-gray-100 text-gray-600'
+                                            }`}>
+                                            {selectedResident.case_record_history || 'NO PREVIOUS LEGAL HISTORY OR PENDING CASES REPORTED FOR THIS RESIDENT.'}
+                                        </div>
+                                        <p className="text-[9px] text-gray-400 mt-2 italic">* This record is strictly for administrative use by the barangay review team.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer Actions */}
                             <div className="pt-4 flex justify-between items-center border-t border-gray-100">
                                 <button
                                     onClick={() => setIsDeleteConfirmOpen(true)}
@@ -609,6 +649,34 @@ export default function Residents() {
                             </div>
                         </div>
 
+                        {/* Legal Status Section */}
+                        <div className="bg-red-50 p-6 rounded-2xl border border-red-100 space-y-4 mb-6">
+                            <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Legal Status & Records</p>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={formData.pending_case}
+                                        onChange={(e) => setFormData({ ...formData, pending_case: e.target.checked })}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                    <span className="ml-3 text-sm font-bold text-red-700 uppercase">With Pending Case</span>
+                                </label>
+                            </div>
+
+                            <div>
+                                <label className="label text-red-700 font-bold">Case Record History / Remarks</label>
+                                <textarea
+                                    className="input min-h-[100px] resize-none uppercase p-4"
+                                    placeholder="Enter case details, history, or administrative remarks..."
+                                    value={formData.case_record_history}
+                                    onChange={(e) => setFormData({ ...formData, case_record_history: e.target.value })}
+                                />
+                                <p className="text-[10px] text-red-400 mt-1 uppercase font-semibold">Note: This information is only visible to the review team.</p>
+                            </div>
+                        </div>
+
                         <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
                             <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Location Details</p>
                             <label className="label">Full Residential Address</label>
@@ -679,7 +747,7 @@ export default function Residents() {
                         </div>
                     </div>
                 </Modal>
-            </div>
-        </Layout>
+            </div >
+        </Layout >
     );
 }

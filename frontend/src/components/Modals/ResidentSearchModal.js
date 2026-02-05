@@ -100,8 +100,13 @@ export default function ResidentSearchModal({ isOpen, onClose, onSelect }) {
                                         </div>
 
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors uppercase">
+                                            <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors uppercase flex items-center gap-2">
                                                 {resident.full_name}
+                                                {resident.pending_case && (
+                                                    <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full border border-red-200">
+                                                        PENDING CASE
+                                                    </span>
+                                                )}
                                             </h4>
                                             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-gray-500">
                                                 <span className="flex items-center gap-1">
