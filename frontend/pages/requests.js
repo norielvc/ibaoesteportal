@@ -694,213 +694,215 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
               <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border ${getStatusColor(request.status)}`}>
                 {request.status?.replace(/_/g, ' ').toUpperCase()}
               </span>
-              {currentStep && (
-                <>
-                  <span className="text-gray-300">•</span>
-                  <span className="text-sm text-blue-600 font-medium">{currentStep.name}</span>
-                </>
-              )}
-              {request.residents?.pending_case && (
-                <span className="bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse">
-                  CRITICAL: PENDING CASE RECORDED
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Preview Certificate Button */}
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-purple-100 p-2 rounded-lg">
-                  <Eye className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-purple-900">Certificate Preview</h3>
-                  <p className="text-sm text-purple-600">View how the certificate will look when printed</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowPdfPreview(true)}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 flex items-center gap-2 transition-colors"
-              >
-                <Eye className="w-4 h-4" />
-                Preview PDF
-              </button>
-            </div>
-          </div>
-
-          {/* Applicant Info */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-500" />
-                Applicant Information
-              </h3>
-              <div className="grid grid-cols-1 gap-4 text-sm">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-gray-500">Full Name</p>
-                    <p className="font-bold text-gray-900 text-lg uppercase">{request.applicant_name || request.full_name || 'N/A'}</p>
-                  </div>
-                  {request.residents?.pending_case && (
-                    <div className="bg-red-50 border border-red-200 p-2 rounded-lg flex items-center gap-2 text-red-600">
-                      <AlertTriangle className="w-5 h-5" />
-                      <span className="text-xs font-black uppercase tracking-tighter">With Pending Case</span>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="text-gray-500">Contact Number</p>
-                  <p className="font-medium text-gray-900">{request.contact_number || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Age</p>
-                  <p className="font-medium text-gray-900">{request.age || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Sex</p>
-                  <p className="font-medium text-gray-900">{request.sex || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Civil Status</p>
-                  <p className="font-medium text-gray-900">{request.civil_status || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Date of Birth</p>
-                  <p className="font-medium text-gray-900">{request.date_of_birth || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Address</p>
-                  <p className="font-medium text-gray-900">{request.address || 'N/A'}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              {/* Purpose */}
-              <div className="bg-blue-50 rounded-xl p-4">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2">
-                  <FileCheck className="w-5 h-5 text-blue-500" />
-                  Purpose
-                </h3>
-                <p className="text-gray-700">{request.purpose || 'Not specified'}</p>
-              </div>
-
-              {/* Timeline */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
-                  <History className="w-5 h-5 text-blue-500" />
-                  Timeline
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Submitted</span>
-                    <span className="font-medium">{formatDate(request.created_at)}</span>
-                  </div>
-                  {request.updated_at && request.updated_at !== request.created_at && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Last Updated</span>
-                      <span className="font-medium">{formatDate(request.updated_at)}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Admin Comment if any */}
-              {request.admin_comment && (
-                <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
-                  <h3 className="font-semibold text-orange-800 flex items-center gap-2 mb-2">
-                    <AlertTriangle className="w-5 h-5" />
-                    Admin Notes
-                  </h3>
-                  <p className="text-orange-700">{request.admin_comment}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Actions */}
-        {canAct && ['pending', 'processing', 'staff_review', 'secretary_approval', 'captain_approval'].includes(request.status) && (
-          <div className="border-t bg-gray-50 px-6 py-4">
-            {/* Review Request Team - Verification step */}
-            {currentStep?.status === 'staff_review' ? (
-              <div className="space-y-4">
-                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    <span className="font-semibold">Review Task:</span> Verify that the request is valid and the resident is legitimate for <span className="font-semibold">{getTypeLabel(request.certificate_type)}</span>.
-                  </p>
-                </div>
-
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">{getTypeLabel(request.certificate_type)}</span>
+                {currentStep && (
+                  <>
+                    <span className="text-gray-300">•</span>
+                    <span className="text-sm text-blue-600 font-medium">{currentStep.name}</span>
+                  </>
+                )}
                 {request.residents?.pending_case && (
-                  <div className="bg-red-600 p-4 rounded-xl shadow-lg border-2 border-red-400 text-white">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-white/20 p-2 rounded-lg">
-                        <ShieldAlert className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-1">Legal Hold Notification</p>
-                        <h4 className="text-lg font-black uppercase leading-tight">This applicant has a PENDING CASE</h4>
-                        <div className="mt-3 p-3 bg-black/20 rounded-lg border border-white/20">
-                          <p className="text-[10px] font-bold uppercase mb-1 opacity-70">Official Record History / Remarks:</p>
-                          <p className="text-sm font-semibold italic">"{request.residents.case_record_history || 'No detail remarks provided.'}"</p>
-                        </div>
-                        <p className="mt-3 text-[10px] font-bold uppercase text-red-100 flex items-center gap-2">
-                          <Info className="w-3 h-3" />
-                          Please carefully evaluate if the applicant is eligible for this certificate based on the case details above.
-                        </p>
-                      </div>
+                  <span className="bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse">
+                    CRITICAL: PENDING CASE RECORDED
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Preview Certificate Button */}
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-purple-100 p-2 rounded-lg">
+                    <Eye className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-purple-900">Certificate Preview</h3>
+                    <p className="text-sm text-purple-600">View how the certificate will look when printed</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowPdfPreview(true)}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 flex items-center gap-2 transition-colors"
+                >
+                  <Eye className="w-4 h-4" />
+                  Preview PDF
+                </button>
+              </div>
+            </div>
+
+            {/* Applicant Info */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-500" />
+                  Applicant Information
+                </h3>
+                <div className="grid grid-cols-1 gap-4 text-sm">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-gray-500">Full Name</p>
+                      <p className="font-bold text-gray-900 text-lg uppercase">{request.applicant_name || request.full_name || 'N/A'}</p>
                     </div>
+                    {request.residents?.pending_case && (
+                      <div className="bg-red-50 border border-red-200 p-2 rounded-lg flex items-center gap-2 text-red-600">
+                        <AlertTriangle className="w-5 h-5" />
+                        <span className="text-xs font-black uppercase tracking-tighter">With Pending Case</span>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Contact Number</p>
+                    <p className="font-medium text-gray-900">{request.contact_number || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Age</p>
+                    <p className="font-medium text-gray-900">{request.age || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Sex</p>
+                    <p className="font-medium text-gray-900">{request.sex || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Civil Status</p>
+                    <p className="font-medium text-gray-900">{request.civil_status || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Date of Birth</p>
+                    <p className="font-medium text-gray-900">{request.date_of_birth || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Address</p>
+                    <p className="font-medium text-gray-900">{request.address || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* Purpose */}
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2">
+                    <FileCheck className="w-5 h-5 text-blue-500" />
+                    Purpose
+                  </h3>
+                  <p className="text-gray-700">{request.purpose || 'Not specified'}</p>
+                </div>
+
+                {/* Timeline */}
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                    <History className="w-5 h-5 text-blue-500" />
+                    Timeline
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Submitted</span>
+                      <span className="font-medium">{formatDate(request.created_at)}</span>
+                    </div>
+                    {request.updated_at && request.updated_at !== request.created_at && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Last Updated</span>
+                        <span className="font-medium">{formatDate(request.updated_at)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Admin Comment if any */}
+                {request.admin_comment && (
+                  <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                    <h3 className="font-semibold text-orange-800 flex items-center gap-2 mb-2">
+                      <AlertTriangle className="w-5 h-5" />
+                      Admin Notes
+                    </h3>
+                    <p className="text-orange-700">{request.admin_comment}</p>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          {canAct && ['pending', 'processing', 'staff_review', 'secretary_approval', 'captain_approval'].includes(request.status) && (
+            <div className="border-t bg-gray-50 px-6 py-4">
+              {/* Review Request Team - Verification step */}
+              {currentStep?.status === 'staff_review' ? (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <p className="text-sm text-blue-800">
+                      <span className="font-semibold">Review Task:</span> Verify that the request is valid and the resident is legitimate for <span className="font-semibold">{getTypeLabel(request.certificate_type)}</span>.
+                    </p>
+                  </div>
+
+                  {request.residents?.pending_case && (
+                    <div className="bg-red-600 p-4 rounded-xl shadow-lg border-2 border-red-400 text-white">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-white/20 p-2 rounded-lg">
+                          <ShieldAlert className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-1">Legal Hold Notification</p>
+                          <h4 className="text-lg font-black uppercase leading-tight">This applicant has a PENDING CASE</h4>
+                          <div className="mt-3 p-3 bg-black/20 rounded-lg border border-white/20">
+                            <p className="text-[10px] font-bold uppercase mb-1 opacity-70">Official Record History / Remarks:</p>
+                            <p className="text-sm font-semibold italic">"{request.residents.case_record_history || 'No detail remarks provided.'}"</p>
+                          </div>
+                          <p className="mt-3 text-[10px] font-bold uppercase text-red-100 flex items-center gap-2">
+                            <Info className="w-3 h-3" />
+                            Please carefully evaluate if the applicant is eligible for this certificate based on the case details above.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => onAction(request, 'reject')}
+                      className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 flex items-center gap-2"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Not Legitimate
+                    </button>
+                    <button
+                      onClick={() => onAction(request, 'approve')}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Verify & Forward
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Approval Steps - Secretary, Captain */
                 <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => onAction(request, 'return')}
+                    className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg font-medium hover:bg-orange-200 flex items-center gap-2"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Send Back
+                  </button>
                   <button
                     onClick={() => onAction(request, 'reject')}
                     className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 flex items-center gap-2"
                   >
                     <XCircle className="w-4 h-4" />
-                    Not Legitimate
+                    Reject
                   </button>
                   <button
                     onClick={() => onAction(request, 'approve')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center gap-2"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    Verify & Forward
+                    Approve
                   </button>
                 </div>
-              </div>
-            ) : (
-              /* Approval Steps - Secretary, Captain */
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => onAction(request, 'return')}
-                  className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg font-medium hover:bg-orange-200 flex items-center gap-2"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Send Back
-                </button>
-                <button
-                  onClick={() => onAction(request, 'reject')}
-                  className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 flex items-center gap-2"
-                >
-                  <XCircle className="w-4 h-4" />
-                  Reject
-                </button>
-                <button
-                  onClick={() => onAction(request, 'approve')}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center gap-2"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Approve
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
     </div >
   );
 }
