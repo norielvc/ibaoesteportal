@@ -99,7 +99,13 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
           civil_status,
           address,
           date_of_birth,
-          place_of_birth
+          place_of_birth,
+          resident_id,
+          residents:resident_id (
+            id,
+            pending_case,
+            case_record_history
+          )
         )
       `)
       .eq('assigned_user_id', userId)

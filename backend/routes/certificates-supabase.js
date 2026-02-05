@@ -130,7 +130,14 @@ router.get('/', async (req, res) => {
 
     let query = supabase
       .from('certificate_requests')
-      .select('*')
+      .select(`
+        *,
+        residents:resident_id (
+          id,
+          pending_case,
+          case_record_history
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (type) query = query.eq('certificate_type', type);
@@ -218,6 +225,7 @@ router.post('/clearance', async (req, res) => {
         date_of_birth: dateOfBirth,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
+        resident_id: residentId,
         status: 'staff_review',
         date_issued: new Date().toISOString()
       }])
@@ -369,6 +377,7 @@ router.post('/indigency', async (req, res) => {
         date_of_birth: dateOfBirth,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
+        resident_id: residentId,
         status: 'staff_review',
         date_issued: new Date().toISOString()
       }])
@@ -516,6 +525,7 @@ router.post('/residency', async (req, res) => {
         date_of_birth: dateOfBirth,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
+        resident_id: residentId,
         status: 'staff_review',
         date_issued: new Date().toISOString()
       }])
