@@ -66,7 +66,12 @@ router.post('/bulk-insert', async (req, res) => {
 // Create new resident
 router.post('/', async (req, res) => {
     try {
-        const residentData = req.body;
+        const residentData = { ...req.body };
+
+        // Remove generated or system columns
+        delete residentData.full_name;
+        delete residentData.id;
+
         const { data, error } = await supabase
             .from('residents')
             .insert([residentData])
@@ -85,7 +90,14 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const updates = req.body;
+        const updates = { ...req.body };
+
+        // Remove read-only or generated columns to prevent Supabase errors
+        delete updates.full_name;
+        delete updates.id;
+        delete updates.created_at;
+        delete updates.updated_at;
+
         const { data, error } = await supabase
             .from('residents')
             .update(updates)
