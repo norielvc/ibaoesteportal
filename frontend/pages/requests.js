@@ -694,7 +694,7 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
               <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border ${getStatusColor(request.status)}`}>
                 {request.status?.replace(/_/g, ' ').toUpperCase()}
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm text-gray-500">{getTypeLabel(request.certificate_type)}</span>
                 {currentStep && (
                   <>
@@ -703,12 +703,41 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
                   </>
                 )}
                 {request.residents?.pending_case && (
-                  <span className="bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse">
-                    CRITICAL: PENDING CASE RECORDED
+                  <span className="bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse whitespace-nowrap">
+                    CRITICAL: PENDING CASE
                   </span>
                 )}
               </div>
             </div>
+
+
+
+            {/* Legal Hold Notification - Body Placement */}
+            {request.residents?.pending_case && (
+              <div className="bg-red-50 border-l-4 border-red-600 p-4 rounded-r-xl shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="bg-red-100 p-2 rounded-lg shrink-0">
+                    <ShieldAlert className="w-6 h-6 text-red-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-lg font-black text-red-700 uppercase leading-tight">Pending Case Record</h4>
+                      <span className="text-[10px] font-bold bg-red-600 text-white px-2 py-0.5 rounded uppercase">Action Required</span>
+                    </div>
+
+                    <div className="mt-2 p-3 bg-white rounded-lg border border-red-100">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Official Record History / Remarks:</p>
+                      <p className="text-sm font-semibold text-gray-800 italic">"{request.residents.case_record_history || 'No detail remarks provided.'}"</p>
+                    </div>
+
+                    <p className="mt-2 text-xs font-medium text-red-600 flex items-center gap-1.5">
+                      <Info className="w-4 h-4" />
+                      Strictly evaluate eligibility. Verification is required before approval.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Preview Certificate Button */}
             <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
@@ -835,27 +864,6 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
                     </p>
                   </div>
 
-                  {request.residents?.pending_case && (
-                    <div className="bg-red-600 p-4 rounded-xl shadow-lg border-2 border-red-400 text-white">
-                      <div className="flex items-start gap-4">
-                        <div className="bg-white/20 p-2 rounded-lg">
-                          <ShieldAlert className="w-6 h-6 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-1">Legal Hold Notification</p>
-                          <h4 className="text-lg font-black uppercase leading-tight">This applicant has a PENDING CASE</h4>
-                          <div className="mt-3 p-3 bg-black/20 rounded-lg border border-white/20">
-                            <p className="text-[10px] font-bold uppercase mb-1 opacity-70">Official Record History / Remarks:</p>
-                            <p className="text-sm font-semibold italic">"{request.residents.case_record_history || 'No detail remarks provided.'}"</p>
-                          </div>
-                          <p className="mt-3 text-[10px] font-bold uppercase text-red-100 flex items-center gap-2">
-                            <Info className="w-3 h-3" />
-                            Please carefully evaluate if the applicant is eligible for this certificate based on the case details above.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                   <div className="flex gap-3 justify-end">
                     <button
                       onClick={() => onAction(request, 'reject')}
