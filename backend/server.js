@@ -26,6 +26,8 @@ const residentRoutes = require('./routes/residents-supabase');
 const errorHandler = require('./middleware/errorHandler');
 const { authenticateToken } = require('./middleware/auth-supabase');
 
+// Deployment Sync: 2026-02-05 19:55
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
