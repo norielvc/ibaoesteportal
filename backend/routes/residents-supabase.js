@@ -12,7 +12,8 @@ router.get('/search', async (req, res) => {
             .from('residents')
             .select('*')
             .ilike('full_name', `%${name}%`)
-            .limit(15);
+            .order('last_name', { ascending: true })
+            .limit(1000);
 
         if (error) throw error;
 
