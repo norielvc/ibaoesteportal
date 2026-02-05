@@ -2,22 +2,33 @@ const express = require('express');
 const router = express.Router();
 const { supabase } = require('../services/supabaseClient');
 
-// Search residents by name
+// Search residents by name with pagination
 router.get('/search', async (req, res) => {
     try {
-        const { name = '' } = req.query;
+        const { name = '', page = 1, limit = 15 } = req.query;
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const offset = (pageNum - 1) * limitNum;
 
         // Search across the generated full_name column
-        const { data, error } = await supabase
+        let query = supabase
             .from('residents')
-            .select('*')
+            .select('*', { count: 'exact' })
             .ilike('full_name', `%${name}%`)
             .order('last_name', { ascending: true })
-            .limit(1000);
+            .range(offset, offset + limitNum - 1);
+
+        const { data, error, count } = await query;
 
         if (error) throw error;
 
-        res.json({ success: true, residents: data });
+        res.json({
+            success: true,
+            residents: data,
+            totalItems: count,
+            totalPages: Math.ceil(count / limitNum),
+            currentPage: pageNum
+        });
     } catch (error) {
         console.error('Error searching residents:', error);
         res.status(500).json({ success: false, message: error.message });

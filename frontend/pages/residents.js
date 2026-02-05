@@ -39,6 +39,7 @@ export default function Residents() {
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
+    const [limit, setLimit] = useState(30);
 
     // Modal state
     const [selectedResident, setSelectedResident] = useState(null);
@@ -74,7 +75,7 @@ export default function Residents() {
         if (mounted && currentUser?.role === 'admin') {
             fetchResidents();
         }
-    }, [mounted, currentUser, currentPage, searchTerm]);
+    }, [mounted, currentUser, currentPage, searchTerm, limit]);
 
     const handleOpenAddModal = () => {
         setFormData({
@@ -161,14 +162,13 @@ export default function Residents() {
     const fetchResidents = async () => {
         setIsLoading(true);
         try {
-            // Use the search endpoint for now, or we can add a generic list endpoint if needed
-            const response = await fetch(`${API_URL}/api/residents/search?name=${encodeURIComponent(searchTerm || '')}`);
+            const response = await fetch(`${API_URL}/api/residents/search?name=${encodeURIComponent(searchTerm || '')}&page=${currentPage}&limit=${limit}`);
             const data = await response.json();
 
             if (data.success) {
                 setResidents(data.residents);
-                setTotalItems(data.residents.length);
-                setTotalPages(1); // Simple version for now
+                setTotalItems(data.totalItems);
+                setTotalPages(data.totalPages);
             }
         } catch (error) {
             console.error('Error fetching residents:', error);
@@ -200,12 +200,29 @@ export default function Residents() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="text-sm font-medium text-gray-500 mr-2">
-                            Total: <span className="text-blue-600">{totalItems}</span> residents
+                        <div className="text-sm font-medium text-gray-500 mr-2 whitespace-nowrap">
+                            Total: <span className="text-blue-600 font-bold">{totalItems}</span> residents
                         </div>
+
+                        <div className="flex items-center gap-2 border-l pl-3 mr-2">
+                            <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Show:</span>
+                            <select
+                                value={limit}
+                                onChange={(e) => {
+                                    setLimit(parseInt(e.target.value));
+                                    setCurrentPage(1);
+                                }}
+                                className="text-sm border border-gray-200 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-gray-700 bg-white"
+                            >
+                                <option value={30}>30</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                            </select>
+                        </div>
+
                         <button
                             onClick={handleOpenAddModal}
-                            className="btn-primary flex items-center gap-2 whitespace-nowrap"
+                            className="btn-primary flex items-center gap-2 whitespace-nowrap px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-sm"
                         >
                             <Plus className="w-4 h-4" /> Add Resident
                         </button>
@@ -290,11 +307,18 @@ export default function Residents() {
                             </table>
                         </div>
 
-                        {/* Simple footer for now */}
-                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500 font-medium">
-                            <span>Showing first {residents.length} results</span>
-                            <div className="flex items-center gap-4">
-                                <span>Powered by Iba O' Este Resident Database</span>
+                        {/* Pagination footer */}
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="text-sm text-gray-500 font-medium order-2 sm:order-1">
+                                Showing <span className="text-gray-900 font-bold">{(currentPage - 1) * limit + 1}</span> to <span className="text-gray-900 font-bold">{Math.min(currentPage * limit, totalItems)}</span> of <span className="text-gray-900 font-bold">{totalItems}</span> residents
+                            </div>
+
+                            <div className="order-1 sm:order-2">
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                />
                             </div>
                         </div>
                     </div>
