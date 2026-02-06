@@ -252,52 +252,49 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
 
     // Determine new status based on action
     if (action === 'approve') {
-      newStatus = 'completed';
+      // 🎯 SPECIAL CASE: OIC / Releasing Team Two-Stage Flow
+      if (currentStep && currentStep.status === 'oic_review') {
+        if (assignment.certificate_requests.status !== 'ready') {
+          // Stage 1: Mark as Ready (Keep assignment pending so it stays in "My Assignments")
+          newStatus = 'pending';
+          newRequestStatus = 'ready';
 
-      if (currentStepIndex !== -1 && currentStepIndex < steps.length - 1) {
-        // Move to NEXT defined step
+          // Trigger PDF generation
+          setImmediate(async () => {
+            try {
+              await processPostApprovalWorkflow(assignment.request_id, assignment.certificate_requests);
+            } catch (error) {
+              console.error('Error in post-approval workflow:', error);
+            }
+          });
+          console.log(`⚡ OIC Stage 1: Moved to Ready, keeping assignment pending for final release.`);
+        } else {
+          // Stage 2: Mark as Released (Finalize assignment)
+          newStatus = 'completed';
+          newRequestStatus = 'released';
+          console.log(`✅ OIC Stage 2: Final Release completed.`);
+        }
+      } else if (currentStepIndex !== -1 && currentStepIndex < steps.length - 1) {
+        // Normal Flow: Move to NEXT defined step
+        newStatus = 'completed';
         nextStep = steps[currentStepIndex + 1];
-
-        // Map step status to VALID database request status
-        // We now support expanded statuses: staff_review, secretary_approval, captain_approval, oic_review
         newRequestStatus = nextStep.status;
 
-        // Check if next step is the FINAL step (Ready for Pickup / Released with no approvers)
-        if (!nextStep.requiresApproval || nextStep.status === 'ready' || nextStep.status === 'released') {
-          // 🎯 FLOW COMPLETE - TRIGGER POST-APPROVAL WORKFLOW
-          console.log(`🎉 Workflow reached final/auto step: ${nextStep.name}`);
-
-          // If manual "Releasing Team" is the step before this, then we trigger here??
-          // Actually, if the NEXT step is Releasing Team, we just assign them.
-          // If THIS step was Releasing Team (oic_review) and we Approved, THEN we go to Ready.
-
-          if (currentStep.status === 'oic_review') {
-            // We just finished Releasing Team review
-            newRequestStatus = 'ready';
-            setImmediate(async () => {
-              try {
-                await processPostApprovalWorkflow(assignment.request_id, assignment.certificate_requests);
-              } catch (error) {
-                console.error('Error in post-approval workflow:', error);
-              }
-            });
-          } else if (nextStep.status === 'ready') {
-            // If we skipped Releasing Team or it wasn't there
-            setImmediate(async () => {
-              try {
-                await processPostApprovalWorkflow(assignment.request_id, assignment.certificate_requests);
-              } catch (error) {
-                console.error('Error in post-approval workflow:', error);
-              }
-            });
-          }
+        // Auto-trigger post-approval if we skipped to a ready/released state (non-OIC flow)
+        if (nextStep.status === 'ready' || nextStep.status === 'released') {
+          setImmediate(async () => {
+            try {
+              await processPostApprovalWorkflow(assignment.request_id, assignment.certificate_requests);
+            } catch (error) {
+              console.error('Error in post-approval workflow:', error);
+            }
+          });
         }
-
       } else {
-        // No more steps
-        newRequestStatus = 'ready';
+        // No more steps and not OIC (or already in a final state)
+        newStatus = 'completed';
+        newRequestStatus = 'released';
       }
-
     } else if (action === 'reject') {
       newStatus = 'completed';
       newRequestStatus = 'cancelled'; // Changed from 'rejected' to match DB constraint

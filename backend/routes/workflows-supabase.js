@@ -212,7 +212,7 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
           certificate_type
         `)
         .eq('certificate_type', certType)
-        .in('status', ['pending', 'submitted', 'staff_review', 'processing', 'oic_review']);
+        .in('status', ['pending', 'submitted', 'staff_review', 'processing', 'oic_review', 'ready', 'ready_for_pickup']);
 
       if (requestsError) {
         console.error(`Error fetching requests for ${certType}:`, requestsError);
@@ -231,7 +231,7 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
           // 🛡️ ENFORCED SEQUENTIAL FLOW: Initial requests ALWAYS go to the first step (index 0)
           // which we forced to be the "Review Request Team" in the UI save logic.
           currentStep = workflowSteps[0];
-        } else if (request.status === 'oic_review') {
+        } else if (['oic_review', 'ready', 'ready_for_pickup'].includes(request.status)) {
           // It's at the Releasing phase
           currentStep = workflowSteps.find(s => s.status === 'oic_review');
         } else if (request.status === 'processing') {

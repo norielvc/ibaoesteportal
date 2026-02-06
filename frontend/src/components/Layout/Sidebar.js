@@ -98,6 +98,13 @@ const mainMenuItems = [
         description: 'Manage facilities'
       },
       {
+        name: 'Certificate Layout',
+        href: '/certificate-layout',
+        icon: FileText,
+        adminOnly: true,
+        description: 'Edit PDF design'
+      },
+      {
         name: 'Events',
         href: '/events',
         icon: Calendar,

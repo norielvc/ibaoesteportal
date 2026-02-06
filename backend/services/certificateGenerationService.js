@@ -37,15 +37,34 @@ class CertificateGenerationService {
             chairman: 'ALEXANDER C. MANIO', // Fallback
             secretary: 'ROYCE ANN C. GALVEZ',
             treasurer: 'MA. LUZ S. REYES',
-            // ... map others if needed
+            skChairman: 'JOHN RUZZEL C. SANTOS',
+            councilors: [],
+            administrator: 'ROBERT D. SANTOS',
+            assistantSecretary: 'PERLITA C. DE JESUS',
+            assistantAdministrator: 'KHINZ JANZL V. BARROGA',
+            recordKeeper: 'EMIL D. ROBLES',
+            clerk: 'CIELITO B. DE LEON',
         };
 
         if (officialsRows) {
+            const kagawads = [];
             officialsRows.forEach(o => {
-                if (o.position_type === 'captain') officials.chairman = o.name;
-                else if (o.position_type === 'secretary') officials.secretary = o.name;
-                else if (o.position_type === 'treasurer') officials.treasurer = o.name;
+                const pos = o.position_type?.toLowerCase();
+                const name = o.name;
+
+                if (pos === 'captain' || pos === 'chairman' || pos === 'punong_barangay') officials.chairman = name;
+                else if (pos === 'secretary') officials.secretary = name;
+                else if (pos === 'treasurer') officials.treasurer = name;
+                else if (pos === 'sk_chairman') officials.skChairman = name;
+                else if (pos === 'kagawad' || pos === 'councilor') kagawads.push(name);
+                else if (pos === 'administrator') officials.administrator = name;
+                else if (pos === 'assistant_secretary') officials.assistantSecretary = name;
+                else if (pos === 'assistant_administrator') officials.assistantAdministrator = name;
+                else if (pos === 'record_keeper') officials.recordKeeper = name;
+                else if (pos === 'clerk') officials.clerk = name;
             });
+            if (kagawads.length > 0) officials.councilors = kagawads;
+            else officials.councilors = ['JOELITO C. MANIO', 'ENGELBERT M. INDUCTIVO', 'NORMANDO T. SANTOS', 'JOPHET M. TURLA', 'JOHN BRYAN C. CRUZ', 'ARNEL D. BERNARDINO', 'LORENA G. LOPEZ'];
         }
 
         return {
@@ -143,332 +162,257 @@ class CertificateGenerationService {
     // Common Header Generator
     generateHeader(config) {
         const { headerInfo, logos, styles } = config;
-        // Handle base64 or path for logos. Ideally, convert paths to absolute or base64 if needed for PDF rendering tools.
-        // Since this saves as HTML, relative paths might fail if opened elsewhere. 
-        // Assuming 'logos.leftLogo' is a URL/Path. User uploads dataURL in frontend, so it's likely base64 data:image/...
-
         const leftLogoSrc = logos.leftLogo || '';
         const rightLogoSrc = logos.rightLogo || '';
         const size = logos.logoSize || 80;
 
+        const getFontClass = (font) => {
+            const fonts = { 'serif': 'font-family: serif;', 'sans': 'font-family: sans-serif;', 'mono': 'font-family: monospace;' };
+            return fonts[font] || '';
+        };
+
         return `
-        <div class="header" style="border-bottom: 3px solid ${styles.headerStyle.borderColor}; background-color: ${styles.headerStyle.bgColor};">
-            <div class="logo-section">
-                <div class="logo" style="width: ${size}px; height: ${size}px;">
-                    ${leftLogoSrc ? `<img src="${leftLogoSrc}" style="width: 100%; height: 100%; object-fit: contain;">` : ''}
-                </div>
-                <div class="header-text">
-                    <div class="country" style="color: ${styles.countryStyle.color}; font-size: ${styles.countryStyle.size}px; font-weight: ${styles.countryStyle.fontWeight}">${headerInfo.country}</div>
-                    <div class="province" style="color: ${styles.provinceStyle.color}; font-size: ${styles.provinceStyle.size}px; font-weight: ${styles.provinceStyle.fontWeight}">${headerInfo.province}</div>
-                    <div class="municipality" style="color: ${styles.municipalityStyle.color}; font-size: ${styles.municipalityStyle.size}px; font-weight: ${styles.municipalityStyle.fontWeight}">${headerInfo.municipality}</div>
-                    <div class="barangay-name" style="color: ${styles.barangayNameStyle.color}; font-size: ${styles.barangayNameStyle.size}px; font-weight: ${styles.barangayNameStyle.fontWeight}">${headerInfo.barangayName}</div>
-                    <div class="office-name" style="color: ${styles.officeNameStyle.color}; font-size: ${styles.officeNameStyle.size}px; font-weight: ${styles.officeNameStyle.fontWeight}">${headerInfo.officeName}</div>
-                </div>
-                <div class="logo" style="width: ${size}px; height: ${size}px;">
-                     ${rightLogoSrc ? `<img src="${rightLogoSrc}" style="width: 100%; height: 100%; object-fit: contain;">` : ''}
-                </div>
+        <div class="header" style="display: flex; align-items: center; justify-content: center; padding: 20px 40px; border-bottom: 2px solid ${styles.headerStyle.borderColor || '#1e40af'}; background-color: ${styles.headerStyle.bgColor || '#ffffff'}; ${getFontClass(styles.headerStyle.fontFamily)}">
+            <div style="width: ${size}px; height: ${size}px; flex-shrink: 0;">
+                ${leftLogoSrc ? `<img src="${leftLogoSrc}" style="width: 100%; height: 100%; object-fit: contain;">` : ''}
+            </div>
+            <div style="text-align: center; flex: 1; padding: 0 20px;">
+                <p style="margin: 0; color: ${styles.countryStyle.color || '#4b5563'}; font-size: ${styles.countryStyle.size || 13}px; font-weight: ${styles.countryStyle.fontWeight || 'normal'}; line-height: 1.2; ${getFontClass(styles.countryStyle.fontFamily)}">${headerInfo.country || 'Republic of the Philippines'}</p>
+                <p style="margin: 0; color: ${styles.provinceStyle.color || '#4b5563'}; font-size: ${styles.provinceStyle.size || 13}px; font-weight: ${styles.provinceStyle.fontWeight || 'normal'}; line-height: 1.2; ${getFontClass(styles.provinceStyle.fontFamily)}">${headerInfo.province || 'Province of Bulacan'}</p>
+                <p style="margin: 0; color: ${styles.municipalityStyle.color || '#4b5563'}; font-size: ${styles.municipalityStyle.size || 13}px; font-weight: ${styles.municipalityStyle.fontWeight || 'normal'}; line-height: 1.2; ${getFontClass(styles.municipalityStyle.fontFamily)}">${headerInfo.municipality || 'Municipality of Calumpit'}</p>
+                <p style="margin: 4px 0 0; color: ${styles.barangayNameStyle.color || '#1e40af'}; font-size: ${styles.barangayNameStyle.size || 22}px; font-weight: ${styles.barangayNameStyle.fontWeight || 'bold'}; line-height: 1.2; ${getFontClass(styles.barangayNameStyle.fontFamily)}">${headerInfo.barangayName || "BARANGAY IBA O' ESTE"}</p>
+                <p style="margin: 0; color: ${styles.officeNameStyle.color || '#6b7280'}; font-size: ${styles.officeNameStyle.size || 12}px; font-weight: ${styles.officeNameStyle.fontWeight || 'normal'}; line-height: 1.2; ${getFontClass(styles.officeNameStyle.fontFamily)}">${headerInfo.officeName || 'Office of the Punong Barangay'}</p>
+            </div>
+            <div style="width: ${size}px; height: ${size}px; flex-shrink: 0;">
+                ${rightLogoSrc ? `<img src="${rightLogoSrc}" style="width: 100%; height: 100%; object-fit: contain;">` : ''}
             </div>
         </div>
       `;
     }
 
+    generateSidebar(config) {
+        const { officials, styles, logos } = config;
+        const s = styles.sidebarStyle || {};
+
+        const getFontClass = (font) => {
+            const fonts = { 'serif': 'font-family: serif;', 'sans': 'font-family: sans-serif;', 'mono': 'font-family: monospace;' };
+            return fonts[font] || '';
+        };
+
+        return `
+        <div class="sidebar" style="width: 220px; flex-shrink: 0; padding: 20px; color: ${s.textColor || '#ffffff'}; background: linear-gradient(to bottom, ${s.bgColor || '#1e40af'}, ${s.gradientEnd || '#1e3a8a'}); text-align: center; ${getFontClass(s.fontFamily)}">
+            <div style="margin-bottom: 20px;">
+                <p style="margin: 0; font-weight: bold; font-size: ${(s.titleSize || 16) + 4}px;">BARANGAY</p>
+                <p style="margin: 0; font-weight: bold; font-size: ${(s.titleSize || 16) + 4}px;">IBA O' ESTE</p>
+            </div>
+
+            <div style="border-top: 1px solid rgba(255,255,255,0.2); pt-3;">
+                <p style="font-weight: bold; margin: 15px 0 10px; color: ${s.labelColor || '#fde047'}; font-size: ${(s.titleSize || 13) + 2}px;">BARANGAY COUNCIL</p>
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="width: 120px; height: 160px; margin: 0 auto 10px; background-color: rgba(0,0,0,0.1); border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); overflow: hidden;">
+                        ${logos.captainImage ? `<img src="${logos.captainImage}" style="width: 100%; height: 100%; object-fit: cover;">` : ''}
+                    </div>
+                    <p style="margin: 0; font-size: ${s.textSize || 11}px; opacity: 0.8;">Punong Barangay</p>
+                    <p style="margin: 0; font-weight: bold; font-size: ${(s.textSize || 11) + 1}px;">${officials.chairman}</p>
+                </div>
+
+                <div style="border-top: 1px solid rgba(255,255,255,0.1); padding: 10px 0;">
+                    <p style="margin: 0 0 5px; font-size: ${s.textSize || 11}px; opacity: 0.8;">Kagawad</p>
+                    ${officials.councilors.map(c => `<p style="margin: 0; font-size: ${s.textSize || 11}px; line-height: 1.4;">${c}</p>`).join('')}
+                </div>
+
+                <div style="border-top: 1px solid rgba(255,255,255,0.1); padding: 10px 0;">
+                    <p style="margin: 0; font-size: ${s.textSize || 11}px; opacity: 0.8;">SK Chairman</p>
+                    <p style="margin: 0; font-size: ${s.textSize || 11}px;">${officials.skChairman}</p>
+                </div>
+
+                <div style="border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 0;">
+                    <p style="margin: 0; font-size: ${s.textSize || 11}px; opacity: 0.8;">Barangay Secretary</p>
+                    <p style="margin: 0; font-size: ${s.textSize || 11}px;">${officials.secretary}</p>
+                </div>
+
+                <div style="border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 0;">
+                    <p style="margin: 0; font-size: ${s.textSize || 11}px; opacity: 0.8;">Barangay Treasurer</p>
+                    <p style="margin: 0; font-size: ${s.textSize || 11}px;">${officials.treasurer}</p>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
     generateFooter(request, config) {
         const { styles, contactInfo } = config;
         return `
-        <div class="footer" style="color: ${styles.footerStyle.textColor}; border-top: 1px solid ${styles.footerStyle.borderColor}; background-color: ${styles.footerStyle.bgColor};">
-            <div>${contactInfo?.address || ''}</div>
-            <div>Reference No: <strong>${request.reference_number}</strong> | Generated on: ${new Date().toLocaleString()}</div>
-            <div>This is a computer-generated certificate. Verify authenticity by scanning the QR code.</div>
+        <div class="footer" style="padding: 15px 40px; font-size: 10px; color: ${styles.footerStyle.textColor || '#374151'}; border-top: 2px solid ${styles.footerStyle.borderColor || '#d1d5db'}; background-color: ${styles.footerStyle.bgColor || '#f9fafb'};">
+            <div style="display: flex; justify-content: space-between;">
+                <div>
+                    <p style="margin: 0;"><strong>Address:</strong> ${contactInfo?.address || ''}</p>
+                    <p style="margin: 0;"><strong>Contact:</strong> ${contactInfo?.contactPerson || ''} (${contactInfo?.telephone || ''}) email: ${contactInfo?.email || ''}</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0;">Reference No: <strong>${request.reference_number}</strong></p>
+                    <p style="margin: 0;">Generated on: ${new Date().toLocaleString()}</p>
+                </div>
+            </div>
         </div>
       `;
     }
 
     generateBarangayClearanceContent(request, config) {
         const { officials, styles } = config;
-        const currentDate = new Date().toLocaleDateString('en-US', {
-            year: 'numeric', month: 'long', day: 'numeric'
-        });
+        const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const bodyStyle = styles.bodyStyle || {};
 
-        // Default title color if not set in bodyStyle (fallback)
-        const titleColor = styles.bodyStyle.titleColor || '#16a34a';
+        const bodyHtml = `
+            <div style="font-size: ${bodyStyle.textSize || 14}px; line-height: 1.6;">
+                <p><strong>TO WHOM IT MAY CONCERN:</strong></p>
+                
+                <p style="margin: 20px 0;">
+                    This is to certify that below mentioned person is a bona fide resident of this barangay and has no derogatory record as of date mentioned below:
+                </p>
 
-        return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barangay Clearance - ${request.reference_number}</title>
-    <style>
-        @page { size: A4; margin: 20mm; }
-        body { font-family: ${styles.bodyStyle.fontFamily !== 'default' ? styles.bodyStyle.fontFamily : 'Arial, sans-serif'}; margin: 0; padding: 20px; line-height: 1.4; color: ${styles.bodyStyle.textColor}; background-color: ${styles.bodyStyle.bgColor}; }
-        .header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; }
-        .logo-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header-text { flex: 1; text-align: center; }
-        .title { text-align: center; font-size: 28px; font-weight: bold; color: ${titleColor}; margin: 30px 0; text-decoration: underline; }
-        .content { margin: 30px 0; }
-        .greeting { font-weight: bold; margin-bottom: 20px; }
-        .body-text { text-align: justify; margin-bottom: 20px; }
-        .details { margin: 20px 0; }
-        .detail-row { display: flex; margin-bottom: 8px; }
-        .detail-label { width: 150px; font-weight: bold; }
-        .detail-value { flex: 1; border-bottom: 1px solid #000; padding-bottom: 2px; }
-        .signature-section { margin-top: 50px; display: flex; justify-content: space-between; }
-        .signature-box { text-align: center; width: 200px; }
-        .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 50px; }
-        .signature-label { font-size: 12px; }
-        .footer { margin-top: 40px; text-align: center; font-size: 10px; padding-top: 10px; }
-        .qr-section { position: absolute; top: 20px; right: 20px; text-align: center; }
-        .qr-code { width: 80px; height: 80px; border: 1px solid #ddd; }
-    </style>
-</head>
-<body>
-    <div class="qr-section">
-        <div class="qr-code" style="background: url('data:image/svg+xml;base64,${this.generateQRCodeSVG(request.reference_number)}') center/contain no-repeat;"></div>
-        <div style="font-size: 8px; margin-top: 5px;">${request.reference_number}</div>
-    </div>
+                <div class="details-grid">
+                    <span class="detail-label">Name</span><span>:</span><span class="detail-value" style="font-size: 1.2em;">${request.full_name}</span>
+                    <span class="detail-label">Age</span><span>:</span><span class="detail-value">${request.age || '-'}</span>
+                    <span class="detail-label">Sex</span><span>:</span><span class="detail-value">${request.sex || '-'}</span>
+                    <span class="detail-label">Civil Status</span><span>:</span><span class="detail-value">${request.civil_status || '-'}</span>
+                    <span class="detail-label">Residential Address</span><span>:</span><span class="detail-value">${request.address || '-'}</span>
+                    <span class="detail-label">Date of Birth</span><span>:</span><span class="detail-value">${request.date_of_birth ? new Date(request.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : '-'}</span>
+                    <span class="detail-label">Place of Birth</span><span>:</span><span class="detail-value">${request.place_of_birth || '-'}</span>
+                </div>
 
-    ${this.generateHeader(config)}
+                <div style="margin: 30px 0;">
+                    <p>This certification is being issued upon the request of above mentioned person for below purpose(s):</p>
+                    <p style="padding-left: 20px; font-weight: bold; font-size: 1.1em; margin-top: 10px;">• ${request.purpose ? request.purpose.toUpperCase() : 'GENERAL PURPOSES'}</p>
+                </div>
 
-    <div class="title" style="color: ${titleColor}">BARANGAY CLEARANCE CERTIFICATE</div>
+                <p style="margin-bottom: 40px;">
+                    Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName}, ${config.headerInfo.municipality}, ${config.headerInfo.province}.
+                </p>
 
-    <div class="content">
-        <div class="greeting">To Whom It May Concern:</div>
-        
-        <div class="body-text">
-            This is to certify that the below mentioned person is a bona fide resident of this barangay 
-            and has no derogatory record as of the date mentioned below:
-        </div>
+                <div class="signature-section">
+                    <div class="sig-block">
+                        <div class="sig-line">
+                            <p style="font-size: 12px; margin: 0;">Resident's Signature / Thumb Mark</p>
+                        </div>
+                    </div>
 
-        <div class="details">
-            <div class="detail-row"><div class="detail-label">Name:</div><div class="detail-value">${request.full_name}</div></div>
-            <div class="detail-row"><div class="detail-label">Age:</div><div class="detail-value">${request.age}</div></div>
-            <div class="detail-row"><div class="detail-label">Sex:</div><div class="detail-value">${request.sex}</div></div>
-            <div class="detail-row"><div class="detail-label">Civil Status:</div><div class="detail-value">${request.civil_status}</div></div>
-            <div class="detail-row"><div class="detail-label">Address:</div><div class="detail-value">${request.address}</div></div>
-            <div class="detail-row"><div class="detail-label">Purpose:</div><div class="detail-value">${request.purpose}</div></div>
-        </div>
-
-        <div class="body-text">
-            This certification is issued upon the request of the above-mentioned person for 
-            <strong>${request.purpose}</strong> and for whatever legal purpose it may serve.
-        </div>
-
-        <div class="body-text">
-            Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName}, ${config.headerInfo.municipality}, ${config.headerInfo.province}.
-        </div>
-    </div>
-
-    <div class="signature-section">
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">
-                <strong>${officials.secretary}</strong><br>
-                Barangay Secretary
+                    <div class="sig-block" style="margin-top: 20px;">
+                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
+                        <div style="height: 40px;"></div>
+                        <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
+                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">
-                <strong>${officials.chairman}</strong><br>
-                Punong Barangay
-            </div>
-        </div>
-    </div>
+        `;
 
-    ${this.generateFooter(request, config)}
-</body>
-</html>`;
+        return this.generateDocument('BARANGAY CLEARANCE CERTIFICATE', bodyHtml, request, config);
     }
 
     generateIndigencyContent(request, config) {
-        const { officials, styles, headerInfo } = config;
+        const { officials, styles } = config;
         const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        const titleColor = styles.bodyStyle.titleColor || '#16a34a';
+        const bodyStyle = styles.bodyStyle || {};
 
-        return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Certificate of Indigency - ${request.reference_number}</title>
-    <style>
-        @page { size: A4; margin: 20mm; }
-        body { font-family: ${styles.bodyStyle.fontFamily !== 'default' ? styles.bodyStyle.fontFamily : 'Arial, sans-serif'}; margin: 0; padding: 20px; line-height: 1.4; color: ${styles.bodyStyle.textColor}; background-color: ${styles.bodyStyle.bgColor}; }
-        .header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; }
-        .logo-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header-text { flex: 1; text-align: center; }
-        .title { text-align: center; font-size: 28px; font-weight: bold; color: ${titleColor}; margin: 30px 0; text-decoration: underline; }
-        .content { margin: 30px 0; }
-        .greeting { font-weight: bold; margin-bottom: 20px; }
-        .body-text { text-align: justify; margin-bottom: 20px; }
-        .details { margin: 20px 0; }
-        .detail-row { display: flex; margin-bottom: 8px; }
-        .detail-label { width: 150px; font-weight: bold; }
-        .detail-value { flex: 1; border-bottom: 1px solid #000; padding-bottom: 2px; }
-        .signature-section { margin-top: 50px; display: flex; justify-content: space-between; }
-        .signature-box { text-align: center; width: 200px; }
-        .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 50px; }
-        .signature-label { font-size: 12px; }
-        .footer { margin-top: 40px; text-align: center; font-size: 10px; padding-top: 10px; }
-        .qr-section { position: absolute; top: 20px; right: 20px; text-align: center; }
-        .qr-code { width: 80px; height: 80px; border: 1px solid #ddd; }
-    </style>
-</head>
-<body>
-    <div class="qr-section">
-        <div class="qr-code" style="background: url('data:image/svg+xml;base64,${this.generateQRCodeSVG(request.reference_number)}') center/contain no-repeat;"></div>
-        <div style="font-size: 8px; margin-top: 5px;">${request.reference_number}</div>
-    </div>
+        const bodyHtml = `
+            <div style="font-size: ${bodyStyle.textSize || 14}px; line-height: 1.6;">
+                <p><strong>TO WHOM IT MAY CONCERN:</strong></p>
+                
+                <p style="margin: 20px 0;">
+                    This is to certify that below mentioned person is a bona fide resident and their family belongs to the "Indigent Families" of this barangay as of date mentioned below. Further certifying that their income is not enough to sustain and support their basic needs:
+                </p>
 
-    ${this.generateHeader(config)}
+                <div class="details-grid">
+                    <span class="detail-label">Name</span><span>:</span><span class="detail-value" style="font-size: 1.2em;">${request.full_name}</span>
+                    <span class="detail-label">Age</span><span>:</span><span class="detail-value">${request.age || '-'}</span>
+                    <span class="detail-label">Sex</span><span>:</span><span class="detail-value">${request.sex || '-'}</span>
+                    <span class="detail-label">Civil Status</span><span>:</span><span class="detail-value">${request.civil_status || '-'}</span>
+                    <span class="detail-label">Residential Address</span><span>:</span><span class="detail-value">${request.address || '-'}</span>
+                    <span class="detail-label">Date of Birth</span><span>:</span><span class="detail-value">${request.date_of_birth ? new Date(request.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : '-'}</span>
+                    <span class="detail-label">Place of Birth</span><span>:</span><span class="detail-value">${request.place_of_birth || '-'}</span>
+                </div>
 
-    <div class="title" style="color: ${titleColor}">CERTIFICATE OF INDIGENCY</div>
+                <div style="margin: 30px 0;">
+                    <p>This certification is being issued upon the request of above mentioned person for below purpose(s):</p>
+                    <p style="padding-left: 20px; font-weight: bold; font-size: 1.1em; margin-top: 10px;">• ${request.purpose ? request.purpose.toUpperCase() : 'GENERAL PURPOSES'}</p>
+                </div>
 
-    <div class="content">
-        <div class="greeting">To Whom It May Concern:</div>
-        
-        <div class="body-text">
-            This is to certify that <strong>${request.full_name}</strong>, of legal age, 
-            ${request.sex}, ${request.civil_status}, and a resident of ${request.address}, 
-            belongs to an indigent family in this barangay.
-        </div>
+                <p style="margin-bottom: 40px;">
+                    Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName}, ${config.headerInfo.municipality}, ${config.headerInfo.province}.
+                </p>
 
-        <div class="details">
-            <div class="detail-row"><div class="detail-label">Name:</div><div class="detail-value">${request.full_name}</div></div>
-            <div class="detail-row"><div class="detail-label">Age:</div><div class="detail-value">${request.age}</div></div>
-            <div class="detail-row"><div class="detail-label">Sex:</div><div class="detail-value">${request.sex}</div></div>
-            <div class="detail-row"><div class="detail-label">Civil Status:</div><div class="detail-value">${request.civil_status}</div></div>
-            <div class="detail-row"><div class="detail-label">Address:</div><div class="detail-value">${request.address}</div></div>
-            <div class="detail-row"><div class="detail-label">Purpose:</div><div class="detail-value">${request.purpose}</div></div>
-        </div>
+                <div class="signature-section">
+                    <div class="sig-block">
+                        <div class="sig-line">
+                            <p style="font-size: 12px; margin: 0;">Resident's Signature / Thumb Mark</p>
+                        </div>
+                    </div>
 
-        <div class="body-text">
-            This certification is issued upon the request of the interested party for 
-            <strong>${request.purpose}</strong> and for whatever legal purpose it may serve.
-        </div>
-
-        <div class="body-text">
-            Issued this <strong>${currentDate}</strong> at ${headerInfo.barangayName}, ${headerInfo.municipality}, ${headerInfo.province}.
-        </div>
-    </div>
-
-    <div class="signature-section">
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">
-                <strong>${officials.secretary}</strong><br>
-                Barangay Secretary
+                    <div class="sig-block" style="margin-top: 20px;">
+                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
+                        <div style="height: 40px;"></div>
+                        <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
+                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">
-                <strong>${officials.chairman}</strong><br>
-                Punong Barangay
-            </div>
-        </div>
-    </div>
+        `;
 
-    ${this.generateFooter(request, config)}
-</body>
-</html>`;
+        return this.generateDocument('CERTIFICATE OF INDIGENCY', bodyHtml, request, config);
     }
 
     generateResidencyContent(request, config) {
-        const { officials, styles, headerInfo } = config;
+        const { officials, styles } = config;
         const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        const titleColor = styles.bodyStyle.titleColor || '#16a34a';
+        const bodyStyle = styles.bodyStyle || {};
 
-        return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barangay Residency Certificate - ${request.reference_number}</title>
-    <style>
-        @page { size: A4; margin: 20mm; }
-        body { font-family: ${styles.bodyStyle.fontFamily !== 'default' ? styles.bodyStyle.fontFamily : 'Arial, sans-serif'}; margin: 0; padding: 20px; line-height: 1.4; color: ${styles.bodyStyle.textColor}; background-color: ${styles.bodyStyle.bgColor}; }
-        .header { text-align: center; padding-bottom: 20px; margin-bottom: 30px; }
-        .logo-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header-text { flex: 1; text-align: center; }
-        .title { text-align: center; font-size: 28px; font-weight: bold; color: ${titleColor}; margin: 30px 0; text-decoration: underline; }
-        .content { margin: 30px 0; }
-        .greeting { font-weight: bold; margin-bottom: 20px; }
-        .body-text { text-align: justify; margin-bottom: 20px; }
-        .details { margin: 20px 0; }
-        .detail-row { display: flex; margin-bottom: 8px; }
-        .detail-label { width: 150px; font-weight: bold; }
-        .detail-value { flex: 1; border-bottom: 1px solid #000; padding-bottom: 2px; }
-        .signature-section { margin-top: 50px; display: flex; justify-content: space-between; }
-        .signature-box { text-align: center; width: 200px; }
-        .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 50px; }
-        .signature-label { font-size: 12px; }
-        .footer { margin-top: 40px; text-align: center; font-size: 10px; padding-top: 10px; }
-        .qr-section { position: absolute; top: 20px; right: 20px; text-align: center; }
-        .qr-code { width: 80px; height: 80px; border: 1px solid #ddd; }
-    </style>
-</head>
-<body>
-    <div class="qr-section">
-        <div class="qr-code" style="background: url('data:image/svg+xml;base64,${this.generateQRCodeSVG(request.reference_number)}') center/contain no-repeat;"></div>
-        <div style="font-size: 8px; margin-top: 5px;">${request.reference_number}</div>
-    </div>
+        const bodyHtml = `
+            <div style="font-size: ${bodyStyle.textSize || 14}px; line-height: 1.6;">
+                <p><strong>TO WHOM IT MAY CONCERN:</strong></p>
+                
+                <p style="margin: 20px 0;">
+                    This is to certify that below mentioned person is a bona fide resident of this barangay as of the date mentioned below:
+                </p>
 
-    ${this.generateHeader(config)}
+                <div class="details-grid">
+                    <span class="detail-label">Name</span><span>:</span><span class="detail-value" style="font-size: 1.2em;">${request.full_name}</span>
+                    <span class="detail-label">Age</span><span>:</span><span class="detail-value">${request.age || '-'}</span>
+                    <span class="detail-label">Sex</span><span>:</span><span class="detail-value">${request.sex || '-'}</span>
+                    <span class="detail-label">Civil Status</span><span>:</span><span class="detail-value">${request.civil_status || '-'}</span>
+                    <span class="detail-label">Residential Address</span><span>:</span><span class="detail-value">${request.address || '-'}</span>
+                    <span class="detail-label">Date of Birth</span><span>:</span><span class="detail-value">${request.date_of_birth ? new Date(request.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : '-'}</span>
+                    <span class="detail-label">Place of Birth</span><span>:</span><span class="detail-value">${request.place_of_birth || '-'}</span>
+                </div>
 
-    <div class="title" style="color: ${titleColor}">CERTIFICATE OF RESIDENCY</div>
+                <div style="margin: 30px 0;">
+                    <p>This certification is being issued upon the request of above mentioned person for below purpose(s):</p>
+                    <p style="padding-left: 20px; font-weight: bold; font-size: 1.1em; margin-top: 10px;">• ${request.purpose ? request.purpose.toUpperCase() : 'GENERAL PURPOSES'}</p>
+                </div>
 
-    <div class="content">
-        <div class="greeting">To Whom It May Concern:</div>
-        
-        <div class="body-text">
-            This is to certify that <strong>${request.full_name}</strong>, of legal age, 
-            ${request.sex}, ${request.civil_status}, is a bonafide resident of 
-            ${request.address}, ${headerInfo.barangayName}, ${headerInfo.municipality}, ${headerInfo.province}.
-        </div>
+                <p style="margin-bottom: 40px;">
+                    Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName}, ${config.headerInfo.municipality}, ${config.headerInfo.province}.
+                </p>
 
-        <div class="details">
-            <div class="detail-row"><div class="detail-label">Name:</div><div class="detail-value">${request.full_name}</div></div>
-            <div class="detail-row"><div class="detail-label">Age:</div><div class="detail-value">${request.age}</div></div>
-            <div class="detail-row"><div class="detail-label">Sex:</div><div class="detail-value">${request.sex}</div></div>
-            <div class="detail-row"><div class="detail-label">Civil Status:</div><div class="detail-value">${request.civil_status}</div></div>
-            <div class="detail-row"><div class="detail-label">Address:</div><div class="detail-value">${request.address}</div></div>
-            <div class="detail-row"><div class="detail-label">Purpose:</div><div class="detail-value">${request.purpose}</div></div>
-        </div>
+                <div class="signature-section">
+                    <div class="sig-block">
+                        <div class="sig-line">
+                            <p style="font-size: 12px; margin: 0;">Resident's Signature / Thumb Mark</p>
+                        </div>
+                    </div>
 
-        <div class="body-text">
-            This certification is issued upon the request of the above-mentioned person for 
-            <strong>${request.purpose}</strong> and for whatever legal purpose it may serve.
-        </div>
-
-        <div class="body-text">
-            Issued this <strong>${currentDate}</strong> at ${headerInfo.barangayName}, ${headerInfo.municipality}, ${headerInfo.province}.
-        </div>
-    </div>
-
-    <div class="signature-section">
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">
-                <strong>${officials.secretary}</strong><br>
-                Barangay Secretary
+                    <div class="sig-block" style="margin-top: 20px;">
+                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
+                        <div style="height: 40px;"></div>
+                        <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
+                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">
-                <strong>${officials.chairman}</strong><br>
-                Punong Barangay
-            </div>
-        </div>
-    </div>
+        `;
 
-    ${this.generateFooter(request, config)}
-</body>
-</html>`;
+        return this.generateDocument('BARANGAY RESIDENCY CERTIFICATE', bodyHtml, request, config);
     }
 
     generateQRCodeSVG(text) {
