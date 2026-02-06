@@ -157,6 +157,7 @@ export default function Residents() {
         }
     };
 
+
     if (!mounted || !currentUser || currentUser.role !== 'admin') {
         return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -472,8 +473,8 @@ export default function Residents() {
                                     <div className="md:col-span-1 border-r border-gray-200 pr-4">
                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight mb-2">Internal Status</p>
                                         <div className={`inline-flex items-center px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border shadow-sm ${selectedResident.pending_case
-                                                ? 'bg-red-600 text-white border-red-700 animate-pulse'
-                                                : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                                            ? 'bg-red-600 text-white border-red-700 animate-pulse'
+                                            : 'bg-emerald-100 text-emerald-700 border-emerald-200'
                                             }`}>
                                             {selectedResident.pending_case ? 'With Pending Case' : 'Cleansed / No Record'}
                                         </div>
@@ -482,8 +483,8 @@ export default function Residents() {
                                     <div className="md:col-span-3">
                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight mb-2">Record Details / Remarks</p>
                                         <div className={`p-4 rounded-xl border text-sm font-semibold min-h-[80px] ${selectedResident.pending_case
-                                                ? 'bg-white border-red-200 text-red-900'
-                                                : 'bg-white border-gray-100 text-gray-600'
+                                            ? 'bg-white border-red-200 text-red-900'
+                                            : 'bg-white border-gray-100 text-gray-600'
                                             }`}>
                                             {selectedResident.case_record_history || 'NO PREVIOUS LEGAL HISTORY OR PENDING CASES REPORTED FOR THIS RESIDENT.'}
                                         </div>
@@ -747,7 +748,7 @@ export default function Residents() {
                         </div>
                     </div>
                 </Modal>
-            </div >
+            </div>
         </Layout >
     );
 }

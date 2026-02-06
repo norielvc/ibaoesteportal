@@ -138,7 +138,7 @@ router.get('/', async (req, res) => {
           case_record_history
         )
       `)
-      .order('created_at', { ascending: false });
+      .order('updated_at', { ascending: false, nullsFirst: false });
 
     if (type) query = query.eq('certificate_type', type);
     if (status) query = query.eq('status', status);

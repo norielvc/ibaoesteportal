@@ -105,7 +105,8 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
             id,
             pending_case,
             case_record_history
-          )
+          ),
+          updated_at
         )
       `)
       .eq('assigned_user_id', userId)
@@ -178,8 +179,13 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
       return acc;
     }, []);
 
-    // Sort by certificate request creation date (newest first)
-    requests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    // Sort by latest activity (updated_at) - newest first
+    // Note: 'updated_at' is used as the primary activity indicator
+    requests.sort((a, b) => {
+      const timeA = new Date(a.updated_at || a.created_at).getTime();
+      const timeB = new Date(b.updated_at || b.created_at).getTime();
+      return timeB - timeA;
+    });
 
     res.json({
       success: true,
@@ -310,7 +316,13 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       newRequestStatus = 'cancelled'; // Changed from 'rejected' to match DB constraint
     } else if (action === 'return') {
       newStatus = 'completed';
-      newRequestStatus = 'pending'; // Return to previous step
+      newRequestStatus = 'returned'; // Explicitly set to 'returned'
+
+      // 🔄 RETURNING FLOW: Re-assign to the FIRST step (Review Request Team)
+      if (steps && steps.length > 0) {
+        nextStep = steps[0]; // First step is Review Team
+        console.log(`🏠 Returning to first step: ${nextStep.name}`);
+      }
     }
 
     // Update assignment status
@@ -335,8 +347,8 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
 
     if (requestUpdateError) throw requestUpdateError;
 
-    // Create next step assignments if approved
-    if (action === 'approve' && nextStep) {
+    // Create next step assignments if approved or returned
+    if ((action === 'approve' || action === 'return') && nextStep) {
       console.log(`Creating assignments for next step: ${nextStep.name} (ID: ${nextStep.id})`);
 
       const nextStepAssignments = nextStep.assignedUsers || [];
@@ -409,12 +421,52 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
   }
 });
 
+// Add an internal note to a request
+router.post('/add-note', authenticateToken, async (req, res) => {
+  try {
+    const { requestId, requestType, comment, stepId, stepName } = req.body;
+    const userId = req.user._id;
+
+    if (!requestId || !comment) {
+      return res.status(400).json({ success: false, message: 'Request ID and comment are required' });
+    }
+
+    const { error } = await supabase
+      .from('workflow_history')
+      .insert([{
+        request_id: requestId,
+        request_type: requestType,
+        step_id: stepId || 'note',
+        step_name: stepName || 'Internal Note',
+        action: 'note',
+        performed_by: userId,
+        comments: comment,
+        new_status: 'note' // Using 'note' as status or keep previous? Maybe 'note' to distinguish.
+      }]);
+
+    if (error) throw error;
+
+    // 🎯 IMPORTANT: Update the certificate_requests table's updated_at 
+    // to ensure this request jumps to the top of the "Last Activity" list
+    await supabase
+      .from('certificate_requests')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', requestId);
+
+    res.json({ success: true, message: 'Note added successfully' });
+  } catch (error) {
+    console.error('Error adding note:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Get workflow history for a request
 router.get('/history/:requestId', authenticateToken, async (req, res) => {
   try {
     const { requestId } = req.params;
 
-    const { data, error } = await supabase
+    // 1. Fetch from new workflow_history table
+    const { data: historyData, error: historyError } = await supabase
       .from('workflow_history')
       .select(`
         *,
@@ -425,13 +477,49 @@ router.get('/history/:requestId', authenticateToken, async (req, res) => {
         )
       `)
       .eq('request_id', requestId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (historyError) throw historyError;
+
+    // 2. Fetch completed assignments from workflow_assignments (Legacy/Fallback)
+    const { data: assignmentData, error: assignmentError } = await supabase
+      .from('workflow_assignments')
+      .select(`
+        *,
+        users:assigned_user_id (
+          first_name,
+          last_name,
+          email
+        )
+      `)
+      .eq('request_id', requestId)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: true });
+
+    if (assignmentError) throw assignmentError;
+
+    // 3. Merge and formatting
+    const existingStepIds = new Set((historyData || []).map(h => String(h.step_id)));
+    const legacyEntries = (assignmentData || []).filter(a => !existingStepIds.has(String(a.step_id))).map(a => ({
+      id: a.id,
+      request_id: a.request_id,
+      step_id: a.step_id,
+      step_name: a.step_name,
+      action: 'completed', // Generic action for legacy
+      performed_by: a.assigned_user_id,
+      users: a.users, // Attached user data
+      created_at: a.completed_at || a.updated_at || a.assigned_at, // Use completion time
+      comments: a.comments || a.comment || a.remarks || a.note || 'Action Completed', // Try to find comment, fallback to generic
+      is_legacy: true
+    }));
+
+    const combinedHistory = [...(historyData || []), ...legacyEntries].sort((a, b) =>
+      new Date(a.created_at) - new Date(b.created_at)
+    );
 
     res.json({
       success: true,
-      history: data || []
+      history: combinedHistory
     });
   } catch (error) {
     console.error('Error fetching workflow history:', error);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Save, AlertCircle, CheckCircle, Lock, Bell, Shield, Database, Pen, Upload, Eye, EyeOff, Trash2, Download, CheckCircle2 } from 'lucide-react';
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 import Layout from '@/components/Layout/Layout';
 import { getUserData, logout, getAuthToken, isAdmin } from '@/lib/auth';
 import SignatureInput from '@/components/UI/SignatureInput';
@@ -25,6 +26,7 @@ export default function Settings() {
   const [importFile, setImportFile] = useState(null);
   const [importPreview, setImportPreview] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // API Configuration
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
@@ -239,6 +241,66 @@ export default function Settings() {
     }));
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setIsExporting(true);
+      // Fetch ALL residents without pagination for export
+      const response = await fetch(`${API_URL}/api/residents/search?name=&page=1&limit=100000`);
+      const data = await response.json();
+
+      if (data.success && data.residents.length > 0) {
+        // Prepare data for Excel
+        const exportData = data.residents.map(r => ({
+          'Last Name': r.last_name || '',
+          'First Name': r.first_name || '',
+          'Middle Name': r.middle_name || '',
+          'Suffix': r.suffix || '',
+          'Age': r.age || '',
+          'Gender': r.gender || '',
+          'Civil Status': r.civil_status || '',
+          'Birth Date': r.date_of_birth || '',
+          'Birth Place': r.place_of_birth || '',
+          'Address': r.residential_address || '',
+          'Contact Number': r.contact_number || '',
+          'Pending Case': r.pending_case ? 'YES' : 'NO',
+          'Case History': r.case_record_history || ''
+        }));
+
+        // Create Worksheet
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Residents");
+
+        // Save File
+        XLSX.writeFile(wb, `Residents_Database_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+        setSuccessMessage('Database exported successfully!');
+      } else {
+        setErrorMessage('No data found to export');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      setErrorMessage('Failed to export database');
+    } finally {
+      setIsExporting(false);
+      setTimeout(() => { setSuccessMessage(''); setErrorMessage(''); }, 3000);
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    const headers = ['last_name', 'first_name', 'middle_name', 'suffix', 'age', 'gender', 'civil_status', 'date_of_birth', 'place_of_birth', 'residential_address', 'contact_number'];
+    const sampleData = 'SALAZAR,CARLO,PADILLA,IV,57,FEMALE,SEPARATED,1968-04-19,BAGUIO,House No. 810C,09171234567';
+    const csvContent = headers.join(',') + '\n' + sampleData;
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'residents_import_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    setSuccessMessage('Sample template downloaded!');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
   // Load signatures when signatures tab is active
   useEffect(() => {
     if (activeTab === 'signatures' && user) {
@@ -255,7 +317,7 @@ export default function Settings() {
   ];
 
   if (isAdmin()) {
-    tabs.push({ id: 'import', label: 'Data Import', icon: Database });
+    tabs.push({ id: 'import', label: 'Import & Export', icon: Database });
   }
 
   return (
@@ -475,8 +537,8 @@ export default function Settings() {
                         <div
                           key={signature.id}
                           className={`border rounded-lg p-4 ${signature.id === defaultSignatureId
-                              ? 'border-[#03254c] bg-blue-50'
-                              : 'border-gray-200 bg-white'
+                            ? 'border-[#03254c] bg-blue-50'
+                            : 'border-gray-200 bg-white'
                             }`}
                         >
                           <div className="flex items-center justify-between">
@@ -665,139 +727,178 @@ export default function Settings() {
               </div>
             )}
 
-            {/* Data Import Settings */}
+            {/* Import & Export Settings */}
             {activeTab === 'import' && (
-              <div className="space-y-6 max-w-2xl">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">Database Migration</h3>
-                    <p className="text-sm text-gray-600">Bulk upload resident records via CSV file</p>
+              <div className="space-y-8 max-w-2xl">
+                {/* Section 1: Export Database */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="h-12 w-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 shrink-0">
+                      <Download className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-extrabold text-gray-900">Database Export</h3>
+                      <p className="text-sm text-gray-500">Download the entire resident directory as an Excel file for backup or reporting.</p>
+                    </div>
                   </div>
                   <button
-                    onClick={() => {
-                      const headers = ['last_name', 'first_name', 'middle_name', 'suffix', 'age', 'gender', 'civil_status', 'date_of_birth', 'place_of_birth', 'residential_address', 'contact_number'];
-                      const csvContent = headers.join(',') + '\n' + 'SALAZAR,CARLO,PADILLA,IV,57,FEMALE,SEPARATED,1968-04-19,BAGUIO,House No. 810C,09171234567';
-                      const blob = new Blob([csvContent], { type: 'text/csv' });
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = 'residents_template.csv';
-                      a.click();
-                    }}
-                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    onClick={handleExportExcel}
+                    disabled={isExporting}
+                    className="w-full flex items-center justify-center gap-3 py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-green-100 hover:scale-[1.01] active:scale-95 disabled:opacity-50"
                   >
-                    <Download className="w-4 h-4" /> Template
+                    {isExporting ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                      <Download className="w-5 h-5" />
+                    )}
+                    {isExporting ? 'PREPARING EXCEL FILE...' : 'DOWNLOAD RESIDENTS DIRECTORY (XLSX)'}
                   </button>
                 </div>
 
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50">
-                  <input
-                    type="file"
-                    id="csvUpload"
-                    accept=".csv"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        setImportFile(file);
-                        Papa.parse(file, {
-                          header: true,
-                          skipEmptyLines: true,
-                          complete: (results) => setImportPreview(results.data.slice(0, 5))
-                        });
-                      }
-                    }}
-                  />
-                  <label htmlFor="csvUpload" className="cursor-pointer flex flex-col items-center">
-                    <Upload className="w-12 h-12 text-gray-400 mb-3" />
-                    <span className="text-sm font-medium text-gray-900">
-                      {importFile ? importFile.name : 'Select CSV File'}
-                    </span>
-                    <span className="text-xs text-gray-500 mt-1">Excel-exported CSV files only</span>
-                  </label>
-                </div>
-
-                {importPreview.length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-semibold text-gray-800">Preview</h4>
-                      <button onClick={() => { setImportFile(null); setImportPreview([]); }} className="text-red-500">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                {/* Section 2: Import Records */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="h-12 w-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
+                      <Upload className="w-6 h-6" />
                     </div>
-                    <div className="overflow-x-auto rounded-lg border border-gray-200">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Gender</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200 text-xs">
-                          {importPreview.map((row, i) => (
-                            <tr key={i}>
-                              <td className="px-4 py-2">{row.first_name || row['First Name']} {row.last_name || row['Last Name']}</td>
-                              <td className="px-4 py-2">{row.gender || row.Gender || row.sex}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-lg font-extrabold text-gray-900 leading-none">Bulk Import Migration</h3>
+                        <button
+                          onClick={handleDownloadTemplate}
+                          className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded-md transition-colors"
+                          title="Download sample CSV format"
+                        >
+                          <Download className="w-3 h-3" /> Sample Template
+                        </button>
+                      </div>
+                      <p className="text-sm text-gray-500">Quickly upload multiple resident records using a formatted CSV file.</p>
                     </div>
                   </div>
-                )}
 
-                <button
-                  onClick={() => {
-                    if (!importFile) return;
-                    setIsImporting(true);
-                    Papa.parse(importFile, {
-                      header: true,
-                      skipEmptyLines: true,
-                      complete: async (results) => {
-                        try {
-                          const mappedData = results.data.map(row => ({
-                            last_name: row.last_name || row['Last Name'] || row.lastName,
-                            first_name: row.first_name || row['First Name'] || row.firstName,
-                            middle_name: row.middle_name || row['Middle Name'] || '',
-                            suffix: row.suffix || row.Suffix || '',
-                            age: parseInt(row.age || row.Age) || null,
-                            gender: (row.gender || row.Gender || row.sex || '').toUpperCase(),
-                            civil_status: (row.civil_status || row['Civil Status'] || '').toUpperCase(),
-                            date_of_birth: row.date_of_birth || row['Date of Birth'],
-                            place_of_birth: row.place_of_birth || row['Place of Birth'],
-                            residential_address: row.residential_address || row['Residential Address'] || row.address,
-                            contact_number: row.contact_number || row['Contact Number'] || ''
-                          }));
-
-                          const res = await fetch(`${API_URL}/api/residents/bulk-insert`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ residents: mappedData })
+                  <div className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center bg-gray-50/50 mb-6 transition-all hover:border-blue-400 hover:bg-blue-50/30 group">
+                    <input
+                      type="file"
+                      id="csvUpload"
+                      accept=".csv"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setImportFile(file);
+                          Papa.parse(file, {
+                            header: true,
+                            skipEmptyLines: true,
+                            complete: (results) => setImportPreview(results.data.slice(0, 5))
                           });
-
-                          const data = await res.json();
-                          if (data.success) {
-                            setSuccessMessage(data.message);
-                            setImportFile(null);
-                            setImportPreview([]);
-                          } else {
-                            setErrorMessage(data.message);
-                          }
-                        } catch (err) {
-                          setErrorMessage('Import failed: ' + err.message);
-                        } finally {
-                          setIsImporting(false);
-                          setTimeout(() => { setSuccessMessage(''); setErrorMessage(''); }, 5000);
                         }
-                      }
-                    });
-                  }}
-                  disabled={!importFile || isImporting}
-                  className="btn-primary w-full flex justify-center items-center gap-2"
-                >
-                  {isImporting ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <CheckCircle2 className="w-4 h-4" />}
-                  {isImporting ? 'Importing...' : 'Start Database Migration'}
-                </button>
+                      }}
+                    />
+                    <label htmlFor="csvUpload" className="cursor-pointer flex flex-col items-center">
+                      <div className="h-14 w-14 bg-white rounded-full shadow-sm border border-gray-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <Upload className="w-6 h-6 text-blue-500" />
+                      </div>
+                      <span className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                        {importFile ? importFile.name : 'Select CSV Data Source'}
+                      </span>
+                      <span className="text-xs text-gray-500 mt-2 font-medium">Drag and drop file here or click to browse</span>
+                    </label>
+                  </div>
+
+                  {importPreview.length > 0 && (
+                    <div className="mb-6 space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                          Data Structure Preview
+                        </h4>
+                        <button
+                          onClick={() => { setImportFile(null); setImportPreview([]); }}
+                          className="text-red-500 hover:text-red-700 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Clear selected file
+                        </button>
+                      </div>
+                      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
+                        <table className="min-w-full divide-y divide-gray-100">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-2.5 text-left text-[9px] font-black text-gray-500 uppercase tracking-tight">First Name</th>
+                              <th className="px-4 py-2.5 text-left text-[9px] font-black text-gray-500 uppercase tracking-tight">Last Name</th>
+                              <th className="px-4 py-2.5 text-left text-[9px] font-black text-gray-500 uppercase tracking-tight">Gender</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-50 text-xs text-gray-700">
+                            {importPreview.map((row, i) => (
+                              <tr key={i} className="hover:bg-blue-50/50 transition-colors">
+                                <td className="px-4 py-2.5 font-bold uppercase">{row.first_name || row['First Name'] || '-'}</td>
+                                <td className="px-4 py-2.5 font-bold uppercase">{row.last_name || row['Last Name'] || '-'}</td>
+                                <td className="px-4 py-2.5">{row.gender || row.Gender || row.sex || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      if (!importFile) return;
+                      setIsImporting(true);
+                      Papa.parse(importFile, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: async (results) => {
+                          try {
+                            const mappedData = results.data.map(row => ({
+                              last_name: row.last_name || row['Last Name'] || row.lastName,
+                              first_name: row.first_name || row['First Name'] || row.firstName,
+                              middle_name: row.middle_name || row['Middle Name'] || '',
+                              suffix: row.suffix || row.Suffix || '',
+                              age: parseInt(row.age || row.Age) || null,
+                              gender: (row.gender || row.Gender || row.sex || '').toUpperCase(),
+                              civil_status: (row.civil_status || row['Civil Status'] || '').toUpperCase(),
+                              date_of_birth: row.date_of_birth || row['Date of Birth'],
+                              place_of_birth: row.place_of_birth || row['Place of Birth'],
+                              residential_address: row.residential_address || row['Residential Address'] || row.address,
+                              contact_number: row.contact_number || row['Contact Number'] || ''
+                            }));
+
+                            const res = await fetch(`${API_URL}/api/residents/bulk-insert`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ residents: mappedData })
+                            });
+
+                            const data = await res.json();
+                            if (data.success) {
+                              setSuccessMessage(data.message);
+                              setImportFile(null);
+                              setImportPreview([]);
+                            } else {
+                              setErrorMessage(data.message);
+                            }
+                          } catch (err) {
+                            setErrorMessage('Import failed: ' + err.message);
+                          } finally {
+                            setIsImporting(false);
+                            setTimeout(() => { setSuccessMessage(''); setErrorMessage(''); }, 5000);
+                          }
+                        }
+                      });
+                    }}
+                    disabled={!importFile || isImporting}
+                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-sm transition-all shadow-lg shadow-blue-100 flex justify-center items-center gap-3 hover:scale-[1.01] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:bg-gray-400"
+                  >
+                    {isImporting ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                      <CheckCircle2 className="w-5 h-5" />
+                    )}
+                    {isImporting ? 'EXECUTING MIGRATION...' : 'FINALIZE & COMMENCE IMPORT'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -817,6 +918,6 @@ export default function Settings() {
           </button>
         </div>
       </div>
-    </Layout>
+    </Layout >
   );
 }

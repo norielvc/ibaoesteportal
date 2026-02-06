@@ -26,7 +26,37 @@ export default function RequestsPage() {
   const [actionType, setActionType] = useState('');
   const [actionComment, setActionComment] = useState('');
   const [processing, setProcessing] = useState(false);
+
   const [userSignature, setUserSignature] = useState(null);
+  const [requestHistory, setRequestHistory] = useState([]);
+
+  // Fetch history when selectedRequest changes
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!selectedRequest) {
+        setRequestHistory([]);
+        return;
+      }
+
+      try {
+        const token = getAuthToken();
+        const response = await fetch(`${API_URL}/api/workflow-assignments/history/${selectedRequest.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setRequestHistory(Array.isArray(data.history) ? data.history : []);
+        }
+      } catch (error) {
+        console.error('Error fetching history:', error);
+      }
+    };
+
+    fetchHistory();
+  }, [selectedRequest]);
 
   // Load current user and workflows
   useEffect(() => {
@@ -149,7 +179,7 @@ export default function RequestsPage() {
     if (!workflowSteps) return false;
 
     let currentStep;
-    if (request.status === 'staff_review' || request.status === 'pending') {
+    if (request.status === 'staff_review' || request.status === 'pending' || request.status === 'returned') {
       currentStep = workflowSteps.find(s => s.status === 'staff_review');
     } else if (request.status === 'oic_review') {
       currentStep = workflowSteps.find(s => s.status === 'oic_review');
@@ -182,7 +212,7 @@ export default function RequestsPage() {
       });
     }
 
-    if (workflowSteps && Array.isArray(workflowSteps) && ['pending', 'submitted', 'staff_review'].includes(currentStatus)) {
+    if (workflowSteps && Array.isArray(workflowSteps) && ['pending', 'submitted', 'staff_review', 'returned'].includes(currentStatus)) {
       return workflowSteps[0];
     }
 
@@ -274,7 +304,7 @@ export default function RequestsPage() {
 
   const getNextStatus = (currentStatus, action, request) => {
     if (action === 'reject') return 'rejected';
-    if (action === 'return') return 'pending'; // Return to pending for revision
+    if (action === 'return') return 'returned'; // Return to Review Team as 'Returned'
 
     // For approve action, move to next workflow step
     if (action === 'approve') {
@@ -284,6 +314,7 @@ export default function RequestsPage() {
       const statusFlow = {
         'pending': 'processing',
         'staff_review': 'processing',
+        'returned': 'processing', // Returned requests go to processing (or next step) when approved
         'submitted': 'processing',
         'processing': 'oic_review', // After Captain, go to OIC
         'oic_review': 'ready',      // After OIC, go to Ready
@@ -296,7 +327,7 @@ export default function RequestsPage() {
     }
 
     if (action === 'reject') return 'cancelled';
-    if (action === 'return') return 'pending';
+    if (action === 'return') return 'returned';
 
     return 'ready';
   };
@@ -356,6 +387,50 @@ export default function RequestsPage() {
     }
   };
 
+  const submitNote = async (note) => {
+    if (!selectedRequest || !note.trim()) return;
+
+    try {
+      const token = getAuthToken();
+
+      // Use history endpoint to insert a note/comment (we'll implement this backend route shortly)
+      // Or use a dedicated endpoint
+      const response = await fetch(`${API_URL}/api/workflow-assignments/add-note`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          requestId: selectedRequest.id,
+          requestType: selectedRequest.certificate_type,
+          comment: note,
+          stepId: selectedRequest.workflow_assignment?.step_id,
+          stepName: selectedRequest.workflow_assignment?.step_name || 'Internal Note'
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // Refresh history
+        const historyRes = await fetch(`${API_URL}/api/workflow-assignments/history/${selectedRequest.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const historyData = await historyRes.json();
+        if (historyData.success) {
+          setRequestHistory(historyData.history || []);
+        }
+        return true;
+      }
+      alert(data.message || 'Failed to add note');
+      return false;
+    } catch (error) {
+      console.error('Error adding note:', error);
+      alert('Error adding note');
+      return false;
+    }
+  };
+
   // Filter requests based on view mode and other filters
   const filteredRequests = requests.filter(req => {
     // View mode filter
@@ -368,7 +443,7 @@ export default function RequestsPage() {
       req.applicant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' ||
-      (statusFilter === 'pending' ? ['pending', 'staff_review', 'submitted'].includes(req.status) :
+      (statusFilter === 'pending' ? ['pending', 'staff_review', 'submitted', 'returned'].includes(req.status) :
         statusFilter === 'ready' ? ['ready', 'ready_for_pickup'].includes(req.status) :
           req.status === statusFilter);
     const matchesType = typeFilter === 'all' || req.certificate_type === typeFilter;
@@ -467,6 +542,7 @@ export default function RequestsPage() {
                   <option value="oic_review">Releasing Team</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
+                  <option value="returned">Returned</option>
                   <option value="released">Released</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -521,8 +597,7 @@ export default function RequestsPage() {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Step</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Last Activity</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -531,7 +606,11 @@ export default function RequestsPage() {
                     const canAct = canUserTakeAction(request);
 
                     return (
-                      <tr key={request.id} className={`hover:bg-gray-50 transition-colors ${canAct ? 'bg-blue-50/30' : ''}`}>
+                      <tr
+                        key={request.id}
+                        onClick={() => setSelectedRequest(request)}
+                        className={`hover:bg-gray-50 transition-colors cursor-pointer ${canAct ? 'bg-blue-50/30' : ''}`}
+                      >
                         <td className="px-6 py-4">
                           <span className="font-mono font-semibold text-blue-600">{request.reference_number}</span>
                         </td>
@@ -567,43 +646,7 @@ export default function RequestsPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 text-sm text-gray-500">
                             <Calendar className="w-4 h-4" />
-                            {formatDate(request.created_at)}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => setSelectedRequest(request)}
-                              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="View Details"
-                            >
-                              <Eye className="w-5 h-5" />
-                            </button>
-                            {canAct && ['pending', 'processing', 'staff_review'].includes(request.status) && (
-                              <>
-                                <button
-                                  onClick={() => handleAction(request, 'approve')}
-                                  className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                  title="Approve"
-                                >
-                                  <CheckCircle className="w-5 h-5" />
-                                </button>
-                                <button
-                                  onClick={() => handleAction(request, 'reject')}
-                                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Reject"
-                                >
-                                  <XCircle className="w-5 h-5" />
-                                </button>
-                                <button
-                                  onClick={() => handleAction(request, 'return')}
-                                  className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                                  title="Send Back"
-                                >
-                                  <RotateCcw className="w-5 h-5" />
-                                </button>
-                              </>
-                            )}
+                            {formatDate(request.updated_at || request.created_at)}
                           </div>
                         </td>
                       </tr>
@@ -626,6 +669,7 @@ export default function RequestsPage() {
             formatDate={formatDate}
             canUserTakeAction={canUserTakeAction}
             getCurrentWorkflowStep={getCurrentWorkflowStep}
+            history={requestHistory}
           />
         )}
 
@@ -641,6 +685,7 @@ export default function RequestsPage() {
             processing={processing}
             currentStep={getCurrentWorkflowStep(selectedRequest)}
             userSignature={userSignature}
+            history={requestHistory}
           />
         )}
       </div>
@@ -650,10 +695,13 @@ export default function RequestsPage() {
 
 
 // Request Details Modal Component
-function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTypeLabel, formatDate, canUserTakeAction, getCurrentWorkflowStep }) {
+// RequestDetailsModal Component
+function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTypeLabel, formatDate, canUserTakeAction, getCurrentWorkflowStep, history = [] }) {
   const currentStep = getCurrentWorkflowStep(request);
   const canAct = canUserTakeAction(request);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
+  const hasComments = (Array.isArray(history) && history.some(h => h.comment || h.comments)) || !!request.admin_comment;
 
   if (showPdfPreview) {
     return (
@@ -671,9 +719,9 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 p-2 rounded-lg">
                 <FileText className="w-6 h-6 text-white" />
@@ -683,206 +731,254 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
                 <p className="text-blue-200 text-sm">{request.reference_number}</p>
               </div>
             </div>
-            <button onClick={onClose} className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded-lg">
-              <X className="w-6 h-6" />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowPdfPreview(true)}
+                className="px-3 py-1.5 bg-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/30 flex items-center gap-2 transition-colors"
+                title="View Certificate Preview"
+              >
+                <Eye className="w-4 h-4" />
+                <span>Preview PDF</span>
+              </button>
+              <button onClick={onClose} className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded-lg">
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex border-b border-gray-100 bg-gray-50/50 px-6 pt-2 shrink-0">
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`pb-3 pt-2 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'details'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+            >
+              Request Details
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`pb-3 pt-2 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'history'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+            >
+              <span>History & Comments</span>
+              {hasComments && (
+                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+              )}
             </button>
           </div>
 
-          <div className="p-6 overflow-y-auto max-h-[calc(95vh-200px)] space-y-6">
-            {/* Status and Step */}
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border ${getStatusColor(request.status)}`}>
-                {request.status?.replace(/_/g, ' ').toUpperCase()}
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm text-gray-500">{getTypeLabel(request.certificate_type)}</span>
-                {currentStep && (
-                  <>
-                    <span className="text-gray-300">•</span>
-                    <span className="text-sm text-blue-600 font-medium">{currentStep.name}</span>
-                  </>
-                )}
-                {request.residents?.pending_case && (
-                  <span className="bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse whitespace-nowrap">
-                    CRITICAL: PENDING CASE
-                  </span>
-                )}
-              </div>
-            </div>
-
-
-
-            {/* Legal Hold Notification - Body Placement */}
-            {request.residents?.pending_case && (
-              <div className="bg-red-50 border-l-4 border-red-600 p-4 rounded-r-xl shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="bg-red-100 p-2 rounded-lg shrink-0">
-                    <ShieldAlert className="w-6 h-6 text-red-600" />
+          <div className="p-6 overflow-y-auto flex-1 space-y-4">
+            {activeTab === 'details' && (
+              <>
+                {/* Status and Step */}
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(request.status)}`}>
+                      {request.status?.replace(/_/g, ' ').toUpperCase()}
+                    </span>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <span className="font-medium text-gray-700">{getTypeLabel(request.certificate_type)}</span>
+                      {currentStep && (
+                        <>
+                          <span className="text-gray-300">•</span>
+                          <span className="text-blue-600 font-medium">{currentStep.name}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-lg font-black text-red-700 uppercase leading-tight">Pending Case Record</h4>
-                      <span className="text-[10px] font-bold bg-red-600 text-white px-2 py-0.5 rounded uppercase">Action Required</span>
-                    </div>
+                  {request.residents?.pending_case && (
+                    <span className="bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse flex items-center gap-1">
+                      <ShieldAlert className="w-3 h-3" />
+                      CRITICAL: PENDING CASE RECORDED
+                    </span>
+                  )}
+                </div>
 
-                    <div className="mt-2 p-3 bg-white rounded-lg border border-red-100">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Official Record History / Remarks:</p>
-                      <p className="text-sm font-semibold text-gray-800 italic">"{request.residents.case_record_history || 'No detail remarks provided.'}"</p>
+                {/* Compact Applicant Info Grid */}
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3 text-sm">
+                    <User className="w-4 h-4 text-blue-500" />
+                    Applicant Information
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="col-span-2 md:col-span-2">
+                      <p className="text-xs text-gray-500 uppercase mb-0.5">Full Name</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-gray-900 uppercase truncate text-base" title={request.applicant_name || request.full_name}>
+                          {request.applicant_name || request.full_name || 'N/A'}
+                        </p>
+                        {request.residents?.pending_case && (
+                          <div className="text-red-600" title="With Pending Case">
+                            <AlertTriangle className="w-4 h-4" />
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase mb-0.5">Contact</p>
+                      <p className="font-medium text-gray-900 truncate">{request.contact_number || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase mb-0.5">Age / Sex</p>
+                      <p className="font-medium text-gray-900">{request.age || '-'} / {request.sex || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase mb-0.5">Civil Status</p>
+                      <p className="font-medium text-gray-900 uppercase">{request.civil_status || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase mb-0.5">Date of Birth</p>
+                      <p className="font-medium text-gray-900">{request.date_of_birth || 'N/A'}</p>
+                    </div>
+                    <div className="col-span-2 md:col-span-2">
+                      <p className="text-xs text-gray-500 uppercase mb-0.5">Address</p>
+                      <p className="font-medium text-gray-900 truncate" title={request.address}>
+                        {request.address || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-                    <p className="mt-2 text-xs font-medium text-red-600 flex items-center gap-1.5">
-                      <Info className="w-4 h-4" />
-                      Strictly evaluate eligibility. Verification is required before approval.
+                {/* Purpose & Timeline */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 flex flex-col">
+                    <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
+                      <FileCheck className="w-4 h-4 text-blue-500" />
+                      Purpose
+                    </h3>
+                    <p className="text-sm text-gray-700 leading-relaxed font-medium mt-1 flex-1">
+                      {request.purpose || 'Not specified'}
                     </p>
                   </div>
+
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
+                      <History className="w-4 h-4 text-blue-500" />
+                      Timeline
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Submitted</span>
+                        <span className="font-medium">{formatDate(request.created_at)}</span>
+                      </div>
+                      {request.updated_at && request.updated_at !== request.created_at && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Updated</span>
+                          <span className="font-medium">{formatDate(request.updated_at)}</span>
+                        </div>
+                      )}
+                      {request.admin_comment && (
+                        <div className="mt-2 text-xs bg-orange-50 text-orange-800 p-2 rounded border border-orange-100 italic">
+                          <span className="font-bold not-italic">Admin Note:</span> {request.admin_comment}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
-            {/* Preview Certificate Button */}
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-purple-100 p-2 rounded-lg">
-                    <Eye className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-purple-900">Certificate Preview</h3>
-                    <p className="text-sm text-purple-600">View how the certificate will look when printed</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowPdfPreview(true)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 flex items-center gap-2 transition-colors"
-                >
-                  <Eye className="w-4 h-4" />
-                  Preview PDF
-                </button>
-              </div>
-            </div>
-
-            {/* Applicant Info */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-500" />
-                  Applicant Information
+            {activeTab === 'history' && (
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 min-h-[400px]">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3 text-sm">
+                  <Clock className="w-4 h-4 text-blue-500" />
+                  Request History & Comments
                 </h3>
-                <div className="grid grid-cols-1 gap-4 text-sm">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-gray-500">Full Name</p>
-                      <p className="font-bold text-gray-900 text-lg uppercase">{request.applicant_name || request.full_name || 'N/A'}</p>
-                    </div>
-                    {request.residents?.pending_case && (
-                      <div className="bg-red-50 border border-red-200 p-2 rounded-lg flex items-center gap-2 text-red-600">
-                        <AlertTriangle className="w-5 h-5" />
-                        <span className="text-xs font-black uppercase tracking-tighter">With Pending Case</span>
+
+                {Array.isArray(history) && history.length > 0 ? (
+                  <div className="space-y-4">
+                    {history.map((entry, index) => (
+                      <div key={index} className="flex gap-3 text-sm">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${entry.action === 'approve' ? 'bg-green-100 text-green-600' :
+                            entry.action === 'reject' ? 'bg-red-100 text-red-600' :
+                              entry.action === 'return' ? 'bg-orange-100 text-orange-600' :
+                                'bg-blue-100 text-blue-600'
+                            }`}>
+                            {entry.action === 'approve' ? <CheckCircle className="w-4 h-4" /> :
+                              entry.action === 'reject' ? <XCircle className="w-4 h-4" /> :
+                                entry.action === 'return' ? <RotateCcw className="w-4 h-4" /> :
+                                  <FileText className="w-4 h-4" />}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <p className="font-medium text-gray-900">
+                              {entry.users
+                                ? `${entry.users.first_name || ''} ${entry.users.last_name || ''}`.trim() || entry.users.email
+                                : (entry.performed_by_name || entry.performed_by_email || 'System Log')}
+                            </p>
+                            <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
+                              {new Date(entry.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 mb-1">
+                            {entry.action === 'approve' ? 'Approved -' :
+                              entry.action === 'reject' ? 'Rejected -' :
+                                entry.action === 'return' ? 'Returned -' :
+                                  'Updated -'} {entry.step_name}
+                          </p>
+                          {(entry.comments || entry.comment) && (
+                            <div className="bg-white p-2 rounded border border-gray-200 text-gray-700 italic">
+                              "{entry.comments || entry.comment}"
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-gray-500">Contact Number</p>
-                    <p className="font-medium text-gray-900">{request.contact_number || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Age</p>
-                    <p className="font-medium text-gray-900">{request.age || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Sex</p>
-                    <p className="font-medium text-gray-900">{request.sex || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Civil Status</p>
-                    <p className="font-medium text-gray-900">{request.civil_status || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Date of Birth</p>
-                    <p className="font-medium text-gray-900">{request.date_of_birth || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Address</p>
-                    <p className="font-medium text-gray-900">{request.address || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                {/* Purpose */}
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2">
-                    <FileCheck className="w-5 h-5 text-blue-500" />
-                    Purpose
-                  </h3>
-                  <p className="text-gray-700">{request.purpose || 'Not specified'}</p>
-                </div>
-
-                {/* Timeline */}
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
-                    <History className="w-5 h-5 text-blue-500" />
-                    Timeline
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Submitted</span>
-                      <span className="font-medium">{formatDate(request.created_at)}</span>
-                    </div>
-                    {request.updated_at && request.updated_at !== request.created_at && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Last Updated</span>
-                        <span className="font-medium">{formatDate(request.updated_at)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Admin Comment if any */}
-                {request.admin_comment && (
-                  <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
-                    <h3 className="font-semibold text-orange-800 flex items-center gap-2 mb-2">
-                      <AlertTriangle className="w-5 h-5" />
-                      Admin Notes
-                    </h3>
-                    <p className="text-orange-700">{request.admin_comment}</p>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 text-sm italic">
+                    No activity or comments recorded yet.
                   </div>
                 )}
               </div>
-            </div>
+            )}
           </div>
 
           {/* Footer Actions */}
-          {canAct && ['pending', 'processing', 'staff_review', 'secretary_approval', 'captain_approval'].includes(request.status) && (
-            <div className="border-t bg-gray-50 px-6 py-4">
-              {/* Review Request Team - Verification step */}
-              {currentStep?.status === 'staff_review' ? (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                    <p className="text-sm text-blue-800">
-                      <span className="font-semibold">Review Task:</span> Verify that the request is valid and the resident is legitimate for <span className="font-semibold">{getTypeLabel(request.certificate_type)}</span>.
-                    </p>
-                  </div>
-
-                  <div className="flex gap-3 justify-end">
-                    <button
-                      onClick={() => onAction(request, 'reject')}
-                      className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 flex items-center gap-2"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      Not Legitimate
-                    </button>
-                    <button
-                      onClick={() => onAction(request, 'approve')}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Verify & Forward
-                    </button>
+          {canAct && ['pending', 'processing', 'staff_review', 'secretary_approval', 'captain_approval', 'returned'].includes(request.status) && (
+            <div className="border-t bg-gray-50 px-6 py-4 pb-6 shrink-0 mt-auto">
+              {request.residents?.pending_case && (
+                <div className="bg-red-600 p-4 rounded-xl shadow-lg border-2 border-red-400 text-white mb-6">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-white/20 p-2 rounded-lg">
+                      <ShieldAlert className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-1">Legal Hold Notification</p>
+                      <h4 className="text-lg font-black uppercase leading-tight">This applicant has a PENDING CASE</h4>
+                      <div className="mt-3 p-3 bg-black/20 rounded-lg border border-white/20">
+                        <p className="text-[10px] font-bold uppercase mb-1 opacity-70">Official Record History / Remarks:</p>
+                        <p className="text-sm font-semibold italic">"{request.residents.case_record_history || 'No detail remarks provided.'}"</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              )}
+
+              {currentStep?.status === 'staff_review' ? (
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => onAction(request, 'reject')}
+                    className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 flex items-center gap-2"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Not Legitimate
+                  </button>
+                  <button
+                    onClick={() => onAction(request, 'approve')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Verify & Forward
+                  </button>
+                </div>
               ) : (
-                /* Approval Steps - Secretary, Captain */
                 <div className="flex gap-3 justify-end">
                   <button
                     onClick={() => onAction(request, 'return')}
@@ -911,12 +1007,12 @@ function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTy
           )}
         </div>
       </div>
-    </div >
+    </div>
   );
 }
 
 // Action Modal Component
-function ActionModal({ request, actionType, comment, setComment, onSubmit, onClose, processing, currentStep, userSignature }) {
+function ActionModal({ request, actionType, comment, setComment, onSubmit, onClose, processing, currentStep, userSignature, history = [] }) {
   const [useEsign, setUseEsign] = useState(false);
   const [tempSignature, setTempSignature] = useState(null);
   const [showSignPad, setShowSignPad] = useState(false);
@@ -1006,6 +1102,9 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
               <p className="text-sm text-gray-500 mt-2">Applicant</p>
               <p className="font-medium text-gray-900">{request.applicant_name || request.full_name}</p>
             </div>
+
+
+
 
             {/* Comment */}
             <div className="mb-6">
@@ -1102,7 +1201,7 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
               </button>
               <button
                 onClick={() => onSubmit(useEsign ? (tempSignature || userSignature) : null)}
-                disabled={processing || (actionType !== 'approve' && !comment.trim()) || (useEsign && !tempSignature && !userSignature)}
+                disabled={processing || (actionType === 'reject' && !comment.trim()) || (useEsign && !tempSignature && !userSignature)}
                 className={`flex-1 px-4 py-3 text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 ${cfg.buttonBg}`}
               >
                 {processing ? (
@@ -1677,3 +1776,5 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
     </div>
   );
 }
+
+
