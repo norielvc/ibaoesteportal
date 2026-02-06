@@ -4,7 +4,7 @@ import Layout from '@/components/Layout/Layout';
 import {
   FileText, Search, Eye, CheckCircle, XCircle, RotateCcw,
   Clock, User, Calendar, ChevronDown, X, AlertTriangle,
-  FileCheck, History, Filter, Shield, Printer, Download, PenTool, ShieldAlert, Info, Edit, Save
+  FileCheck, History, Filter, Shield, Printer, Download, PenTool, ShieldAlert, Info
 } from 'lucide-react';
 import { getAuthToken, getUserData } from '@/lib/auth';
 import SignaturePad from '@/components/UI/SignaturePad';
@@ -20,12 +20,7 @@ export default function RequestsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [historyGroup, setHistoryGroup] = useState('all'); // 'all', 'active', 'closed'
-  const [timeRange, setTimeRange] = useState('all'); // 'all', 'daily', 'weekly', 'monthly', 'yearly', 'custom'
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [viewMode, setViewMode] = useState('assigned'); // 'assigned' or 'all'
-  const [totalCount, setTotalCount] = useState(0);
-  const [assignedCount, setAssignedCount] = useState(0);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const [actionType, setActionType] = useState('');
@@ -67,6 +62,7 @@ export default function RequestsPage() {
   useEffect(() => {
     const user = getUserData();
     setCurrentUser(user);
+    console.log('Current user loaded:', user);
 
     // Load workflows from API first, then fallback to localStorage
     const loadWorkflows = async () => {
@@ -81,6 +77,7 @@ export default function RequestsPage() {
         const data = await response.json();
         if (data.success && data.data && Object.keys(data.data).length > 0) {
           setWorkflows(data.data);
+          console.log('Workflows loaded from database:', data.data);
           return;
         }
       } catch (error) {
@@ -92,6 +89,9 @@ export default function RequestsPage() {
       if (savedWorkflows) {
         const parsedWorkflows = JSON.parse(savedWorkflows);
         setWorkflows(parsedWorkflows);
+        console.log('Workflows loaded from localStorage:', parsedWorkflows);
+      } else {
+        console.log('No workflows found');
       }
     };
 
@@ -135,43 +135,30 @@ export default function RequestsPage() {
     try {
       const token = getAuthToken();
 
-      // Always fetch BOTH or at least counts to keep badges accurate
-      // 1. Fetch My Assignments
-      const assignedRes = await fetch(`${API_URL}/api/workflow-assignments/my-assignments`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const assignedData = await assignedRes.json();
-      const myAssigned = assignedData.success ? (assignedData.certificates || []) : [];
-      setAssignedCount(myAssigned.length);
-
-      // 2. Fetch All Requests
-      const allRes = await fetch(`${API_URL}/api/certificates`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const allData = await allRes.json();
-      const allCertificates = allData.success ? (allData.certificates || []) : [];
-      setTotalCount(allCertificates.length);
-
-      // 3. Set the active requests list based on viewMode
+      // If viewing "My Assignments", use the workflow assignments API
       if (viewMode === 'assigned') {
-        setRequests(myAssigned);
+        const response = await fetch(`${API_URL}/api/workflow-assignments/my-assignments`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setRequests(data.certificates || []);
+        }
       } else {
-        setRequests(allCertificates);
+        // For "All Requests" view, use the regular certificates API
+        const response = await fetch(`${API_URL}/api/certificates`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setRequests(data.certificates || []);
+        }
       }
     } catch (error) {
       console.error('Error fetching requests:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const clearFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('all');
-    setTypeFilter('all');
-    setHistoryGroup('all');
-    setTimeRange('all');
-    setDateRange({ start: '', end: '' });
   };
 
   // Check if current user is assigned to approve a request at its current step
@@ -187,36 +174,19 @@ export default function RequestsPage() {
     }
 
     // Fallback: Check based on current status and global workflows
-    if (!currentUser) return false;
-
-    // 1. Trust explicit backend assignment if available
-    if (request.workflow_assignment && String(request.workflow_assignment.assigned_user_id) === String(currentUser._id || currentUser.id)) {
-      return true;
-    }
-
-    // 2. Fallback to manual check based on current workflows
     if (!workflows) return false;
-    const workflowSteps = workflows[request.certificate_type] || Object.values(workflows)[0];
+    const workflowSteps = workflows[request.certificate_type] || workflows['master_workflow'];
     if (!workflowSteps) return false;
 
     let currentStep;
-    const s = (request.status || '').toLowerCase();
-
-    if (['staff_review', 'pending', 'returned', 'submitted'].includes(s)) {
-      currentStep = workflowSteps.find(step => step.status === 'staff_review');
-    } else if (s === 'oic_review') {
-      currentStep = workflowSteps.find(step => step.status === 'oic_review');
-    } else if (s === 'captain_approval') {
-      currentStep = workflowSteps.find(step => step.status === 'captain_approval');
-    } else if (s === 'secretary_approval') {
-      currentStep = workflowSteps.find(step => step.status === 'secretary_approval');
-    } else if (s === 'processing') {
-      // Find the first step that requires approval and isn't staff/oic
-      currentStep = workflowSteps.find(step =>
-        step.requiresApproval &&
-        step.status !== 'staff_review' &&
-        step.status !== 'oic_review'
-      );
+    if (request.status === 'staff_review' || request.status === 'pending' || request.status === 'returned') {
+      currentStep = workflowSteps.find(s => s.status === 'staff_review');
+    } else if (request.status === 'oic_review') {
+      currentStep = workflowSteps.find(s => s.status === 'oic_review');
+    } else if (request.status === 'processing') {
+      // Find middle steps (approvals)
+      const approvalSteps = workflowSteps.filter(s => s.status !== 'staff_review' && s.status !== 'oic_review');
+      currentStep = approvalSteps[0]; // Assume first for now
     }
 
     if (!currentStep) return false;
@@ -229,6 +199,18 @@ export default function RequestsPage() {
     // 🛡️ ENFORCED SEQUENTIAL FLOW: Initial requests ALWAYS go to the first step
     const currentStatus = (request.status || 'pending').toLowerCase();
     const workflowSteps = workflows[request.certificate_type] || Object.values(workflows)[0];
+
+    // DEBUG: Log what we're working with
+    if (request.reference_number === filteredRequests[0]?.reference_number) {
+      console.log('🔍 DEBUG getCurrentWorkflowStep:', {
+        ref: request.reference_number,
+        status: currentStatus,
+        certType: request.certificate_type,
+        hasWorkflowSteps: !!workflowSteps,
+        firstStepName: workflowSteps?.[0]?.name,
+        allStepNames: workflowSteps?.map(s => s.name)
+      });
+    }
 
     if (workflowSteps && Array.isArray(workflowSteps) && ['pending', 'submitted', 'staff_review', 'returned'].includes(currentStatus)) {
       return workflowSteps[0];
@@ -254,10 +236,10 @@ export default function RequestsPage() {
       return activeStep || workflowSteps[1] || null;
     }
 
-    // Find the step that matches the current status
+    // Find the step that matches the target status
     const matchingStep = workflowSteps.find(s =>
-      s.status?.toLowerCase() === currentStatus ||
-      s.name?.toLowerCase().includes(currentStatus.replace('_', ' '))
+      s.status?.toLowerCase() === targetStepStatus ||
+      s.name?.toLowerCase().includes(targetStepStatus.replace('_', ' '))
     );
 
     return matchingStep || workflowSteps[0] || null;
@@ -389,11 +371,8 @@ export default function RequestsPage() {
 
       const data = await response.json();
       if (data.success) {
-        // Use actual status from backend if available (workflow returns newStatus, regular returns data.status)
-        const confirmedStatus = data.newStatus || data.data?.status || newStatus;
-
         setRequests(prev => prev.map(r =>
-          r.id === selectedRequest.id ? { ...r, status: confirmedStatus } : r
+          r.id === selectedRequest.id ? { ...r, status: newStatus } : r
         ));
         setShowActionModal(false);
         setSelectedRequest(null);
@@ -452,35 +431,6 @@ export default function RequestsPage() {
     }
   };
 
-  const handleUpdateDetails = async (requestId, updatedData) => {
-    try {
-      const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/certificates/${requestId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(updatedData)
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setRequests(prev => prev.map(r =>
-          r.id === requestId ? { ...r, ...data.data } : r
-        ));
-        setSelectedRequest({ ...selectedRequest, ...data.data });
-        return true;
-      }
-      alert(data.message || 'Update failed');
-      return false;
-    } catch (error) {
-      console.error('Error updating certificate:', error);
-      alert('Error updating certificate');
-      return false;
-    }
-  };
-
   // Filter requests based on view mode and other filters
   const filteredRequests = requests.filter(req => {
     // View mode filter
@@ -488,48 +438,12 @@ export default function RequestsPage() {
       return false;
     }
 
-    // History group filter (Active/Closed)
-    if (historyGroup === 'active') {
-      const isActive = !['released', 'cancelled', 'rejected'].includes(req.status);
-      if (!isActive) return false;
-    } else if (historyGroup === 'closed') {
-      const isClosed = ['released', 'cancelled', 'rejected'].includes(req.status);
-      if (!isClosed) return false;
-    }
-
-    // Time range filter
-    if (timeRange !== 'all') {
-      const reqDate = new Date(req.created_at);
-      const now = new Date();
-
-      if (timeRange === 'daily') {
-        const reqDateStr = reqDate.toLocaleDateString('en-CA'); // YYYY-MM-DD
-        const nowDateStr = now.toLocaleDateString('en-CA');
-        if (reqDateStr !== nowDateStr) return false;
-      } else if (timeRange === 'weekly') {
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(now.getDate() - 7);
-        if (reqDate < oneWeekAgo) return false;
-      } else if (timeRange === 'monthly') {
-        if (reqDate.getMonth() !== now.getMonth() || reqDate.getFullYear() !== now.getFullYear()) return false;
-      } else if (timeRange === 'yearly') {
-        if (reqDate.getFullYear() !== now.getFullYear()) return false;
-      } else if (timeRange === 'custom') {
-        if (dateRange.start && new Date(req.created_at) < new Date(dateRange.start)) return false;
-        if (dateRange.end) {
-          const endDate = new Date(dateRange.end);
-          endDate.setHours(23, 59, 59, 999);
-          if (new Date(req.created_at) > endDate) return false;
-        }
-      }
-    }
-
     const matchesSearch =
       req.reference_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.applicant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' ||
-      (statusFilter === 'pending' ? ['pending', 'staff_review', 'submitted', 'returned'].includes(req.status) :
+      (statusFilter === 'pending' ? ['pending', 'staff_review', 'submitted'].includes(req.status) :
         statusFilter === 'ready' ? ['ready', 'ready_for_pickup'].includes(req.status) :
           req.status === statusFilter);
     const matchesType = typeFilter === 'all' || req.certificate_type === typeFilter;
@@ -537,14 +451,16 @@ export default function RequestsPage() {
   });
 
   // Count requests assigned to current user
+  const [assignedCount, setAssignedCount] = useState(0);
   const [pendingActionCount, setPendingActionCount] = useState(0);
 
-  // Fetch assignment counts for the floating orange badge
+  // Fetch assignment counts
   useEffect(() => {
     const visibleAssigned = requests.filter(r => isUserAssignedToRequest(r));
+    setAssignedCount(visibleAssigned.length);
 
     const pending = visibleAssigned.filter(r =>
-      ['staff_review', 'processing', 'oic_review', 'pending', 'captain_approval', 'secretary_approval'].includes(r.status)
+      ['staff_review', 'processing', 'oic_review', 'pending'].includes(r.status)
     ).length;
 
     setPendingActionCount(pending);
@@ -569,151 +485,82 @@ export default function RequestsPage() {
           </div>
         </div>
 
-        {/* Tabs and Filters Navigation */}
-        <div className="space-y-4">
-          {/* Top Tabs */}
-          <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => setViewMode('assigned')}
-              className={`px-6 py-4 text-sm font-semibold transition-all border-b-2 flex items-center gap-2 ${viewMode === 'assigned'
-                ? 'border-blue-600 text-blue-600 bg-blue-50/30'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-            >
-              <FileCheck className="w-4 h-4" />
-              My Assignments
-              <span className={`px-2 py-0.5 rounded-full text-[10px] ${viewMode === 'assigned' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
-                {assignedCount}
-              </span>
-            </button>
-            <button
-              onClick={() => setViewMode('all')}
-              className={`px-6 py-4 text-sm font-semibold transition-all border-b-2 flex items-center gap-2 ${viewMode === 'all'
-                ? 'border-blue-600 text-blue-600 bg-blue-50/30'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-            >
-              <History className="w-4 h-4" />
-              Certificate Request History
-              <span className={`px-2 py-0.5 rounded-full text-[10px] ${viewMode === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
-                {totalCount}
-              </span>
-            </button>
-          </div>
-
-          {/* Filter Bar */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-              <div className="flex flex-wrap gap-3 items-center w-full">
-                {/* Search */}
-                <div className="relative flex-1 min-w-[300px] md:max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by Reference, Applicant Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                </div>
-
-                {/* Status Filter */}
-                <div className="relative">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="staff_review">Staff Review</option>
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="oic_review">Releasing Team</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="returned">Returned</option>
-                    <option value="released">Released</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
-                {/* Type Filter */}
-                <div className="relative">
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-                  >
-                    <option value="all">All Types</option>
-                    <option value="barangay_clearance">Clearance</option>
-                    <option value="certificate_of_indigency">Indigency</option>
-                    <option value="barangay_residency">Residency</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
-
-                {/* History Group */}
-                <div className="relative">
-                  <select
-                    value={historyGroup}
-                    onChange={(e) => setHistoryGroup(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-blue-50/50 text-sm font-medium text-blue-700"
-                  >
-                    <option value="all">All Records</option>
-                    <option value="active">Active Requests</option>
-                    <option value="closed">Closed / Archive</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
-                </div>
-
-                {/* Time Range */}
-                <div className="relative">
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <select
-                        value={timeRange}
-                        onChange={(e) => setTimeRange(e.target.value)}
-                        className="appearance-none pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-                      >
-                        <option value="all">Any Time</option>
-                        <option value="daily">Today</option>
-                        <option value="weekly">This Week</option>
-                        <option value="monthly">This Month</option>
-                        <option value="yearly">This Year</option>
-                        <option value="custom">Custom Date</option>
-                      </select>
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    </div>
-
-                    {timeRange === 'custom' && (
-                      <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300 bg-gray-50 p-1 rounded-lg border border-gray-200">
-                        <input
-                          type="date"
-                          value={dateRange.start}
-                          onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                          className="px-2 py-1 border-none bg-transparent text-xs focus:ring-0"
-                        />
-                        <span className="text-gray-400 text-[10px] font-bold uppercase">to</span>
-                        <input
-                          type="date"
-                          value={dateRange.end}
-                          onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                          className="px-2 py-1 border-none bg-transparent text-xs focus:ring-0"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Clear Filter Button */}
+        {/* View Mode Toggle */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setViewMode('assigned')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${viewMode === 'assigned'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+              >
+                <User className="w-4 h-4" />
+                My Assignments ({assignedCount})
+              </button>
+              {currentUser?.role === 'admin' && (
                 <button
-                  onClick={clearFilters}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all ml-auto"
-                  title="Clear all filters"
+                  onClick={() => setViewMode('all')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${viewMode === 'all'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
                 >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Reset</span>
+                  <Shield className="w-4 h-4" />
+                  All Requests ({requests.length})
                 </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+
+
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-48"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                >
+                  <option value="all">All Status</option>
+                  <option value="staff_review">Staff Review</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="oic_review">Releasing Team</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="returned">Returned</option>
+                  <option value="released">Released</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Type Filter */}
+              <div className="relative">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                >
+                  <option value="all">All Types</option>
+                  <option value="barangay_clearance">Clearance</option>
+                  <option value="certificate_of_indigency">Indigency</option>
+                  <option value="barangay_residency">Residency</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
           </div>
@@ -750,7 +597,7 @@ export default function RequestsPage() {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Step</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Last Activity</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -799,7 +646,7 @@ export default function RequestsPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 text-sm text-gray-500">
                             <Calendar className="w-4 h-4" />
-                            {formatDate(request.updated_at || request.created_at)}
+                            {formatDate(request.created_at)}
                           </div>
                         </td>
                       </tr>
@@ -817,7 +664,6 @@ export default function RequestsPage() {
             request={selectedRequest}
             onClose={() => setSelectedRequest(null)}
             onAction={handleAction}
-            onUpdate={handleUpdateDetails}
             getStatusColor={getStatusColor}
             getTypeLabel={getTypeLabel}
             formatDate={formatDate}
@@ -850,94 +696,12 @@ export default function RequestsPage() {
 
 // Request Details Modal Component
 // RequestDetailsModal Component
-function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusColor, getTypeLabel, formatDate, canUserTakeAction, getCurrentWorkflowStep, history = [] }) {
+function RequestDetailsModal({ request, onClose, onAction, getStatusColor, getTypeLabel, formatDate, canUserTakeAction, getCurrentWorkflowStep, history = [] }) {
   const currentStep = getCurrentWorkflowStep(request);
   const canAct = canUserTakeAction(request);
-
-  // Helper to calculate age from date string
-  const calculateAge = (dob) => {
-    if (!dob) return null;
-    const birthDate = new Date(dob);
-    const today = new Date();
-    if (isNaN(birthDate.getTime())) return null;
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
-  const displayAge = calculateAge(request.date_of_birth) || request.age;
+  const canAct = canUserTakeAction(request);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
-  const [isEditing, setIsEditing] = useState(false);
-  const [editFormData, setEditFormData] = useState({
-    first_name: request.first_name || '',
-    middle_name: request.middle_name || '',
-    last_name: request.last_name || '',
-    suffix: request.suffix || '',
-    full_name: request.full_name || request.applicant_name || '',
-    contact_number: request.contact_number || '',
-    age: request.age || '',
-    sex: request.sex || '',
-    civil_status: request.civil_status || '',
-    date_of_birth: request.date_of_birth || '',
-    address: request.address || '',
-    purpose: request.purpose || ''
-  });
-
-  // Split name if fields are empty but full_name exists
-  useEffect(() => {
-    if (isEditing && !editFormData.first_name && !editFormData.last_name && editFormData.full_name) {
-      const parts = editFormData.full_name.trim().split(' ');
-      if (parts.length >= 2) {
-        setEditFormData(prev => ({
-          ...prev,
-          first_name: parts[0],
-          last_name: parts[parts.length - 1],
-          middle_name: parts.length > 2 ? parts.slice(1, -1).join(' ') : ''
-        }));
-      }
-    }
-  }, [isEditing]);
-
-  // Calculate age when date_of_birth changes
-  useEffect(() => {
-    if (editFormData.date_of_birth) {
-      const birthDate = new Date(editFormData.date_of_birth);
-      const today = new Date();
-      if (!isNaN(birthDate.getTime())) {
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-          age--;
-        }
-        setEditFormData(prev => ({ ...prev, age: age >= 0 ? age : '' }));
-      }
-    }
-  }, [editFormData.date_of_birth]);
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    // Combine names for full_name
-    const combinedName = `${editFormData.first_name} ${editFormData.middle_name} ${editFormData.last_name} ${editFormData.suffix}`.replace(/\s+/g, ' ').trim();
-    const dataToSave = { ...editFormData, full_name: combinedName };
-
-    const success = await onUpdate(request.id, dataToSave);
-    if (success) {
-      setIsEditing(false);
-    }
-    setIsSaving(false);
-  };
-
-  const hasComments = (Array.isArray(history) && history.some(h => h.comment || h.comments)) || !!request.admin_comment;
 
   if (showPdfPreview) {
     return (
@@ -968,46 +732,6 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {!isEditing && canAct && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-3 py-1.5 bg-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/30 flex items-center gap-2 transition-colors"
-                  title="Edit Request Details"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span>Edit Details</span>
-                </button>
-              )}
-              {isEditing && (
-                <>
-                  <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 flex items-center gap-2 transition-colors disabled:opacity-50"
-                  >
-                    {isSaving ? <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Save className="w-4 h-4" />}
-                    <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditing(false);
-                      setEditFormData({
-                        full_name: request.full_name || request.applicant_name || '',
-                        contact_number: request.contact_number || '',
-                        age: request.age || '',
-                        sex: request.sex || '',
-                        civil_status: request.civil_status || '',
-                        date_of_birth: request.date_of_birth || '',
-                        address: request.address || '',
-                        purpose: request.purpose || ''
-                      });
-                    }}
-                    className="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600 flex items-center transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </>
-              )}
               <button
                 onClick={() => setShowPdfPreview(true)}
                 className="px-3 py-1.5 bg-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/30 flex items-center gap-2 transition-colors"
@@ -1017,413 +741,293 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                 <span>Preview PDF</span>
               </button>
               <button onClick={onClose} className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded-lg">
-                <XCircle className="w-6 h-6" />
+                <X className="w-6 h-6" />
               </button>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex border-b border-gray-100 bg-gray-50/50 px-6 pt-2 shrink-0">
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`pb-3 pt-2 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'details'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              Request Details
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`pb-3 pt-2 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'history'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              <span>History & Comments</span>
-              {hasComments && (
-                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-              )}
-            </button>
-          </div>
+        </div>
 
-          <div className="p-6 overflow-y-auto flex-1 space-y-4">
-            {activeTab === 'details' && (
-              <>
-                {/* Status and Step */}
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(request.status)}`}>
-                      {request.status?.replace(/_/g, ' ').toUpperCase()}
-                    </span>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span className="font-medium text-gray-700">{getTypeLabel(request.certificate_type)}</span>
-                      {currentStep && (
-                        <>
-                          <span className="text-gray-300">•</span>
-                          <span className="text-blue-600 font-medium">{currentStep.name}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  {request.residents?.pending_case && (
-                    <span className="bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse flex items-center gap-1">
-                      <ShieldAlert className="w-3 h-3" />
-                      CRITICAL: PENDING CASE RECORDED
-                    </span>
-                  )}
-                </div>
+        {/* Navigation Tabs */}
+        <div className="flex border-b border-gray-100 bg-gray-50/50 px-6 pt-2">
+          <button
+            onClick={() => setActiveTab('details')}
+            className={`pb-3 pt-2 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'details'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Request Details
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`pb-3 pt-2 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'history'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            History & Comments
+          </button>
+        </div>
 
-                {/* Compact Applicant Info Grid */}
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
-                      <User className="w-4 h-4 text-blue-500" />
-                      Applicant Information
-                    </h3>
-                    {isEditing && (
-                      <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-100 italic flex items-center gap-1">
-                        <Info className="w-3 h-3" />
-                        Note: Changes will sync with the Residents Database
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    {isEditing ? (
+        <div className="p-6 overflow-y-auto flex-1 space-y-4">
+          {activeTab === 'details' && (
+            <>
+              {/* Status and Step */}
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(request.status)}`}>
+                    {request.status?.replace(/_/g, ' ').toUpperCase()}
+                  </span>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <span className="font-medium text-gray-700">{getTypeLabel(request.certificate_type)}</span>
+                    {currentStep && (
                       <>
-                        <div className="col-span-1">
-                          <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">First Name</p>
-                          <input
-                            type="text"
-                            name="first_name"
-                            value={editFormData.first_name}
-                            onChange={handleInputChange}
-                            placeholder="First Name"
-                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Middle Name</p>
-                          <input
-                            type="text"
-                            name="middle_name"
-                            value={editFormData.middle_name}
-                            onChange={handleInputChange}
-                            placeholder="Middle Name"
-                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Last Name</p>
-                          <input
-                            type="text"
-                            name="last_name"
-                            value={editFormData.last_name}
-                            onChange={handleInputChange}
-                            placeholder="Last Name"
-                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Suffix</p>
-                          <input
-                            type="text"
-                            name="suffix"
-                            value={editFormData.suffix}
-                            onChange={handleInputChange}
-                            placeholder="e.g. Jr., III"
-                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
-                          />
-                        </div>
+                        <span className="text-gray-300">•</span>
+                        <span className="text-blue-600 font-medium">{currentStep.name}</span>
                       </>
-                    ) : (
-                      <div className="col-span-2 md:col-span-2">
-                        <p className="text-xs text-gray-500 uppercase mb-0.5">Full Name</p>
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-gray-900 uppercase truncate text-base" title={request.applicant_name || request.full_name}>
-                            {request.applicant_name || request.full_name || 'N/A'}
-                          </p>
-                          {request.residents?.pending_case && (
-                            <div className="text-red-600" title="With Pending Case">
-                              <AlertTriangle className="w-4 h-4" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase mb-0.5">Contact</p>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="contact_number"
-                          value={editFormData.contact_number}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 font-medium mt-1"
-                        />
-                      ) : (
-                        <p className="font-medium text-gray-900 truncate">{request.contact_number || 'N/A'}</p>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase mb-0.5">Date of Birth</p>
-                      {isEditing ? (
-                        <input
-                          type="date"
-                          name="date_of_birth"
-                          value={editFormData.date_of_birth}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 font-medium mt-1"
-                        />
-                      ) : (
-                        <p className="font-medium text-gray-900">{request.date_of_birth || 'N/A'}</p>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase mb-0.5">Civil Status</p>
-                      {isEditing ? (
-                        <select
-                          name="civil_status"
-                          value={editFormData.civil_status}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 font-medium uppercase mt-1"
-                        >
-                          <option value="">SELECT...</option>
-                          <option value="SINGLE">SINGLE</option>
-                          <option value="MARRIED">MARRIED</option>
-                          <option value="WIDOWED">WIDOWED</option>
-                          <option value="SEPARATED">SEPARATED</option>
-                        </select>
-                      ) : (
-                        <p className="font-medium text-gray-900 uppercase">{request.civil_status || 'N/A'}</p>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase mb-0.5">Age / Sex</p>
-                      {isEditing ? (
-                        <div className="flex gap-2 mt-1">
-                          <input
-                            type="number"
-                            name="age"
-                            placeholder="Age"
-                            value={editFormData.age}
-                            readOnly
-                            title="Age is automatically calculated from Date of Birth"
-                            className="w-1/2 px-2 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 cursor-not-allowed"
-                          />
-                          <select
-                            name="sex"
-                            value={editFormData.sex}
-                            onChange={handleInputChange}
-                            className="w-1/2 px-2 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="">Sex</option>
-                            <option value="MALE">MALE</option>
-                            <option value="FEMALE">FEMALE</option>
-                          </select>
-                        </div>
-                      ) : (
-                        <p className="font-medium text-gray-900">{displayAge || '-'} / {request.sex || '-'}</p>
-                      )}
-                    </div>
-                    <div className="col-span-2 md:col-span-2">
-                      <p className="text-xs text-gray-500 uppercase mb-0.5">Address</p>
-                      {isEditing ? (
-                        <textarea
-                          name="address"
-                          value={editFormData.address}
-                          onChange={handleInputChange}
-                          rows={2}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 font-medium mt-1 uppercase resize-none"
-                        />
-                      ) : (
-                        <p className="font-medium text-gray-900 whitespace-pre-line leading-relaxed" title={request.address}>
-                          {request.address || 'N/A'}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Purpose & Timeline */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 flex flex-col">
-                    <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
-                      <FileCheck className="w-4 h-4 text-blue-500" />
-                      Purpose
-                    </h3>
-                    {isEditing ? (
-                      <textarea
-                        name="purpose"
-                        value={editFormData.purpose}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 font-medium text-sm mt-1 uppercase h-24"
-                      />
-                    ) : (
-                      <p className="text-sm text-gray-700 leading-relaxed font-medium mt-1 flex-1">
-                        {request.purpose || 'Not specified'}
-                      </p>
                     )}
                   </div>
-
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
-                      <History className="w-4 h-4 text-blue-500" />
-                      Timeline
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Submitted</span>
-                        <span className="font-medium">{formatDate(request.created_at)}</span>
-                      </div>
-                      {request.updated_at && request.updated_at !== request.created_at && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Updated</span>
-                          <span className="font-medium">{formatDate(request.updated_at)}</span>
-                        </div>
-                      )}
-                      {request.admin_comment && (
-                        <div className="mt-2 text-xs bg-orange-50 text-orange-800 p-2 rounded border border-orange-100 italic">
-                          <span className="font-bold not-italic">Admin Note:</span> {request.admin_comment}
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
-              </>
-            )}
-
-            {activeTab === 'history' && (
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 min-h-[400px]">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3 text-sm">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  Request History & Comments
-                </h3>
-
-                {Array.isArray(history) && history.length > 0 ? (
-                  <div className="space-y-4">
-                    {history.map((entry, index) => (
-                      <div key={index} className="flex gap-3 text-sm">
-                        <div className="flex-shrink-0 mt-0.5">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${entry.action === 'approve' ? 'bg-green-100 text-green-600' :
-                            entry.action === 'reject' ? 'bg-red-100 text-red-600' :
-                              entry.action === 'return' ? 'bg-orange-100 text-orange-600' :
-                                'bg-blue-100 text-blue-600'
-                            }`}>
-                            {entry.action === 'approve' ? <CheckCircle className="w-4 h-4" /> :
-                              entry.action === 'reject' ? <XCircle className="w-4 h-4" /> :
-                                entry.action === 'return' ? <RotateCcw className="w-4 h-4" /> :
-                                  <FileText className="w-4 h-4" />}
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start">
-                            <p className="font-medium text-gray-900">
-                              {entry.users
-                                ? `${entry.users.first_name || ''} ${entry.users.last_name || ''}`.trim() || entry.users.email
-                                : (entry.performed_by_name || entry.performed_by_email || 'System Log')}
-                            </p>
-                            <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
-                              {new Date(entry.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 mb-1">
-                            {entry.action === 'approve' ? 'Approved -' :
-                              entry.action === 'reject' ? 'Rejected -' :
-                                entry.action === 'return' ? 'Returned -' :
-                                  'Updated -'} {entry.step_name}
-                          </p>
-                          {(entry.comments || entry.comment) && (
-                            <div className="bg-white p-2 rounded border border-gray-200 text-gray-700 italic">
-                              "{entry.comments || entry.comment}"
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-gray-500 text-sm italic">
-                    No activity or comments recorded yet.
-                  </div>
+                {request.residents?.pending_case && (
+                  <span className="bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse flex items-center gap-1">
+                    <ShieldAlert className="w-3 h-3" />
+                    CRITICAL: PENDING CASE RECORDED
+                  </span>
                 )}
               </div>
-            )}
-          </div>
 
-          {/* Footer Actions */}
-          {canAct && ['pending', 'processing', 'staff_review', 'secretary_approval', 'captain_approval', 'returned'].includes(request.status) && (
-            <div className="border-t bg-gray-50 px-6 py-4 pb-6 shrink-0 mt-auto">
-              {request.residents?.pending_case && (
-                <div className="bg-red-600 p-4 rounded-xl shadow-lg border-2 border-red-400 text-white mb-6">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-white/20 p-2 rounded-lg">
-                      <ShieldAlert className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-1">Legal Hold Notification</p>
-                      <h4 className="text-lg font-black uppercase leading-tight">This applicant has a PENDING CASE</h4>
-                      <div className="mt-3 p-3 bg-black/20 rounded-lg border border-white/20">
-                        <p className="text-[10px] font-bold uppercase mb-1 opacity-70">Official Record History / Remarks:</p>
-                        <p className="text-sm font-semibold italic">"{request.residents.case_record_history || 'No detail remarks provided.'}"</p>
-                      </div>
+              {/* Compact Applicant Info Grid */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3 text-sm">
+                  <User className="w-4 h-4 text-blue-500" />
+                  Applicant Information
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="col-span-2 md:col-span-2">
+                    <p className="text-xs text-gray-500 uppercase mb-0.5">Full Name</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-gray-900 uppercase truncate text-base" title={request.applicant_name || request.full_name}>
+                        {request.applicant_name || request.full_name || 'N/A'}
+                      </p>
+                      {request.residents?.pending_case && (
+                        <div className="text-red-600" title="With Pending Case">
+                          <AlertTriangle className="w-4 h-4" />
+                        </div>
+                      )}
                     </div>
                   </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase mb-0.5">Contact</p>
+                    <p className="font-medium text-gray-900 truncate">{request.contact_number || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase mb-0.5">Age / Sex</p>
+                    <p className="font-medium text-gray-900">{request.age || '-'} / {request.sex || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase mb-0.5">Civil Status</p>
+                    <p className="font-medium text-gray-900 uppercase">{request.civil_status || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase mb-0.5">Date of Birth</p>
+                    <p className="font-medium text-gray-900">{request.date_of_birth || 'N/A'}</p>
+                  </div>
+                  <div className="col-span-2 md:col-span-2">
+                    <p className="text-xs text-gray-500 uppercase mb-0.5">Address</p>
+                    <p className="font-medium text-gray-900 truncate" title={request.address}>
+                      {request.address || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Purpose & Timeline */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 flex flex-col">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
+                    <FileCheck className="w-4 h-4 text-blue-500" />
+                    Purpose
+                  </h3>
+                  <p className="text-sm text-gray-700 leading-relaxed font-medium mt-1 flex-1">
+                    {request.purpose || 'Not specified'}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
+                    <History className="w-4 h-4 text-blue-500" />
+                    Timeline
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Submitted</span>
+                      <span className="font-medium">{formatDate(request.created_at)}</span>
+                    </div>
+                    {request.updated_at && request.updated_at !== request.created_at && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Updated</span>
+                        <span className="font-medium">{formatDate(request.updated_at)}</span>
+                      </div>
+                    )}
+                    {request.admin_comment && (
+                      <div className="mt-2 text-xs bg-orange-50 text-orange-800 p-2 rounded border border-orange-100 italic">
+                        <span className="font-bold not-italic">Admin Note:</span> {request.admin_comment}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+
+            </>
+          )}
+
+          {activeTab === 'history' && (
+            /* History / Activity Log */
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 min-h-[50vh]">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3 text-sm">
+                <Clock className="w-4 h-4 text-blue-500" />
+                Request History & Comments
+              </h3>
+
+              {Array.isArray(history) && history.length > 0 ? (
+                <div className="space-y-4">
+                  {history.map((entry, index) => (
+                    <div key={index} className="flex gap-3 text-sm">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${entry.action === 'approve' ? 'bg-green-100 text-green-600' :
+                          entry.action === 'reject' ? 'bg-red-100 text-red-600' :
+                            entry.action === 'return' ? 'bg-orange-100 text-orange-600' :
+                              'bg-blue-100 text-blue-600'
+                          }`}>
+                          {entry.action === 'approve' ? <CheckCircle className="w-4 h-4" /> :
+                            entry.action === 'reject' ? <XCircle className="w-4 h-4" /> :
+                              entry.action === 'return' ? <RotateCcw className="w-4 h-4" /> :
+                                <FileText className="w-4 h-4" />}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <p className="font-medium text-gray-900">
+                            {entry.users
+                              ? `${entry.users.first_name || ''} ${entry.users.last_name || ''}`.trim() || entry.users.email
+                              : (entry.performed_by_name || entry.performed_by_email || 'System Log')}
+                          </p>
+                          <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
+                            {new Date(entry.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mb-1">
+                          {entry.action === 'approve' ? 'Approved - ' :
+                            entry.action === 'reject' ? 'Rejected - ' :
+                              entry.action === 'return' ? 'Returned - ' :
+                                'Updated - '}
+                          {entry.step_name}
+                        </p>
+                        {(entry.comments || entry.comment) && (
+                          <div className="bg-white p-2 rounded border border-gray-200 text-gray-700 italic">
+                            "{entry.comments || entry.comment}"
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500 text-sm italic">
+                  No activity or comments recorded yet.
                 </div>
               )}
+            </div>
+          )}
 
-              {currentStep?.status === 'staff_review' ? (
+        </div>
+
+
+
+        {/* Footer Actions */}
+        {canAct && ['pending', 'processing', 'staff_review', 'secretary_approval', 'captain_approval', 'returned'].includes(request.status) && (
+          <div className="border-t bg-gray-50 px-6 py-8 pb-10 shrink-0">
+            {/* Legal Hold Notification - Always visible if pending case exists */}
+            {request.residents?.pending_case && (
+              <div className="bg-red-600 p-4 rounded-xl shadow-lg border-2 border-red-400 text-white mb-6">
+                <div className="flex items-start gap-4">
+                  <div className="bg-white/20 p-2 rounded-lg">
+                    <ShieldAlert className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-1">Legal Hold Notification</p>
+                    <h4 className="text-lg font-black uppercase leading-tight">This applicant has a PENDING CASE</h4>
+                    <div className="mt-3 p-3 bg-black/20 rounded-lg border border-white/20">
+                      <p className="text-[10px] font-bold uppercase mb-1 opacity-70">Official Record History / Remarks:</p>
+                      <p className="text-sm font-semibold italic">"{request.residents.case_record_history || 'No detail remarks provided.'}"</p>
+                    </div>
+                    <p className="mt-3 text-[10px] font-bold uppercase text-red-100 flex items-center gap-2">
+                      <Info className="w-3 h-3" />
+                      Please carefully evaluate if the applicant is eligible for this certificate based on the case details above.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Review Request Team - Verification step */}
+            {currentStep?.status === 'staff_review' ? (
+              <div className="space-y-4">
+                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-semibold">Review Task:</span> Verify that the request is valid and the resident is legitimate for <span className="font-semibold">{getTypeLabel(request.certificate_type)}</span>.
+                  </p>
+                </div>
                 <div className="flex gap-3 justify-end">
                   <button
                     onClick={() => onAction(request, 'reject')}
-                    disabled={isEditing}
-                    className={`px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-red-200'}`}
+                    className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 flex items-center gap-2"
                   >
                     <XCircle className="w-4 h-4" />
                     Not Legitimate
                   </button>
                   <button
                     onClick={() => onAction(request, 'approve')}
-                    disabled={isEditing}
-                    className={`px-4 py-2 bg-blue-600 text-white rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2"
                   >
                     <CheckCircle className="w-4 h-4" />
                     Verify & Forward
                   </button>
                 </div>
-              ) : (
-                <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={() => onAction(request, 'return')}
-                    disabled={isEditing}
-                    className={`px-4 py-2 bg-orange-100 text-orange-700 rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-orange-200'}`}
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    Send Back
-                  </button>
-                  <button
-                    onClick={() => onAction(request, 'reject')}
-                    disabled={isEditing}
-                    className={`px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-red-200'}`}
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Reject
-                  </button>
-                  <button
-                    onClick={() => onAction(request, 'approve')}
-                    disabled={isEditing}
-                    className={`px-4 py-2 bg-green-600 text-white rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}`}
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Approve
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            ) : (
+              /* Approval Steps - Secretary, Captain */
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => onAction(request, 'return')}
+                  className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg font-medium hover:bg-orange-200 flex items-center gap-2"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Send Back
+                </button>
+                <button
+                  onClick={() => onAction(request, 'reject')}
+                  className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 flex items-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Reject
+                </button>
+                <button
+                  onClick={() => onAction(request, 'approve')}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Approve
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
+  </div>
   );
 }
 
@@ -1519,6 +1123,30 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
               <p className="font-medium text-gray-900">{request.applicant_name || request.full_name}</p>
             </div>
 
+            {/* Previous Comments (if any) */}
+            {Array.isArray(history) && history.length > 0 && (
+              <div className="mb-4 max-h-40 overflow-y-auto bg-gray-50 rounded-lg p-3 border border-gray-100 text-xs">
+                <p className="font-semibold text-gray-500 mb-2 uppercase text-[10px] tracking-wider">Previous Activity</p>
+                <div className="space-y-3">
+                  {history.map((entry, idx) => (
+                    <div key={idx} className="border-l-2 border-gray-200 pl-2">
+                      <div className="flex justify-between items-center mb-0.5">
+                        <span className="font-medium text-gray-700">
+                          {entry.users
+                            ? `${entry.users.first_name || ''} ${entry.users.last_name || ''}`.trim()
+                            : (entry.performed_by_name || 'System Log')}
+                        </span>
+                        <span className="text-[10px] text-gray-400">
+                          {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      <p className="text-gray-500 truncate">{entry.action} - {entry.step_name}</p>
+                      {(entry.comments || entry.comment) && <p className="text-gray-600 italic mt-0.5">"{entry.comments || entry.comment}"</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
 
 

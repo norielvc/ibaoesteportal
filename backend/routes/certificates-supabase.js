@@ -177,7 +177,8 @@ router.get('/:id', async (req, res) => {
 router.post('/clearance', async (req, res) => {
   try {
     const {
-      fullName, age, sex, civilStatus, address, contactNumber,
+      fullName, first_name, middle_name, last_name, suffix,
+      age, sex, civilStatus, address, contactNumber,
       dateOfBirth, placeOfBirth, purpose, residentId
     } = req.body;
 
@@ -217,6 +218,10 @@ router.post('/clearance', async (req, res) => {
         reference_number: refNumber,
         certificate_type: 'barangay_clearance',
         full_name: fullName?.toUpperCase() || '',
+        first_name: first_name?.toUpperCase() || '',
+        middle_name: middle_name?.toUpperCase() || '',
+        last_name: last_name?.toUpperCase() || '',
+        suffix: suffix?.toUpperCase() || '',
         age: parseInt(age),
         sex: sex?.toUpperCase() || '',
         civil_status: civilStatus?.toUpperCase() || '',
@@ -329,7 +334,8 @@ router.post('/indigency', async (req, res) => {
     console.log('--- INDIGENCY REQUEST START ---');
     console.log('Body:', JSON.stringify(req.body, null, 2));
     const {
-      fullName, age, gender, civilStatus, address, contactNumber,
+      fullName, first_name, middle_name, last_name, suffix,
+      age, gender, civilStatus, address, contactNumber,
       dateOfBirth, placeOfBirth, purpose, residentId
     } = req.body;
 
@@ -369,6 +375,10 @@ router.post('/indigency', async (req, res) => {
         reference_number: refNumber,
         certificate_type: 'certificate_of_indigency',
         full_name: fullName?.toUpperCase() || '',
+        first_name: first_name?.toUpperCase() || '',
+        middle_name: middle_name?.toUpperCase() || '',
+        last_name: last_name?.toUpperCase() || '',
+        suffix: suffix?.toUpperCase() || '',
         age: parseInt(age) || null,
         sex: gender?.toUpperCase() || '',
         civil_status: civilStatus?.toUpperCase() || '',
@@ -477,7 +487,8 @@ router.post('/indigency', async (req, res) => {
 router.post('/residency', async (req, res) => {
   try {
     const {
-      fullName, age, sex, civilStatus, address, contactNumber,
+      fullName, first_name, middle_name, last_name, suffix,
+      age, sex, civilStatus, address, contactNumber,
       dateOfBirth, placeOfBirth, purpose, residentId
     } = req.body;
 
@@ -517,6 +528,10 @@ router.post('/residency', async (req, res) => {
         reference_number: refNumber,
         certificate_type: 'barangay_residency',
         full_name: fullName?.toUpperCase() || '',
+        first_name: first_name?.toUpperCase() || '',
+        middle_name: middle_name?.toUpperCase() || '',
+        last_name: last_name?.toUpperCase() || '',
+        suffix: suffix?.toUpperCase() || '',
         age: parseInt(age),
         sex: sex?.toUpperCase() || '',
         civil_status: civilStatus?.toUpperCase() || '',
@@ -698,6 +713,72 @@ router.put('/:id/status', async (req, res) => {
     }
   } catch (error) {
     console.error('Error updating status:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Update certificate details
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body };
+
+    // Remove protected fields
+    delete updateData.id;
+    delete updateData.created_at;
+    delete updateData.reference_number;
+    delete updateData.residents; // Don't try to update joined data
+
+    // Convert strings to uppercase if they exist in updateData
+    const uppercaseFields = ['full_name', 'first_name', 'middle_name', 'last_name', 'suffix', 'sex', 'civil_status', 'address', 'place_of_birth', 'purpose'];
+    uppercaseFields.forEach(field => {
+      if (updateData[field] && typeof updateData[field] === 'string') {
+        updateData[field] = updateData[field].toUpperCase();
+      }
+    });
+
+    updateData.updated_at = new Date().toISOString();
+
+    const { data: updatedCert, error: certError } = await supabase
+      .from('certificate_requests')
+      .update(updateData)
+      .eq('id', id)
+      .select('*, residents(*)')
+      .single();
+
+    if (certError) throw certError;
+
+    // Synchronize with residents table if linked
+    if (updatedCert.resident_id) {
+      const residentUpdates = {
+        first_name: updatedCert.first_name,
+        middle_name: updatedCert.middle_name,
+        last_name: updatedCert.last_name,
+        suffix: updatedCert.suffix,
+        age: updatedCert.age,
+        gender: updatedCert.sex, // Map sex to gender
+        civil_status: updatedCert.civil_status,
+        date_of_birth: updatedCert.date_of_birth,
+        place_of_birth: updatedCert.place_of_birth,
+        residential_address: updatedCert.address, // Map address to residential_address
+        contact_number: updatedCert.contact_number,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: residentError } = await supabase
+        .from('residents')
+        .update(residentUpdates)
+        .eq('id', updatedCert.resident_id);
+
+      if (residentError) {
+        console.error('Error synchronizing resident data:', residentError);
+        // We don't throw here to ensure the cert update is still considered successful
+      }
+    }
+
+    res.json({ success: true, message: 'Certificate and resident updated successfully', data: updatedCert });
+  } catch (error) {
+    console.error('Error updating certificate:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

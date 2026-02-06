@@ -254,22 +254,9 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
     if (action === 'approve') {
       newStatus = 'completed';
 
-      // DEBUG: Log workflow step transition
-      console.log('🔄 WORKFLOW TRANSITION DEBUG:');
-      console.log('   Request ID:', assignment.request_id);
-      console.log('   Request Type:', assignment.request_type);
-      console.log('   Current Step ID:', assignment.step_id);
-      console.log('   Current Step Name:', assignment.step_name);
-      console.log('   Steps found:', steps.length);
-      console.log('   Steps:', steps.map(s => ({ id: s.id, name: s.name, status: s.status })));
-      console.log('   Current Step Index:', currentStepIndex);
-
       if (currentStepIndex !== -1 && currentStepIndex < steps.length - 1) {
         // Move to NEXT defined step
         nextStep = steps[currentStepIndex + 1];
-
-        console.log('   ✅ Next Step:', nextStep.name, '(ID:', nextStep.id, ')');
-        console.log('   Next Step Assigned Users:', nextStep.assignedUsers);
 
         // Map step status to VALID database request status
         // We now support expanded statuses: staff_review, secretary_approval, captain_approval, oic_review
@@ -345,7 +332,10 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       })
       .eq('id', assignment.request_id);
 
-    if (requestUpdateError) throw requestUpdateError;
+    if (requestUpdateError) {
+      console.error(`❌ DATABASE CONSTRAINT ERROR: Failed to update certificate_requests status to "${newRequestStatus}":`, requestUpdateError);
+      throw requestUpdateError;
+    }
 
     // Create next step assignments if approved or returned
     if ((action === 'approve' || action === 'return') && nextStep) {
