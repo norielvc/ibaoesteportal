@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+// Build Trigger: 2026-02-07 17:09
 import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 // API Configuration
