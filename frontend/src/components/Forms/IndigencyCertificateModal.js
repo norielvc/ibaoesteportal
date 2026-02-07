@@ -255,151 +255,199 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
         <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-green-600 to-green-800 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-lg"><FileText className="w-6 h-6 text-white" /></div>
+          <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-8 py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden">
+            {/* Decorative background element */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="bg-white/15 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-inner">
+                <FileText className="w-7 h-7 text-white" />
+              </div>
               <div>
-                <h2 className="text-xl font-bold text-white">New Certificate of Indigency Application</h2>
-                <p className="text-green-200 text-sm">Reference: {referenceNumber || 'Will be assigned after submission'}</p>
+                <h2 className="text-2xl font-bold text-white tracking-tight">Certificate of Indigency</h2>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <p className="text-green-100/80 text-sm font-medium">Community Support Portal • {referenceNumber || 'New Request'}</p>
+                </div>
               </div>
             </div>
-            <button onClick={onClose} className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded-lg"><X className="w-6 h-6" /></button>
+            <button
+              onClick={onClose}
+              className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group"
+            >
+              <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+            </button>
           </div>
 
           {notification && <div className="px-6 pt-4"><Notification type={notification.type} title={notification.title} message={notification.message} onClose={() => setNotification(null)} /></div>}
 
           <div className="flex-1 overflow-y-auto">
             {!showPreview ? (
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-green-100 p-2 rounded-lg shrink-0"><Info className="w-5 h-5 text-green-600" /></div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-black text-green-700 uppercase tracking-widest">Public Notice</p>
-                      <p className="text-sm text-green-800 leading-relaxed font-medium">
-                        Only residents registered in the <strong>latest census</strong> can request online. If you are not in the census, please coordinate with the Barangay Office for record updating.
+              <form onSubmit={handleSubmit} className="p-8 space-y-10">
+                {/* Status/Info Integrated Section */}
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6 shadow-sm relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-200/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
+                  <div className="flex items-start gap-4 relative z-10">
+                    <div className="bg-emerald-100 p-3 rounded-xl border border-emerald-200 shadow-sm"><Info className="w-6 h-6 text-emerald-600" /></div>
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-bold text-emerald-900 uppercase tracking-widest flex items-center gap-2">
+                        Official Requirement Notice
+                      </h4>
+                      <p className="text-emerald-800/90 leading-relaxed text-sm">
+                        Indigency certificates are strictly for residents requiring <strong>social or financial assistance</strong>.
+                        Your record must be verified against the <span className="font-bold underline decoration-emerald-300/50">latest socioeconomic census</span> for online processing.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 flex items-center gap-2">
-                    <span className="bg-green-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
-                    Personal Information
-                  </h3>
+                <div className="space-y-8">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#112e1f] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">1</div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">Personal Information</h3>
+                        <p className="text-sm text-gray-500 font-medium">Verify your registered details</p>
+                      </div>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 flex justify-between items-center">
-                      <span>Full Name <span className="text-red-500">*</span></span>
-                      <button
-                        type="button"
-                        onClick={() => setIsResidentModalOpen(true)}
-                        className="text-green-600 hover:text-green-700 text-xs font-semibold flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md transition-colors"
-                      >
-                        <Search className="w-3 h-3" /> Search Database
-                      </button>
-                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsResidentModalOpen(true)}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-xl text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-md group"
+                    >
+                      <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      Access Resident Directory
+                    </button>
+                  </div>
+
+                  <div className="relative group">
+                    <div className={`absolute inset-0 bg-emerald-500/5 rounded-2xl blur-xl opacity-0 ${formData.fullName ? 'opacity-100' : ''} transition-opacity duration-500`}></div>
                     <div className="relative">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Resident Full Name</label>
                       <input
                         type="text"
                         name="fullName"
                         value={formData.fullName}
                         readOnly
                         onClick={() => setIsResidentModalOpen(true)}
-                        placeholder="CLICK HERE TO SEARCH RESIDENT..."
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 uppercase pr-10 cursor-pointer bg-gray-50 hover:bg-white transition-colors font-bold text-green-700"
+                        placeholder="TAP HERE TO SELECT FROM RESIDENT DIRECTORY..."
+                        className={`w-full px-6 py-5 bg-white border-2 ${formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic'} rounded-2xl transition-all duration-300 font-extrabold text-lg cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`}
                       />
-                      <Search
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 w-5 h-5 cursor-pointer"
-                        onClick={() => setIsResidentModalOpen(true)}
-                      />
+                      {formData.fullName && (
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                          <CheckCircle className="w-6 h-6 text-emerald-500" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Age <span className="text-red-500">*</span></label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
                       <input type="number" name="age" value={formData.age} readOnly disabled
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 font-semibold" />
+                        className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Gender <span className="text-red-500">*</span></label>
-                      <select name="gender" value={formData.gender} disabled
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 uppercase font-semibold appearance-none">
-                        <option value="">Select...</option>
-                        <option value="MALE">MALE</option>
-                        <option value="FEMALE">FEMALE</option>
-                      </select>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex</label>
+                      <input type="text" value={formData.gender || 'N/A'} readOnly disabled
+                        className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Civil Status <span className="text-red-500">*</span></label>
-                      <select name="civilStatus" value={formData.civilStatus} disabled
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 uppercase font-semibold appearance-none">
-                        <option value="">Select...</option>
-                        <option value="SINGLE">SINGLE</option>
-                        <option value="MARRIED">MARRIED</option>
-                        <option value="WIDOWED">WIDOWED</option>
-                        <option value="SEPARATED">SEPARATED</option>
-                      </select>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Civil Status</label>
+                      <input type="text" value={formData.civilStatus || 'N/A'} readOnly disabled
+                        className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth <span className="text-red-500">*</span></label>
-                      <input type="date" name="dateOfBirth" value={formData.dateOfBirth} readOnly disabled
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 font-semibold" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Date of Birth</label>
+                      <input type="text" value={formData.dateOfBirth || 'N/A'} readOnly disabled
+                        className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Place of Birth <span className="text-red-500">*</span></label>
-                      <input type="text" name="placeOfBirth" value={formData.placeOfBirth} readOnly disabled
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 uppercase font-semibold" />
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Place of Birth</label>
+                      <input type="text" value={formData.placeOfBirth || 'N/A'} readOnly disabled
+                        className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Residential Address <span className="text-red-500">*</span></label>
-                    <input type="text" name="address" value={formData.address} readOnly disabled
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 uppercase font-semibold" />
+                  <div className="space-y-2 pb-6">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Registered Residential Address</label>
+                    <input type="text" value={formData.address || 'N/A'} readOnly disabled
+                      className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Purpose(s) <span className="text-red-500">*</span></label>
-                    <textarea name="purpose" value={formData.purpose} onChange={handleInputChange} rows={3}
-                      placeholder="e.g., Medical Assistance, Educational Assistance, Financial Assistance, etc."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 resize-none uppercase" />
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-5 border border-gray-200">
-                  <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <span className="bg-gray-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span>
-                    Administrative Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="bg-white rounded-lg p-3 border">
-                      <span className="text-gray-500 text-xs uppercase">Punong Barangay</span>
-                      <p className="font-semibold text-gray-900 mt-1">{officials.chairman}</p>
+                  <div className="pt-6 border-t border-gray-100">
+                    <div className="flex items-center gap-3 mb-8">
+                      <div className="w-10 h-10 bg-[#2d5a3d] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">2</div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">Application Intent</h3>
+                        <p className="text-sm text-gray-500 font-medium tracking-wide">Please specify why you are requesting this certificate</p>
+                      </div>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border">
-                      <span className="text-gray-500 text-xs uppercase">Date of Issue</span>
-                      <p className="font-semibold text-gray-900 mt-1">{currentDate}</p>
+
+                    <div className="space-y-2 relative">
+                      <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Request Purpose <span className="text-red-500">*</span></label>
+                      <textarea
+                        name="purpose"
+                        value={formData.purpose}
+                        onChange={handleInputChange}
+                        rows={3}
+                        placeholder="e.g. Educational Assistance, Medical Subsidy, Burial Assistance, Legal Aid..."
+                        className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none uppercase font-extrabold text-gray-800 placeholder:text-gray-300 placeholder:italic shadow-sm"
+                      />
                     </div>
                   </div>
-                </div>
 
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-5 border border-green-200">
-                  <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <span className="bg-green-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">3</span>
-                    Contact for Pickup Notification
-                  </h3>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number <span className="text-red-500">*</span></label>
-                    <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange}
-                      placeholder="e.g., 09XX XXX XXXX"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-white" />
-                    <p className="text-xs text-green-700 mt-1">We will send a message when your certificate is ready for pickup.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-100">
+                    {/* Admin Column */}
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gray-100 text-gray-400 rounded-lg flex items-center justify-center font-bold text-xs">A</div>
+                        <h4 className="font-bold text-gray-400 uppercase tracking-widest text-[10px]">Processing Log</h4>
+                      </div>
+                      <div className="space-y-4 bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Signatory Authority</span>
+                          <p className="font-bold text-gray-700 text-sm italic">{officials.chairman}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Filing Date</span>
+                          <p className="font-bold text-gray-700 text-sm">{currentDate}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contact Column */}
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center font-bold text-xs border border-emerald-200">B</div>
+                        <h4 className="font-bold text-emerald-900 uppercase tracking-widest text-[10px]">Digital Alerts</h4>
+                      </div>
+                      <div className="space-y-4 bg-emerald-50/30 p-5 rounded-2xl border border-emerald-100/50">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-bold text-[#2d5a3d] uppercase tracking-widest ml-1">SMS Contact Number <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <input
+                              type="tel"
+                              name="contactNumber"
+                              value={formData.contactNumber}
+                              onChange={handleInputChange}
+                              placeholder="09XX XXX XXXX"
+                              className="w-full px-4 py-3 bg-white border-2 border-emerald-100 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none font-black text-emerald-900 transition-all shadow-sm"
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-1">
+                              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce"></div>
+                              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                            </div>
+                          </div>
+                          <p className="text-[9px] text-emerald-700/60 font-medium leading-tight">We will send an instant SMS notification for record pickup.</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </form>
@@ -408,19 +456,21 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
             )}
           </div>
 
-          <div className="border-t bg-gray-50 px-6 py-4 sm:py-5 flex flex-col sm:flex-row gap-3 justify-end pb-10 sm:pb-5">
-            {!showPreview && (
-              <button type="submit" onClick={handleSubmit}
-                className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg">
-                <Send className="w-5 h-5" />Submit Application
-              </button>
-            )}
-            {showPreview && (
-              <button type="button" onClick={() => setShowPreview(false)}
-                className="px-6 py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-center gap-2">
-                <Eye className="w-5 h-5" />Back to Form
-              </button>
-            )}
+          <div className="border-t bg-gray-50/80 backdrop-blur-md px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print pb-12 sm:pb-6">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:block">Please check all entries before final submission</p>
+
+            <div className="flex gap-3 w-full sm:w-auto">
+              {!showPreview && (
+                <button
+                  type="submit"
+                  onClick={handleSubmit}
+                  className="flex-1 sm:flex-none px-8 py-4 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                  Submit Application
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -433,16 +483,22 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
 
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
               {/* Popup Header */}
-              <div className="bg-gradient-to-r from-green-600 to-green-800 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-white/20 p-2 rounded-lg"><FileText className="w-6 h-6 text-white" /></div>
+              <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-8 py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="bg-white/15 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-inner">
+                    <FileText className="w-7 h-7 text-white" />
+                  </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Review Your Application</h2>
-                    <p className="text-green-200 text-sm">Please double-check all information before proceeding</p>
+                    <h2 className="text-2xl font-bold text-white tracking-tight">Review Application</h2>
+                    <p className="text-green-100/80 text-sm font-medium">Verify your final document preview below</p>
                   </div>
                 </div>
-                <button onClick={() => setShowConfirmationPopup(false)} className="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded-lg">
-                  <X className="w-6 h-6" />
+                <button
+                  onClick={() => setShowConfirmationPopup(false)}
+                  className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group"
+                >
+                  <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
                 </button>
               </div>
 
@@ -460,32 +516,36 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
               </div>
 
               {/* Popup Actions */}
-              <div className="border-t bg-white px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end pb-10 sm:pb-4">
-                <button
-                  type="button"
-                  onClick={handleCustomizeForm}
-                  disabled={isSubmitting}
-                  className="px-6 py-2.5 border border-green-300 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-medium flex items-center justify-center gap-2 shadow-sm disabled:opacity-50">
-                  <Eye className="w-5 h-5" />
-                  Edit Information
-                </button>
-                <button
-                  type="button"
-                  onClick={handleProceedSubmission}
-                  disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg disabled:opacity-75 disabled:cursor-not-allowed">
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-5 h-5" />
-                      Proceed with Submission
-                    </>
-                  )}
-                </button>
+              <div className="border-t bg-gray-50/80 backdrop-blur-md px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden sm:block">Please check all entries before final submission</p>
+
+                <div className="flex gap-3 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleCustomizeForm}
+                    disabled={isSubmitting}
+                    className="px-8 py-3.5 border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d]/5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all outline-none disabled:opacity-50">
+                    <Eye className="w-5 h-5" />
+                    Go Back & Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleProceedSubmission}
+                    disabled={isSubmitting}
+                    className="px-8 py-3.5 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-extrabold flex items-center justify-center gap-3 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-0.5 transition-all disabled:opacity-75">
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        Confirm & Submit
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -500,46 +560,41 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
 
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
               {/* Success Header */}
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-center">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle className="w-10 h-10 text-white" />
+              <div className="bg-gradient-to-r from-[#112e1f] to-[#214431] px-8 py-10 text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                <div className="w-20 h-20 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
+                  <CheckCircle className="w-12 h-12 text-emerald-400 animate-bounce" />
                 </div>
-                <h2 className="text-xl font-bold text-white">Application Submitted!</h2>
-                <p className="text-green-100 text-sm">Your request has been processed successfully</p>
+                <h2 className="text-2xl font-black text-white uppercase tracking-tight">Filing Complete!</h2>
+                <p className="text-green-100/70 text-sm font-medium">Your request has been successfully queued</p>
               </div>
 
               {/* Success Content */}
               <div className="p-6 text-center">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm font-medium text-green-800 mb-2">Your Reference Number:</p>
-                  <p className="text-2xl font-bold text-green-900 font-mono tracking-wider">
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6 mb-6 shadow-inner relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-200/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-xl"></div>
+                  <p className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em] mb-2">Reference Identifier</p>
+                  <p className="text-3xl font-black text-[#112e1f] font-mono tracking-tighter">
                     {submittedReferenceNumber}
                   </p>
-                  <p className="text-xs text-green-600 mt-2">Please keep this reference number safe</p>
+                  <p className="text-[10px] text-emerald-600/60 mt-2 font-bold italic">Secure digital copy generated</p>
                 </div>
 
                 <div className="space-y-4 text-left">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                      <Info className="w-4 h-4" />
-                      Important Instructions:
+                  <div className="bg-[#112e1f]/5 border border-[#112e1f]/10 rounded-2xl p-5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-1 h-full bg-emerald-500/20"></div>
+                    <h4 className="font-bold text-[#112e1f] mb-3 flex items-center gap-2 text-sm uppercase tracking-wider">
+                      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                      Next Steps
                     </h4>
-                    <ul className="text-sm text-blue-800 space-y-2">
-                      <li className="flex items-start gap-2">
-                        <span className="text-blue-500 mt-1">•</span>
-                        <span>Our Barangay staff will contact you via SMS regarding your request status</span>
+                    <ul className="text-xs text-gray-600 space-y-3 font-medium">
+                      <li className="flex items-start gap-3">
+                        <div className="w-5 h-5 bg-white rounded-md flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Clock className="w-3 h-3 text-[#112e1f]" /></div>
+                        <span>Our team will verify your eligibility against the community census records.</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-blue-500 mt-1">•</span>
-                        <span>Please ensure your mobile number <strong>({formData.contactNumber})</strong> is correct and active</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-blue-500 mt-1">•</span>
-                        <span>Processing time is typically 1-3 business days</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-blue-500 mt-1">•</span>
-                        <span>Bring a valid ID when picking up your certificate</span>
+                      <li className="flex items-start gap-3">
+                        <div className="w-5 h-5 bg-white rounded-md flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Send className="w-3 h-3 text-[#112e1f]" /></div>
+                        <span>An <strong>SMS alert</strong> will be sent to your mobile device once verified.</span>
                       </li>
                     </ul>
                   </div>
@@ -547,16 +602,16 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
               </div>
 
               {/* Success Actions */}
-              <div className="border-t bg-gray-50 px-6 py-4 pb-10 sm:pb-4">
+              <div className="p-6 pt-0 no-print">
                 <button
                   onClick={() => {
                     setShowSuccessModal(false);
                     resetForm();
                     onClose();
                   }}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 shadow-lg">
-                  <CheckCircle className="w-5 h-5" />
-                  Got it, Thanks!
+                  className="w-full bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:shadow-xl hover:shadow-emerald-900/20 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-3 group">
+                  Close Dashboard
+                  <CheckCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 </button>
               </div>
             </div>

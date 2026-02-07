@@ -3,7 +3,8 @@ import { useRouter } from 'next/router';
 import {
   Menu, X, ChevronRight, ChevronLeft, Plus, Send, Phone, MapPin, Mail,
   Clock, Sun, Moon, Cloud, CloudRain, Users, FileText, Award, Building2, Heart, Baby,
-  AlertTriangle, Shield, Home, Calendar, TrendingUp, CheckCircle, GraduationCap, User
+  AlertTriangle, Shield, Home, Calendar, TrendingUp, CheckCircle, GraduationCap, User,
+  Store, Briefcase, Stethoscope, Fingerprint, UserPlus, Flower2
 } from 'lucide-react';
 import BarangayClearanceModal from '@/components/Forms/BarangayClearanceModal';
 import IndigencyCertificateModal from '@/components/Forms/IndigencyCertificateModal';
@@ -28,6 +29,7 @@ export default function BarangayPortal() {
   const [showResidencyModal, setShowResidencyModal] = useState(false);
   const [showBusinessPermitModal, setShowBusinessPermitModal] = useState(false);
   const [showEducationalAssistanceModal, setShowEducationalAssistanceModal] = useState(false);
+  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
   const [currentFormSlide, setCurrentFormSlide] = useState(0);
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', message: ''
@@ -324,13 +326,15 @@ export default function BarangayPortal() {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-slide for news carousel
+  // Hero news carousel auto-slide removed as per user request
+  /*
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % newsItems.length);
     }, 5000);
     return () => clearInterval(interval);
   }, [newsItems.length]);
+  */
 
   // State for facility image slides
   const [facilityImageSlides, setFacilityImageSlides] = useState({});
@@ -344,15 +348,18 @@ export default function BarangayPortal() {
     setFacilityImageSlides(initial);
   }, [facilities]);
 
-  // Auto-slide for forms carousel
+  // Forms carousel auto-slide removed as per user request
+  /*
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentFormSlide((prev) => (prev + 1) % 4); // 4 forms total
-    }, 6000); // 6 seconds per form
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
+  */
 
-  // Auto-slide for facility images with facility transition
+  // Facilities auto-transition removed as per user request
+  /*
   useEffect(() => {
     const interval = setInterval(() => {
       setFacilityImageSlides(prev => {
@@ -384,6 +391,7 @@ export default function BarangayPortal() {
     }, 4000);
     return () => clearInterval(interval);
   }, [facilities]);
+  */
 
   // Intersection Observer for scroll animations
   useEffect(() => {
@@ -437,7 +445,7 @@ export default function BarangayPortal() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Large Portal Header with Date/Time and Weather */}
-      <div className="bg-gradient-to-r from-blue-800 via-blue-700 to-green-700 py-4">
+      <div className="bg-gradient-to-r from-[#112117] via-[#112e1f] to-[#004b3a] py-4">
         <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-8">
           {/* Left Side - Logo and Title */}
           <div className="flex items-center gap-4 md:gap-6">
@@ -446,7 +454,7 @@ export default function BarangayPortal() {
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg">
                 IBA O' ESTE PORTAL
               </h1>
-              <p className="text-lg md:text-xl text-blue-100 font-medium mt-1">
+              <p className="text-lg md:text-xl text-green-100 font-medium mt-1">
                 Calumpit, Bulacan
               </p>
             </div>
@@ -472,30 +480,30 @@ export default function BarangayPortal() {
           <div className="flex justify-end items-center h-12 gap-8">
             {/* Desktop Navigation - Right Side */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#forms" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+              <a href="#forms" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
                 Barangay Forms
               </a>
-              <a href="#educational-assistance" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+              <a href="#educational-assistance" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
                 Educational Assistance
               </a>
-              <a href="#senior-citizen-assistance" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+              <a href="#senior-citizen-assistance" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
                 Senior Citizen Services
               </a>
-              <a href="#officials" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+              <a href="#officials" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
                 Barangay Officials
               </a>
-              <a href="#directory" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+              <a href="#directory" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
                 Facilities
               </a>
-              <a href="#news" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+              <a href="#news" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
                 News & Updates
               </a>
-              <a href="#contact" className="text-gray-700 hover:text-blue-600 font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-blue-600">
+              <a href="#contact" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
                 Contact Us
               </a>
               <button
                 onClick={() => router.push('/login')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold transition-all shadow-md"
+                className="bg-[#2d5a3d] hover:bg-[#112e1f] text-white px-5 py-2 rounded-lg font-semibold transition-all shadow-md"
               >
                 Login
               </button>
@@ -514,30 +522,30 @@ export default function BarangayPortal() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200 py-4 px-4 space-y-3">
-            <a href="#forms" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+            <a href="#forms" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               Barangay Forms
             </a>
-            <a href="#educational-assistance" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+            <a href="#educational-assistance" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               Educational Assistance
             </a>
-            <a href="#senior-citizen-assistance" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+            <a href="#senior-citizen-assistance" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               Senior Citizen Services
             </a>
-            <a href="#officials" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+            <a href="#officials" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               Barangay Officials
             </a>
-            <a href="#directory" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+            <a href="#directory" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               Facilities
             </a>
-            <a href="#news" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+            <a href="#news" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               News & Updates
             </a>
-            <a href="#contact" className="block py-2 text-gray-700 hover:text-blue-600 font-medium">
+            <a href="#contact" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               Contact Us
             </a>
             <button
               onClick={() => router.push('/login')}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className="w-full bg-[#2d5a3d] hover:bg-[#112e1f] text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
               Login
             </button>
@@ -546,7 +554,7 @@ export default function BarangayPortal() {
       </nav>
 
       {/* Hero Section with News Carousel */}
-      <section id="news" className="relative h-[600px] md:h-[700px] overflow-hidden animate-on-scroll">
+      <section id="news" className="relative h-[650px] md:h-[800px] overflow-hidden animate-on-scroll">
         {newsItems.map((item, index) => (
           <div
             key={index}
@@ -557,16 +565,16 @@ export default function BarangayPortal() {
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url(${item.image})` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/60 to-blue-800/40" />
-            <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#112117]/80 to-[#112e1f]/60" />
+            <div className="relative h-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
               <div className="max-w-2xl text-white">
-                <span className="inline-block bg-yellow-500 text-blue-900 px-3 py-1 rounded-full text-sm font-semibold mb-4">
+                <span className="inline-block bg-[#648a6a] text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   {item.date}
                 </span>
                 <h2 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">{item.title}</h2>
                 <p className="text-lg md:text-xl text-gray-200 mb-6">{item.description}</p>
-                <button className="bg-white text-blue-900 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 flex items-center gap-2 shadow-lg">
+                <button className="bg-[#efefef] text-[#112117] px-6 py-3 rounded-lg font-semibold hover:bg-white transition-all transform hover:scale-105 flex items-center gap-2 shadow-lg">
                   Read More <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
@@ -618,7 +626,7 @@ export default function BarangayPortal() {
         />
 
         {/* Light Overlay for Text Readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/40 via-blue-900/30 to-blue-900/50"></div>
+
 
         {/* Additional Decorative Overlays - Responsive */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -626,11 +634,11 @@ export default function BarangayPortal() {
           <div className="absolute -bottom-20 md:-bottom-40 -left-20 md:-left-40 w-40 h-40 md:w-80 md:h-80 bg-white/10 rounded-full opacity-50 blur-3xl"></div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Section Header */}
           <div className="text-center mb-16">
             {/* Enhanced Online Services Badge */}
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-blue-600/90 backdrop-blur-sm border border-blue-500/50 text-white rounded-full text-sm font-semibold mb-6 shadow-lg">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-[#2d5a3d]/90 backdrop-blur-sm border border-[#4b6c56]/50 text-white rounded-full text-sm font-semibold mb-6 shadow-lg">
               <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-full">
                 <FileText className="w-4 h-4 text-white" />
               </div>
@@ -641,7 +649,7 @@ export default function BarangayPortal() {
               </div>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-800 drop-shadow-2xl mb-4">
-              Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800 drop-shadow-lg">Forms</span>
+              Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2d5a3d] to-[#112117] drop-shadow-lg">Forms</span>
             </h2>
             <p className="text-gray-700 drop-shadow-lg max-w-2xl mx-auto text-lg font-medium">
               Request official documents and certificates online. Fast, easy, and convenient.
@@ -683,6 +691,54 @@ export default function BarangayPortal() {
                   color: 'purple',
                   features: ['New Business', 'Renewal', 'Transfer'],
                   onClick: () => setShowBusinessPermitModal(true)
+                },
+                {
+                  title: 'Business Closure',
+                  description: 'Official notice to cease business operations within the barangay.',
+                  icon: Briefcase,
+                  color: 'blue',
+                  features: ['Liquidation', 'Permit Exit', 'Tax Clearance'],
+                  onClick: () => setShowComingSoonModal(true)
+                },
+                {
+                  title: 'Co-habitation',
+                  description: 'Certification for couples living together without formal marriage.',
+                  icon: Heart,
+                  color: 'green',
+                  features: ['Live-in', 'Relationship', 'Proof'],
+                  onClick: () => setShowComingSoonModal(true)
+                },
+                {
+                  title: 'Medico-legal',
+                  description: 'Official document for cases requiring medical and legal coordination.',
+                  icon: Stethoscope,
+                  color: 'orange',
+                  features: ['Accident', 'Legal Case', 'Medical Report'],
+                  onClick: () => setShowComingSoonModal(true)
+                },
+                {
+                  title: 'Certification of Same Person',
+                  description: 'Certification that differences in name records refer to the same individual.',
+                  icon: Fingerprint,
+                  color: 'purple',
+                  features: ['ID Match', 'Affidavit', 'Verification'],
+                  onClick: () => setShowComingSoonModal(true)
+                },
+                {
+                  title: 'Guardianship',
+                  description: 'Legal certification for designated guardians of minors or dependents.',
+                  icon: UserPlus,
+                  color: 'blue',
+                  features: ['Legal Guardian', 'Minor Support', 'Custody'],
+                  onClick: () => setShowComingSoonModal(true)
+                },
+                {
+                  title: 'Natural Death',
+                  description: 'Official certification for natural death recording and burial requirements.',
+                  icon: Flower2,
+                  color: 'green',
+                  features: ['Certified', 'Family Record', 'Cemetery'],
+                  onClick: () => setShowComingSoonModal(true)
                 }
               ];
 
@@ -730,59 +786,87 @@ export default function BarangayPortal() {
               };
 
               return (
-                <div className="relative overflow-hidden">
-                  {/* Container with Background - Added height and better proportions */}
-                  <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 relative max-w-lg mx-auto overflow-hidden h-[500px] flex items-center">
+                <div className="relative">
+                  {/* Container with Background - Adjusted for 3 items */}
+                  <div className="relative max-w-[1400px] mx-auto overflow-hidden">
                     <div
-                      className="flex transition-transform duration-500 ease-in-out w-full"
-                      style={{ transform: `translateX(-${currentFormSlide * 100}%)` }}
+                      className="flex transition-transform duration-500 ease-in-out"
+                      style={{
+                        transform: `translateX(-${currentFormSlide * (100 / forms.length)}%)`,
+                        width: `${(forms.length / 3) * 100}%`
+                      }}
                     >
                       {forms.map((form, formIndex) => {
                         const Icon = form.icon;
                         const colors = colorClasses[form.color];
+                        const isPrimary = formIndex % 2 === 0;
+
+                        // Theme definitions for better blending
+                        const theme = isPrimary ? {
+                          bg: '#112e1f',              // Dark Forest
+                          title: 'text-white',
+                          desc: 'text-green-100/80',
+                          iconBg: 'from-emerald-500 to-green-600',
+                          badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                          button: 'from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600',
+                          buttonShadow: 'shadow-emerald-900/40',
+                          countBg: 'bg-emerald-400 text-[#112e1f]'
+                        } : {
+                          bg: '#d1e0d3',              // Sage
+                          title: 'text-[#112e1f]',
+                          desc: 'text-[#2d5a3d]',
+                          iconBg: 'from-[#2d5a3d] to-[#112e1f]',
+                          badge: 'bg-[#2d5a3d]/10 text-[#2d5a3d] border-[#2d5a3d]/20',
+                          button: 'from-[#2d5a3d] to-[#112e1f] hover:from-[#3a6d4b] hover:to-[#1a3826]',
+                          buttonShadow: 'shadow-[#112e1f]/20',
+                          countBg: 'bg-[#112e1f] text-white'
+                        };
 
                         return (
-                          <div key={formIndex} className="w-full flex-shrink-0 flex items-center justify-center">
-                            <div className="group relative bg-transparent rounded-3xl p-10 transition-all duration-500 overflow-hidden w-full max-w-md">
-                              {/* Gradient Overlay on Hover */}
-                              <div className={`absolute inset-0 bg-gradient-to-br ${colors.overlay} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl`}></div>
+                          <div key={formIndex} className="w-full flex-shrink-0 flex items-center justify-center p-4" style={{ width: `${100 / forms.length}%` }}>
+                            <div
+                              className="group relative backdrop-blur-sm rounded-3xl p-8 transition-all duration-500 overflow-hidden w-full border border-white/20 shadow-xl hover:shadow-2xl"
+                              style={{ backgroundColor: theme.bg }}
+                            >
+                              {/* Integrated Gradient Glow */}
+                              <div className={`absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl`}></div>
 
                               {/* Icon Container */}
                               <div className="relative mb-8">
-                                <div className={`w-20 h-20 bg-gradient-to-br ${colors.gradient} rounded-2xl flex items-center justify-center shadow-lg ${colors.shadow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 mx-auto`}>
+                                <div className={`w-20 h-20 bg-gradient-to-br ${theme.iconBg} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 mx-auto`}>
                                   <Icon className="w-10 h-10 text-white" />
                                 </div>
-                                <div className={`absolute -top-1 -right-1 w-7 h-7 ${colors.bg} rounded-full flex items-center justify-center`}>
-                                  <span className={`${colors.text} text-sm font-bold`}>{formIndex + 1}</span>
+                                <div className={`absolute -top-1 -right-1 w-7 h-7 ${theme.countBg} rounded-full flex items-center justify-center shadow-md`}>
+                                  <span className="text-sm font-bold">{formIndex + 1}</span>
                                 </div>
                               </div>
 
                               {/* Content */}
                               <div className="text-center">
-                                <h3 className={`text-2xl font-bold text-gray-900 mb-4 group-hover:${colors.text} transition-colors relative`}>
+                                <h3 className={`text-2xl font-bold ${theme.title} mb-4 transition-colors relative`}>
                                   {form.title}
                                 </h3>
-                                <p className="text-gray-500 mb-8 leading-relaxed relative text-base">
+                                <p className={`${theme.desc} mb-8 leading-relaxed relative text-base h-12 overflow-hidden`}>
                                   {form.description}
                                 </p>
 
-                                {/* Features */}
+                                {/* Feature Badges - Blended */}
                                 <div className="flex flex-wrap gap-3 mb-8 relative justify-center">
                                   {form.features.map((feature, idx) => (
-                                    <span key={idx} className={`px-4 py-2 ${colors.feature} text-sm font-medium rounded-full`}>
+                                    <span key={idx} className={`px-4 py-1.5 ${theme.badge} text-xs font-semibold rounded-full border backdrop-blur-sm`}>
                                       {feature}
                                     </span>
                                   ))}
                                 </div>
 
-                                {/* Button */}
+                                {/* Blended Request Button */}
                                 <button
                                   onClick={form.onClick}
-                                  className={`relative z-10 w-full bg-gradient-to-r ${colors.button} text-white py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg ${colors.buttonShadow} text-lg`}
+                                  className={`relative z-10 w-full bg-gradient-to-r ${theme.button} text-white py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg ${theme.buttonShadow} text-lg group/btn`}
                                 >
-                                  <Plus className="w-6 h-6" />
+                                  <Plus className="w-6 h-6 group-hover/btn:rotate-90 transition-transform" />
                                   Request Now
-                                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                  <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                                 </button>
                               </div>
                             </div>
@@ -791,16 +875,16 @@ export default function BarangayPortal() {
                       })}
                     </div>
 
-                    {/* Navigation Arrows - Fixed positioning closer to container */}
+                    {/* Navigation Arrows - Improved positioning */}
                     <button
-                      onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % forms.length)}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-blue-500/50"
+                      onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % (forms.length - 2))}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
                     >
                       <ChevronLeft className="w-6 h-6 text-white" />
                     </button>
                     <button
-                      onClick={() => setCurrentFormSlide((prev) => (prev + 1) % forms.length)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-blue-500/50"
+                      onClick={() => setCurrentFormSlide((prev) => (prev + 1) % (forms.length - 2))}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
                     >
                       <ChevronRight className="w-6 h-6 text-white" />
                     </button>
@@ -808,11 +892,11 @@ export default function BarangayPortal() {
 
                   {/* Dots Navigation */}
                   <div className="flex justify-center gap-2 mt-8">
-                    {forms.map((_, index) => (
+                    {Array.from({ length: forms.length - 2 }).map((_, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentFormSlide(index)}
-                        className={`w-3 h-3 rounded-full transition-all ${currentFormSlide === index ? 'bg-blue-600 w-8 shadow-lg' : 'bg-gray-400 hover:bg-gray-500'
+                        className={`w-3 h-3 rounded-full transition-all ${currentFormSlide === index ? 'bg-[#2d5a3d] w-8 shadow-lg' : 'bg-gray-400 hover:bg-gray-500'
                           }`}
                       />
                     ))}
@@ -826,18 +910,18 @@ export default function BarangayPortal() {
           <div className="mt-16">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 max-w-4xl mx-auto">
               {/* Processing Time */}
-              <div className="group relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl md:rounded-2xl p-3 md:p-6 border border-blue-100 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1">
+              <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl md:rounded-2xl p-3 md:p-6 border border-green-100 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center gap-2 md:gap-4">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30 group-hover:scale-110 transition-transform">
                     <Clock className="w-5 h-5 md:w-7 md:h-7 text-white" />
                   </div>
                   <div>
                     <p className="text-lg md:text-2xl font-bold text-gray-900">1-3 Days</p>
-                    <p className="text-xs md:text-sm text-blue-600 font-medium">Processing Time</p>
+                    <p className="text-xs md:text-sm text-green-600 font-medium">Processing Time</p>
                   </div>
                 </div>
                 <div className="absolute top-2 md:top-3 right-2 md:right-3">
-                  <span className="px-1.5 py-0.5 md:px-2 md:py-1 bg-blue-100 text-blue-700 text-[10px] md:text-xs font-semibold rounded-full">FAST</span>
+                  <span className="px-1.5 py-0.5 md:px-2 md:py-1 bg-green-100 text-green-700 text-[10px] md:text-xs font-semibold rounded-full">FAST</span>
                 </div>
               </div>
 
@@ -880,7 +964,7 @@ export default function BarangayPortal() {
 
 
       {/* Educational Assistance Program Section - SK Project - Trimmed for single screen */}
-      <section id="educational-assistance" className="py-8 md:py-12 bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
+      <section id="educational-assistance" className="py-8 md:py-12 bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
         {/* Background Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-48 h-48 md:w-96 md:h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
@@ -901,7 +985,7 @@ export default function BarangayPortal() {
 
         <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
           {/* Responsive Container */}
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-[1800px] mx-auto">
             {/* Mobile-first layout, then desktop alignment */}
             <div className="w-full md:flex md:justify-end">
               <div className="w-full md:max-w-4xl lg:max-w-5xl md:pr-8 lg:pr-16">
@@ -926,7 +1010,7 @@ export default function BarangayPortal() {
                     <div className="w-20 md:w-28 h-1 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-full"></div>
                   </div>
 
-                  <p className="text-base md:text-lg lg:text-xl text-blue-100 font-light leading-relaxed text-center md:text-right px-4 md:px-0">
+                  <p className="text-base md:text-lg lg:text-xl text-green-100 font-light leading-relaxed text-center md:text-right px-4 md:px-0">
                     Empowering the youth of Iba O' Este through quality education
                   </p>
                   <p className="text-sm md:text-base text-cyan-200 font-medium text-center md:text-right px-4 md:px-0">
@@ -939,7 +1023,7 @@ export default function BarangayPortal() {
                   <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 md:gap-4 text-center px-2 md:px-0">
                     {/* Eligibility - Compact */}
                     <div className="flex items-center justify-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 md:px-4 py-2 border border-white/30 text-center">
-                      <Users className="w-3 h-3 md:w-4 md:h-4 text-blue-300 flex-shrink-0" />
+                      <Users className="w-3 h-3 md:w-4 md:h-4 text-green-300 flex-shrink-0" />
                       <span className="text-white text-xs md:text-xs font-medium">ELIGIBILITY: GRADE 7 TO 4TH/5TH YEAR COLLEGE</span>
                     </div>
 
@@ -956,7 +1040,7 @@ export default function BarangayPortal() {
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-8 border border-white/20 shadow-xl mx-2 md:mx-0">
                     <div className="text-center mb-4 md:mb-6">
                       <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-3 md:mb-4 text-center">Ready to Apply?</h3>
-                      <p className="text-blue-200 text-sm md:text-base mb-4 md:mb-6 text-center leading-relaxed max-w-3xl mx-auto px-2 md:px-0">
+                      <p className="text-green-200 text-sm md:text-base mb-4 md:mb-6 text-center leading-relaxed max-w-3xl mx-auto px-2 md:px-0">
                         Take the first step towards your educational goals. Fill out our comprehensive application form and join hundreds of students who have benefited from this program.
                       </p>
 
@@ -974,7 +1058,7 @@ export default function BarangayPortal() {
                       {/* Requirements Preview - Responsive Grid */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                         <div className="bg-white/15 rounded-lg p-3 md:p-4 text-center flex flex-col items-center justify-center min-h-[70px] md:min-h-[80px]">
-                          <User className="w-6 h-6 md:w-8 md:h-8 text-blue-300 mx-auto mb-1 md:mb-2" />
+                          <User className="w-6 h-6 md:w-8 md:h-8 text-green-300 mx-auto mb-1 md:mb-2" />
                           <p className="text-white text-xs md:text-sm font-medium">Personal Info</p>
                         </div>
                         <div className="bg-white/15 rounded-lg p-3 md:p-4 text-center flex flex-col items-center justify-center min-h-[70px] md:min-h-[80px]">
@@ -999,15 +1083,15 @@ export default function BarangayPortal() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-6">
                     <div className="text-center bg-white/5 rounded-lg p-3 md:p-4 border border-white/10">
                       <div className="text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2">500+</div>
-                      <div className="text-blue-200 text-xs md:text-sm font-medium">Students Helped</div>
+                      <div className="text-green-200 text-xs md:text-sm font-medium">Students Helped</div>
                     </div>
                     <div className="text-center bg-white/5 rounded-lg p-3 md:p-4 border border-white/10">
                       <div className="text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2">₱2M+</div>
-                      <div className="text-blue-200 text-xs md:text-sm font-medium">Total Assistance</div>
+                      <div className="text-green-200 text-xs md:text-sm font-medium">Total Assistance</div>
                     </div>
                     <div className="text-center bg-white/5 rounded-lg p-3 md:p-4 border border-white/10">
                       <div className="text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2">95%</div>
-                      <div className="text-blue-200 text-xs md:text-sm font-medium">Success Rate</div>
+                      <div className="text-green-200 text-xs md:text-sm font-medium">Success Rate</div>
                     </div>
                   </div>
                 </div>
@@ -1019,7 +1103,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Senior Citizen Assistance Section */}
-      <section id="senior-citizen-assistance" className="py-8 md:py-12 bg-gradient-to-br from-emerald-900 via-teal-900 to-green-900 relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
+      <section id="senior-citizen-assistance" className="py-8 md:py-12 bg-gradient-to-br from-[#112e1f] via-[#2d5a3d] to-[#112117] relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
         {/* Background Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-48 h-48 md:w-96 md:h-96 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
@@ -1039,7 +1123,7 @@ export default function BarangayPortal() {
         </div>
 
         <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-[1800px] mx-auto">
 
             {/* Section Header */}
             <div className="text-center mb-8 md:mb-12">
@@ -1052,13 +1136,13 @@ export default function BarangayPortal() {
               </div>
 
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#bdcdc0] via-[#648a6a] to-[#2d5a3d]">
                   SENIOR CITIZEN ASSISTANCE PROGRAM
                 </span>
               </h2>
 
               <div className="flex justify-center mb-4 md:mb-6">
-                <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-full"></div>
+                <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-[#bdcdc0] via-[#648a6a] to-[#2d5a3d] rounded-full"></div>
               </div>
 
               <p className="text-lg md:text-xl lg:text-2xl text-emerald-100 font-light leading-relaxed max-w-4xl mx-auto px-4 md:px-0">
@@ -1322,44 +1406,44 @@ export default function BarangayPortal() {
       </section>
 
       {/* Facilities Section - Enhanced Modern Design */}
-      <section id="directory" className="py-16 md:py-24 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden animate-on-scroll">
+      <section id="directory" className="py-16 md:py-24 bg-gradient-to-br from-[#112117] via-[#2d5a3d] to-[#112e1f] relative overflow-hidden animate-on-scroll">
         {/* Enhanced Background Pattern */}
         <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 right-0 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-          <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute top-0 right-0 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-teal-400 to-green-500 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+          <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
         </div>
 
         {/* Floating Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-4 h-4 bg-pink-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0s' }}></div>
-          <div className="absolute top-40 right-20 w-3 h-3 bg-cyan-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute bottom-32 left-20 w-5 h-5 bg-purple-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute bottom-20 right-10 w-3 h-3 bg-blue-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0.5s' }}></div>
+          <div className="absolute top-20 left-10 w-4 h-4 bg-green-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0s' }}></div>
+          <div className="absolute top-40 right-20 w-3 h-3 bg-emerald-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute bottom-32 left-20 w-5 h-5 bg-teal-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute bottom-20 right-10 w-3 h-3 bg-green-400 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0.5s' }}></div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Enhanced Section Header */}
           <div className="text-center mb-16 md:mb-20">
             <div className="flex justify-center mb-6">
               <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-semibold border border-white/20 shadow-lg">
-                <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-[#2d5a3d] to-[#112e1f] rounded-full flex items-center justify-center">
                   <Building2 className="w-4 h-4 text-white" />
                 </div>
                 <span className="tracking-wide">COMMUNITY SERVICES</span>
-                <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               </div>
             </div>
 
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400">Facilities</span>
+              Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400">Facilities</span>
             </h2>
 
             <div className="flex justify-center mb-6">
-              <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 rounded-full"></div>
+              <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-full"></div>
             </div>
 
-            <p className="text-blue-100 max-w-3xl mx-auto text-lg md:text-xl leading-relaxed">
+            <p className="text-green-100 max-w-3xl mx-auto text-lg md:text-xl leading-relaxed">
               Discover our state-of-the-art community facilities designed to serve and enhance the lives of Iba O' Este residents
             </p>
           </div>
@@ -1418,7 +1502,7 @@ export default function BarangayPortal() {
               return (
                 <div className="group relative">
                   {/* Main Facility Card - Bigger Photos */}
-                  <div className={`relative bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border-2 ${colorSet.border} hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2`}>
+                  <div className={`relative w-full bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border-2 ${colorSet.border} hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2`}>
 
                     {/* Image Section - Much Bigger */}
                     <div
@@ -1451,35 +1535,49 @@ export default function BarangayPortal() {
                         <Icon className="w-8 h-8 md:w-10 md:h-10 text-white" />
                       </div>
 
-                      {/* Enhanced Image Indicators */}
+                      {/* Integrated Thumbnail Gallery Overlay */}
                       {facility.images.length > 1 && (
-                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-                          {facility.images.map((_, dotIndex) => (
-                            <div
-                              key={dotIndex}
-                              className={`w-3 h-3 rounded-full transition-all duration-300 ${currentImageIndex === dotIndex
-                                ? 'bg-white scale-125'
-                                : 'bg-white/60 hover:bg-white/80'
-                                }`}
-                            />
-                          ))}
+                        <div className="absolute bottom-6 left-0 right-0 z-20 px-4">
+                          <div className="flex justify-center gap-3">
+                            {facility.images.map((image, imgIndex) => (
+                              <button
+                                key={imgIndex}
+                                onClick={() => {
+                                  setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: imgIndex }));
+                                }}
+                                className={`group/thumb relative w-16 h-12 md:w-20 md:h-16 rounded-xl overflow-hidden transition-all duration-300 ${currentImageIndex === imgIndex
+                                  ? 'ring-4 ring-[#648a6a] ring-offset-2 ring-offset-[#112117] scale-110 shadow-2xl'
+                                  : 'ring-2 ring-white/20 hover:ring-white/50 opacity-60 hover:opacity-100'
+                                  }`}
+                              >
+                                <img
+                                  src={image}
+                                  alt={`${facility.name} thumbnail ${imgIndex + 1}`}
+                                  className="w-full h-full object-cover transition-transform group-hover/thumb:scale-110"
+                                />
+                                {currentImageIndex === imgIndex && (
+                                  <div className="absolute inset-0 bg-[#648a6a]/10" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
 
                     {/* Enhanced Content Section */}
-                    <div className={`bg-gradient-to-br ${colorSet.light} backdrop-blur-sm p-6 md:p-8 border-t border-white/20`}>
-                      <div className="mb-4">
+                    <div className={`bg-gradient-to-br ${colorSet.light} backdrop-blur-sm p-4 md:p-5 border-t border-white/20`}>
+                      <div className="mb-2">
                         <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
                           {facility.name}
                         </h3>
-                        <p className="text-blue-100 text-base md:text-lg leading-relaxed">
+                        <p className="text-green-100 text-base md:text-lg leading-relaxed">
                           {facility.description}
                         </p>
                       </div>
 
                       {/* Enhanced Features */}
-                      <div className="flex flex-wrap gap-2 md:gap-3">
+                      <div className="flex flex-wrap gap-2 md:gap-3 mb-2">
                         {facility.features.map((feature, fIndex) => (
                           <span
                             key={fIndex}
@@ -1496,45 +1594,7 @@ export default function BarangayPortal() {
             })()}
           </div>
 
-          {/* Enhanced Thumbnail Navigation */}
-          {(() => {
-            const currentFacilityIndex = facilityImageSlides['main'] || 0;
-            const facility = facilities[currentFacilityIndex];
-            const currentImageIndex = facilityImageSlides[currentFacilityIndex] || 0;
 
-            if (facility.images.length <= 1) return null;
-
-            return (
-              <div className="mb-12 md:mb-16">
-                <div className="flex justify-center gap-3 md:gap-4 overflow-x-auto pb-4 pt-2 px-4">
-                  {facility.images.map((image, imgIndex) => (
-                    <button
-                      key={imgIndex}
-                      onClick={() => {
-                        setFacilityImageSlides(prev => ({ ...prev, [currentFacilityIndex]: imgIndex }));
-                      }}
-                      className={`flex-shrink-0 w-20 h-16 md:w-28 md:h-20 rounded-xl overflow-hidden transition-all duration-300 ${currentImageIndex === imgIndex
-                        ? 'ring-4 ring-pink-400 ring-offset-2 shadow-xl scale-110'
-                        : 'ring-2 ring-white/30 hover:ring-white/50 hover:scale-105 shadow-md'
-                        }`}
-                    >
-                      <img
-                        src={image}
-                        alt={`${facility.name} thumbnail ${imgIndex + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = '/background.jpg';
-                        }}
-                      />
-                    </button>
-                  ))}
-                </div>
-                <p className="text-center text-sm text-blue-200 mt-3 font-medium">
-                  Tap thumbnails to explore different views
-                </p>
-              </div>
-            );
-          })()}
 
           {/* Enhanced Facility Navigation */}
           <div className="flex justify-center gap-3 md:gap-4 mb-16 md:mb-20 overflow-x-auto pb-4">
@@ -1554,14 +1614,14 @@ export default function BarangayPortal() {
                   key={index}
                   onClick={() => setFacilityImageSlides(prev => ({ ...prev, main: index }))}
                   className={`flex flex-col items-center gap-3 p-4 md:p-6 rounded-2xl transition-all duration-300 min-w-[100px] md:min-w-[120px] ${isActive
-                    ? 'bg-white/20 backdrop-blur-sm shadow-xl scale-110 border-2 border-pink-400 transform -translate-y-2'
+                    ? 'bg-white/20 backdrop-blur-sm shadow-xl scale-110 border-2 border-[#648a6a] transform -translate-y-2'
                     : 'bg-white/10 backdrop-blur-sm hover:bg-white/20 hover:shadow-lg border-2 border-transparent hover:scale-105'
                     }`}
                 >
                   <div className={`w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br ${colors[facility.color]} rounded-2xl flex items-center justify-center shadow-lg ${isActive ? 'shadow-xl' : ''}`}>
                     <Icon className="w-7 h-7 md:w-8 md:h-8 text-white" />
                   </div>
-                  <span className={`text-xs md:text-sm font-semibold text-center leading-tight ${isActive ? 'text-pink-300' : 'text-blue-200'}`}>
+                  <span className={`text-xs md:text-sm font-semibold text-center leading-tight ${isActive ? 'text-[#bdcdc0]' : 'text-green-200'}`}>
                     {facility.name}
                   </span>
                 </button>
@@ -1604,8 +1664,8 @@ export default function BarangayPortal() {
       />
 
       {/* Transparency Stats Section - Barangay at a Glance */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-800 animate-on-scroll">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-16 bg-gradient-to-r from-[#112e1f] to-[#112117] animate-on-scroll">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-white text-center mb-12">Barangay at a Glance</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {stats.map((stat, index) => {
@@ -1619,7 +1679,7 @@ export default function BarangayPortal() {
                     <Icon className="w-8 h-8 text-white" />
                   </div>
                   <p className="text-4xl font-bold text-white mb-2">{stat.value}</p>
-                  <p className="text-blue-200">{stat.label}</p>
+                  <p className="text-[#bdcdc0]">{stat.label}</p>
                 </div>
               );
             })}
@@ -1632,7 +1692,7 @@ export default function BarangayPortal() {
       <section id="officials" className="bg-gray-900">
         <div className="text-center py-8">
           <h3 className="text-2xl font-bold text-white mb-2">Barangay Officials</h3>
-          <p className="text-blue-300">Meet our dedicated team serving Iba O' Este</p>
+          <p className="text-green-300">Meet our dedicated team serving Iba O' Este</p>
         </div>
 
         {/* Photo - Full visibility without overlay */}
@@ -1648,26 +1708,26 @@ export default function BarangayPortal() {
         </div>
 
         {/* Text Section - Professional Leadership Introduction */}
-        <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 py-16 px-4">
+        <div className="bg-gradient-to-br from-[#112117] via-[#2d5a3d] to-[#112e1f] py-16 px-4">
           <div className="max-w-6xl mx-auto">
             {/* Leadership Header */}
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full mb-6">
-                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span className="text-blue-200 font-semibold text-sm tracking-wide uppercase">Leadership Team</span>
+                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                <span className="text-green-200 font-semibold text-sm tracking-wide uppercase">Leadership Team</span>
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               </div>
 
               <h4 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
                 Barangay Iba O' Este
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-green-400">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-500 to-green-400">
                   Leadership Team
                 </span>
               </h4>
 
-              <div className="w-32 h-1 bg-gradient-to-r from-blue-400 via-cyan-400 to-green-400 mx-auto mb-6 rounded-full"></div>
+              <div className="w-32 h-1 bg-gradient-to-r from-green-600 via-emerald-500 to-green-400 mx-auto mb-6 rounded-full"></div>
 
-              <p className="text-xl md:text-2xl text-blue-100 font-light leading-relaxed max-w-3xl mx-auto">
+              <p className="text-xl md:text-2xl text-green-100 font-light leading-relaxed max-w-3xl mx-auto">
                 Working together for our community's progress and development
               </p>
             </div>
@@ -1675,12 +1735,12 @@ export default function BarangayPortal() {
         </div>
 
         {/* Officials Details Section */}
-        <div className="bg-gradient-to-br from-gray-50 to-blue-50 py-16 px-4">
+        <div className="bg-gradient-to-br from-gray-50 to-green-50 py-16 px-4">
           <div className="max-w-6xl mx-auto">
             {/* Section Header */}
             <div className="text-center mb-12">
               <h5 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Meet Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Officials</span>
+                Meet Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-950">Officials</span>
               </h5>
               <p className="text-gray-600 text-lg max-w-2xl mx-auto">
                 Dedicated leaders committed to serving the community of Iba O' Este with integrity and excellence
@@ -1705,7 +1765,7 @@ export default function BarangayPortal() {
                       title: 'Barangay Captain',
                       subtitle: 'Chief Executive Officer',
                       officials: groupedOfficials.captain,
-                      bgColor: 'from-blue-600 to-indigo-700',
+                      bgColor: 'from-[#112e1f] to-[#2d5a3d]',
                       icon: '👑'
                     },
                     {
@@ -1721,7 +1781,7 @@ export default function BarangayPortal() {
                       title: 'SK Chairman',
                       subtitle: 'Youth Representative',
                       officials: groupedOfficials.sk_chairman,
-                      bgColor: 'from-orange-600 to-amber-700',
+                      bgColor: 'from-emerald-600 to-green-700',
                       icon: '🌟'
                     },
                     {
@@ -1729,7 +1789,7 @@ export default function BarangayPortal() {
                       title: 'Barangay Staff',
                       subtitle: 'Administrative Team',
                       officials: groupedOfficials.staff,
-                      bgColor: 'from-purple-600 to-violet-700',
+                      bgColor: 'from-teal-600 to-green-700',
                       icon: '👥'
                     }
                   ];
@@ -1755,28 +1815,25 @@ export default function BarangayPortal() {
                           }`}>
                           {section.officials.map((official, index) => {
                             const colors = [
-                              'from-blue-600 to-indigo-700',
+                              'from-[#112e1f] to-[#2d5a3d]',
                               'from-teal-600 to-green-700',
                               'from-emerald-600 to-green-700',
-                              'from-cyan-600 to-blue-700',
+                              'from-[#2d5a3d] to-emerald-800',
                               'from-green-600 to-emerald-700',
-                              'from-purple-600 to-violet-700',
-                              'from-orange-600 to-red-700',
-                              'from-pink-600 to-rose-700',
-                              'from-indigo-600 to-purple-700',
-                              'from-yellow-600 to-orange-700',
-                              'from-red-600 to-pink-700',
-                              'from-gray-600 to-slate-700',
-                              'from-violet-600 to-purple-700',
-                              'from-rose-600 to-pink-700',
-                              'from-amber-600 to-orange-700',
-                              'from-lime-600 to-green-700'
+                              'from-teal-500 to-emerald-600',
+                              'from-[#112117] to-green-900',
+                              'from-emerald-700 to-teal-800',
+                              'from-green-700 to-emerald-900',
+                              'from-[#2d5a3d] to-teal-700',
+                              'from-emerald-500 to-green-600',
+                              'from-teal-400 to-emerald-500',
+                              'from-green-500 to-teal-600'
                             ];
 
                             // Use section-specific colors for consistency
                             let colorClass;
                             if (section.key === 'captain') {
-                              colorClass = 'from-blue-600 to-indigo-700';
+                              colorClass = 'from-green-800 to-green-950';
                             } else if (section.key === 'kagawad') {
                               colorClass = colors[index % colors.length];
                             } else if (section.key === 'sk_chairman') {
@@ -1835,11 +1892,11 @@ export default function BarangayPortal() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-16 bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="contact" className="py-16 bg-[#112117]">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-white mb-2">Feel free to contact us</h2>
-            <p className="text-xl text-blue-400 italic">Wag mahiya at kami ay inyong tanungin</p>
+            <p className="text-xl text-green-400 italic">Wag mahiya at kami ay inyong tanungin</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -1912,7 +1969,7 @@ export default function BarangayPortal() {
 
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 transform hover:scale-105 shadow-lg"
+                  className="w-full bg-[#2d5a3d] hover:bg-[#112e1f] text-white py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 transform hover:scale-105 shadow-lg"
                 >
                   <Send className="w-5 h-5" />
                   Send Message
@@ -1922,42 +1979,42 @@ export default function BarangayPortal() {
 
             {/* Contact Info */}
             <div className="space-y-8">
-              <div className="bg-blue-800/50 backdrop-blur-sm rounded-2xl p-8 border border-blue-700/50">
+              <div className="bg-green-950/50 backdrop-blur-sm rounded-2xl p-8 border border-green-800/50">
                 <h3 className="text-xl font-bold text-white mb-6">Contact Information</h3>
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
-                    <div className="bg-blue-600 p-3 rounded-lg">
+                    <div className="bg-green-800 p-3 rounded-lg">
                       <MapPin className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-white font-medium">Address</p>
-                      <p className="text-blue-200">Brgy. Iba O' Este, Calumpit, Bulacan</p>
+                      <p className="text-green-200">Brgy. Iba O' Este, Calumpit, Bulacan</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="bg-blue-600 p-3 rounded-lg">
+                    <div className="bg-green-800 p-3 rounded-lg">
                       <Phone className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-white font-medium">Phone</p>
-                      <p className="text-blue-200">(044) 123-4567</p>
+                      <p className="text-green-200">(044) 123-4567</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="bg-blue-600 p-3 rounded-lg">
+                    <div className="bg-green-800 p-3 rounded-lg">
                       <Mail className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-white font-medium">Email</p>
-                      <p className="text-blue-200">ibaoeste@calumpit.gov.ph</p>
+                      <p className="text-green-200">ibaoeste@calumpit.gov.ph</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-blue-800/50 backdrop-blur-sm rounded-2xl p-8 border border-blue-700/50">
+              <div className="bg-green-950/50 backdrop-blur-sm rounded-2xl p-8 border border-green-800/50">
                 <h3 className="text-xl font-bold text-white mb-4">Office Hours</h3>
-                <div className="space-y-2 text-blue-200">
+                <div className="space-y-2 text-green-200">
                   <p>Monday - Friday: 8:00 AM - 5:00 PM</p>
                   <p>Saturday: 8:00 AM - 12:00 PM</p>
                   <p>Sunday: Closed</p>
@@ -1983,7 +2040,7 @@ export default function BarangayPortal() {
                   <span className="text-sm font-medium text-gray-700">{hotline.name}</span>
                   <a
                     href={`tel:${hotline.number}`}
-                    className="text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+                    className="text-green-700 font-semibold hover:text-green-800 transition-colors"
                   >
                     {hotline.number}
                   </a>
@@ -2109,7 +2166,38 @@ export default function BarangayPortal() {
         .animate-on-scroll:nth-child(6) { transition-delay: 0.6s; }
         .animate-on-scroll:nth-child(7) { transition-delay: 0.7s; }
         .animate-on-scroll:nth-child(8) { transition-delay: 0.8s; }
-        
+      `}</style>
+
+      {/* Coming Soon Modal */}
+      {showComingSoonModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-white/20 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-green-600"></div>
+
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
+              <Clock className="w-10 h-10 text-emerald-600 animate-pulse" />
+            </div>
+
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon!</h3>
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              We are currently finalizing this online service to serve you better. Please visit the Barangay Hall for manual processing in the meantime.
+            </p>
+
+            <button
+              onClick={() => setShowComingSoonModal(false)}
+              className="w-full bg-gradient-to-r from-[#2d5a3d] to-[#112e1f] text-white py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 group/btn"
+            >
+              Got it!
+              <CheckCircle className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
+            </button>
+
+            {/* Decorative background circle */}
+            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-emerald-50 rounded-full -z-10 opacity-50"></div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
         /* Smooth scrolling for navigation */
         html {
           scroll-behavior: smooth;

@@ -3,8 +3,8 @@ import { Pen, Upload, Check } from 'lucide-react';
 import SignaturePad from './SignaturePad';
 import SignatureUpload from './SignatureUpload';
 
-export default function SignatureInput({ 
-  onSignatureChange, 
+export default function SignatureInput({
+  onSignatureChange,
   required = false,
   label = "Digital Signature",
   defaultMethod = 'draw' // 'draw' or 'upload'
@@ -26,35 +26,33 @@ export default function SignatureInput({
   return (
     <div className="signature-input-container">
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
+        <label className="block text-[10px] font-black text-emerald-900 uppercase tracking-[0.2em] mb-4">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
-        
-        {/* Method Selection Tabs */}
-        <div className="flex bg-gray-100 rounded-lg p-1 w-fit">
+
+        {/* Method Selection Tabs - Premium Nature Style */}
+        <div className="flex bg-emerald-900/5 rounded-2xl p-1.5 w-full sm:w-fit border border-emerald-900/5">
           <button
             type="button"
             onClick={() => switchMethod('draw')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              method === 'draw'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${method === 'draw'
+                ? 'bg-white text-emerald-700 shadow-md ring-1 ring-emerald-900/5'
+                : 'text-emerald-900/40 hover:text-emerald-900'
+              }`}
           >
-            <Pen className="w-4 h-4" />
-            Draw Signature
+            <Pen className="w-3.5 h-3.5" />
+            Manual Drawing
           </button>
           <button
             type="button"
             onClick={() => switchMethod('upload')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              method === 'upload'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${method === 'upload'
+                ? 'bg-white text-emerald-700 shadow-md ring-1 ring-emerald-900/5'
+                : 'text-emerald-900/40 hover:text-emerald-900'
+              }`}
           >
-            <Upload className="w-4 h-4" />
-            Upload Image
+            <Upload className="w-3.5 h-3.5" />
+            File Upload
           </button>
         </div>
       </div>
@@ -81,9 +79,11 @@ export default function SignatureInput({
 
       {/* Status Indicator */}
       {signature && (
-        <div className="mt-3 flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
-          <Check className="w-4 h-4" />
-          <span>Signature captured successfully</span>
+        <div className="mt-4 flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-100 px-4 py-3 rounded-xl animate-fade-in shadow-sm">
+          <div className="bg-emerald-500 rounded-full p-0.5 shadow-sm">
+            <Check className="w-3 h-3 text-white" />
+          </div>
+          <span>Digital Identity Verified Successfully</span>
         </div>
       )}
     </div>

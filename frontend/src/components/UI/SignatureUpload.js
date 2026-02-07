@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
-import { Upload, X, Check, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Check, Image as ImageIcon, Info, AlertCircle } from 'lucide-react';
 
-export default function SignatureUpload({ 
-  onSignatureChange, 
+export default function SignatureUpload({
+  onSignatureChange,
   required = false,
   label = "Upload Signature",
   maxSize = 1024 * 1024, // 1MB default
@@ -66,7 +66,7 @@ export default function SignatureUpload({
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       handleFileSelect(files[0]);
@@ -88,10 +88,12 @@ export default function SignatureUpload({
   };
 
   return (
-    <div className="signature-upload-container">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+    <div className="signature-upload-container space-y-4">
+      {label && (
+        <label className="block text-[10px] font-black text-emerald-900/60 uppercase tracking-[0.2em] ml-1">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
 
       <input
         ref={fileInputRef}
@@ -103,72 +105,99 @@ export default function SignatureUpload({
 
       {!preview ? (
         <div
-          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-            isDragging
-              ? 'border-blue-400 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400 bg-gray-50'
-          }`}
+          className={`relative border-2 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all duration-300 group overflow-hidden ${isDragging
+              ? 'border-emerald-500 bg-emerald-100/50 shadow-emerald-900/10'
+              : 'border-emerald-900/10 hover:border-emerald-500/40 bg-emerald-50/20 hover:bg-emerald-50/50'
+            }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={triggerFileInput}
         >
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-              <Upload className="w-6 h-6 text-gray-500" />
+          {/* Decorative element */}
+          <div className={`absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl transition-transform duration-700 ${isDragging ? 'scale-150' : 'group-hover:scale-110'}`}></div>
+
+          <div className="flex flex-col items-center gap-5 relative z-10">
+            <div className={`w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-emerald-900/5 transition-all duration-500 ${isDragging ? 'rotate-12 scale-110' : 'group-hover:-translate-y-1 group-hover:shadow-md'}`}>
+              <Upload className={`w-7 h-7 ${isDragging ? 'text-emerald-600' : 'text-emerald-900/30 group-hover:text-emerald-600'}`} />
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-700">
-                Click to upload or drag and drop
+            <div className="space-y-1">
+              <p className="text-sm font-black text-emerald-950 uppercase tracking-widest leading-none">
+                {isDragging ? 'RELEASE TO STORE' : 'ATTACH SIGNATURE ASSET'}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
-                PNG or JPEG up to {Math.round(maxSize / 1024 / 1024)}MB
+              <p className="text-[10px] text-emerald-800/40 font-bold uppercase tracking-widest mt-2 transform transition-all duration-300 group-hover:scale-105">
+                PNG, JPG or JPEG • MAX {Math.round(maxSize / 1024 / 1024)}MB
               </p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="border border-gray-300 rounded-lg p-4 bg-white">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
+        <div className="border-2 border-emerald-500/20 rounded-3xl p-6 bg-emerald-50/30 animate-scale-in relative group overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="relative group/preview">
               <img
                 src={preview}
                 alt="Signature preview"
-                className="w-24 h-16 object-contain border border-gray-200 rounded bg-white"
+                className="w-32 h-20 object-contain border border-emerald-900/5 rounded-xl bg-white shadow-sm p-2 transition-transform duration-500 group-hover/preview:scale-105"
               />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-700">
-                  Signature uploaded
-                </span>
+              <div className="absolute -top-2 -right-2 bg-emerald-500 text-white rounded-full p-1 shadow-lg border-2 border-white">
+                <Check className="w-3 h-3" />
               </div>
-              <p className="text-xs text-gray-500 mt-1 truncate">
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 leading-none">
+                  ASSET VERIFIED
+                </span>
+                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm"></div>
+              </div>
+              <p className="text-xs font-black text-emerald-950 truncate uppercase tracking-tight">
                 {signature?.name}
               </p>
-              <p className="text-xs text-gray-500">
-                {signature && `${Math.round(signature.size / 1024)} KB`}
+              <p className="text-[10px] font-black text-emerald-800/40 uppercase tracking-widest mt-1">
+                MEM: {signature && `${Math.round(signature.size / 1024)} KB`}
               </p>
             </div>
+
             <button
               type="button"
               onClick={removeSignature}
-              className="flex-shrink-0 p-1 text-gray-400 hover:text-red-600 transition-colors"
+              className="w-12 h-12 flex items-center justify-center bg-white border-2 border-rose-100 text-rose-300 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 rounded-2xl transition-all duration-300 shadow-sm active:scale-90"
             >
-              <X className="w-4 h-4" />
+              <X className="w-6 h-6" />
             </button>
           </div>
         </div>
       )}
 
       {error && (
-        <p className="text-sm text-red-600 mt-2">{error}</p>
+        <div className="flex items-center gap-2 text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-100 px-4 py-3 rounded-xl animate-shake">
+          <AlertCircle className="w-4 h-4" />
+          <span className="uppercase tracking-widest">{error}</span>
+        </div>
       )}
 
       {required && !preview && (
-        <p className="text-sm text-red-600 mt-1">Signature upload is required</p>
+        <div className="flex items-center gap-2 text-[10px] font-black text-rose-500 ml-1 mt-1 opacity-60">
+          <Info className="w-3.5 h-3.5" />
+          FILE UPLOAD IS MANDATORY
+        </div>
       )}
+
+      <style jsx>{`
+        .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes shake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+          40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+      `}</style>
     </div>
   );
 }
