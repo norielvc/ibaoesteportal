@@ -5,16 +5,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary-50: #eff6ff;
-  --primary-100: #dbeafe;
-  --primary-200: #bfdbfe;
-  --primary-300: #93c5fd;
-  --primary-400: #60a5fa;
-  --primary-500: #3b82f6;
-  --primary-600: #2563eb;
-  --primary-700: #1d4ed8;
-  --primary-800: #1e40af;
-  --primary-900: #1e3a8a;
+  --primary-50: #efefef;
+  --primary-100: #bdcdc0;
+  --primary-200: #a8aca4;
+  --primary-300: #648a6a;
+  --primary-400: #4b6c56;
+  --primary-500: #2d5a3d;
+  --primary-600: #266236;
+  --primary-700: #112e1f;
+  --primary-800: #004b3a;
+  --primary-900: #112117;
 }
 
 @layer base {

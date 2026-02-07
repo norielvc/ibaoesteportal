@@ -452,7 +452,7 @@ export default function BarangayPortal() {
             <img src="/logo.png" alt="Iba O' Este Logo" className="h-20 w-20 md:h-24 md:w-24 object-contain drop-shadow-2xl" />
             <div className="text-center md:text-left">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg">
-                IBA O' ESTE PORTAL
+                IBA O' ESTE PORTAL V5
               </h1>
               <p className="text-lg md:text-xl text-green-100 font-medium mt-1">
                 Calumpit, Bulacan
