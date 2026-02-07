@@ -255,15 +255,19 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
             {/* Decorative background element */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
 
-            <div className="flex items-center gap-4 relative z-10">
-              <div className="bg-white/15 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-inner">
-                <FileText className="w-7 h-7 text-white" />
+            <div className="flex items-center gap-5 relative z-10">
+              <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/30 shadow-xl">
+                <FileText className="w-8 h-8 text-white shadow-sm" />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">Barangay Residency</h2>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                  <p className="text-green-100/80 text-sm font-medium">Community Registry Portal • {referenceNumber || 'New Request'}</p>
+              <div className="flex flex-col">
+                <h2 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md">
+                  Barangay Residency
+                </h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
+                  <p className="text-emerald-50/90 text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">
+                    {referenceNumber || 'New Application Request'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -481,13 +485,20 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
               {/* Popup Header */}
               <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-8 py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                <div className="flex items-center gap-4 relative z-10">
-                  <div className="bg-white/15 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-inner">
-                    <FileText className="w-7 h-7 text-white" />
+                <div className="flex items-center gap-5 relative z-10">
+                  <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/30 shadow-xl">
+                    <FileText className="w-8 h-8 text-white shadow-sm" />
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-white tracking-tight">Review Application</h2>
-                    <p className="text-green-100/80 text-sm font-medium">Verify your final document preview below</p>
+                  <div className="flex flex-col">
+                    <h2 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md uppercase">
+                      Review Application
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
+                      <p className="text-emerald-50/90 text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">
+                        Verification Stage
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <button
@@ -721,40 +732,7 @@ function ResidencyPreview({ formData, referenceNumber, currentDate, officials, c
           </div>
 
           <div className="flex flex-1 relative">
-            {/* Sidebar */}
-            <div className={`w-64 p-6 flex flex-col text-center flex-shrink-0 ${getFontClass(sidebarStyle.fontFamily)}`} style={{
-              background: `linear-gradient(to bottom, ${sidebarStyle.bgColor || '#1e40af'}, ${sidebarStyle.gradientEnd || '#1e3a8a'})`,
-              color: sidebarStyle.textColor || '#ffffff'
-            }}>
-              <div className="text-center mb-4">
-                <p className="font-bold" style={{ fontSize: '20px' }}>BARANGAY</p>
-                <p className="font-bold" style={{ fontSize: '20px' }}>IBA O' ESTE</p>
-              </div>
-
-              <div className="border-t pt-3" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>
-                <p className="font-bold mb-3" style={{ fontSize: '15px', color: sidebarStyle.labelColor || '#fde047' }}>BARANGAY COUNCIL</p>
-                <div className="mb-3 text-center">
-                  <div className="mb-2 w-24 h-32 mx-auto bg-black/10 rounded overflow-hidden shadow-inner border border-white/20">
-                    {logos.captainImage && <img src={logos.captainImage} className="w-full h-full object-cover" />}
-                  </div>
-                  <p className="text-xs opacity-80" style={{ color: sidebarStyle.labelColor || '#fde047' }}>Punong Barangay</p>
-                  <p className="font-bold text-sm tracking-wide">{officials.chairman}</p>
-                </div>
-
-                <div className="space-y-1 mb-4">
-                  <p className="text-[10px] uppercase opacity-60 mb-1" style={{ color: sidebarStyle.labelColor || '#fde047' }}>Kagawad</p>
-                  {officials.councilors?.slice(0, 7).map((c, i) => (
-                    <p key={i} className="text-[11px] leading-tight font-medium">{c}</p>
-                  ))}
-                </div>
-
-                <div className="space-y-1 text-[11px] border-t border-white/10 pt-2 text-left pl-2">
-                  <p className="font-medium flex justify-between"><span className="opacity-60" style={{ color: sidebarStyle.labelColor || '#fde047' }}>SK Chair:</span> {officials.skChairman}</p>
-                  <p className="font-medium flex justify-between"><span className="opacity-60" style={{ color: sidebarStyle.labelColor || '#fde047' }}>Secretary:</span> {officials.secretary}</p>
-                  <p className="font-medium flex justify-between"><span className="opacity-60" style={{ color: sidebarStyle.labelColor || '#fde047' }}>Treasurer:</span> {officials.treasurer}</p>
-                </div>
-              </div>
-            </div>
+            {/* Sidebar Removed as requested */}
 
             {/* Main Content - Certificate Body */}
             <div className={`flex-1 px-16 py-12 flex flex-col relative ${getFontClass(bodyStyle.fontFamily)}`} style={{ backgroundColor: bodyStyle.bgColor || '#ffffff' }}>
