@@ -445,7 +445,7 @@ export default function BarangayPortal() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Large Portal Header with Date/Time and Weather */}
-      <div className="bg-gradient-to-r from-[#112117] via-[#112e1f] to-[#004b3a] py-4">
+      <div className="bg-gradient-to-r from-[#008000] via-[#006400] to-[#112117] py-4">
         <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-8">
           {/* Left Side - Logo and Title */}
           <div className="flex items-center gap-4 md:gap-6">
@@ -480,30 +480,30 @@ export default function BarangayPortal() {
           <div className="flex justify-end items-center h-12 gap-8">
             {/* Desktop Navigation - Right Side */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#forms" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
+              <a href="#forms" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 Barangay Forms
               </a>
-              <a href="#educational-assistance" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
+              <a href="#educational-assistance" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 Educational Assistance
               </a>
-              <a href="#senior-citizen-assistance" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
+              <a href="#senior-citizen-assistance" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 Senior Citizen Services
               </a>
-              <a href="#officials" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
+              <a href="#officials" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 Barangay Officials
               </a>
-              <a href="#directory" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
+              <a href="#directory" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 Facilities
               </a>
-              <a href="#news" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
+              <a href="#news" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 News & Updates
               </a>
-              <a href="#contact" className="text-gray-700 hover:text-[#2d5a3d] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#2d5a3d]">
+              <a href="#contact" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 Contact Us
               </a>
               <button
                 onClick={() => router.push('/login')}
-                className="bg-[#2d5a3d] hover:bg-[#112e1f] text-white px-5 py-2 rounded-lg font-semibold transition-all shadow-md"
+                className="bg-[#008000] hover:bg-[#006400] text-white px-5 py-2 rounded-lg font-semibold transition-all shadow-md"
               >
                 Login
               </button>
@@ -545,7 +545,7 @@ export default function BarangayPortal() {
             </a>
             <button
               onClick={() => router.push('/login')}
-              className="w-full bg-[#2d5a3d] hover:bg-[#112e1f] text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className="w-full bg-[#008000] hover:bg-[#006400] text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
               Login
             </button>
