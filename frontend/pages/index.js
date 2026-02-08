@@ -208,6 +208,11 @@ export default function BarangayPortal() {
 
   const [facilities, setFacilities] = useState(defaultFacilities);
   const [officials, setOfficials] = useState([]);
+  const [heroSettings, setHeroSettings] = useState({
+    title: 'BARANGAY OFFICIALS',
+    subtitle: 'Meet our dedicated team serving Iba O\' Este',
+    image: '/images/barangay-officials.jpg'
+  });
 
   // Helper function to map icon names to components
   const getIconComponent = (iconName) => {
@@ -373,6 +378,22 @@ export default function BarangayPortal() {
     };
 
     fetchOfficials();
+
+    // Fetch Hero Settings
+    const fetchSettings = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+        const res = await fetch(`${API_URL}/api/officials/config`);
+        const data = await res.json();
+        if (data.success && data.data.heroSection) {
+          console.log('✅ Hero settings fetched:', data.data.heroSection);
+          setHeroSettings(data.data.heroSection);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching hero settings:', error);
+      }
+    };
+    fetchSettings();
   }, []);
 
   // Update time and weather every second
@@ -548,7 +569,7 @@ export default function BarangayPortal() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Large Portal Header with Date/Time and Weather */}
-      <div className="bg-gradient-to-r from-[#008000] via-[#006400] to-[#112117] py-4">
+      <div className="bg-gradient-to-r from-[#004700] to-[#001a00] py-4">
         <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-8">
           {/* Left Side - Logo and Title */}
           <div className="flex items-center gap-4 md:gap-6">
@@ -583,6 +604,9 @@ export default function BarangayPortal() {
           <div className="flex justify-end items-center h-12 gap-8">
             {/* Desktop Navigation - Right Side */}
             <div className="hidden md:flex items-center gap-8">
+              <a href="#news" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
+                News & Updates
+              </a>
               <a href="#forms" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 Barangay Forms
               </a>
@@ -592,14 +616,11 @@ export default function BarangayPortal() {
               <a href="#senior-citizen-assistance" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 Senior Citizen Services
               </a>
-              <a href="#officials" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
-                Barangay Officials
-              </a>
               <a href="#directory" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 Facilities
               </a>
-              <a href="#news" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
-                News & Updates
+              <a href="#officials" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
+                Barangay Officials
               </a>
               <a href="#contact" className="text-gray-700 hover:text-[#008000] font-semibold transition-colors py-3 border-b-2 border-transparent hover:border-[#008000]">
                 Contact Us
@@ -625,6 +646,9 @@ export default function BarangayPortal() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200 py-4 px-4 space-y-3">
+            <a href="#news" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+              News & Updates
+            </a>
             <a href="#forms" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               Barangay Forms
             </a>
@@ -634,14 +658,11 @@ export default function BarangayPortal() {
             <a href="#senior-citizen-assistance" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               Senior Citizen Services
             </a>
-            <a href="#officials" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
-              Barangay Officials
-            </a>
             <a href="#directory" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               Facilities
             </a>
-            <a href="#news" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
-              News & Updates
+            <a href="#officials" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+              Barangay Officials
             </a>
             <a href="#contact" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
               Contact Us
@@ -721,7 +742,7 @@ export default function BarangayPortal() {
       <section id="forms" className="py-12 md:py-20 relative overflow-hidden animate-on-scroll">
         {/* Responsive Background Image */}
         <div
-          className="absolute inset-0 bg-cover bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-no-repeat hidden md:block"
           style={{
             backgroundImage: 'url(/images/barangay-captain.jpg)',
             backgroundPosition: 'center center',
@@ -730,7 +751,7 @@ export default function BarangayPortal() {
 
         {/* Barangay Logo Watermark - Even Bigger & Impactful */}
         <div
-          className="absolute right-[-5%] md:right-[-2%] top-1/2 -translate-y-1/2 w-[600px] md:w-[1100px] h-[110%] md:h-[115%] bg-contain bg-right bg-no-repeat opacity-20 pointer-events-none z-0"
+          className="absolute right-[-5%] md:right-[-2%] top-1/2 -translate-y-1/2 w-[600px] md:w-[1100px] h-[110%] md:h-[115%] bg-contain bg-right bg-no-repeat opacity-20 pointer-events-none z-0 hidden md:block"
           style={{ backgroundImage: 'url(/images/ibalogo.png)', backgroundPosition: 'right center' }}
         />
 
@@ -946,7 +967,7 @@ export default function BarangayPortal() {
           </div>
 
           {/* Enhanced Bottom Info */}
-          <div className="mt-16">
+          <div className="mt-8 md:mt-16">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 max-w-4xl mx-auto">
               {/* Processing Time */}
               <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl md:rounded-2xl p-3 md:p-6 border border-green-100 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 hover:-translate-y-1">
@@ -1011,7 +1032,7 @@ export default function BarangayPortal() {
         </div>
 
         {/* SK Chairman Background Image - Responsive */}
-        <div className="absolute left-0 top-0 bottom-0 w-full md:w-1/2 opacity-20 md:opacity-30 pointer-events-none">
+        <div className="absolute left-0 top-0 bottom-0 w-full md:w-1/2 opacity-20 md:opacity-30 pointer-events-none hidden md:block">
           <div
             className="w-full h-full bg-cover bg-no-repeat bg-center md:bg-left-top"
             style={{
@@ -1545,7 +1566,7 @@ export default function BarangayPortal() {
 
                     {/* Image Section - Much Bigger */}
                     <div
-                      className="relative h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden"
+                      className="relative h-[300px] md:h-[600px] lg:h-[700px] overflow-hidden"
                       onTouchStart={handleTouchStart}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
@@ -1702,29 +1723,7 @@ export default function BarangayPortal() {
         onClose={() => setShowEducationalAssistanceModal(false)}
       />
 
-      {/* Transparency Stats Section - Barangay at a Glance */}
-      <section className="py-16 bg-gradient-to-r from-[#112e1f] to-[#112117] animate-on-scroll">
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Barangay at a Glance</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={index}
-                  className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center transform hover:scale-105 transition-all border border-white/20"
-                >
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <p className="text-4xl font-bold text-white mb-2">{stat.value}</p>
-                  <p className="text-[#bdcdc0]">{stat.label}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+
 
 
       {/* Barangay Officials Section - Optimized */}
@@ -1736,13 +1735,17 @@ export default function BarangayPortal() {
           </div>
 
           <h3 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 tracking-tighter uppercase">
-            Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">Officials</span>
+            {heroSettings?.title && heroSettings.title.includes('OFFICIALS') ? (
+              <>Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">Officials</span></>
+            ) : (
+              heroSettings?.title || 'BARANGAY OFFICIALS'
+            )}
           </h3>
 
           <div className="flex justify-center items-center gap-4 mb-4">
             <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-green-500/50"></div>
             <p className="text-white font-bold text-sm md:text-base tracking-[0.3em] uppercase">
-              Meet our dedicated team serving Iba O' Este
+              {heroSettings?.subtitle || 'Meet our dedicated team serving Iba O\' Este'}
             </p>
             <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-green-500/50"></div>
           </div>
@@ -1751,13 +1754,15 @@ export default function BarangayPortal() {
         {/* Photo - Full visibility without overlay */}
         <div className="relative">
           <img
-            src="/images/barangay-officials.jpg"
-            alt="Barangay Iba O' Este Officials"
-            className="w-full h-auto object-contain bg-gray-800"
+            src={heroSettings?.image || '/images/barangay-officials.jpg'}
+            alt={heroSettings?.title || "Barangay Officials"}
+            className="w-full h-auto md:h-[600px] lg:h-[800px] xl:h-[900px] md:object-cover bg-gray-800"
             onError={(e) => {
               e.target.src = '/background.jpg';
             }}
           />
+          {/* Green Shadow Overlay on Edges */}
+          <div className="absolute inset-0 shadow-[inset_0_0_150px_60px_#112e1f] pointer-events-none z-10 hidden md:block"></div>
         </div>
 
         {/* Text Section - Professional Leadership Introduction */}
@@ -1788,7 +1793,7 @@ export default function BarangayPortal() {
         </div>
 
         {/* Officials Details Section */}
-        <div className="bg-gradient-to-br from-gray-50 to-green-50 py-16 px-4">
+        <div className="bg-gradient-to-br from-gray-50 to-green-50 py-8 md:py-16 px-4">
           <div className="max-w-6xl mx-auto">
             {/* Section Header */}
             <div className="text-center mb-12">
@@ -2116,6 +2121,30 @@ export default function BarangayPortal() {
             </div>
           </div>
 
+        </div>
+      </section>
+
+      {/* Transparency Stats Section - Barangay at a Glance */}
+      <section className="py-16 bg-gradient-to-r from-[#112e1f] to-[#112117] animate-on-scroll">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Barangay at a Glance</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {stats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={index}
+                  className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center transform hover:scale-105 transition-all border border-white/20"
+                >
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  <p className="text-4xl font-bold text-white mb-2">{stat.value}</p>
+                  <p className="text-[#bdcdc0]">{stat.label}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 

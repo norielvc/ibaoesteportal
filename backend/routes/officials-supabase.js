@@ -18,43 +18,81 @@ const mapOfficialsToConfig = (officials) => {
       councilors: Array(7).fill(''),
       administrator: '', assistantSecretary: '', assistantAdministrator: '',
       recordKeeper: '', clerk: ''
+    },
+    heroSection: {
+      title: 'BARANGAY OFFICIALS',
+      subtitle: 'Meet our dedicated team serving Iba O\' Este',
+      image: '/images/barangay-officials.jpg'
+    },
+    descriptions: {
+      chairman: '', secretary: '', treasurer: '', skChairman: '',
+      skSecretary: '', skTreasurer: '',
+      skKagawads: Array(8).fill(''),
+      councilors: Array(7).fill(''),
+      administrator: '', assistantSecretary: '', assistantAdministrator: '',
+      recordKeeper: '', clerk: ''
+    },
+    committees: {
+      councilors: Array(7).fill(''),
+      skKagawads: Array(8).fill('')
     }
   };
 
   const setImg = (key, val) => { config.officialImages[key] = val; };
+  const setDesc = (key, val) => { config.descriptions[key] = val; };
+
   const setCouncilImg = (idx, val) => { if (idx >= 0 && idx < 7) config.officialImages.councilors[idx] = val; };
+  const setCouncilDesc = (idx, val) => { if (idx >= 0 && idx < 7) config.descriptions.councilors[idx] = val; };
+  const setCouncilComm = (idx, val) => { if (idx >= 0 && idx < 7) config.committees.councilors[idx] = val; };
+
   const setSkKagawadImg = (idx, val) => { if (idx >= 0 && idx < 8) config.officialImages.skKagawads[idx] = val; };
+  const setSkKagawadDesc = (idx, val) => { if (idx >= 0 && idx < 8) config.descriptions.skKagawads[idx] = val; };
+  const setSkKagawadComm = (idx, val) => { if (idx >= 0 && idx < 8) config.committees.skKagawads[idx] = val; };
 
   officials.forEach(o => {
     const url = o.image_url || '';
-    if (o.position_type === 'captain') { config.chairman = o.name; setImg('chairman', url); }
-    else if (o.position_type === 'secretary') { config.secretary = o.name; setImg('secretary', url); }
-    else if (o.position_type === 'treasurer') { config.treasurer = o.name; setImg('treasurer', url); }
-    else if (o.position_type === 'sk_chairman') { config.skChairman = o.name; setImg('skChairman', url); }
-    else if (o.position_type === 'sk_secretary') { config.skSecretary = o.name; setImg('skSecretary', url); }
-    else if (o.position_type === 'sk_treasurer') { config.skTreasurer = o.name; setImg('skTreasurer', url); }
+    const desc = o.description || '';
+    const comm = o.committee || '';
+
+    if (o.position_type === 'captain') { config.chairman = o.name; setImg('chairman', url); setDesc('chairman', desc); }
+    else if (o.position_type === 'secretary') { config.secretary = o.name; setImg('secretary', url); setDesc('secretary', desc); }
+    else if (o.position_type === 'treasurer') { config.treasurer = o.name; setImg('treasurer', url); setDesc('treasurer', desc); }
+    else if (o.position_type === 'sk_chairman') { config.skChairman = o.name; setImg('skChairman', url); setDesc('skChairman', desc); }
+    else if (o.position_type === 'sk_secretary') { config.skSecretary = o.name; setImg('skSecretary', url); setDesc('skSecretary', desc); }
+    else if (o.position_type === 'sk_treasurer') { config.skTreasurer = o.name; setImg('skTreasurer', url); setDesc('skTreasurer', desc); }
     else if (o.position_type === 'sk_kagawad') {
       const match = o.position.match(/SK Kagawad\s+(\d+)/i);
       if (match) {
         const idx = parseInt(match[1], 10) - 1;
-        if (idx >= 0 && idx < 8) { config.skKagawads[idx] = o.name; setSkKagawadImg(idx, url); }
+        if (idx >= 0 && idx < 8) {
+          config.skKagawads[idx] = o.name;
+          setSkKagawadImg(idx, url);
+          setSkKagawadDesc(idx, desc);
+          setSkKagawadComm(idx, comm);
+        }
       }
     }
     else if (o.position_type === 'kagawad') {
       const match = o.position.match(/Kagawad\s+(\d+)/i);
+      let idx = -1;
       if (match) {
-        const idx = parseInt(match[1], 10) - 1;
-        if (idx >= 0 && idx < 7) { config.councilors[idx] = o.name; setCouncilImg(idx, url); }
+        idx = parseInt(match[1], 10) - 1;
       } else {
-        const idx = (o.order_index || 5) - 5;
-        if (idx >= 0 && idx < 7) { config.councilors[idx] = o.name; setCouncilImg(idx, url); }
+        idx = (o.order_index || 5) - 5;
+      }
+
+      if (idx >= 0 && idx < 7) {
+        config.councilors[idx] = o.name;
+        setCouncilImg(idx, url);
+        setCouncilDesc(idx, desc);
+        setCouncilComm(idx, comm);
       }
     }
-    else if (o.position === 'Administrator') { config.administrator = o.name; setImg('administrator', url); }
-    else if (o.position === 'Assistant Secretary') { config.assistantSecretary = o.name; setImg('assistantSecretary', url); }
-    else if (o.position === 'Assistant Administrator') { config.assistantAdministrator = o.name; setImg('assistantAdministrator', url); }
-    else if (o.position === 'Barangay Keeper' || o.position === 'Record Keeper') { config.recordKeeper = o.name; setImg('recordKeeper', url); }
-    else if (o.position === 'Clerk') { config.clerk = o.name; setImg('clerk', url); }
+    else if (o.position === 'Administrator') { config.administrator = o.name; setImg('administrator', url); setDesc('administrator', desc); }
+    else if (o.position === 'Assistant Secretary') { config.assistantSecretary = o.name; setImg('assistantSecretary', url); setDesc('assistantSecretary', desc); }
+    else if (o.position === 'Assistant Administrator') { config.assistantAdministrator = o.name; setImg('assistantAdministrator', url); setDesc('assistantAdministrator', desc); }
+    else if (o.position === 'Barangay Keeper' || o.position === 'Record Keeper') { config.recordKeeper = o.name; setImg('recordKeeper', url); setDesc('recordKeeper', desc); }
+    else if (o.position === 'Clerk') { config.clerk = o.name; setImg('clerk', url); setDesc('clerk', desc); }
   });
   return config;
 };
@@ -108,9 +146,11 @@ router.put('/config', async (req, res) => {
     const updates = [];
 
     // Helper to push update promise
-    const updateOfficial = (type, name, positionPattern = null, orderIndex = null, imageUrl = null) => {
+    const updateOfficial = (type, name, positionPattern = null, orderIndex = null, imageUrl = null, description = null, committee = null) => {
       const payload = { name, updated_at: new Date() };
-      if (imageUrl !== null) payload.image_url = imageUrl;
+      if (imageUrl !== null && imageUrl !== undefined) payload.image_url = imageUrl;
+      if (description !== null && description !== undefined) payload.description = description;
+      if (committee !== null && committee !== undefined) payload.committee = committee;
 
       let query = supabase.from('barangay_officials').update(payload).eq('position_type', type);
 
@@ -124,21 +164,26 @@ router.put('/config', async (req, res) => {
     };
 
     const imgs = config.officialImages || {};
+    const descs = config.descriptions || {};
+    const comms = config.committees || {};
 
-    updates.push(updateOfficial('captain', config.chairman, null, null, imgs.chairman));
-    updates.push(updateOfficial('secretary', config.secretary, null, null, imgs.secretary));
-    updates.push(updateOfficial('treasurer', config.treasurer, null, null, imgs.treasurer));
-    updates.push(updateOfficial('sk_chairman', config.skChairman, null, null, imgs.skChairman));
-    updates.push(updateOfficial('sk_secretary', config.skSecretary || '', null, null, imgs.skSecretary));
-    updates.push(updateOfficial('sk_treasurer', config.skTreasurer || '', null, null, imgs.skTreasurer));
+    updates.push(updateOfficial('captain', config.chairman, null, null, imgs.chairman, descs.chairman));
+    updates.push(updateOfficial('secretary', config.secretary, null, null, imgs.secretary, descs.secretary));
+    updates.push(updateOfficial('treasurer', config.treasurer, null, null, imgs.treasurer, descs.treasurer));
+    updates.push(updateOfficial('sk_chairman', config.skChairman, null, null, imgs.skChairman, descs.skChairman));
+    updates.push(updateOfficial('sk_secretary', config.skSecretary || '', null, null, imgs.skSecretary, descs.skSecretary));
+    updates.push(updateOfficial('sk_treasurer', config.skTreasurer || '', null, null, imgs.skTreasurer, descs.skTreasurer));
 
     // SK Kagawads
     if (Array.isArray(config.skKagawads)) {
       config.skKagawads.forEach((name, i) => {
         const imageUrl = (imgs.skKagawads && imgs.skKagawads[i]) ? imgs.skKagawads[i] : null;
+        const description = (descs.skKagawads && descs.skKagawads[i]) ? descs.skKagawads[i] : null;
+        const committee = (comms.skKagawads && comms.skKagawads[i]) ? comms.skKagawads[i] : null;
+
         updates.push(
           supabase.from('barangay_officials')
-            .update({ name: name || '', image_url: imageUrl, updated_at: new Date() })
+            .update({ name: name || '', image_url: imageUrl, description, committee, updated_at: new Date() })
             .eq('position_type', 'sk_kagawad')
             .eq('position', `SK Kagawad ${i + 1}`)
         );
@@ -149,9 +194,12 @@ router.put('/config', async (req, res) => {
     if (Array.isArray(config.councilors)) {
       config.councilors.forEach((name, i) => {
         const imageUrl = (imgs.councilors && imgs.councilors[i]) ? imgs.councilors[i] : null;
+        const description = (descs.councilors && descs.councilors[i]) ? descs.councilors[i] : null;
+        const committee = (comms.councilors && comms.councilors[i]) ? comms.councilors[i] : null;
+
         updates.push(
           supabase.from('barangay_officials')
-            .update({ name, image_url: imageUrl, updated_at: new Date() })
+            .update({ name, image_url: imageUrl, description, committee, updated_at: new Date() })
             .eq('position_type', 'kagawad')
             .eq('position', `Kagawad ${i + 1}`)
         );
@@ -159,11 +207,11 @@ router.put('/config', async (req, res) => {
     }
 
     // Staff
-    updates.push(supabase.from('barangay_officials').update({ name: config.administrator, image_url: imgs.administrator }).eq('position', 'Administrator'));
-    updates.push(supabase.from('barangay_officials').update({ name: config.assistantSecretary, image_url: imgs.assistantSecretary }).eq('position', 'Assistant Secretary'));
-    updates.push(supabase.from('barangay_officials').update({ name: config.assistantAdministrator, image_url: imgs.assistantAdministrator }).eq('position', 'Assistant Administrator'));
-    updates.push(supabase.from('barangay_officials').update({ name: config.recordKeeper, image_url: imgs.recordKeeper }).eq('position', 'Barangay Keeper'));
-    updates.push(supabase.from('barangay_officials').update({ name: config.clerk, image_url: imgs.clerk }).eq('position', 'Clerk'));
+    updates.push(supabase.from('barangay_officials').update({ name: config.administrator, image_url: imgs.administrator, description: descs.administrator }).eq('position', 'Administrator'));
+    updates.push(supabase.from('barangay_officials').update({ name: config.assistantSecretary, image_url: imgs.assistantSecretary, description: descs.assistantSecretary }).eq('position', 'Assistant Secretary'));
+    updates.push(supabase.from('barangay_officials').update({ name: config.assistantAdministrator, image_url: imgs.assistantAdministrator, description: descs.assistantAdministrator }).eq('position', 'Assistant Administrator'));
+    updates.push(supabase.from('barangay_officials').update({ name: config.recordKeeper, image_url: imgs.recordKeeper, description: descs.recordKeeper }).eq('position', 'Barangay Keeper'));
+    updates.push(supabase.from('barangay_officials').update({ name: config.clerk, image_url: imgs.clerk, description: descs.clerk }).eq('position', 'Clerk'));
 
 
     await Promise.all(updates);
@@ -181,7 +229,8 @@ router.put('/config', async (req, res) => {
       provinceStyle: config.provinceStyle,
       municipalityStyle: config.municipalityStyle,
       barangayNameStyle: config.barangayNameStyle,
-      officeNameStyle: config.officeNameStyle
+      officeNameStyle: config.officeNameStyle,
+      heroSection: config.heroSection
     };
 
     const { error: settingsError } = await supabase
