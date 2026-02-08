@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 // Build Trigger: 2026-02-07 17:09
-import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search } from 'lucide-react';
+import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 // API Configuration
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
@@ -243,22 +243,22 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
             <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
 
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
-              <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-8 py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden">
+              <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-4 md:px-8 md:py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                <div className="flex items-center gap-5 relative z-10">
-                  <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/30 shadow-xl">
-                    <FileText className="w-8 h-8 text-white shadow-sm" />
+                <div className="flex items-center gap-3 md:gap-5 relative z-10">
+                  <div className="bg-white/20 backdrop-blur-md p-2 md:p-3.5 rounded-xl md:rounded-2xl border border-white/30 shadow-xl">
+                    <FileText className="w-6 h-6 md:w-8 md:h-8 text-white shadow-sm" />
                   </div>
                   <div className="flex flex-col">
-                    <h2 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md">Barangay Clearance</h2>
+                    <h2 className="text-lg md:text-2xl font-extrabold text-white tracking-tight drop-shadow-md">Barangay Clearance</h2>
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
-                      <p className="text-emerald-50/90 text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">{referenceNumber || 'New Application Request'}</p>
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
+                      <p className="text-emerald-50/90 text-[10px] md:text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">{referenceNumber || 'New Application Request'}</p>
                     </div>
                   </div>
                 </div>
                 <button onClick={onClose} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group">
-                  <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+                  <X className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-90 transition-transform duration-300" />
                 </button>
               </div>
 

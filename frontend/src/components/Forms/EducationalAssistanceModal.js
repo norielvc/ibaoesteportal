@@ -165,28 +165,28 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in my-auto">
         {/* Premium Nature Header */}
-        <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-8 py-7 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
+        <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-4 md:px-8 md:py-8 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
 
-          <div className="flex items-center gap-5 relative z-10">
-            <div className="bg-white/10 backdrop-blur-lg p-3.5 rounded-2xl border border-white/20 shadow-xl">
-              <GraduationCap className="w-8 h-8 text-white" />
+          <div className="flex items-center gap-3 md:gap-5 relative z-10">
+            <div className="bg-white/10 backdrop-blur-lg p-2 md:p-3.5 rounded-xl md:rounded-2xl border border-white/20 shadow-xl">
+              <GraduationCap className="w-6 h-6 md:w-8 md:h-8 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-white tracking-tight leading-none">Educational Assistance</h2>
+              <h2 className="text-lg md:text-2xl font-black text-white tracking-tight leading-none">Educational Assistance</h2>
               <div className="flex items-center gap-2 mt-1.5">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                <p className="text-green-100/80 text-sm font-bold uppercase tracking-widest leading-none">Scholarship Filing Portal</p>
+                <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                <p className="text-green-100/80 text-[10px] md:text-sm font-bold uppercase tracking-widest leading-none">Scholarship Filing Portal</p>
               </div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white p-2.5 hover:bg-white/10 rounded-2xl transition-all duration-300 group"
+            className="text-white/40 hover:text-white p-2 md:p-2.5 hover:bg-white/10 rounded-xl md:rounded-2xl transition-all duration-300 group"
           >
-            <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+            <X className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-90 transition-transform duration-300" />
           </button>
         </div>
 

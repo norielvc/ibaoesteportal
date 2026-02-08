@@ -8,34 +8,53 @@ const mapOfficialsToConfig = (officials) => {
     councilors: Array(7).fill(''),
     // Defaults
     chairman: '', secretary: '', treasurer: '', skChairman: '',
+    skSecretary: '', skTreasurer: '', skKagawads: Array(8).fill(''),
     administrator: '', assistantSecretary: '', assistantAdministrator: '',
-    recordKeeper: '', clerk: ''
+    recordKeeper: '', clerk: '',
+    officialImages: {
+      chairman: '', secretary: '', treasurer: '', skChairman: '',
+      skSecretary: '', skTreasurer: '',
+      skKagawads: Array(8).fill(''),
+      councilors: Array(7).fill(''),
+      administrator: '', assistantSecretary: '', assistantAdministrator: '',
+      recordKeeper: '', clerk: ''
+    }
   };
 
+  const setImg = (key, val) => { config.officialImages[key] = val; };
+  const setCouncilImg = (idx, val) => { if (idx >= 0 && idx < 7) config.officialImages.councilors[idx] = val; };
+  const setSkKagawadImg = (idx, val) => { if (idx >= 0 && idx < 8) config.officialImages.skKagawads[idx] = val; };
+
   officials.forEach(o => {
-    if (o.position_type === 'captain') config.chairman = o.name;
-    else if (o.position_type === 'secretary') config.secretary = o.name;
-    else if (o.position_type === 'treasurer') config.treasurer = o.name;
-    else if (o.position_type === 'sk_chairman') config.skChairman = o.name;
-    else if (o.position_type === 'kagawad') {
-      // Parse "Kagawad 1", "Kagawad 2" etc. to determine index
-      const match = o.position.match(/Kagawad\s+(\d+)/i);
+    const url = o.image_url || '';
+    if (o.position_type === 'captain') { config.chairman = o.name; setImg('chairman', url); }
+    else if (o.position_type === 'secretary') { config.secretary = o.name; setImg('secretary', url); }
+    else if (o.position_type === 'treasurer') { config.treasurer = o.name; setImg('treasurer', url); }
+    else if (o.position_type === 'sk_chairman') { config.skChairman = o.name; setImg('skChairman', url); }
+    else if (o.position_type === 'sk_secretary') { config.skSecretary = o.name; setImg('skSecretary', url); }
+    else if (o.position_type === 'sk_treasurer') { config.skTreasurer = o.name; setImg('skTreasurer', url); }
+    else if (o.position_type === 'sk_kagawad') {
+      const match = o.position.match(/SK Kagawad\s+(\d+)/i);
       if (match) {
-        const idx = parseInt(match[1], 10) - 1; // "Kagawad 1" -> 0
-        if (idx >= 0 && idx < 7) config.councilors[idx] = o.name;
-      } else {
-        // Fallback: Use order_index if position name doesn't match
-        // Kagawads usually start at order_index 5 in our seed data
-        const idx = (o.order_index || 5) - 5;
-        if (idx >= 0 && idx < 7) config.councilors[idx] = o.name;
+        const idx = parseInt(match[1], 10) - 1;
+        if (idx >= 0 && idx < 8) { config.skKagawads[idx] = o.name; setSkKagawadImg(idx, url); }
       }
     }
-    // Staff mappings
-    else if (o.position === 'Administrator') config.administrator = o.name; // Map by specific position name for staff if type is generic 'staff'
-    else if (o.position === 'Assistant Secretary') config.assistantSecretary = o.name;
-    else if (o.position === 'Assistant Administrator') config.assistantAdministrator = o.name;
-    else if (o.position === 'Barangay Keeper' || o.position === 'Record Keeper') config.recordKeeper = o.name;
-    else if (o.position === 'Clerk') config.clerk = o.name;
+    else if (o.position_type === 'kagawad') {
+      const match = o.position.match(/Kagawad\s+(\d+)/i);
+      if (match) {
+        const idx = parseInt(match[1], 10) - 1;
+        if (idx >= 0 && idx < 7) { config.councilors[idx] = o.name; setCouncilImg(idx, url); }
+      } else {
+        const idx = (o.order_index || 5) - 5;
+        if (idx >= 0 && idx < 7) { config.councilors[idx] = o.name; setCouncilImg(idx, url); }
+      }
+    }
+    else if (o.position === 'Administrator') { config.administrator = o.name; setImg('administrator', url); }
+    else if (o.position === 'Assistant Secretary') { config.assistantSecretary = o.name; setImg('assistantSecretary', url); }
+    else if (o.position === 'Assistant Administrator') { config.assistantAdministrator = o.name; setImg('assistantAdministrator', url); }
+    else if (o.position === 'Barangay Keeper' || o.position === 'Record Keeper') { config.recordKeeper = o.name; setImg('recordKeeper', url); }
+    else if (o.position === 'Clerk') { config.clerk = o.name; setImg('clerk', url); }
   });
   return config;
 };
@@ -89,11 +108,14 @@ router.put('/config', async (req, res) => {
     const updates = [];
 
     // Helper to push update promise
-    const updateOfficial = (type, name, positionPattern = null, orderIndex = null) => {
-      let query = supabase.from('barangay_officials').update({ name, updated_at: new Date() }).eq('position_type', type);
+    const updateOfficial = (type, name, positionPattern = null, orderIndex = null, imageUrl = null) => {
+      const payload = { name, updated_at: new Date() };
+      if (imageUrl !== null) payload.image_url = imageUrl;
+
+      let query = supabase.from('barangay_officials').update(payload).eq('position_type', type);
 
       if (positionPattern) {
-        query = query.eq('position', positionPattern); // Approximate match for staff
+        query = query.eq('position', positionPattern);
       }
       if (orderIndex !== null) {
         query = query.eq('order_index', orderIndex);
@@ -101,24 +123,35 @@ router.put('/config', async (req, res) => {
       return query;
     };
 
-    updates.push(updateOfficial('captain', config.chairman));
-    updates.push(updateOfficial('secretary', config.secretary));
-    updates.push(updateOfficial('treasurer', config.treasurer));
-    updates.push(updateOfficial('sk_chairman', config.skChairman));
+    const imgs = config.officialImages || {};
+
+    updates.push(updateOfficial('captain', config.chairman, null, null, imgs.chairman));
+    updates.push(updateOfficial('secretary', config.secretary, null, null, imgs.secretary));
+    updates.push(updateOfficial('treasurer', config.treasurer, null, null, imgs.treasurer));
+    updates.push(updateOfficial('sk_chairman', config.skChairman, null, null, imgs.skChairman));
+    updates.push(updateOfficial('sk_secretary', config.skSecretary || '', null, null, imgs.skSecretary));
+    updates.push(updateOfficial('sk_treasurer', config.skTreasurer || '', null, null, imgs.skTreasurer));
+
+    // SK Kagawads
+    if (Array.isArray(config.skKagawads)) {
+      config.skKagawads.forEach((name, i) => {
+        const imageUrl = (imgs.skKagawads && imgs.skKagawads[i]) ? imgs.skKagawads[i] : null;
+        updates.push(
+          supabase.from('barangay_officials')
+            .update({ name: name || '', image_url: imageUrl, updated_at: new Date() })
+            .eq('position_type', 'sk_kagawad')
+            .eq('position', `SK Kagawad ${i + 1}`)
+        );
+      });
+    }
 
     // Councilors
     if (Array.isArray(config.councilors)) {
       config.councilors.forEach((name, i) => {
-        // Assuming Kagawads are order_index 1-7 in DB relative to Kagawads? 
-        // Or they have absolute order_index.
-        // Let's safely update by finding the kagawad with specific order_index if we adhere to CREATE_OFFICIALS_TABLE.sql
-        // In CREATE_OFFICIALS_TABLE: Kagawad 1 is order_index 5, Kagawad 2 is 6... Kagawad 7 is 11.
-        // This is fragile. Better to look up by 'Kagawad ${i+1}' position name or create if not exists?
-        // For now, let's try updating by position name 'Kagawad ${i+1}' which matches the seed data.
-
+        const imageUrl = (imgs.councilors && imgs.councilors[i]) ? imgs.councilors[i] : null;
         updates.push(
           supabase.from('barangay_officials')
-            .update({ name, updated_at: new Date() })
+            .update({ name, image_url: imageUrl, updated_at: new Date() })
             .eq('position_type', 'kagawad')
             .eq('position', `Kagawad ${i + 1}`)
         );
@@ -126,13 +159,11 @@ router.put('/config', async (req, res) => {
     }
 
     // Staff
-    // In seed: 'Administrator', 'Assistant Secretary', 'Assistant Administrator', 'Barangay Keeper', 'Clerk'
-    // position_type is 'staff' for all
-    updates.push(supabase.from('barangay_officials').update({ name: config.administrator }).eq('position', 'Administrator'));
-    updates.push(supabase.from('barangay_officials').update({ name: config.assistantSecretary }).eq('position', 'Assistant Secretary'));
-    updates.push(supabase.from('barangay_officials').update({ name: config.assistantAdministrator }).eq('position', 'Assistant Administrator'));
-    updates.push(supabase.from('barangay_officials').update({ name: config.recordKeeper }).eq('position', 'Barangay Keeper')); // Note map
-    updates.push(supabase.from('barangay_officials').update({ name: config.clerk }).eq('position', 'Clerk'));
+    updates.push(supabase.from('barangay_officials').update({ name: config.administrator, image_url: imgs.administrator }).eq('position', 'Administrator'));
+    updates.push(supabase.from('barangay_officials').update({ name: config.assistantSecretary, image_url: imgs.assistantSecretary }).eq('position', 'Assistant Secretary'));
+    updates.push(supabase.from('barangay_officials').update({ name: config.assistantAdministrator, image_url: imgs.assistantAdministrator }).eq('position', 'Assistant Administrator'));
+    updates.push(supabase.from('barangay_officials').update({ name: config.recordKeeper, image_url: imgs.recordKeeper }).eq('position', 'Barangay Keeper'));
+    updates.push(supabase.from('barangay_officials').update({ name: config.clerk, image_url: imgs.clerk }).eq('position', 'Clerk'));
 
 
     await Promise.all(updates);
@@ -198,8 +229,11 @@ router.get('/', async (req, res) => {
       'captain': 1,
       'kagawad': 2,
       'sk_chairman': 3,
-      'secretary': 4, // Group with staff
-      'treasurer': 4, // Group with staff  
+      'sk_secretary': 3.1,
+      'sk_treasurer': 3.2,
+      'sk_kagawad': 3.3,
+      'secretary': 4,
+      'treasurer': 4,
       'staff': 4
     };
 

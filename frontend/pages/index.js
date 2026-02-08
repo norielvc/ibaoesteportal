@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import {
   Menu, X, ChevronRight, ChevronLeft, Plus, Send, Phone, MapPin, Mail,
@@ -34,6 +34,109 @@ export default function BarangayPortal() {
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', message: ''
   });
+  const [itemsPerView, setItemsPerView] = useState(3);
+
+  const forms = useMemo(() => [
+    {
+      title: 'Barangay Clearance',
+      description: 'Official clearance for employment, business permits, and other legal purposes.',
+      icon: Shield,
+      color: 'blue',
+      features: ['Employment', 'Business', 'Legal'],
+      onClick: () => setShowClearanceModal(true)
+    },
+    {
+      title: 'Certificate of Indigency',
+      description: 'Proof of financial status for medical, educational, and social assistance programs.',
+      icon: FileText,
+      color: 'green',
+      features: ['Medical', 'Education', 'Assistance'],
+      onClick: () => setShowIndigencyModal(true)
+    },
+    {
+      title: 'Barangay Residency',
+      description: 'Certificate confirming your residence in Iba O\' Este for various requirements.',
+      icon: Home,
+      color: 'orange',
+      features: ['Proof', 'Enrollment', 'ID'],
+      onClick: () => setShowResidencyModal(true)
+    },
+    {
+      title: 'Business Permit',
+      description: 'Official permit to operate a business within Iba O\' Este barangay jurisdiction.',
+      icon: Building2,
+      color: 'purple',
+      features: ['New Business', 'Renewal', 'Transfer'],
+      onClick: () => setShowBusinessPermitModal(true)
+    },
+    {
+      title: 'Business Closure',
+      description: 'Official notice to cease business operations within the barangay.',
+      icon: Briefcase,
+      color: 'blue',
+      features: ['Liquidation', 'Permit Exit', 'Tax Clearance'],
+      onClick: () => setShowComingSoonModal(true)
+    },
+    {
+      title: 'Co-habitation',
+      description: 'Certification for couples living together without formal marriage.',
+      icon: Heart,
+      color: 'green',
+      features: ['Live-in', 'Relationship', 'Proof'],
+      onClick: () => setShowComingSoonModal(true)
+    },
+    {
+      title: 'Medico-legal',
+      description: 'Official document for cases requiring medical and legal coordination.',
+      icon: Stethoscope,
+      color: 'orange',
+      features: ['Accident', 'Legal Case', 'Medical Report'],
+      onClick: () => setShowComingSoonModal(true)
+    },
+    {
+      title: 'Certification of Same Person',
+      description: 'Certification that differences in name records refer to the same individual.',
+      icon: Fingerprint,
+      color: 'purple',
+      features: ['ID Match', 'Affidavit', 'Verification'],
+      onClick: () => setShowComingSoonModal(true)
+    },
+    {
+      title: 'Guardianship',
+      description: 'Legal certification for designated guardians of minors or dependents.',
+      icon: UserPlus,
+      color: 'blue',
+      features: ['Legal Guardian', 'Minor Support', 'Custody'],
+      onClick: () => setShowComingSoonModal(true)
+    },
+    {
+      title: 'Natural Death',
+      description: 'Official certification for natural death recording and burial requirements.',
+      icon: Flower2,
+      color: 'green',
+      features: ['Certified', 'Family Record', 'Cemetery'],
+      onClick: () => setShowComingSoonModal(true)
+    }
+  ], [setShowClearanceModal, setShowIndigencyModal, setShowResidencyModal, setShowBusinessPermitModal, setShowComingSoonModal]);
+
+  // Responsive items per view for forms carousel
+  useEffect(() => {
+    const handleResize = () => {
+      let newItemsPerView;
+      if (window.innerWidth < 768) {
+        newItemsPerView = 1;
+      } else if (window.innerWidth < 1024) {
+        newItemsPerView = 2;
+      } else {
+        newItemsPerView = 3;
+      }
+      setItemsPerView(newItemsPerView);
+      setCurrentFormSlide(prev => Math.min(prev, forms.length - (newItemsPerView - 1)));
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [forms.length]);
 
   // Default events (fallback)
   const defaultNewsItems = [
@@ -451,7 +554,7 @@ export default function BarangayPortal() {
           <div className="flex items-center gap-4 md:gap-6">
             <img src="/logo.png" alt="Iba O' Este Logo" className="h-20 w-20 md:h-24 md:w-24 object-contain drop-shadow-2xl" />
             <div className="text-center md:text-left">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg">
                 IBA O' ESTE PORTAL V5
               </h1>
               <p className="text-lg md:text-xl text-green-100 font-medium mt-1">
@@ -554,7 +657,7 @@ export default function BarangayPortal() {
       </nav>
 
       {/* Hero Section with News Carousel */}
-      <section id="news" className="relative h-[650px] md:h-[800px] overflow-hidden animate-on-scroll">
+      <section id="news" className="relative h-[500px] md:h-[800px] overflow-hidden animate-on-scroll">
         {newsItems.map((item, index) => (
           <div
             key={index}
@@ -615,7 +718,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Available Forms Section - Modern Design with Responsive Background */}
-      <section id="forms" className="py-20 relative overflow-hidden animate-on-scroll">
+      <section id="forms" className="py-12 md:py-20 relative overflow-hidden animate-on-scroll">
         {/* Responsive Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-no-repeat"
@@ -623,6 +726,12 @@ export default function BarangayPortal() {
             backgroundImage: 'url(/images/barangay-captain.jpg)',
             backgroundPosition: 'center center',
           }}
+        />
+
+        {/* Barangay Logo Watermark - Even Bigger & Impactful */}
+        <div
+          className="absolute right-[-5%] md:right-[-2%] top-1/2 -translate-y-1/2 w-[600px] md:w-[1100px] h-[110%] md:h-[115%] bg-contain bg-right bg-no-repeat opacity-20 pointer-events-none z-0"
+          style={{ backgroundImage: 'url(/images/ibalogo.png)', backgroundPosition: 'right center' }}
         />
 
         {/* Light Overlay for Text Readability */}
@@ -659,89 +768,6 @@ export default function BarangayPortal() {
           {/* Forms Carousel */}
           <div className="relative mb-16">
             {(() => {
-              const forms = [
-                {
-                  title: 'Barangay Clearance',
-                  description: 'Official clearance for employment, business permits, and other legal purposes.',
-                  icon: Shield,
-                  color: 'blue',
-                  features: ['Employment', 'Business', 'Legal'],
-                  onClick: () => setShowClearanceModal(true)
-                },
-                {
-                  title: 'Certificate of Indigency',
-                  description: 'Proof of financial status for medical, educational, and social assistance programs.',
-                  icon: FileText,
-                  color: 'green',
-                  features: ['Medical', 'Education', 'Assistance'],
-                  onClick: () => setShowIndigencyModal(true)
-                },
-                {
-                  title: 'Barangay Residency',
-                  description: 'Certificate confirming your residence in Iba O\' Este for various requirements.',
-                  icon: Home,
-                  color: 'orange',
-                  features: ['Proof', 'Enrollment', 'ID'],
-                  onClick: () => setShowResidencyModal(true)
-                },
-                {
-                  title: 'Business Permit',
-                  description: 'Official permit to operate a business within Iba O\' Este barangay jurisdiction.',
-                  icon: Building2,
-                  color: 'purple',
-                  features: ['New Business', 'Renewal', 'Transfer'],
-                  onClick: () => setShowBusinessPermitModal(true)
-                },
-                {
-                  title: 'Business Closure',
-                  description: 'Official notice to cease business operations within the barangay.',
-                  icon: Briefcase,
-                  color: 'blue',
-                  features: ['Liquidation', 'Permit Exit', 'Tax Clearance'],
-                  onClick: () => setShowComingSoonModal(true)
-                },
-                {
-                  title: 'Co-habitation',
-                  description: 'Certification for couples living together without formal marriage.',
-                  icon: Heart,
-                  color: 'green',
-                  features: ['Live-in', 'Relationship', 'Proof'],
-                  onClick: () => setShowComingSoonModal(true)
-                },
-                {
-                  title: 'Medico-legal',
-                  description: 'Official document for cases requiring medical and legal coordination.',
-                  icon: Stethoscope,
-                  color: 'orange',
-                  features: ['Accident', 'Legal Case', 'Medical Report'],
-                  onClick: () => setShowComingSoonModal(true)
-                },
-                {
-                  title: 'Certification of Same Person',
-                  description: 'Certification that differences in name records refer to the same individual.',
-                  icon: Fingerprint,
-                  color: 'purple',
-                  features: ['ID Match', 'Affidavit', 'Verification'],
-                  onClick: () => setShowComingSoonModal(true)
-                },
-                {
-                  title: 'Guardianship',
-                  description: 'Legal certification for designated guardians of minors or dependents.',
-                  icon: UserPlus,
-                  color: 'blue',
-                  features: ['Legal Guardian', 'Minor Support', 'Custody'],
-                  onClick: () => setShowComingSoonModal(true)
-                },
-                {
-                  title: 'Natural Death',
-                  description: 'Official certification for natural death recording and burial requirements.',
-                  icon: Flower2,
-                  color: 'green',
-                  features: ['Certified', 'Family Record', 'Cemetery'],
-                  onClick: () => setShowComingSoonModal(true)
-                }
-              ];
-
               const colorClasses = {
                 blue: {
                   gradient: 'from-blue-500 to-blue-600',
@@ -791,9 +817,22 @@ export default function BarangayPortal() {
                   <div className="relative max-w-[1400px] mx-auto overflow-hidden">
                     <div
                       className="flex transition-transform duration-500 ease-in-out"
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={() => {
+                        if (!touchStart || !touchEnd) return;
+                        const distance = touchStart - touchEnd;
+                        if (distance > 50) {
+                          setCurrentFormSlide((prev) => (prev + 1) % (forms.length - (itemsPerView - 1)));
+                        } else if (distance < -50) {
+                          setCurrentFormSlide((prev) => (prev - 1 + forms.length) % (forms.length - (itemsPerView - 1)));
+                        }
+                        setTouchStart(null);
+                        setTouchEnd(null);
+                      }}
                       style={{
                         transform: `translateX(-${currentFormSlide * (100 / forms.length)}%)`,
-                        width: `${(forms.length / 3) * 100}%`
+                        width: `${(forms.length / itemsPerView) * 100}%`
                       }}
                     >
                       {forms.map((form, formIndex) => {
@@ -877,22 +916,22 @@ export default function BarangayPortal() {
 
                     {/* Navigation Arrows - Improved positioning */}
                     <button
-                      onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % (forms.length - 2))}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
+                      onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % (forms.length - (itemsPerView - 1)))}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
                     >
-                      <ChevronLeft className="w-6 h-6 text-white" />
+                      <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </button>
                     <button
-                      onClick={() => setCurrentFormSlide((prev) => (prev + 1) % (forms.length - 2))}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
+                      onClick={() => setCurrentFormSlide((prev) => (prev + 1) % (forms.length - (itemsPerView - 1)))}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
                     >
-                      <ChevronRight className="w-6 h-6 text-white" />
+                      <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </button>
                   </div>
 
                   {/* Dots Navigation */}
                   <div className="flex justify-center gap-2 mt-8">
-                    {Array.from({ length: forms.length - 2 }).map((_, index) => (
+                    {Array.from({ length: forms.length - (itemsPerView - 1) }).map((_, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentFormSlide(index)}
@@ -1103,7 +1142,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Senior Citizen Assistance Section */}
-      <section id="senior-citizen-assistance" className="py-8 md:py-12 bg-gradient-to-br from-[#112e1f] via-[#2d5a3d] to-[#112117] relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
+      <section id="senior-citizen-assistance" className="py-8 md:py-12 bg-gradient-to-br from-[#4d2c00] via-[#8c5100] to-[#331c00] relative overflow-hidden min-h-screen flex items-center animate-on-scroll">
         {/* Background Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-48 h-48 md:w-96 md:h-96 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
@@ -1111,7 +1150,7 @@ export default function BarangayPortal() {
         </div>
 
         {/* Filipino Senior Citizens Background Image */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute inset-0 opacity-40 pointer-events-none">
           <div
             className="w-full h-full bg-cover bg-center bg-no-repeat"
             style={{
@@ -1119,7 +1158,7 @@ export default function BarangayPortal() {
               filter: 'brightness(0.7) contrast(1.2) sepia(0.2)',
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/60 via-transparent to-teal-900/60"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FFA500]/10 via-transparent to-[#FFA500]/10"></div>
         </div>
 
         <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
@@ -1131,24 +1170,24 @@ export default function BarangayPortal() {
                 <div className="inline-flex items-center gap-3 md:gap-4 px-6 md:px-8 py-3 md:py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full">
                   <Heart className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   <span className="text-white font-bold text-lg md:text-xl lg:text-2xl tracking-wide">SENIOR CITIZEN SERVICES</span>
-                  <div className="w-2 h-2 md:w-3 md:h-3 bg-red-400 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 md:w-3 md:h-3 bg-[#FFA500] rounded-full animate-pulse shadow-[0_0_8px_rgba(255,165,0,0.6)]"></div>
                 </div>
               </div>
 
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#bdcdc0] via-[#648a6a] to-[#2d5a3d]">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffd89b] via-[#FFA500] to-[#996300]">
                   SENIOR CITIZEN ASSISTANCE PROGRAM
                 </span>
               </h2>
 
               <div className="flex justify-center mb-4 md:mb-6">
-                <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-[#bdcdc0] via-[#648a6a] to-[#2d5a3d] rounded-full"></div>
+                <div className="w-24 md:w-32 h-1 bg-gradient-to-r from-[#ffd89b]/20 via-[#FFA500] to-[#ffd89b]/20 rounded-full"></div>
               </div>
 
-              <p className="text-lg md:text-xl lg:text-2xl text-emerald-100 font-light leading-relaxed max-w-4xl mx-auto px-4 md:px-0">
+              <p className="text-lg md:text-xl lg:text-2xl text-orange-100 font-light leading-relaxed max-w-4xl mx-auto px-4 md:px-0">
                 Honoring our elders with comprehensive care and support services
               </p>
-              <p className="text-base md:text-lg text-teal-200 font-medium max-w-3xl mx-auto px-4 md:px-0">
+              <p className="text-base md:text-lg text-[#FFA500] font-bold max-w-3xl mx-auto px-4 md:px-0 uppercase tracking-wide">
                 Dedicated programs for the health, welfare, and dignity of our senior citizens
               </p>
             </div>
@@ -1157,186 +1196,186 @@ export default function BarangayPortal() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-12">
 
               {/* Healthcare Services */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+              <div className="bg-orange-950/15 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-[#FFA500]/20 hover:bg-orange-900/40 hover:border-[#FFA500]/40 transition-all duration-300 group shadow-2xl">
                 <div className="flex items-center mb-4 md:mb-6">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#996300] to-[#FFA500] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-[#FFA500]/20 group-hover:scale-110 transition-all duration-300">
                     <Heart className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg md:text-xl font-bold text-white">Healthcare Services</h3>
-                    <p className="text-emerald-200 text-sm md:text-base">Medical Care & Support</p>
+                    <p className="text-orange-200/80 text-sm md:text-base font-medium">Medical Care & Support</p>
                   </div>
                 </div>
                 <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Free medical check-ups and consultations</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Medicine assistance and subsidies</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Health monitoring and wellness programs</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Referral services to specialists</span>
                   </li>
                 </ul>
               </div>
 
               {/* Financial Assistance */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+              <div className="bg-orange-950/15 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-[#FFA500]/20 hover:bg-orange-900/40 hover:border-[#FFA500]/40 transition-all duration-300 group shadow-2xl">
                 <div className="flex items-center mb-4 md:mb-6">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#FFA500] to-[#ffd89b] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-[#FFA500]/20 group-hover:scale-110 transition-all duration-300">
                     <Award className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg md:text-xl font-bold text-white">Financial Assistance</h3>
-                    <p className="text-emerald-200 text-sm md:text-base">Economic Support</p>
+                    <p className="text-orange-200/80 text-sm md:text-base font-medium">Economic Support</p>
                   </div>
                 </div>
                 <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Senior citizen pension assistance</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Emergency financial aid</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Burial and funeral assistance</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Utility bill subsidies</span>
                   </li>
                 </ul>
               </div>
 
               {/* Social Services */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+              <div className="bg-orange-950/15 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-[#FFA500]/20 hover:bg-orange-900/40 hover:border-[#FFA500]/40 transition-all duration-300 group shadow-2xl">
                 <div className="flex items-center mb-4 md:mb-6">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#8c5100] to-[#FFA500] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-[#FFA500]/20 group-hover:scale-110 transition-all duration-300">
                     <Users className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg md:text-xl font-bold text-white">Social Services</h3>
-                    <p className="text-emerald-200 text-sm md:text-base">Community & Recreation</p>
+                    <p className="text-orange-200/80 text-sm md:text-base font-medium">Community & Recreation</p>
                   </div>
                 </div>
                 <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Senior citizen activities and events</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Transportation assistance</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Recreational and wellness programs</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Social interaction and support groups</span>
                   </li>
                 </ul>
               </div>
 
               {/* Legal Assistance */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+              <div className="bg-orange-950/15 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-[#FFA500]/20 hover:bg-orange-900/40 hover:border-[#FFA500]/40 transition-all duration-300 group shadow-2xl">
                 <div className="flex items-center mb-4 md:mb-6">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#664200] to-[#996300] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-[#FFA500]/20 group-hover:scale-110 transition-all duration-300">
                     <Shield className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg md:text-xl font-bold text-white">Legal Assistance</h3>
-                    <p className="text-emerald-200 text-sm md:text-base">Rights & Protection</p>
+                    <p className="text-orange-200/80 text-sm md:text-base font-medium">Rights & Protection</p>
                   </div>
                 </div>
                 <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Senior citizen ID processing</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Legal counseling and advice</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Document assistance and notarization</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Advocacy and rights protection</span>
                   </li>
                 </ul>
               </div>
 
               {/* Food & Nutrition */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+              <div className="bg-orange-950/15 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-[#FFA500]/20 hover:bg-orange-900/40 hover:border-[#FFA500]/40 transition-all duration-300 group shadow-2xl">
                 <div className="flex items-center mb-4 md:mb-6">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#FFA500] to-[#cc8400] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-[#FFA500]/20 group-hover:scale-110 transition-all duration-300">
                     <Baby className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg md:text-xl font-bold text-white">Food & Nutrition</h3>
-                    <p className="text-emerald-200 text-sm md:text-base">Nutritional Support</p>
+                    <p className="text-orange-200/80 text-sm md:text-base font-medium">Nutritional Support</p>
                   </div>
                 </div>
                 <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Nutritional meals and food packs</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Dietary counseling and guidance</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Special dietary requirements support</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Community feeding programs</span>
                   </li>
                 </ul>
               </div>
 
               {/* Home Care Services */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+              <div className="bg-orange-950/15 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-[#FFA500]/20 hover:bg-orange-900/40 hover:border-[#FFA500]/40 transition-all duration-300 group shadow-2xl">
                 <div className="flex items-center mb-4 md:mb-6">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#cc8400] to-[#ffd89b] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-[#FFA500]/20 group-hover:scale-110 transition-all duration-300">
                     <Home className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg md:text-xl font-bold text-white">Home Care Services</h3>
-                    <p className="text-emerald-200 text-sm md:text-base">In-Home Support</p>
+                    <p className="text-orange-200/80 text-sm md:text-base font-medium">In-Home Support</p>
                   </div>
                 </div>
                 <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Home visits and wellness checks</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Personal care assistance</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Household maintenance support</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <span>Emergency response services</span>
                   </li>
                 </ul>
@@ -1346,24 +1385,24 @@ export default function BarangayPortal() {
 
             {/* Call to Action */}
             <div className="text-center mb-8 md:mb-12">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/20 shadow-xl max-w-4xl mx-auto">
+              <div className="bg-orange-950/20 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-[#FFA500]/20 shadow-xl max-w-4xl mx-auto">
                 <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6">Need Assistance?</h3>
-                <p className="text-emerald-200 text-base md:text-lg mb-6 md:mb-8 leading-relaxed">
+                <p className="text-orange-100/90 text-base md:text-lg mb-6 md:mb-8 leading-relaxed font-medium">
                   Our dedicated team is here to help our senior citizens access the services and support they deserve.
                   Contact us today to learn more about available programs and how to apply.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
-                  <div className="flex items-center gap-3 bg-white/15 rounded-full px-6 py-3 border border-white/30">
-                    <Phone className="w-5 h-5 text-emerald-300" />
+                  <div className="flex items-center gap-3 bg-white/10 rounded-full px-6 py-3 border border-white/20">
+                    <Phone className="w-5 h-5 text-[#FFA500]" />
                     <span className="text-white font-medium">(044) 123-4567</span>
                   </div>
-                  <div className="flex items-center gap-3 bg-white/15 rounded-full px-6 py-3 border border-white/30">
-                    <Mail className="w-5 h-5 text-emerald-300" />
+                  <div className="flex items-center gap-3 bg-white/10 rounded-full px-6 py-3 border border-white/20">
+                    <Mail className="w-5 h-5 text-[#FFA500]" />
                     <span className="text-white font-medium">seniors@ibaoeste.gov.ph</span>
                   </div>
-                  <div className="flex items-center gap-3 bg-white/15 rounded-full px-6 py-3 border border-white/30">
-                    <Clock className="w-5 h-5 text-emerald-300" />
+                  <div className="flex items-center gap-3 bg-white/10 rounded-full px-6 py-3 border border-white/20">
+                    <Clock className="w-5 h-5 text-[#FFA500]" />
                     <span className="text-white font-medium">Mon-Fri 8AM-5PM</span>
                   </div>
                 </div>
@@ -1372,7 +1411,7 @@ export default function BarangayPortal() {
                 <div className="mt-6">
                   <a
                     href="#contact"
-                    className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className="inline-flex items-center gap-3 bg-gradient-to-r from-[#996300] to-[#FFA500] hover:from-[#FFA500] hover:to-[#ffd89b] text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-[#FFA500]/20 transition-all duration-300 transform hover:scale-105"
                   >
                     <Send className="w-5 h-5" />
                     Message Us Here
@@ -1383,21 +1422,21 @@ export default function BarangayPortal() {
 
             {/* Statistics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              <div className="text-center bg-white/5 rounded-xl p-4 md:p-6 border border-white/10">
+              <div className="text-center bg-orange-950/20 backdrop-blur-xl rounded-xl p-4 md:p-6 border border-[#FFA500]/10 hover:border-[#FFA500]/30 transition-all duration-300 group shadow-lg">
                 <div className="text-2xl md:text-3xl font-bold text-white mb-2">1,200+</div>
-                <div className="text-emerald-200 text-sm md:text-base font-medium">Senior Citizens Served</div>
+                <div className="text-orange-100/80 text-sm md:text-base font-bold uppercase tracking-wider">Senior Citizens Served</div>
               </div>
-              <div className="text-center bg-white/5 rounded-xl p-4 md:p-6 border border-white/10">
+              <div className="text-center bg-orange-950/20 backdrop-blur-xl rounded-xl p-4 md:p-6 border border-[#FFA500]/10 hover:border-[#FFA500]/30 transition-all duration-300 group shadow-lg">
                 <div className="text-2xl md:text-3xl font-bold text-white mb-2">₱5M+</div>
-                <div className="text-emerald-200 text-sm md:text-base font-medium">Total Assistance Provided</div>
+                <div className="text-orange-100/80 text-sm md:text-base font-bold uppercase tracking-wider">Total Assistance Provided</div>
               </div>
-              <div className="text-center bg-white/5 rounded-xl p-4 md:p-6 border border-white/10">
+              <div className="text-center bg-orange-950/20 backdrop-blur-xl rounded-xl p-4 md:p-6 border border-[#FFA500]/10 hover:border-[#FFA500]/30 transition-all duration-300 group shadow-lg">
                 <div className="text-2xl md:text-3xl font-bold text-white mb-2">15</div>
-                <div className="text-emerald-200 text-sm md:text-base font-medium">Active Programs</div>
+                <div className="text-orange-100/80 text-sm md:text-base font-bold uppercase tracking-wider">Active Programs</div>
               </div>
-              <div className="text-center bg-white/5 rounded-xl p-4 md:p-6 border border-white/10">
+              <div className="text-center bg-orange-950/20 backdrop-blur-xl rounded-xl p-4 md:p-6 border border-[#FFA500]/10 hover:border-[#FFA500]/30 transition-all duration-300 group shadow-lg">
                 <div className="text-2xl md:text-3xl font-bold text-white mb-2">98%</div>
-                <div className="text-emerald-200 text-sm md:text-base font-medium">Satisfaction Rate</div>
+                <div className="text-orange-100/80 text-sm md:text-base font-bold uppercase tracking-wider">Satisfaction Rate</div>
               </div>
             </div>
 
@@ -1597,7 +1636,7 @@ export default function BarangayPortal() {
 
 
           {/* Enhanced Facility Navigation */}
-          <div className="flex justify-center gap-3 md:gap-4 mb-16 md:mb-20 overflow-x-auto pb-4">
+          <div className="flex justify-start md:justify-center gap-3 md:gap-4 mb-16 md:mb-20 overflow-x-auto pb-4 px-4 scrollbar-hide">
             {facilities.map((facility, index) => {
               const Icon = facility.icon;
               const isActive = (facilityImageSlides['main'] || 0) === index;
@@ -1689,10 +1728,24 @@ export default function BarangayPortal() {
 
 
       {/* Barangay Officials Section - Optimized */}
-      <section id="officials" className="bg-gray-900">
-        <div className="text-center py-8">
-          <h3 className="text-2xl font-bold text-white mb-2">Barangay Officials</h3>
-          <p className="text-green-300">Meet our dedicated team serving Iba O' Este</p>
+      <section id="officials" className="bg-gradient-to-br from-[#112e1f] via-[#1a3d29] to-[#0d1f14] relative overflow-hidden">
+        {/* Header with modern aesthetic */}
+        <div className="text-center pt-20 pb-12 relative z-10">
+          <div className="inline-flex items-center gap-3 px-5 py-2 bg-white/10 border border-white/20 rounded-full mb-6">
+            <span className="text-green-300 font-bold text-xs tracking-[0.2em] uppercase">Executive Governance</span>
+          </div>
+
+          <h3 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 tracking-tighter uppercase">
+            Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">Officials</span>
+          </h3>
+
+          <div className="flex justify-center items-center gap-4 mb-4">
+            <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-green-500/50"></div>
+            <p className="text-white font-bold text-sm md:text-base tracking-[0.3em] uppercase">
+              Meet our dedicated team serving Iba O' Este
+            </p>
+            <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-green-500/50"></div>
+          </div>
         </div>
 
         {/* Photo - Full visibility without overlay */}
@@ -1718,9 +1771,9 @@ export default function BarangayPortal() {
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               </div>
 
-              <h4 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+              <h4 className="text-4xl md:text-5xl lg:text-7xl font-black text-white mb-6 leading-none uppercase tracking-tight">
                 Barangay Iba O' Este
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-500 to-green-400">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-emerald-400 to-green-300">
                   Leadership Team
                 </span>
               </h4>
@@ -1739,10 +1792,10 @@ export default function BarangayPortal() {
           <div className="max-w-6xl mx-auto">
             {/* Section Header */}
             <div className="text-center mb-12">
-              <h5 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              <h5 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 uppercase tracking-tighter">
                 Meet Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-950">Officials</span>
               </h5>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              <p className="text-gray-600 text-sm md:text-base font-bold max-w-2xl mx-auto uppercase tracking-[0.2em] leading-relaxed">
                 Dedicated leaders committed to serving the community of Iba O' Este with integrity and excellence
               </p>
             </div>
@@ -1756,6 +1809,9 @@ export default function BarangayPortal() {
                     captain: officials.filter(o => o.position_type === 'captain'),
                     kagawad: officials.filter(o => o.position_type === 'kagawad'),
                     sk_chairman: officials.filter(o => o.position_type === 'sk_chairman'),
+                    sk_secretary: officials.filter(o => o.position_type === 'sk_secretary'),
+                    sk_treasurer: officials.filter(o => o.position_type === 'sk_treasurer'),
+                    sk_kagawad: officials.filter(o => o.position_type === 'sk_kagawad'),
                     staff: officials.filter(o => ['secretary', 'treasurer', 'staff'].includes(o.position_type))
                   };
 
@@ -1785,6 +1841,14 @@ export default function BarangayPortal() {
                       icon: '🌟'
                     },
                     {
+                      key: 'sk_kagawad',
+                      title: 'SK Council',
+                      subtitle: 'Youth Council Secretary, Treasurer, and Members',
+                      officials: [], // Will be populated in the logic below
+                      bgColor: 'from-orange-500 to-amber-600',
+                      icon: '⚡'
+                    },
+                    {
                       key: 'staff',
                       title: 'Barangay Staff',
                       subtitle: 'Administrative Team',
@@ -1795,7 +1859,16 @@ export default function BarangayPortal() {
                   ];
 
                   return sections.map((section) => {
-                    if (section.officials.length === 0) return null;
+                    // Special case for SK Council: Combine Secretary, Treasurer, and Kagawads
+                    let displayOfficials = section.officials;
+                    if (section.key === 'sk_kagawad') {
+                      const sec = groupedOfficials.sk_secretary.length > 0 ? groupedOfficials.sk_secretary : [{ name: 'SK SECRETARY NAME', position: 'SK Secretary', description: 'Official secretary of the Sangguniang Kabataan.' }];
+                      const trs = groupedOfficials.sk_treasurer.length > 0 ? groupedOfficials.sk_treasurer : [{ name: 'SK TREASURER NAME', position: 'SK Treasurer', description: 'Official treasurer of the Sangguniang Kabataan.' }];
+                      const kgw = groupedOfficials.sk_kagawad.length > 0 ? groupedOfficials.sk_kagawad : Array(8).fill({ name: 'SK KAGAWAD NAME', position: 'SK Kagawad', description: 'Member of the Sangguniang Kabataan council.' });
+                      displayOfficials = [...kgw, ...sec, ...trs];
+                    }
+
+                    if (displayOfficials.length === 0) return null;
 
                     return (
                       <div key={section.key} className="mb-16">
@@ -1808,12 +1881,9 @@ export default function BarangayPortal() {
                           <p className="text-gray-600 text-lg font-medium">{section.subtitle}</p>
                         </div>
 
-                        {/* Officials Grid for this section */}
-                        <div className={`grid gap-6 ${section.key === 'captain' ? 'grid-cols-1 max-w-md mx-auto' :
-                          section.key === 'sk_chairman' ? 'grid-cols-1 max-w-md mx-auto' :
-                            'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-                          }`}>
-                          {section.officials.map((official, index) => {
+                        {/* Officials Flex Container for automatic centering of orphans */}
+                        <div className={`flex flex-wrap gap-6 justify-center ${section.key === 'captain' || section.key === 'sk_chairman' ? 'max-w-md mx-auto' : ''}`}>
+                          {displayOfficials.map((official, index) => {
                             const colors = [
                               'from-[#112e1f] to-[#2d5a3d]',
                               'from-teal-600 to-green-700',
@@ -1838,33 +1908,56 @@ export default function BarangayPortal() {
                               colorClass = colors[index % colors.length];
                             } else if (section.key === 'sk_chairman') {
                               colorClass = 'from-orange-600 to-amber-700';
+                            } else if (section.key === 'sk_secretary') {
+                              colorClass = 'from-orange-500 to-amber-600';
+                            } else if (section.key === 'sk_treasurer') {
+                              colorClass = 'from-amber-600 to-orange-500';
+                            } else if (section.key === 'sk_kagawad') {
+                              colorClass = 'from-amber-500 to-orange-600';
                             } else {
                               colorClass = colors[(index + 8) % colors.length];
                             }
 
                             const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
 
+                            // Dynamic width based on section type
+                            const widthClass = section.key === 'captain' || section.key === 'sk_chairman' ? 'w-full' :
+                              section.key === 'sk_kagawad' || section.key === 'staff' ? 'w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(25%-1.5rem)]' :
+                                'w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-1.5rem)]';
+
                             return (
-                              <div key={official.id || index} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-200 overflow-hidden border border-gray-100">
-                                <div className={`bg-gradient-to-br ${colorClass} p-6 text-center`}>
-                                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl font-bold text-white">{initials}</span>
-                                  </div>
-                                  <h3 className="text-xl font-bold text-white mb-1">
-                                    {(() => {
-                                      const pos = official.position;
-                                      if (pos.includes('Kagawad')) return 'Brgy. Kagawad';
-                                      if (['Secretary', 'Treasurer', 'Administrator', 'Clerk', 'Record Keeper'].includes(pos)) return `Brgy. ${pos}`;
-                                      if (pos === 'Barangay Keeper') return 'Brgy. Record Keeper';
-                                      if (['Assistant Secretary', 'Assistant Administrator'].includes(pos)) {
-                                        return pos.replace('Assistant', 'Asst. Brgy.');
-                                      }
-                                      return pos;
-                                    })()}
-                                  </h3>
-                                  {official.committee && (
-                                    <p className="text-white/80 text-sm">{official.committee}</p>
+                              <div key={official.id || index} className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group ${widthClass}`}>
+                                <div className="relative aspect-square overflow-hidden group bg-white">
+                                  {official.image_url ? (
+                                    <img
+                                      src={official.image_url}
+                                      alt={official.name}
+                                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10"
+                                    />
+                                  ) : (
+                                    <div className={`w-full h-full bg-gradient-to-br ${colorClass} flex items-center justify-center`}>
+                                      <span className="text-5xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity">{initials}</span>
+                                    </div>
                                   )}
+
+                                  {/* Position & Committee Overlay */}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-[#112e1f]/90 via-[#112e1f]/40 to-transparent flex flex-col justify-end p-6 text-center z-20">
+                                    <h3 className="text-white font-bold text-xl mb-1 drop-shadow-lg">
+                                      {(() => {
+                                        const pos = official.position;
+                                        if (pos.includes('Kagawad')) return 'Brgy. Kagawad';
+                                        if (['Secretary', 'Treasurer', 'Administrator', 'Clerk', 'Record Keeper'].includes(pos)) return `Brgy. ${pos}`;
+                                        if (pos === 'Barangay Keeper') return 'Brgy. Record Keeper';
+                                        if (['Assistant Secretary', 'Assistant Administrator'].includes(pos)) {
+                                          return pos.replace('Assistant', 'Asst. Brgy.');
+                                        }
+                                        return pos;
+                                      })()}
+                                    </h3>
+                                    {official.committee && (
+                                      <p className="text-green-300 text-sm font-medium drop-shadow-md">{official.committee}</p>
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="p-6">
                                   <h4 className="text-lg font-semibold text-gray-900 mb-2">{official.name}</h4>
