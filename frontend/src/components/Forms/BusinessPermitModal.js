@@ -36,6 +36,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
   const [submitStatus, setSubmitStatus] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState('');
+  const [errors, setErrors] = useState({});
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,10 +44,38 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
       ...prev,
       [name]: value
     }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: false }));
+    }
+  };
+
+  const validateForm = () => {
+    const required = [
+      'businessName', 'businessType', 'businessAddress',
+      'ownerFirstName', 'ownerLastName', 'ownerAddress', 'ownerPhone', 'ownerBirthdate',
+      'natureOfBusiness', 'capitalInvestment', 'purpose'
+    ];
+    const newErrors = {};
+    required.forEach(field => {
+      if (!formData[field]) {
+        newErrors[field] = true;
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setSubmitStatus({
+        type: 'error',
+        message: 'Please fill in all required fields highlighted in red.'
+      });
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    if (!validateForm()) return;
     setIsSubmitting(true);
     setSubmitStatus(null);
 
@@ -109,6 +138,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     });
     setSubmitStatus(null);
     setReferenceNumber('');
+    setErrors({});
   };
 
   if (!isOpen) return null;
@@ -195,8 +225,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                       value={formData.businessName}
                       onChange={handleInputChange}
                       placeholder="E.G. JUAN'S SARI-SARI STORE..."
-                      className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 uppercase shadow-sm"
-                      required
+                      className={`w-full px-6 py-4 bg-white border-2 ${errors.businessName ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 uppercase shadow-sm`}
                     />
                   </div>
                   <div className="space-y-3">
@@ -205,8 +234,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                       name="businessType"
                       value={formData.businessType}
                       onChange={handleInputChange}
-                      className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 appearance-none cursor-pointer"
-                      required
+                      className={`w-full px-6 py-4 bg-white border-2 ${errors.businessType ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 appearance-none cursor-pointer`}
                     >
                       <option value="">SELECT TYPE...</option>
                       {['Retail', 'Restaurant', 'Service', 'Manufacturing', 'Wholesale', 'Other'].map(type => (
@@ -225,8 +253,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                       value={formData.businessAddress}
                       onChange={handleInputChange}
                       placeholder="PUROK / STREET / BARANGAY..."
-                      className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase shadow-sm"
-                      required
+                      className={`w-full px-6 py-4 bg-white border-2 ${errors.businessAddress ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase shadow-sm`}
                     />
                     <MapPin className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
                   </div>
@@ -257,23 +284,23 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">First Name <span className="text-red-500">*</span></label>
-                    <input type="text" name="ownerFirstName" value={formData.ownerFirstName} onChange={handleInputChange} placeholder="OWNER GIVEN NAME..." className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase shadow-sm" required />
+                    <input type="text" name="ownerFirstName" value={formData.ownerFirstName} onChange={handleInputChange} placeholder="OWNER GIVEN NAME..." className={`w-full px-6 py-4 bg-white border-2 ${errors.ownerFirstName ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase shadow-sm`} />
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Last Name <span className="text-red-500">*</span></label>
-                    <input type="text" name="ownerLastName" value={formData.ownerLastName} onChange={handleInputChange} placeholder="OWNER SURNAME..." className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase shadow-sm" required />
+                    <input type="text" name="ownerLastName" value={formData.ownerLastName} onChange={handleInputChange} placeholder="OWNER SURNAME..." className={`w-full px-6 py-4 bg-white border-2 ${errors.ownerLastName ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase shadow-sm`} />
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Owner Residential Address <span className="text-red-500">*</span></label>
-                  <input type="text" name="ownerAddress" value={formData.ownerAddress} onChange={handleInputChange} placeholder="COMPLETE HOME ADDRESS..." className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase shadow-sm" required />
+                  <input type="text" name="ownerAddress" value={formData.ownerAddress} onChange={handleInputChange} placeholder="COMPLETE HOME ADDRESS..." className={`w-full px-6 py-4 bg-white border-2 ${errors.ownerAddress ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase shadow-sm`} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Owner Mobile Number <span className="text-red-500">*</span></label>
-                    <input type="tel" name="ownerPhone" value={formData.ownerPhone} onChange={handleInputChange} placeholder="09XX XXX XXXX..." className="w-full px-6 py-4 bg-emerald-50/20 border-2 border-emerald-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none shadow-sm" required />
+                    <input type="tel" name="ownerPhone" value={formData.ownerPhone} onChange={handleInputChange} placeholder="09XX XXX XXXX..." className={`w-full px-6 py-4 ${errors.ownerPhone ? 'bg-red-50 border-red-500' : 'bg-emerald-50/20 border-emerald-100'} border-2 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none shadow-sm`} />
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Owner Email (Optional)</label>
@@ -300,8 +327,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                     onChange={handleInputChange}
                     placeholder="DESCRIBE PRODUCTS / SERVICES OFFERED..."
                     rows={3}
-                    className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-extrabold text-[#112e1f] outline-none uppercase shadow-sm"
-                    required
+                    className={`w-full px-6 py-5 bg-white border-2 ${errors.natureOfBusiness ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-extrabold text-[#112e1f] outline-none uppercase shadow-sm`}
                   />
                 </div>
 
@@ -310,7 +336,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Capital Investment (Est. PHP)</label>
                     <div className="relative">
                       <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-emerald-900 opacity-40">₱</span>
-                      <input type="number" name="capitalInvestment" value={formData.capitalInvestment} onChange={handleInputChange} placeholder="0.00" className="w-full pl-12 pr-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none" />
+                      <input type="number" name="capitalInvestment" value={formData.capitalInvestment} onChange={handleInputChange} placeholder="0.00" className={`w-full pl-12 pr-6 py-4 bg-white border-2 ${errors.capitalInvestment ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none`} />
                     </div>
                   </div>
                   <div className="space-y-3">
@@ -328,8 +354,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                     name="purpose"
                     value={formData.purpose}
                     onChange={handleInputChange}
-                    className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 cursor-pointer appearance-none shadow-sm"
-                    required
+                    className={`w-full px-6 py-4 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 cursor-pointer appearance-none shadow-sm`}
                   >
                     <option value="">SELECT FILING TYPE...</option>
                     {['New Business', 'Renewal', 'Transfer of Location', 'Change of Business Name'].map(p => (

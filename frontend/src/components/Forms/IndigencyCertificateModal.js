@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search } from 'lucide-react';
+import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 // API Configuration
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
@@ -75,10 +75,18 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
   const [officials, setOfficials] = useState(defaultOfficials);
   const [isDownloading, setIsDownloading] = useState(false);
   const [currentDate, setCurrentDate] = useState('');
-  const [referenceNumber, setReferenceNumber] = useState(''); // Will be set after submission
-  const [submittedReferenceNumber, setSubmittedReferenceNumber] = useState(''); // For success display
+  const [referenceNumber, setReferenceNumber] = useState('');
+  const [submittedReferenceNumber, setSubmittedReferenceNumber] = useState('');
   const [isResidentModalOpen, setIsResidentModalOpen] = useState(false);
+  const [errors, setErrors] = useState({});
   const certificateRef = useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [formData, setFormData] = useState({
+    fullName: '', age: '', gender: '', civilStatus: '',
+    address: '', dateOfBirth: '', placeOfBirth: '',
+    purpose: '', contactNumber: '', residentId: null
+  });
 
   const handleResidentSelect = (resident) => {
     setFormData(prev => ({
@@ -99,14 +107,9 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
       title: 'Profile Found',
       message: `${resident.full_name}'s details have been auto-filled.`
     });
+    setErrors(prev => ({ ...prev, fullName: false }));
   };
-  const [formData, setFormData] = useState({
-    fullName: '', age: '', gender: '', civilStatus: '',
-    address: '', dateOfBirth: '', placeOfBirth: '',
-    purpose: '', contactNumber: '', residentId: null
-  });
 
-  // Generate current date dynamically
   useEffect(() => {
     const now = new Date();
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -145,36 +148,43 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: false }));
+    }
   };
 
   const validateForm = () => {
+    setErrors({});
     const required = ['fullName', 'age', 'gender', 'civilStatus', 'dateOfBirth', 'placeOfBirth', 'address', 'purpose', 'contactNumber'];
+    const newErrors = {};
+
     for (const field of required) {
       if (!formData[field]) {
-        setNotification({ type: 'error', title: 'Validation Error', message: 'Please fill in all required fields.' });
-        return false;
+        newErrors[field] = true;
       }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setNotification({
+        type: 'error',
+        title: 'Validation Error',
+        message: 'Please fill in all required fields highlighted in red.'
+      });
+      return false;
     }
     return true;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
-    // Show PDF confirmation popup instead of directly submitting
     setShowConfirmationPopup(true);
   };
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleProceedSubmission = async () => {
-    // REMOVED: setShowConfirmationPopup(false);
     setIsSubmitting(true);
-    // REMOVED: setNotification...
-
     try {
-      console.log('Submitting form with data:', formData);
       const response = await fetch(`${API_URL}/api/certificates/indigency`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -184,12 +194,11 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
       const result = await response.json();
 
       if (result.success) {
-        // Set the reference number received from the server
         setSubmittedReferenceNumber(result.referenceNumber);
-        setReferenceNumber(result.referenceNumber); // For PDF generation
-        setNotification(null); // Clear any existing notifications
+        setReferenceNumber(result.referenceNumber);
+        setNotification(null);
         setShowConfirmationPopup(false);
-        setShowSuccessModal(true); // Show success modal
+        setShowSuccessModal(true);
       } else {
         throw new Error(result.message || 'Failed to submit application');
       }
@@ -202,12 +211,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
     }
   };
 
-  // ... (rest of file)
-
-  const handleCustomizeForm = () => {
-    setShowConfirmationPopup(false);
-    // Form remains open for editing
-  };
+  const handleCustomizeForm = () => setShowConfirmationPopup(false);
 
   const resetForm = () => {
     setFormData({ fullName: '', age: '', gender: '', civilStatus: '', address: '', dateOfBirth: '', placeOfBirth: '', purpose: '', contactNumber: '' });
@@ -217,344 +221,113 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
     setNotification(null);
     setReferenceNumber('');
     setSubmittedReferenceNumber('');
-  };
-
-  const handleDownloadPDF = async () => {
-    if (!certificateRef.current) return;
-    setIsDownloading(true);
-    setNotification({ type: 'info', title: 'Generating PDF...', message: 'Please wait while we prepare your certificate.' });
-    try {
-      const html2canvas = (await import('html2canvas')).default;
-      const jsPDF = (await import('jspdf')).default;
-      const element = certificateRef.current;
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      pdf.addImage(imgData, 'PNG', imgX, 10, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`Certificate_of_Indigency_${referenceNumber}.pdf`);
-      setNotification({ type: 'success', title: 'PDF Downloaded!', message: `Certificate ${referenceNumber} has been saved.` });
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      setNotification({ type: 'error', title: 'Download Failed', message: 'Could not generate PDF. Please try printing instead.' });
-    } finally {
-      setIsDownloading(false);
-    }
+    setErrors({});
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-8 py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden">
-            {/* Decorative background element */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-
-            <div className="flex items-center gap-5 relative z-10">
-              <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/30 shadow-xl">
-                <FileText className="w-8 h-8 text-white shadow-sm" />
-              </div>
-              <div className="flex flex-col">
-                <h2 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md">
-                  Certificate of Indigency
-                </h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
-                  <p className="text-emerald-50/90 text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">
-                    {referenceNumber || 'New Application Request'}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group"
-            >
-              <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
-            </button>
-          </div>
-
-          {notification && <div className="px-6 pt-4"><Notification type={notification.type} title={notification.title} message={notification.message} onClose={() => setNotification(null)} /></div>}
-
-          <div className="flex-1 overflow-y-auto">
-            {!showPreview ? (
-              <form onSubmit={handleSubmit} className="p-8 space-y-10">
-                {/* Status/Info Integrated Section */}
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6 shadow-sm relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-200/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
-                  <div className="flex items-start gap-4 relative z-10">
-                    <div className="bg-emerald-100 p-3 rounded-xl border border-emerald-200 shadow-sm"><Info className="w-6 h-6 text-emerald-600" /></div>
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-bold text-emerald-900 uppercase tracking-widest flex items-center gap-2">
-                        Official Requirement Notice
-                      </h4>
-                      <p className="text-emerald-800/90 leading-relaxed text-sm">
-                        Indigency certificates are strictly for residents requiring <strong>social or financial assistance</strong>.
-                        Your record must be verified against the <span className="font-bold underline decoration-emerald-300/50">latest socioeconomic census</span> for online processing.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-8">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#112e1f] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">1</div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">Personal Information</h3>
-                        <p className="text-sm text-gray-500 font-medium">Verify your registered details</p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setIsResidentModalOpen(true)}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-xl text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-md group"
-                    >
-                      <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      Access Resident Directory
-                    </button>
-                  </div>
-
-                  <div className="relative group">
-                    <div className={`absolute inset-0 bg-emerald-500/5 rounded-2xl blur-xl opacity-0 ${formData.fullName ? 'opacity-100' : ''} transition-opacity duration-500`}></div>
-                    <div className="relative">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Resident Full Name</label>
-                      <input
-                        type="text"
-                        name="fullName"
-                        value={formData.fullName}
-                        readOnly
-                        onClick={() => setIsResidentModalOpen(true)}
-                        placeholder="TAP HERE TO SELECT FROM RESIDENT DIRECTORY..."
-                        className={`w-full px-6 py-5 bg-white border-2 ${formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic'} rounded-2xl transition-all duration-300 font-extrabold text-lg cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`}
-                      />
-                      {formData.fullName && (
-                        <div className="absolute right-6 top-1/2 -translate-y-1/2">
-                          <CheckCircle className="w-6 h-6 text-emerald-500" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
-                      <input type="number" name="age" value={formData.age} readOnly disabled
-                        className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex</label>
-                      <input type="text" value={formData.gender || 'N/A'} readOnly disabled
-                        className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Civil Status</label>
-                      <input type="text" value={formData.civilStatus || 'N/A'} readOnly disabled
-                        className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Date of Birth</label>
-                      <input type="text" value={formData.dateOfBirth || 'N/A'} readOnly disabled
-                        className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Place of Birth</label>
-                      <input type="text" value={formData.placeOfBirth || 'N/A'} readOnly disabled
-                        className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pb-6">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Registered Residential Address</label>
-                    <input type="text" value={formData.address || 'N/A'} readOnly disabled
-                      className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
-                  </div>
-
-                  <div className="pt-6 border-t border-gray-100">
-                    <div className="flex items-center gap-3 mb-8">
-                      <div className="w-10 h-10 bg-[#2d5a3d] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">2</div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">Application Intent</h3>
-                        <p className="text-sm text-gray-500 font-medium tracking-wide">Please specify why you are requesting this certificate</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 relative">
-                      <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Request Purpose <span className="text-red-500">*</span></label>
-                      <textarea
-                        name="purpose"
-                        value={formData.purpose}
-                        onChange={handleInputChange}
-                        rows={3}
-                        placeholder="e.g. Educational Assistance, Medical Subsidy, Burial Assistance, Legal Aid..."
-                        className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none uppercase font-extrabold text-gray-800 placeholder:text-gray-300 placeholder:italic shadow-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-100">
-                    {/* Admin Column */}
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gray-100 text-gray-400 rounded-lg flex items-center justify-center font-bold text-xs">A</div>
-                        <h4 className="font-bold text-gray-400 uppercase tracking-widest text-[10px]">Processing Log</h4>
-                      </div>
-                      <div className="space-y-4 bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Signatory Authority</span>
-                          <p className="font-bold text-gray-700 text-sm italic">{officials.chairman}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Filing Date</span>
-                          <p className="font-bold text-gray-700 text-sm">{currentDate}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Contact Column */}
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center font-bold text-xs border border-emerald-200">B</div>
-                        <h4 className="font-bold text-emerald-900 uppercase tracking-widest text-[10px]">Digital Alerts</h4>
-                      </div>
-                      <div className="space-y-4 bg-emerald-50/30 p-5 rounded-2xl border border-emerald-100/50">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-bold text-[#2d5a3d] uppercase tracking-widest ml-1">SMS Contact Number <span className="text-red-500">*</span></label>
-                          <div className="relative">
-                            <input
-                              type="tel"
-                              name="contactNumber"
-                              value={formData.contactNumber}
-                              onChange={handleInputChange}
-                              placeholder="09XX XXX XXXX"
-                              className="w-full px-4 py-3 bg-white border-2 border-emerald-100 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none font-black text-emerald-900 transition-all shadow-sm"
-                            />
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-1">
-                              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce"></div>
-                              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                            </div>
-                          </div>
-                          <p className="text-[9px] text-emerald-700/60 font-medium leading-tight">We will send an instant SMS notification for record pickup.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </form>
-            ) : (
-              <IndigencyPreview formData={formData} referenceNumber={referenceNumber || 'PENDING'} currentDate={currentDate} officials={officials} certificateRef={certificateRef} />
-            )}
-          </div>
-
-          <div className="border-t bg-gray-50/80 backdrop-blur-md px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print pb-12 sm:pb-6">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:block">Please check all entries before final submission</p>
-
-            <div className="flex gap-3 w-full sm:w-auto">
-              {!showPreview && (
-                <button
-                  type="submit"
-                  onClick={handleSubmit}
-                  className="flex-1 sm:flex-none px-8 py-4 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-1 transition-all duration-300 group"
-                >
-                  <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                  Submit Application
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* PDF Confirmation Popup */}
-      {showConfirmationPopup && (
-        <div className="fixed inset-0 z-60 overflow-y-auto">
+    <>
+      {(!showConfirmationPopup && !showSuccessModal) && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowConfirmationPopup(false)} />
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
 
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
-              {/* Popup Header */}
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
               <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-8 py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
                 <div className="flex items-center gap-5 relative z-10">
-                  <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/30 shadow-xl">
-                    <FileText className="w-8 h-8 text-white shadow-sm" />
-                  </div>
+                  <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/30 shadow-xl"><FileText className="w-8 h-8 text-white shadow-sm" /></div>
                   <div className="flex flex-col">
-                    <h2 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md uppercase">
-                      Review Application
-                    </h2>
+                    <h2 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md">Certificate of Indigency</h2>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
-                      <p className="text-emerald-50/90 text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">
-                        Verification Stage
-                      </p>
+                      <p className="text-emerald-50/90 text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">{referenceNumber || 'New Application Request'}</p>
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowConfirmationPopup(false)}
-                  className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group"
-                >
-                  <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
-                </button>
+                <button onClick={onClose} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group"><X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" /></button>
               </div>
 
-              {/* PDF Preview */}
-              <div className="flex-1 overflow-y-auto p-4 bg-gray-100">
-                <div className="flex justify-center">
-                  <IndigencyPreview
-                    formData={formData}
-                    referenceNumber={referenceNumber || 'PENDING'}
-                    currentDate={currentDate}
-                    officials={officials}
-                    certificateRef={certificateRef}
-                  />
-                </div>
+              {notification && <div className="px-6 pt-4"><Notification type={notification.type} title={notification.title} message={notification.message} onClose={() => setNotification(null)} /></div>}
+
+              <div className="flex-1 overflow-y-auto">
+                <form onSubmit={handleSubmit} className="p-8 space-y-10">
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6 shadow-sm relative overflow-hidden group">
+                    <div className="flex items-start gap-4 relative z-10">
+                      <div className="bg-emerald-100 p-3 rounded-xl border border-emerald-200 shadow-sm"><Info className="w-6 h-6 text-emerald-600" /></div>
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-bold text-emerald-900 uppercase tracking-widest flex items-center gap-2">Official Requirement Notice</h4>
+                        <p className="text-emerald-800/90 leading-relaxed text-sm">Indigency certificates are strictly for residents requiring social or financial assistance.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#112e1f] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">1</div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">Personal Information</h3>
+                          <p className="text-sm text-gray-500 font-medium tracking-wide">Verify your registered details</p>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => setIsResidentModalOpen(true)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-xl text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-md group">
+                        <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        Access Resident Directory
+                      </button>
+                    </div>
+
+                    <div className="relative group">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Resident Full Name</label>
+                      <input type="text" name="fullName" value={formData.fullName} readOnly onClick={() => setIsResidentModalOpen(true)} placeholder="TAP HERE TO SELECT FROM RESIDENT DIRECTORY..." className={`w-full px-6 py-5 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-2xl transition-all duration-300 font-extrabold text-lg cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`} />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
+                        <input type="number" name="age" value={formData.age} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex</label>
+                        <input type="text" value={formData.gender || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pb-6">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Registered Residential Address</label>
+                      <input type="text" value={formData.address || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
+                    </div>
+
+                    <div className="pt-6 border-t border-gray-100">
+                      <div className="flex items-center gap-3 mb-8">
+                        <div className="w-10 h-10 bg-[#2d5a3d] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">2</div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">Application Intent</h3>
+                        </div>
+                      </div>
+                      <div className="space-y-2 relative">
+                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Request Purpose <span className="text-red-500">*</span></label>
+                        <textarea name="purpose" value={formData.purpose} onChange={handleInputChange} rows={3} placeholder="e.g. Educational Assistance, Medical Subsidy..." className={`w-full px-6 py-5 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:shadow-lg transition-all outline-none uppercase font-extrabold text-gray-800 shadow-sm`} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-100">
+                      <div className="space-y-6">
+                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">SMS Contact Number <span className="text-red-500">*</span></label>
+                        <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full px-4 py-3 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-xl focus:border-emerald-500 transition-all shadow-sm`} />
+                      </div>
+                    </div>
+                  </div>
+                </form>
               </div>
 
-              {/* Popup Actions */}
-              <div className="border-t bg-gray-50/80 backdrop-blur-md px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden sm:block">Please check all entries before final submission</p>
-
+              <div className="border-t bg-gray-50/80 backdrop-blur-md px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print pb-12 sm:pb-6">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:block">Please check all entries before final submission</p>
                 <div className="flex gap-3 w-full sm:w-auto">
-                  <button
-                    type="button"
-                    onClick={handleCustomizeForm}
-                    disabled={isSubmitting}
-                    className="px-8 py-3.5 border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d]/5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all outline-none disabled:opacity-50">
-                    <Eye className="w-5 h-5" />
-                    Go Back & Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleProceedSubmission}
-                    disabled={isSubmitting}
-                    className="px-8 py-3.5 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-extrabold flex items-center justify-center gap-3 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-0.5 transition-all disabled:opacity-75">
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-5 h-5" />
-                        Confirm & Submit
-                      </>
-                    )}
+                  <button type="submit" onClick={handleSubmit} className="flex-1 sm:flex-none px-8 py-4 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-1 transition-all group">
+                    <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    Submit Application
                   </button>
                 </div>
               </div>
@@ -563,271 +336,149 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
         </div>
       )}
 
-      {/* Success Modal */}
+      {showConfirmationPopup && (
+        <div className="fixed inset-0 z-60 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" onClick={() => setShowConfirmationPopup(false)} />
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in" style={{ backfaceVisibility: 'hidden', transform: 'translateZ(0)' }}>
+              <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-8 py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden">
+                <div className="flex items-center gap-5 relative z-10">
+                  <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/30 shadow-xl"><FileText className="w-8 h-8 text-white shadow-sm" /></div>
+                  <h2 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md uppercase">Review Application</h2>
+                </div>
+                <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all group"><X className="w-6 h-6 group-hover:rotate-90 transition-transform" /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 bg-gray-100">
+                <div className="flex justify-center">
+                  <IndigencyPreview formData={formData} referenceNumber={referenceNumber || 'PENDING'} currentDate={currentDate} officials={officials} certificateRef={certificateRef} />
+                </div>
+              </div>
+              <div className="border-t bg-gray-50/80 backdrop-blur-[2px] px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print">
+                <button onClick={handleCustomizeForm} disabled={isSubmitting} className="px-8 py-3.5 border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d]/5 rounded-2xl font-bold flex items-center justify-center gap-2 outline-none"><Eye className="w-5 h-5" />Go Back & Edit</button>
+                <button onClick={handleProceedSubmission} disabled={isSubmitting} className="px-8 py-3.5 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-extrabold flex items-center justify-center gap-3 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-0.5 transition-all">
+                  {isSubmitting ? 'Processing...' : 'Confirm & Submit'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showSuccessModal && (
         <div className="fixed inset-0 z-70 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
-
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
-              {/* Success Header */}
-              <div className="bg-gradient-to-r from-[#112e1f] to-[#214431] px-8 py-10 text-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                <div className="w-20 h-20 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
-                  <CheckCircle className="w-12 h-12 text-emerald-400 animate-bounce" />
-                </div>
+              <div className="bg-gradient-to-r from-[#112e1f] to-[#214431] px-8 py-10 text-center relative">
+                <div className="w-20 h-20 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30"><CheckCircle className="w-12 h-12 text-emerald-400 animate-bounce" /></div>
                 <h2 className="text-2xl font-black text-white uppercase tracking-tight">Filing Complete!</h2>
-                <p className="text-green-100/70 text-sm font-medium">Your request has been successfully queued</p>
               </div>
-
-              {/* Success Content */}
               <div className="p-6 text-center">
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6 mb-6 shadow-inner relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-200/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-xl"></div>
-                  <p className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em] mb-2">Reference Identifier</p>
-                  <p className="text-3xl font-black text-[#112e1f] font-mono tracking-tighter">
-                    {submittedReferenceNumber}
-                  </p>
-                  <p className="text-[10px] text-emerald-600/60 mt-2 font-bold italic">Secure digital copy generated</p>
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm font-medium text-green-800 mb-1">REFERENCE NO:</p>
+                  <p className="text-2xl font-black text-green-900 font-mono tracking-wider">{submittedReferenceNumber}</p>
                 </div>
-
-                <div className="space-y-4 text-left">
-                  <div className="bg-[#112e1f]/5 border border-[#112e1f]/10 rounded-2xl p-5 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-1 h-full bg-emerald-500/20"></div>
-                    <h4 className="font-bold text-[#112e1f] mb-3 flex items-center gap-2 text-sm uppercase tracking-wider">
-                      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                      Next Steps
-                    </h4>
-                    <ul className="text-xs text-gray-600 space-y-3 font-medium">
-                      <li className="flex items-start gap-3">
-                        <div className="w-5 h-5 bg-white rounded-md flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Clock className="w-3 h-3 text-[#112e1f]" /></div>
-                        <span>Our team will verify your eligibility against the community census records.</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <div className="w-5 h-5 bg-white rounded-md flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Send className="w-3 h-3 text-[#112e1f]" /></div>
-                        <span>An <strong>SMS alert</strong> will be sent to your mobile device once verified.</span>
-                      </li>
-                    </ul>
+                <div className="bg-[#112e1f]/5 border border-[#112e1f]/10 rounded-2xl p-6 relative overflow-hidden text-left mb-6">
+                  <div className="flex items-center gap-3 text-[#112e1f] mb-4">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                    <h4 className="text-xs font-black uppercase tracking-[0.1em]">Next Procedures</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Clock className="w-4 h-4 text-emerald-700" /></div>
+                      <p className="text-[11px] text-gray-600 font-bold leading-relaxed">Processing typically takes 1-3 business days. Your application is now in the queue for chairman approval.</p>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Phone className="w-4 h-4 text-emerald-700" /></div>
+                      <p className="text-[11px] text-gray-600 font-bold leading-relaxed">We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your pickup schedule at the Barangay Hall.</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Success Actions */}
-              <div className="p-6 pt-0 no-print">
-                <button
-                  onClick={() => {
-                    setShowSuccessModal(false);
-                    resetForm();
-                    onClose();
-                  }}
-                  className="w-full bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:shadow-xl hover:shadow-emerald-900/20 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-3 group">
-                  Close Dashboard
-                  <CheckCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </button>
+                <button onClick={() => { setShowSuccessModal(false); resetForm(); onClose(); }} className="w-full bg-[#112e1f] text-white py-4 rounded-xl font-bold uppercase transition-all shadow-lg active:scale-95">Return to Dashboard</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <ResidentSearchModal
-        isOpen={isResidentModalOpen}
-        onClose={() => setIsResidentModalOpen(false)}
-        onSelect={handleResidentSelect}
-      />
-
+      <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
       <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.3s ease-out; }`}</style>
-    </div>
+    </>
   );
 }
 
-
-// Certificate Preview
 function IndigencyPreview({ formData, referenceNumber, currentDate, officials, certificateRef }) {
   const logos = officials.logos || {};
   const headerStyle = officials.headerStyle || {};
-  const countryStyle = officials.countryStyle || {};
-  const provinceStyle = officials.provinceStyle || {};
-  const municipalityStyle = officials.municipalityStyle || {};
-  const barangayNameStyle = officials.barangayNameStyle || {};
-  const officeNameStyle = officials.officeNameStyle || {};
-  const sidebarStyle = officials.sidebarStyle || {};
-  const bodyStyle = officials.bodyStyle || {};
-  const footerStyle = officials.footerStyle || {};
-
   const [scale, setScale] = useState(1);
   const containerRef = useRef(null);
 
   useEffect(() => {
     const updateScale = () => {
       if (containerRef.current) {
-        const containerWidth = containerRef.current.offsetWidth;
-        const targetWidth = 794; // A4 width at 96 DPI
-        if (containerWidth < targetWidth) {
-          setScale(containerWidth / targetWidth);
-        } else {
-          setScale(1);
-        }
+        setScale(Math.min(containerRef.current.offsetWidth / 794, 1));
       }
     };
-
     updateScale();
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
-  const getFontClass = (font) => ({ 'default': '', 'serif': 'font-serif', 'sans': 'font-sans', 'mono': 'font-mono' }[font] || '');
-
   return (
-    <div ref={containerRef} className="w-full flex justify-center relative">
-      <div
-        style={{
-          width: `${794 * scale}px`,
-          height: `${1123 * scale}px`,
-          position: 'relative',
-          flexShrink: 0
-        }}
-      >
-        <div ref={certificateRef} className={`certificate-container bg-white shadow-lg print:shadow-none flex flex-col ${getFontClass(bodyStyle.fontFamily)}`}
-          style={{
-            width: '794px',
-            height: '1123px',
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            padding: '0',
-            boxSizing: 'border-box'
-          }}>
-
-          {/* Header Section */}
-          <div className={`w-full border-b flex justify-center items-center p-8 flex-shrink-0 ${getFontClass(headerStyle.fontFamily)}`}
-            style={{
-              backgroundColor: headerStyle.bgColor,
-              borderColor: headerStyle.borderColor
-            }}>
-            {/* Left Logo */}
-            <div style={{
-              width: `${logos.logoSize || 80}px`,
-              height: `${logos.logoSize || 80}px`,
-              marginRight: `${headerStyle.logoSpacing || 0}px`
-            }} className="flex-shrink-0">
-              {logos.leftLogo && <img src={logos.leftLogo} className="w-full h-full object-contain" alt="Left" />}
+    <div ref={containerRef} className="w-full flex justify-center relative overflow-hidden">
+      <div style={{ width: `${794 * scale}px`, height: `${1123 * scale}px`, flexShrink: 0, position: 'relative' }}>
+        <div ref={certificateRef} className="bg-white shadow-lg flex flex-col" style={{ width: '794px', height: '1123px', transform: `scale(${scale}) translateZ(0)`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0, backfaceVisibility: 'hidden', WebkitFontSmoothing: 'antialiased' }}>
+          <div className="w-full border-b flex justify-center items-center p-8 flex-shrink-0" style={{ backgroundColor: headerStyle.bgColor, borderColor: headerStyle.borderColor }}>
+            <div className="flex-shrink-0" style={{ width: `${logos.logoSize || 80}px` }}>{logos.leftLogo && <img src={logos.leftLogo} className="w-full h-full object-contain" alt="Left" />}</div>
+            <div className="text-center px-4">
+              <p className="text-[13px]">{officials.headerInfo?.country}</p>
+              <p className="text-[13px]">{officials.headerInfo?.province}</p>
+              <p className="text-[13px]">{officials.headerInfo?.municipality}</p>
+              <p className="text-[18px] font-bold text-blue-800 uppercase leading-tight mt-1">{officials.headerInfo?.barangayName}</p>
+              <p className="text-[14px] font-extrabold text-red-700 uppercase mt-2">OFFICE OF THE PUNONG BARANGAY</p>
             </div>
-
-            {/* Text Content */}
-            <div className="text-center flex flex-col justify-center">
-              <p className={getFontClass(countryStyle.fontFamily)} style={{ color: countryStyle.color, fontSize: '13px', fontWeight: countryStyle.fontWeight, lineHeight: '1.2' }}>{officials.headerInfo?.country || 'Republic of the Philippines'}</p>
-              <p className={getFontClass(provinceStyle.fontFamily)} style={{ color: provinceStyle.color, fontSize: '13px', fontWeight: provinceStyle.fontWeight, lineHeight: '1.2' }}>{officials.headerInfo?.province || 'Province of Bulacan'}</p>
-              <p className={getFontClass(municipalityStyle.fontFamily)} style={{ color: municipalityStyle.color, fontSize: '13px', fontWeight: municipalityStyle.fontWeight, lineHeight: '1.2' }}>{officials.headerInfo?.municipality || 'Municipality of Calumpit'}</p>
-              <p className="mt-1 uppercase text-blue-800" style={{ fontSize: '18px', fontWeight: 'bold', lineHeight: '1.2' }}>{officials.headerInfo?.barangayName || "BARANGAY IBA O' ESTE"}</p>
-              <p className="mt-2 text-red-700 font-extrabold uppercase tracking-wider" style={{ fontSize: '14px' }}>OFFICE OF THE BARANGAY CHAIRMAN</p>
-            </div>
-
-            {/* Right Logo */}
-            <div style={{
-              width: `${logos.logoSize || 80}px`,
-              height: `${logos.logoSize || 80}px`,
-              marginLeft: `${headerStyle.logoSpacing || 0}px`
-            }} className="flex-shrink-0">
-              {logos.rightLogo && <img src={logos.rightLogo} className="w-full h-full object-contain" alt="Right" />}
-            </div>
+            <div className="flex-shrink-0" style={{ width: `${logos.logoSize || 80}px` }}>{logos.rightLogo && <img src={logos.rightLogo} className="w-full h-full object-contain" alt="Right" />}</div>
           </div>
-
-          <div className="flex flex-1 relative">
-            {/* Sidebar Removed as requested */}
-
-            {/* Main Content - Certificate Body */}
-            <div className={`flex-1 px-16 py-12 flex flex-col relative ${getFontClass(bodyStyle.fontFamily)}`} style={{ backgroundColor: bodyStyle.bgColor || '#ffffff' }}>
-              {/* Background Watermark */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.05] z-0">
-                <img src={logos.leftLogo || '/iba-o-este.png'} alt="Watermark" className="w-3/4 object-contain" />
-              </div>
-
-              {/* Title */}
-              <div className="text-center mb-8 relative z-10">
-                <h2 className="text-center font-bold mb-10 border-b-4 border-black inline-block pb-1 px-4 uppercase leading-normal" style={{
-                  color: '#004d40',
-                  fontSize: '24px',
-                }}>
-                  CERTIFICATE OF INDIGENCY
-                </h2>
-              </div>
-
-              {/* Body Content */}
-              <div className="flex-1 relative z-10" style={{ color: bodyStyle.textColor || '#000000', fontSize: '15px' }}>
-                <div className="flex justify-between items-center mb-6">
-                  <p className="font-bold text-lg">TO WHOM IT MAY CONCERN:</p>
-                </div>
-
-                <p className="text-left mb-6 leading-relaxed">
-                  This is to certify that below mentioned person is a bona fide resident and their family belongs to the "Indigent Families" of this barangay as of date mentioned below. Further certifying that their income is not enough to sustain and support their basic needs:
-                </p>
-
-                <div className="mb-6 space-y-1">
+          <div className="flex-1 p-16 flex flex-col relative overflow-hidden">
+            {logos.leftLogo && <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none"><img src={logos.leftLogo} className="w-3/4 object-contain" alt="Watermark" /></div>}
+            <div className="relative z-10 flex flex-col items-center">
+              <h2 className="text-[24px] font-bold mb-10 border-b-4 border-black inline-block pb-1 px-4 uppercase text-[#004d40]">CERTIFICATE OF INDIGENCY</h2>
+              <div className="w-full space-y-6 text-[15px]">
+                <p className="font-bold text-lg mb-6 uppercase">TO WHOM IT MAY CONCERN:</p>
+                <p className="mb-6 leading-relaxed">This is to certify that below mentioned person is a bona fide resident and their family belongs to the "Indigent Families" of this barangay. Further certifying that their income is not enough to sustain and support their basic needs:</p>
+                <div className="space-y-1 mb-8">
                   {[
                     ['Name', formData.fullName?.toUpperCase()],
                     ['Age', formData.age],
                     ['Sex', formData.gender?.toUpperCase()],
                     ['Civil Status', formData.civilStatus?.toUpperCase()],
                     ['Residential Address', formData.address?.toUpperCase()],
-                    ['Date of Birth', formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
+                    ['Date of Birth', formData.dateOfBirth?.toUpperCase()],
                     ['Place of Birth', formData.placeOfBirth?.toUpperCase()]
                   ].map(([label, value]) => (
                     <div key={label} className="grid grid-cols-[180px_10px_1fr] items-baseline text-black">
                       <span className="font-normal">{label}</span>
                       <span className="font-normal text-center">:</span>
-                      <span className={label === 'Name' ? 'font-bold text-lg' : 'font-semibold'}>{value || '_________________'}</span>
+                      <span className={label === 'Name' ? 'font-bold text-lg underline' : 'font-semibold'}>{value || '_________________'}</span>
                     </div>
                   ))}
                 </div>
-
-                <div className="mb-6">
-                  <p className="mb-2">
-                    This certification is being issued upon the request of above mentioned person for below purpose(s):
-                  </p>
-                  <div className="pl-8 font-bold">
-                    {formData.purpose ? (
-                      <div className="flex gap-2 text-lg">
-                        <span>1.</span>
-                        <span>{formData.purpose.toUpperCase()}</span>
-                      </div>
-                    ) : (
-                      <p>• PURPOSE NOT SPECIFIED</p>
-                    )}
-                  </div>
-                </div>
-
-                <p className="mb-12 text-left">
-                  Issued this {currentDate} at Barangay Iba O' Este, Calumpit, Bulacan.
-                </p>
-
-                {/* Signature Section */}
-                <div className="mt-8 relative">
-                  <div className="mb-12">
-                    <div className="h-12"></div>
-                    <div className="border-t border-black w-64 pt-1">
-                      <p className="text-sm">Resident's Signature / Thumb Mark</p>
-                    </div>
-                  </div>
-
-                  <div className="text-left mb-8 self-start">
+                <div className="mb-8 font-bold text-lg pl-8 underline uppercase">{formData.purpose?.toUpperCase() || 'NOT SPECIFIED'}</div>
+                <p className="mb-16">Issued this {currentDate} at Barangay Iba O' Este, Calumpit, Bulacan.</p>
+                <div className="mt-16 flex flex-col">
+                  <div className="mb-12"><div className="h-16 w-64 border-b border-black"></div><p className="text-sm mt-1">Resident's Signature / Thumb Mark</p></div>
+                  <div className="self-start text-left">
                     <p className="font-bold text-[15px] mb-8 uppercase">Truly Yours,</p>
-                    <p className="uppercase font-bold mb-1" style={{ fontSize: '20px' }}>{officials.chairman}</p>
-                    <p className="text-sm font-bold">BARANGAY CHAIRMAN</p>
+                    <p className="text-[20px] font-bold uppercase underline leading-tight text-black">{officials.chairman}</p>
+                    <p className="text-sm font-bold mt-1">BARANGAY CHAIRMAN</p>
                   </div>
                 </div>
-
-                {/* Reference Number */}
-                <div className="w-full text-right mt-auto mb-1 text-[10px] opacity-60">
-                  <p>Reference No.: <strong>{referenceNumber}</strong></p>
-                </div>
-
-                {/* Footer */}
-                <div className="clear-both pt-2 border-t border-gray-200 w-full text-[10px] text-gray-500 italic">
-                  <p>Address: {officials.contactInfo?.address || "Barangay Iba O' Este, Calumpit, Bulacan"}</p>
-                </div>
+              </div>
+            </div>
+            <div className="mt-auto pt-4 flex flex-col text-[10px] opacity-60">
+              <div className="flex justify-between items-end italic">
+                <p>Address: {officials.contactInfo?.address}</p>
+                <p>Ref No: <strong>{referenceNumber}</strong></p>
               </div>
             </div>
           </div>

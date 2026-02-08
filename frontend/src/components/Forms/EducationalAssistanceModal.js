@@ -31,6 +31,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
   const [signature, setSignature] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const handleResidentSelect = (resident) => {
     setFormData(prev => ({
@@ -45,6 +46,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
       residentId: resident.id
     }));
     setIsResidentModalOpen(false);
+    setErrors(prev => ({ ...prev, firstName: false }));
   };
 
   const handleInputChange = (e) => {
@@ -53,6 +55,39 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
       ...prev,
       [name]: value
     }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: false }));
+    }
+  };
+
+  const validateForm = () => {
+    const required = ['firstName', 'purok', 'cellphoneNumber', 'yearGrade', 'schoolToAttend', 'schoolAttending', 'gwa'];
+    const newErrors = {};
+
+    required.forEach(field => {
+      if (!formData[field]) {
+        newErrors[field] = true;
+      }
+    });
+
+    if (formData.purok === 'NV9') {
+      if (!formData.phaseNumber) newErrors.phaseNumber = true;
+      if (!formData.blockNumber) newErrors.blockNumber = true;
+      if (!formData.lotNumber) newErrors.lotNumber = true;
+    } else if (formData.purok) {
+      if (!formData.houseNumber) newErrors.houseNumber = true;
+    }
+
+    if (!signature) {
+      newErrors.signature = true;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setSubmitStatus('error');
+      return false;
+    }
+    return true;
   };
 
   const generateFullAddress = () => {
@@ -71,12 +106,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
-    // Validate signature
-    if (!signature) {
-      setSubmitStatus('error');
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsSubmitting(true);
     setSubmitStatus(null);
 
@@ -126,6 +156,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
     setSignature(null);
     setSubmitStatus(null);
     setReferenceNumber('');
+    setErrors({});
   };
 
   if (!isOpen) return null;
@@ -186,7 +217,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                 <div className="bg-rose-100 p-2 rounded-lg text-rose-600"><AlertCircle className="w-5 h-5" /></div>
                 <div>
                   <h4 className="text-sm font-bold text-rose-900 uppercase tracking-wide">Filing Error Occurred</h4>
-                  <p className="text-rose-700 text-xs">Pakisuri ang iyong lagda or punan ang lahat ng kinakailangang impormasyon.</p>
+                  <p className="text-rose-700 text-xs text-balance">Pakisuri ang mga patlang na may pulang border o ang iyong lagda or punan ang lahat ng kinakailangang impormasyon.</p>
                 </div>
               </div>
             )}
@@ -226,7 +257,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                           readOnly
                           placeholder="TAP TO SEARCH..."
                           onClick={() => setIsResidentModalOpen(true)}
-                          className={`w-full px-6 py-4.5 bg-white border-2 ${formData.firstName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic'} rounded-2xl transition-all duration-300 font-black text-lg cursor-pointer hover:border-emerald-300 shadow-sm text-center`}
+                          className={`w-full px-6 py-4.5 bg-white border-2 ${errors.firstName ? 'border-red-500 bg-red-50' : (formData.firstName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-2xl transition-all duration-300 font-black text-lg cursor-pointer hover:border-emerald-300 shadow-sm text-center`}
                         />
                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center block">First Name</span>
                       </div>
@@ -275,8 +306,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                       name="purok"
                       value={formData.purok}
                       onChange={handleInputChange}
-                      className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 appearance-none cursor-pointer"
-                      required
+                      className={`w-full px-6 py-4 bg-white border-2 ${errors.purok ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 appearance-none cursor-pointer`}
                     >
                       <option value="">SELECT AREA...</option>
                       {['Purok 1', 'Purok 2', 'Purok 3', 'Purok 4', 'Purok 5', 'Purok 6', 'NV9'].map(p => (
@@ -290,15 +320,15 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                     {formData.purok === 'NV9' ? (
                       <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
-                          <input type="text" name="phaseNumber" value={formData.phaseNumber} onChange={handleInputChange} placeholder="PH" className="w-full px-4 py-4 bg-white border-2 border-gray-100 rounded-xl focus:border-[#2d5a3d] outline-none text-center font-black" />
+                          <input type="text" name="phaseNumber" value={formData.phaseNumber} onChange={handleInputChange} placeholder="PH" className={`w-full px-4 py-4 bg-white border-2 ${errors.phaseNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl focus:border-[#2d5a3d] outline-none text-center font-black`} />
                           <span className="text-[8px] text-gray-400 font-black uppercase text-center block">Phase</span>
                         </div>
                         <div className="space-y-1">
-                          <input type="text" name="blockNumber" value={formData.blockNumber} onChange={handleInputChange} placeholder="BLK" className="w-full px-4 py-4 bg-white border-2 border-gray-100 rounded-xl focus:border-[#2d5a3d] outline-none text-center font-black" />
+                          <input type="text" name="blockNumber" value={formData.blockNumber} onChange={handleInputChange} placeholder="BLK" className={`w-full px-4 py-4 bg-white border-2 ${errors.blockNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl focus:border-[#2d5a3d] outline-none text-center font-black`} />
                           <span className="text-[8px] text-gray-400 font-black uppercase text-center block">Block</span>
                         </div>
                         <div className="space-y-1">
-                          <input type="text" name="lotNumber" value={formData.lotNumber} onChange={handleInputChange} placeholder="LOT" className="w-full px-4 py-4 bg-white border-2 border-gray-100 rounded-xl focus:border-[#2d5a3d] outline-none text-center font-black" />
+                          <input type="text" name="lotNumber" value={formData.lotNumber} onChange={handleInputChange} placeholder="LOT" className={`w-full px-4 py-4 bg-white border-2 ${errors.lotNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl focus:border-[#2d5a3d] outline-none text-center font-black`} />
                           <span className="text-[8px] text-gray-400 font-black uppercase text-center block">Lot</span>
                         </div>
                       </div>
@@ -309,8 +339,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                         value={formData.houseNumber}
                         onChange={handleInputChange}
                         placeholder="ENTER HOUSE NUMBER..."
-                        className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 uppercase"
-                        required
+                        className={`w-full px-6 py-4 bg-white border-2 ${errors.houseNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 uppercase`}
                       />
                     )}
                   </div>
@@ -334,8 +363,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                       name="yearGrade"
                       value={formData.yearGrade}
                       onChange={handleInputChange}
-                      className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 cursor-pointer"
-                      required
+                      className={`w-full px-6 py-4 bg-white border-2 ${errors.yearGrade ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 cursor-pointer`}
                     >
                       <option value="">SELECT LEVEL...</option>
                       {['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12', '1st Year College', '2nd Year College', '3rd Year College', '4th Year College', '5th Year College'].map(lvl => (
@@ -353,8 +381,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                         onChange={handleInputChange}
                         step="0.01"
                         placeholder="ENTER GWA (E.G. 1.25)..."
-                        className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none"
-                        required
+                        className={`w-full px-6 py-4 bg-white border-2 ${errors.gwa ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none`}
                       />
                       <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-[10px] font-black">NUMERIC</div>
                     </div>
@@ -364,7 +391,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Target Institution <span className="text-red-500">*</span></label>
-                    <input type="text" name="schoolToAttend" value={formData.schoolToAttend} onChange={handleInputChange} placeholder="PAARALANG PAPASUKAN..." className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase" required />
+                    <input type="text" name="schoolToAttend" value={formData.schoolToAttend} onChange={handleInputChange} placeholder="PAARALANG PAPASUKAN..." className={`w-full px-6 py-4 bg-white border-2 ${errors.schoolToAttend ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase`} />
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Current Institution</label>
@@ -406,8 +433,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                           value={formData.cellphoneNumber}
                           onChange={handleInputChange}
                           placeholder="09XX XXX XXXX"
-                          className="w-full px-6 py-4 bg-white border-2 border-emerald-100 rounded-2xl focus:border-emerald-500 outline-none font-black text-emerald-900 shadow-sm"
-                          required
+                          className={`w-full px-6 py-4 bg-white border-2 ${errors.cellphoneNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-2xl focus:border-emerald-500 outline-none font-black text-emerald-900 shadow-sm`}
                         />
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-1">
                           <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce"></div>
@@ -432,9 +458,14 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
 
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block text-center">Digital Thumbmark / Signature <span className="text-red-500">*</span></label>
-                    <div className="bg-white border-2 border-gray-100 rounded-3xl p-4 shadow-inner ring-4 ring-gray-50 transition-all hover:ring-emerald-50 focus-within:ring-emerald-50">
+                    <div className={`bg-white border-2 ${errors.signature ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-3xl p-4 shadow-inner ring-4 ring-gray-50 transition-all hover:ring-emerald-50 focus-within:ring-emerald-50`}>
                       <SignatureInput
-                        onSignatureChange={setSignature}
+                        onSignatureChange={(sig) => {
+                          setSignature(sig);
+                          if (errors.signature) {
+                            setErrors(prev => ({ ...prev, signature: false }));
+                          }
+                        }}
                         label="Applicant's Digital Signature"
                         required={true}
                       />
@@ -460,7 +491,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
             </button>
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting || !signature}
+              disabled={isSubmitting}
               className="flex-1 sm:flex-none px-12 py-4 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl hover:shadow-emerald-900/40 transform hover:-translate-y-1 transition-all duration-500 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed group"
             >
               {isSubmitting ? (
