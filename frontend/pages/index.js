@@ -450,15 +450,13 @@ export default function BarangayPortal() {
     return () => clearInterval(interval);
   }, []);
 
-  // Hero news carousel auto-slide removed as per user request
-  /*
+  // Hero news carousel auto-slide
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % newsItems.length);
     }, 5000);
     return () => clearInterval(interval);
   }, [newsItems.length]);
-  */
 
   // State for facility image slides
   const [facilityImageSlides, setFacilityImageSlides] = useState({});
@@ -472,30 +470,34 @@ export default function BarangayPortal() {
     setFacilityImageSlides(initial);
   }, [facilities]);
 
-  // Forms carousel auto-slide removed as per user request
-  /*
+  // Forms carousel auto-slide
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentFormSlide((prev) => (prev + 1) % 4); // 4 forms total
+      setCurrentFormSlide((prev) => {
+        const maxSlide = Math.max(0, forms.length - itemsPerView);
+        return prev >= maxSlide ? 0 : prev + 1;
+      });
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
-  */
+  }, [forms.length, itemsPerView]);
 
-  // Facilities auto-transition removed as per user request
-  /*
+  // Facilities auto-transition
   useEffect(() => {
     const interval = setInterval(() => {
       setFacilityImageSlides(prev => {
         const updated = { ...prev };
         const currentFacilityIndex = updated['main'] || 0;
         const currentFacility = facilities[currentFacilityIndex];
+        // Safety check
+        if (!currentFacility) return prev;
+
         const currentImageIndex = updated[currentFacilityIndex] || 0;
+        const images = currentFacility.images || [];
 
         // Check if current facility has multiple images
-        if (currentFacility.images && currentFacility.images.length > 1) {
+        if (images.length > 1) {
           // If not at last image of current facility, go to next image
-          if (currentImageIndex < currentFacility.images.length - 1) {
+          if (currentImageIndex < images.length - 1) {
             updated[currentFacilityIndex] = currentImageIndex + 1;
           } else {
             // At last image of current facility, move to next facility
@@ -515,7 +517,6 @@ export default function BarangayPortal() {
     }, 4000);
     return () => clearInterval(interval);
   }, [facilities]);
-  */
 
   // Intersection Observer for scroll animations
   useEffect(() => {
