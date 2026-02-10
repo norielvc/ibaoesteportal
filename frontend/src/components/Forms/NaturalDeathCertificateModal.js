@@ -1,17 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
+// Build Trigger: 2026-02-07 17:09
 import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 // API Configuration
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
 
+// Default officials data (fallback)
 const defaultOfficials = {
   chairman: 'ALEXANDER C. MANIO',
   secretary: 'ROYCE ANN C. GALVEZ',
   treasurer: 'MA. LUZ S. REYES',
   skChairman: 'JOHN RUZZEL C. SANTOS',
   councilors: [
-    'JOELITO C. MANIO', 'ENGELBERT M. INDUCTIVO', 'NORMANDO T. SANTOS',
-    'JOPHET M. TURLA', 'JOHN BRYAN C. CRUZ', 'ARNEL D. BERNARDINO', 'LORENA G. LOPEZ'
+    'JOELITO C. MANIO',
+    'ENGELBERT M. INDUCTIVO',
+    'NORMANDO T. SANTOS',
+    'JOPHET M. TURLA',
+    'JOHN BRYAN C. CRUZ',
+    'ARNEL D. BERNARDINO',
+    'LORENA G. LOPEZ'
   ],
   administrator: 'ROBERT D. SANTOS',
   assistantSecretary: 'PERLITA C. DE JESUS',
@@ -43,6 +50,7 @@ const defaultOfficials = {
   footerStyle: { bgColor: '#f9fafb', textColor: '#374151', borderColor: '#d1d5db', textSize: 9, fontFamily: 'default' }
 };
 
+// Enhanced Notification Component
 function Notification({ type, title, message, onClose }) {
   const styles = {
     success: { bg: 'bg-gradient-to-r from-green-50 to-emerald-50', border: 'border-green-200', icon: 'bg-green-100 text-green-600', title: 'text-green-800', message: 'text-green-700' },
@@ -51,6 +59,7 @@ function Notification({ type, title, message, onClose }) {
   };
   const s = styles[type] || styles.info;
   const Icon = type === 'success' ? CheckCircle : type === 'error' ? AlertCircle : Info;
+
   return (
     <div className={`${s.bg} ${s.border} border rounded-xl p-4 shadow-sm animate-fade-in`}>
       <div className="flex items-start gap-3">
@@ -65,7 +74,7 @@ function Notification({ type, title, message, onClose }) {
   );
 }
 
-export default function ResidencyCertificateModal({ isOpen, onClose }) {
+export default function NaturalDeathCertificateModal({ isOpen, onClose }) {
   const [formCounter, setFormCounter] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
@@ -81,10 +90,12 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
   const certificateRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Updated form data for Natural Death Certificate
   const [formData, setFormData] = useState({
     fullName: '', age: '', sex: '', civilStatus: '',
-    address: '', dateOfBirth: '', placeOfBirth: '',
-    purpose: '', contactNumber: '', residentId: null
+    address: '', contactNumber: '',
+    dateOfDeath: '', causeOfDeath: '', covidRelated: 'No', residentId: null,
+    requestorName: ''
   });
 
   const handleResidentSelect = (resident) => {
@@ -95,18 +106,16 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
       sex: resident.gender || '',
       civilStatus: resident.civil_status || '',
       address: resident.residential_address || '',
-      dateOfBirth: resident.date_of_birth ? new Date(resident.date_of_birth).toISOString().split('T')[0] : '',
-      placeOfBirth: resident.place_of_birth || '',
       contactNumber: resident.contact_number || prev.contactNumber,
       residentId: resident.id
     }));
     setIsResidentModalOpen(false);
+    setErrors(prev => ({ ...prev, fullName: false }));
     setNotification({
       type: 'success',
       title: 'Profile Found',
       message: `${resident.full_name}'s details have been auto-filled.`
     });
-    setErrors(prev => ({ ...prev, fullName: false }));
   };
 
   useEffect(() => {
@@ -120,7 +129,8 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
     if (savedOfficials) {
       const parsed = JSON.parse(savedOfficials);
       setOfficials({
-        ...defaultOfficials, ...parsed,
+        ...defaultOfficials,
+        ...parsed,
         contactInfo: { ...defaultOfficials.contactInfo, ...parsed.contactInfo },
         headerInfo: { ...defaultOfficials.headerInfo, ...parsed.headerInfo },
         logos: { ...defaultOfficials.logos, ...parsed.logos },
@@ -154,7 +164,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
 
   const validateForm = () => {
     setErrors({});
-    const required = ['fullName', 'age', 'sex', 'civilStatus', 'dateOfBirth', 'placeOfBirth', 'address', 'purpose', 'contactNumber'];
+    const required = ['fullName', 'age', 'sex', 'civilStatus', 'address', 'contactNumber', 'dateOfDeath', 'causeOfDeath', 'covidRelated', 'requestorName'];
     const newErrors = {};
 
     for (const field of required) {
@@ -168,7 +178,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
       setNotification({
         type: 'error',
         title: 'Validation Error',
-        message: 'Please fill in all required fields highlighted in red.'
+        message: `Please fill in all required fields highlighted in red.`
       });
       return false;
     }
@@ -184,7 +194,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
   const handleProceedSubmission = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_URL}/api/certificates/residency`, {
+      const response = await fetch(`${API_URL}/api/certificates/natural-death`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -213,7 +223,10 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
   const handleCustomizeForm = () => setShowConfirmationPopup(false);
 
   const resetForm = () => {
-    setFormData({ fullName: '', age: '', sex: '', civilStatus: '', address: '', dateOfBirth: '', placeOfBirth: '', purpose: '', contactNumber: '' });
+    setFormData({
+      fullName: '', age: '', sex: '', civilStatus: '', address: '', contactNumber: '',
+      dateOfDeath: '', causeOfDeath: '', covidRelated: 'No', requestorName: ''
+    });
     setShowPreview(false);
     setShowConfirmationPopup(false);
     setShowSuccessModal(false);
@@ -236,16 +249,20 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
               <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-4 md:px-8 md:py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
                 <div className="flex items-center gap-3 md:gap-5 relative z-10">
-                  <div className="bg-white/20 backdrop-blur-md p-2 md:p-3.5 rounded-xl md:rounded-2xl border border-white/30 shadow-xl"><FileText className="w-6 h-6 md:w-8 md:h-8 text-white shadow-sm" /></div>
+                  <div className="bg-white/20 backdrop-blur-md p-2 md:p-3.5 rounded-xl md:rounded-2xl border border-white/30 shadow-xl">
+                    <FileText className="w-6 h-6 md:w-8 md:h-8 text-white shadow-sm" />
+                  </div>
                   <div className="flex flex-col">
-                    <h2 className="text-lg md:text-2xl font-extrabold text-white tracking-tight drop-shadow-md">Barangay Residency</h2>
+                    <h2 className="text-lg md:text-2xl font-extrabold text-white tracking-tight drop-shadow-md">Natural Death Certificate</h2>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
                       <p className="text-emerald-50/90 text-[10px] md:text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">{referenceNumber || 'New Application Request'}</p>
                     </div>
                   </div>
                 </div>
-                <button onClick={onClose} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group"><X className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-90 transition-transform duration-300" /></button>
+                <button onClick={onClose} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group">
+                  <X className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-90 transition-transform duration-300" />
+                </button>
               </div>
 
               {notification && <div className="px-6 pt-4"><Notification type={notification.type} title={notification.title} message={notification.message} onClose={() => setNotification(null)} /></div>}
@@ -257,7 +274,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
                       <div className="bg-emerald-100 p-3 rounded-xl border border-emerald-200 shadow-sm"><Info className="w-6 h-6 text-emerald-600" /></div>
                       <div className="space-y-2">
                         <h4 className="text-sm font-bold text-emerald-900 uppercase tracking-widest flex items-center gap-2">Official Requirement Notice</h4>
-                        <p className="text-emerald-800/90 leading-relaxed text-sm">Online processing is exclusively for residents registered in the latest barangay census.</p>
+                        <p className="text-emerald-800/90 leading-relaxed text-sm">This certification is issued upon the request of the deceased's relatives for legal purposes. The deceased must be a bona fide resident of this barangay.</p>
                       </div>
                     </div>
                   </div>
@@ -267,29 +284,33 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[#112e1f] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">1</div>
                         <div>
-                          <h3 className="text-xl font-bold text-gray-900">Personal Information</h3>
-                          <p className="text-sm text-gray-500 font-medium tracking-tight">Auto-filled via community database</p>
+                          <h3 className="text-xl font-bold text-gray-900">Deceased Information</h3>
+                          <p className="text-sm text-gray-500 font-medium">Please provide accurate details of the deceased</p>
                         </div>
                       </div>
                       <button type="button" onClick={() => setIsResidentModalOpen(true)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-xl text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-md group">
                         <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        Verify Identity Profile
+                        Identify Deceased from Directory
                       </button>
                     </div>
 
                     <div className="relative group">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Resident Full Name</label>
-                      <input type="text" name="fullName" value={formData.fullName} readOnly onClick={() => setIsResidentModalOpen(true)} placeholder="TAP HERE TO SELECT FROM RESIDENT DIRECTORY..." className={`w-full px-6 py-5 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-2xl transition-all duration-300 font-extrabold text-lg cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`} />
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Name of Deceased</label>
+                      <input type="text" name="fullName" value={formData.fullName} readOnly onClick={() => setIsResidentModalOpen(true)} placeholder="TAP TO SELECT RESIDENT..." className={`w-full px-6 py-5 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-2xl transition-all duration-300 font-extrabold text-lg cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`} />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 text-center">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Age at Death</label>
                         <input type="number" name="age" value={formData.age} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex</label>
                         <input type="text" value={formData.sex || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Civil Status</label>
+                        <input type="text" value={formData.civilStatus || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
                       </div>
                     </div>
 
@@ -302,19 +323,39 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
                       <div className="flex items-center gap-3 mb-8">
                         <div className="w-10 h-10 bg-[#2d5a3d] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">2</div>
                         <div>
-                          <h3 className="text-xl font-bold text-gray-900">Application Intent</h3>
+                          <h3 className="text-xl font-bold text-gray-900">Death Details</h3>
+                          <p className="text-sm text-gray-500 font-medium tracking-wide">Particulars of the event</p>
                         </div>
                       </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-[#2d5a3d] uppercase tracking-widest ml-1 block">Date of Death <span className="text-red-500">*</span></label>
+                          <input type="date" name="dateOfDeath" value={formData.dateOfDeath} onChange={handleInputChange} className={`w-full px-5 py-3.5 bg-white border-2 ${errors.dateOfDeath ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl text-gray-900 font-bold focus:outline-none focus:border-[#2d5a3d]`} />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-[#2d5a3d] uppercase tracking-widest ml-1 block">COVID-19 Related / Complication <span className="text-red-500">*</span></label>
+                          <select name="covidRelated" value={formData.covidRelated} onChange={handleInputChange} className={`w-full px-5 py-3.5 bg-white border-2 ${errors.covidRelated ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl text-gray-900 font-bold focus:outline-none focus:border-[#2d5a3d]`}>
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                          </select>
+                        </div>
+                      </div>
+
                       <div className="space-y-2 relative">
-                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Request Purpose <span className="text-red-500">*</span></label>
-                        <textarea name="purpose" value={formData.purpose} onChange={handleInputChange} rows={3} placeholder="e.g. School Enrollment, ID Application..." className={`w-full px-6 py-5 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:shadow-lg transition-all outline-none uppercase font-extrabold text-gray-800 shadow-sm`} />
+                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Cause of Death <span className="text-red-500">*</span></label>
+                        <input type="text" name="causeOfDeath" value={formData.causeOfDeath} onChange={handleInputChange} placeholder="E.G. HEART ATTACK (MILD STROKE)" className={`w-full px-6 py-5 bg-white border-2 ${errors.causeOfDeath ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none uppercase font-extrabold text-gray-800 shadow-sm`} />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-100">
-                      <div className="space-y-6">
-                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">SMS Contact Number <span className="text-red-500">*</span></label>
-                        <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full px-4 py-3 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-xl focus:border-emerald-500 transition-all shadow-sm`} />
+                      <div className="space-y-6 text-sm">
+                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Requestor Name (Relative) <span className="text-red-500">*</span></label>
+                        <input type="text" name="requestorName" value={formData.requestorName} onChange={handleInputChange} placeholder="FULL NAME OF RELATIVE" className={`w-full px-4 py-3 bg-white border-2 ${errors.requestorName ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none font-black text-emerald-900 transition-all shadow-sm uppercase`} />
+                      </div>
+                      <div className="space-y-6 text-sm">
+                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Requestor Contact Number <span className="text-red-500">*</span></label>
+                        <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full px-4 py-3 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none font-black text-emerald-900 transition-all shadow-sm`} />
                       </div>
                     </div>
                   </div>
@@ -322,9 +363,9 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
               </div>
 
               <div className="border-t bg-gray-50/80 backdrop-blur-md px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print pb-12 sm:pb-6">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:block">Please check all entries before final submission</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:block">Please verify all information before submission</p>
                 <div className="flex gap-3 w-full sm:w-auto">
-                  <button type="submit" onClick={handleSubmit} className="flex-1 sm:flex-none px-8 py-4 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-1 transition-all group">
+                  <button type="submit" onClick={handleSubmit} className="flex-1 sm:flex-none px-8 py-4 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-1 transition-all duration-300 group">
                     <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     Submit Application
                   </button>
@@ -345,16 +386,16 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
                   <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/30 shadow-xl"><FileText className="w-8 h-8 text-white shadow-sm" /></div>
                   <h2 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md uppercase">Review Application</h2>
                 </div>
-                <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all group"><X className="w-6 h-6 group-hover:rotate-90 transition-transform" /></button>
+                <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group"><X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" /></button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 bg-gray-100">
                 <div className="flex justify-center">
-                  <ResidencyPreview formData={formData} referenceNumber={referenceNumber || 'PENDING'} currentDate={currentDate} officials={officials} certificateRef={certificateRef} />
+                  <ClearancePreview formData={formData} referenceNumber={referenceNumber || 'PENDING'} currentDate={currentDate} officials={officials} certificateRef={certificateRef} />
                 </div>
               </div>
               <div className="border-t bg-gray-50/80 backdrop-blur-[2px] px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print">
-                <button onClick={handleCustomizeForm} disabled={isSubmitting} className="px-8 py-3.5 border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d]/5 rounded-2xl font-bold flex items-center justify-center gap-2 outline-none"><Eye className="w-5 h-5" />Go Back & Edit</button>
-                <button onClick={handleProceedSubmission} disabled={isSubmitting} className="px-8 py-3.5 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-extrabold flex items-center justify-center gap-3 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-0.5 transition-all">
+                <button onClick={handleCustomizeForm} disabled={isSubmitting} className="px-8 py-3.5 border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d]/5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all outline-none disabled:opacity-50"><Eye className="w-5 h-5" />Go Back & Edit</button>
+                <button onClick={handleProceedSubmission} disabled={isSubmitting} className="px-8 py-3.5 bg-gradient-to-r from-[#112e1f] to-[#2d5a3d] hover:from-[#2d5a3d] hover:to-[#112e1f] text-white rounded-2xl font-extrabold flex items-center justify-center gap-3 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-0.5 transition-all disabled:opacity-75">
                   {isSubmitting ? 'Processing...' : 'Confirm & Submit'}
                 </button>
               </div>
@@ -368,14 +409,14 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
           <div className="flex min-h-screen items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
-              <div className="bg-gradient-to-r from-[#112e1f] to-[#214431] px-8 py-10 text-center relative">
+              <div className="bg-gradient-to-r from-[#112e1f] to-[#214431] px-8 py-10 text-center relative overflow-hidden">
                 <div className="w-20 h-20 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30"><CheckCircle className="w-12 h-12 text-emerald-400 animate-bounce" /></div>
                 <h2 className="text-2xl font-black text-white uppercase tracking-tight">Filing Complete!</h2>
               </div>
               <div className="p-6 text-center">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm font-medium text-green-800 mb-1">REFERENCE NO:</p>
-                  <p className="text-2xl font-black text-green-900 font-mono tracking-wider">{submittedReferenceNumber}</p>
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-6 text-green-900">
+                  <p className="text-sm font-medium mb-1 uppercase tracking-widest">Reference Number:</p>
+                  <p className="text-2xl font-black font-mono tracking-wider">{submittedReferenceNumber}</p>
                 </div>
                 <div className="bg-[#112e1f]/5 border border-[#112e1f]/10 rounded-2xl p-6 relative overflow-hidden text-left mb-6">
                   <div className="flex items-center gap-3 text-[#112e1f] mb-4">
@@ -389,11 +430,11 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
                     </div>
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Phone className="w-4 h-4 text-emerald-700" /></div>
-                      <p className="text-[11px] text-gray-600 font-bold leading-relaxed">We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your pickup schedule at the Barangay Hall.</p>
+                      <p className="text-[11px] text-gray-600 font-bold leading-relaxed">We will coordinate with <strong>{formData.requestorName}</strong> via <strong>SMS at {formData.contactNumber}</strong> to confirm the pickup schedule.</p>
                     </div>
                   </div>
                 </div>
-                <button onClick={() => { setShowSuccessModal(false); resetForm(); onClose(); }} className="w-full bg-[#112e1f] text-white py-4 rounded-xl font-bold uppercase transition-all shadow-lg active:scale-95">Return to Dashboard</button>
+                <button onClick={() => { setShowSuccessModal(false); resetForm(); onClose(); }} className="w-full bg-[#112e1f] hover:bg-[#2d5a3d] text-white py-4 rounded-xl font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95">Return to Dashboard</button>
               </div>
             </div>
           </div>
@@ -406,11 +447,11 @@ export default function ResidencyCertificateModal({ isOpen, onClose }) {
   );
 }
 
-function ResidencyPreview({ formData, referenceNumber, currentDate, officials, certificateRef }) {
+function ClearancePreview({ formData, referenceNumber, currentDate, officials, certificateRef }) {
   const logos = officials.logos || {};
   const headerStyle = officials.headerStyle || {};
-  const [scale, setScale] = useState(1);
   const containerRef = useRef(null);
+  const [scale, setScale] = useState(1);
 
   useEffect(() => {
     const updateScale = () => {
@@ -422,6 +463,13 @@ function ResidencyPreview({ formData, referenceNumber, currentDate, officials, c
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
   }, []);
+
+  // Format Date for preview
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
 
   return (
     <div ref={containerRef} className="w-full flex justify-center relative overflow-hidden">
@@ -441,10 +489,10 @@ function ResidencyPreview({ formData, referenceNumber, currentDate, officials, c
           <div className="flex-1 px-16 pt-8 pb-16 flex flex-col relative overflow-hidden">
             {logos.leftLogo && <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none"><img src={logos.leftLogo} className="w-3/4 object-contain" alt="Watermark" /></div>}
             <div className="relative z-10 flex flex-col items-center">
-              <h2 className="text-[24px] font-bold mb-10 border-b-4 border-black inline-block pb-1 px-4 uppercase text-[#004d40]">BARANGAY RESIDENCY CERTIFICATE</h2>
+              <h2 className="text-[24px] font-bold mb-10 border-b-4 border-black inline-block pb-1 px-4 uppercase text-[#004d40]">NATURAL DEATH CERTIFICATION</h2>
               <div className="w-full space-y-6 text-[15px]">
                 <p className="font-bold text-lg mb-6 uppercase">TO WHOM IT MAY CONCERN:</p>
-                <p className="mb-6 leading-relaxed">This is to certify that below mentioned person is a bona fide resident of this barangay as detailed below:</p>
+                <p className="mb-6 leading-relaxed">This is to certify that below mentioned person, a bona fide resident of this barangay has died at his residence and classified as "Natural Death":</p>
                 <div className="space-y-1 mb-8">
                   {[
                     ['Name', formData.fullName?.toUpperCase()],
@@ -452,23 +500,29 @@ function ResidencyPreview({ formData, referenceNumber, currentDate, officials, c
                     ['Sex', formData.sex?.toUpperCase()],
                     ['Civil Status', formData.civilStatus?.toUpperCase()],
                     ['Residential Address', formData.address?.toUpperCase()],
-                    ['Date of Birth', formData.dateOfBirth?.toUpperCase()],
-                    ['Place of Birth', formData.placeOfBirth?.toUpperCase()]
+                    ['Date of Death', formatDate(formData.dateOfDeath)?.toUpperCase()],
+                    ['Cause of Death', formData.causeOfDeath?.toUpperCase()],
+                    ['COVID-19 Related /', formData.covidRelated === 'Yes' ? 'YES' : 'NO'],
+                    ['Complication', ''] // Empty as requested in image, but label is there
                   ].map(([label, value]) => (
                     <div key={label} className="grid grid-cols-[180px_10px_1fr] items-baseline text-black">
                       <span className="font-normal">{label}</span>
-                      <span className="font-normal text-center">:</span>
-                      <span className={label === 'Name' ? 'font-bold text-lg underline' : 'font-semibold'}>{value || '_________________'}</span>
+                      <span className="font-normal text-center">{label === 'Complication' ? '' : ':'}</span>
+                      <span className={label === 'Name' ? 'font-bold text-lg' : 'font-normal'}>{value || (label === 'Complication' ? '' : '_________________')}</span>
                     </div>
                   ))}
                 </div>
-                <p className="mb-16">Issued this {currentDate} at Barangay Iba O' Este, Calumpit, Bulacan.</p>
-                <div className="mt-16 flex flex-col">
-                  <div className="mb-12"><div className="h-16 w-64 border-b border-black"></div><p className="text-sm mt-1">Resident's Signature / Thumb Mark</p></div>
-                  <div className="self-start text-left">
-                    <p className="font-bold text-[15px] mb-8 uppercase">Truly Yours,</p>
-                    <p className="text-[20px] font-bold uppercase underline leading-tight text-black">{officials.chairman}</p>
-                    <p className="text-sm font-bold mt-1">BARANGAY CHAIRMAN</p>
+
+                <div className="mb-8">
+                  <p className="mb-16 mt-12">Issued this {currentDate} at Barangay Iba O' Este, Calumpit, Bulacan upon the request of <span className="font-bold">{formData.requestorName ? formData.requestorName.toUpperCase() : "THE ABOVE PERSON'S RELATIVES"}</span> for any legal purposes it may serve.</p>
+
+                  <div className="mt-8 flex-1 flex flex-col justify-end">
+                    <div className="h-10"></div> {/* Reduced spacer further */}
+                    <div className="self-start text-left">
+                      <p className="font-bold text-[15px] mb-12 uppercase">Truly Yours,</p>
+                      <p className="text-[20px] font-bold uppercase leading-tight">{officials.chairman}</p>
+                      <p className="text-sm font-bold mt-1 uppercase">BARANGAY CHAIRMAN</p>
+                    </div>
                   </div>
                 </div>
               </div>

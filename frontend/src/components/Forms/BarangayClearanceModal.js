@@ -38,7 +38,7 @@ const defaultOfficials = {
     barangayName: 'BARANGAY IBA O\' ESTE',
     officeName: 'Office of the Punong Barangay'
   },
-  logos: { leftLogo: '/iba-o-este.png', rightLogo: '/calumpit.png', logoSize: 80, captainImage: '/images/brgycaptain.png' },
+  logos: { leftLogo: '/iba-o-este.png', rightLogo: '/calumpit.png', logoSize: 115, captainImage: '/images/brgycaptain.png' },
   headerStyle: { bgColor: '#ffffff', borderColor: '#1e40af', fontFamily: 'default' },
   countryStyle: { color: '#4b5563', size: 12, fontWeight: 'normal', fontFamily: 'default' },
   provinceStyle: { color: '#4b5563', size: 12, fontWeight: 'normal', fontFamily: 'default' },
@@ -458,7 +458,7 @@ function ClearancePreview({ formData, referenceNumber, currentDate, officials, c
       <div style={{ width: `${794 * scale}px`, height: `${1123 * scale}px`, flexShrink: 0, position: 'relative' }}>
         <div ref={certificateRef} className="bg-white shadow-lg flex flex-col" style={{ width: '794px', height: '1123px', transform: `scale(${scale}) translateZ(0)`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0, backfaceVisibility: 'hidden', WebkitFontSmoothing: 'antialiased' }}>
           <div className="w-full border-b flex justify-center items-center p-8 flex-shrink-0" style={{ backgroundColor: headerStyle.bgColor, borderColor: headerStyle.borderColor }}>
-            <div className="flex-shrink-0" style={{ width: `${logos.logoSize || 80}px` }}>{logos.leftLogo && <img src={logos.leftLogo} className="w-full h-full object-contain" alt="Left" />}</div>
+            <div className="flex-shrink-0" style={{ width: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 130}px` }}>{logos.leftLogo && <img src={logos.leftLogo} className="w-full h-full object-contain" alt="Left" />}</div>
             <div className="text-center px-4">
               <p className="text-[13px]">{officials.headerInfo?.country}</p>
               <p className="text-[13px]">{officials.headerInfo?.province}</p>
@@ -466,9 +466,9 @@ function ClearancePreview({ formData, referenceNumber, currentDate, officials, c
               <p className="text-[18px] font-bold text-blue-800 uppercase leading-tight mt-1">{officials.headerInfo?.barangayName}</p>
               <p className="text-[14px] font-extrabold text-red-700 uppercase mt-2">OFFICE OF THE BARANGAY CHAIRMAN</p>
             </div>
-            <div className="flex-shrink-0" style={{ width: `${logos.logoSize || 80}px` }}>{logos.rightLogo && <img src={logos.rightLogo} className="w-full h-full object-contain" alt="Right" />}</div>
+            <div className="flex-shrink-0" style={{ width: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 130}px` }}>{logos.rightLogo && <img src={logos.rightLogo} className="w-full h-full object-contain" alt="Right" />}</div>
           </div>
-          <div className="flex-1 p-16 flex flex-col relative overflow-hidden">
+          <div className="flex-1 px-16 pt-8 pb-16 flex flex-col relative overflow-hidden">
             {logos.leftLogo && <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none"><img src={logos.leftLogo} className="w-3/4 object-contain" alt="Watermark" /></div>}
             <div className="relative z-10 flex flex-col items-center">
               <h2 className="text-[24px] font-bold mb-10 border-b-4 border-black inline-block pb-1 px-4 uppercase text-[#004d40]">BARANGAY CLEARANCE CERTIFICATE</h2>
@@ -507,10 +507,15 @@ function ClearancePreview({ formData, referenceNumber, currentDate, officials, c
                 </div>
               </div>
             </div>
-            <div className="mt-auto pt-4 flex flex-col text-[10px] opacity-60">
-              <div className="flex justify-between items-end italic">
+            {/* Reference Number Section */}
+            <div className="w-full text-right mt-auto mb-2 opacity-60">
+              <p className="text-[10px] italic">Ref No: <strong>{referenceNumber}</strong></p>
+            </div>
+
+            {/* Footer Divider and info */}
+            <div className="w-full border-t border-gray-400 pt-1 text-[10px] opacity-60">
+              <div className="flex flex-col items-start italic">
                 <p>Address: {officials.contactInfo?.address}</p>
-                <p>Ref No: <strong>{referenceNumber}</strong></p>
               </div>
             </div>
           </div>

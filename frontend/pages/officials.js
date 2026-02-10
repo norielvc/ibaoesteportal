@@ -81,7 +81,7 @@ const defaultOfficials = {
   logos: {
     leftLogo: '/iba-o-este.png',
     rightLogo: '/calumpit.png',
-    logoSize: 80,
+    logoSize: 115,
     captainImage: '/images/brgycaptain.png'
   },
   // Header Style - General

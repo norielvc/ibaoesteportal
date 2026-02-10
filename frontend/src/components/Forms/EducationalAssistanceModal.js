@@ -162,8 +162,8 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in my-auto">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-0 md:p-4 overflow-hidden">
+      <div className="relative bg-white md:rounded-3xl shadow-2xl w-full max-w-4xl h-full md:h-auto md:max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
         {/* Premium Nature Header */}
         <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-4 md:px-8 md:py-8 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
           {/* Decorative elements */}
@@ -193,7 +193,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
         {/* Optimized Form Body */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {/* Status/Notice Section */}
-          <div className="p-8 space-y-6">
+          <div className="p-4 md:p-8 space-y-6">
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-200/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
               <div className="flex items-start gap-4 relative z-10">
@@ -257,16 +257,16 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                           readOnly
                           placeholder="TAP TO SEARCH..."
                           onClick={() => setIsResidentModalOpen(true)}
-                          className={`w-full px-6 py-4.5 bg-white border-2 ${errors.firstName ? 'border-red-500 bg-red-50' : (formData.firstName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-2xl transition-all duration-300 font-black text-lg cursor-pointer hover:border-emerald-300 shadow-sm text-center`}
+                          className={`w-full px-4 py-3 md:px-6 md:py-4.5 bg-white border-2 ${errors.firstName ? 'border-red-500 bg-red-50' : (formData.firstName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-2xl transition-all duration-300 font-black text-base md:text-lg cursor-pointer hover:border-emerald-300 shadow-sm text-center`}
                         />
                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center block">First Name</span>
                       </div>
                       <div className="space-y-2">
-                        <input type="text" value={formData.middleName} readOnly disabled className="w-full px-6 py-4.5 bg-gray-50/50 border-2 border-gray-100 rounded-2xl text-gray-500 font-bold text-center italic" />
+                        <input type="text" value={formData.middleName} readOnly disabled className="w-full px-4 py-3 md:px-6 md:py-4.5 bg-gray-50/50 border-2 border-gray-100 rounded-2xl text-gray-500 font-bold text-center italic" />
                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center block">Middle Name</span>
                       </div>
                       <div className="space-y-2">
-                        <input type="text" value={formData.lastName} readOnly disabled className="w-full px-6 py-4.5 bg-gray-50/50 border-2 border-gray-100 rounded-2xl text-gray-500 font-bold text-center italic" />
+                        <input type="text" value={formData.lastName} readOnly disabled className="w-full px-4 py-3 md:px-6 md:py-4.5 bg-gray-50/50 border-2 border-gray-100 rounded-2xl text-gray-500 font-bold text-center italic" />
                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center block">Last Name</span>
                       </div>
                     </div>
@@ -276,15 +276,15 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
-                    <input type="number" value={formData.age} readOnly disabled className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-600 font-black focus:outline-none shadow-inner" />
+                    <input type="number" value={formData.age} readOnly disabled className="w-full px-4 py-3 md:px-5 md:py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-600 font-black focus:outline-none shadow-inner" />
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex</label>
-                    <input type="text" value={formData.gender || 'N/A'} readOnly disabled className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-600 font-black uppercase focus:outline-none shadow-inner" />
+                    <input type="text" value={formData.gender || 'N/A'} readOnly disabled className="w-full px-4 py-3 md:px-5 md:py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-600 font-black uppercase focus:outline-none shadow-inner" />
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Civil Status</label>
-                    <input type="text" value={formData.civilStatus || 'N/A'} readOnly disabled className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-600 font-black uppercase focus:outline-none shadow-inner" />
+                    <input type="text" value={formData.civilStatus || 'N/A'} readOnly disabled className="w-full px-4 py-3 md:px-5 md:py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-600 font-black uppercase focus:outline-none shadow-inner" />
                   </div>
                 </div>
               </div>
@@ -306,7 +306,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                       name="purok"
                       value={formData.purok}
                       onChange={handleInputChange}
-                      className={`w-full px-6 py-4 bg-white border-2 ${errors.purok ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 appearance-none cursor-pointer`}
+                      className={`w-full px-4 py-3 md:px-6 md:py-4 bg-white border-2 ${errors.purok ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 appearance-none cursor-pointer`}
                     >
                       <option value="">SELECT AREA...</option>
                       {['Purok 1', 'Purok 2', 'Purok 3', 'Purok 4', 'Purok 5', 'Purok 6', 'NV9'].map(p => (
@@ -339,7 +339,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                         value={formData.houseNumber}
                         onChange={handleInputChange}
                         placeholder="ENTER HOUSE NUMBER..."
-                        className={`w-full px-6 py-4 bg-white border-2 ${errors.houseNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 uppercase`}
+                        className={`w-full px-4 py-3 md:px-6 md:py-4 bg-white border-2 ${errors.houseNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 uppercase`}
                       />
                     )}
                   </div>
@@ -363,7 +363,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                       name="yearGrade"
                       value={formData.yearGrade}
                       onChange={handleInputChange}
-                      className={`w-full px-6 py-4 bg-white border-2 ${errors.yearGrade ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 cursor-pointer`}
+                      className={`w-full px-4 py-3 md:px-6 md:py-4 bg-white border-2 ${errors.yearGrade ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none font-black text-emerald-900 cursor-pointer`}
                     >
                       <option value="">SELECT LEVEL...</option>
                       {['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12', '1st Year College', '2nd Year College', '3rd Year College', '4th Year College', '5th Year College'].map(lvl => (
@@ -381,7 +381,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                         onChange={handleInputChange}
                         step="0.01"
                         placeholder="ENTER GWA (E.G. 1.25)..."
-                        className={`w-full px-6 py-4 bg-white border-2 ${errors.gwa ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none`}
+                        className={`w-full px-4 py-3 md:px-6 md:py-4 bg-white border-2 ${errors.gwa ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none`}
                       />
                       <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-[10px] font-black">NUMERIC</div>
                     </div>
@@ -391,11 +391,11 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Target Institution <span className="text-red-500">*</span></label>
-                    <input type="text" name="schoolToAttend" value={formData.schoolToAttend} onChange={handleInputChange} placeholder="PAARALANG PAPASUKAN..." className={`w-full px-6 py-4 bg-white border-2 ${errors.schoolToAttend ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase`} />
+                    <input type="text" name="schoolToAttend" value={formData.schoolToAttend} onChange={handleInputChange} placeholder="PAARALANG PAPASUKAN..." className={`w-full px-4 py-3 md:px-6 md:py-4 bg-white border-2 ${errors.schoolToAttend ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase`} />
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Current Institution</label>
-                    <input type="text" name="schoolAttending" value={formData.schoolAttending} onChange={handleInputChange} placeholder="PAARALANG PINAPASUKAN (OPTIONAL)..." className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase" />
+                    <input type="text" name="schoolAttending" value={formData.schoolAttending} onChange={handleInputChange} placeholder="PAARALANG PINAPASUKAN (OPTIONAL)..." className="w-full px-4 py-3 md:px-6 md:py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase" />
                   </div>
                 </div>
 
@@ -407,7 +407,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                     onChange={handleInputChange}
                     placeholder="E.G. DEAN'S LISTER, WITH HIGH HONORS, ETC..."
                     rows={2}
-                    className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-extrabold text-[#112e1f] outline-none uppercase placeholder:text-gray-300 shadow-sm"
+                    className="w-full px-4 py-3 md:px-6 md:py-5 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-extrabold text-[#112e1f] outline-none uppercase placeholder:text-gray-300 shadow-sm"
                   />
                 </div>
               </div>
@@ -433,7 +433,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                           value={formData.cellphoneNumber}
                           onChange={handleInputChange}
                           placeholder="09XX XXX XXXX"
-                          className={`w-full px-6 py-4 bg-white border-2 ${errors.cellphoneNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-2xl focus:border-emerald-500 outline-none font-black text-emerald-900 shadow-sm`}
+                          className={`w-full px-4 py-3 md:px-6 md:py-4 bg-white border-2 ${errors.cellphoneNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-2xl focus:border-emerald-500 outline-none font-black text-emerald-900 shadow-sm`}
                         />
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-1">
                           <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce"></div>
@@ -478,7 +478,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
         </div>
 
         {/* Premium Footer */}
-        <div className="border-t bg-gray-50/80 backdrop-blur-md px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print pb-12 sm:pb-6 flex-shrink-0">
+        <div className="border-t bg-gray-50/80 backdrop-blur-md px-4 py-4 md:px-8 md:py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print pb-6 md:pb-6 flex-shrink-0 safe-pb">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] hidden sm:block">Verify information before final filing</p>
 
           <div className="flex gap-4 w-full sm:w-auto">

@@ -28,7 +28,7 @@ const defaultOfficials = {
     logos: {
         leftLogo: '/iba-o-este.png',
         rightLogo: '/calumpit.png',
-        logoSize: 80,
+        logoSize: 115,
         captainImage: '/images/brgycaptain.png'
     },
     headerStyle: {
@@ -400,7 +400,7 @@ export default function CertificateLayoutPage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="mt-4"><SizeSlider label="Logo Size" value={officials.logos?.logoSize || 80} onChange={updateStyle} section="logos" field="logoSize" min={40} max={120} /></div>
+                            <div className="mt-4"><SizeSlider label="Logo Size" value={officials.logos?.logoSize || 115} onChange={updateStyle} section="logos" field="logoSize" min={40} max={150} /></div>
                         </div>
 
                         {/* Header Text */}
@@ -754,7 +754,7 @@ export default function CertificateLayoutPage() {
                                 )}
 
                                 {/* Document Body */}
-                                <div className="flex-1 p-12 relative" style={{ backgroundColor: officials.bodyStyle?.bgColor }}>
+                                <div className="flex-1 px-12 pt-6 pb-12 relative" style={{ backgroundColor: officials.bodyStyle?.bgColor }}>
                                     {/* Watermark/Background Logo */}
                                     {officials.logos?.leftLogo && (
                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.05]">
@@ -848,7 +848,12 @@ export default function CertificateLayoutPage() {
                                                         </div>
                                                     </div>
 
-                                                    <div className="clear-both pt-2 border-t-2 border-gray-800 w-full mt-auto text-xs text-left">
+                                                    {/* Reference Number Section */}
+                                                    <div className="w-full text-right mt-auto mb-2 text-xs">
+                                                        <p>Ref No: <strong>BRGY-2026-00001</strong></p>
+                                                    </div>
+
+                                                    <div className="clear-both pt-1 border-t border-gray-400 w-full text-xs text-left">
                                                         <p><strong>Address:</strong> {officials.contactInfo?.address}</p>
                                                         <p><strong>Contact:</strong> {officials.contactInfo?.contactPerson} ({officials.contactInfo?.telephone}) email: {officials.contactInfo?.email}</p>
                                                     </div>
@@ -915,7 +920,12 @@ export default function CertificateLayoutPage() {
                                                             <p className="text-xs font-bold">BARANGAY CHAIRMAN</p>
                                                         </div>
 
-                                                        <div className="clear-both pt-2 border-t-2 border-gray-800 w-full mt-4 text-xs">
+                                                        {/* Reference Number Section */}
+                                                        <div className="w-full text-right mt-auto mb-2 text-xs">
+                                                            <p>Ref No: <strong>BRGY-2026-00001</strong></p>
+                                                        </div>
+
+                                                        <div className="clear-both pt-1 border-t border-gray-400 w-full text-xs">
                                                             <p><strong>Address:</strong> {officials.contactInfo?.address}</p>
                                                             <p><strong>Contact:</strong> {officials.contactInfo?.contactPerson} ({officials.contactInfo?.telephone}) email: {officials.contactInfo?.email}</p>
                                                         </div>

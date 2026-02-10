@@ -23,7 +23,11 @@ router.get('/user/:userId', authenticateToken, async (req, res) => {
           status,
           created_at,
           contact_number,
-          purpose
+          purpose,
+          date_of_death,
+          cause_of_death,
+          covid_related,
+          requestor_name
         )
       `)
       .eq('assigned_user_id', userId);
@@ -100,11 +104,19 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
           address,
           date_of_birth,
           place_of_birth,
+          date_of_death,
+          cause_of_death,
+          covid_related,
+          requestor_name,
           resident_id,
           residents:resident_id (
             id,
             pending_case,
-            case_record_history
+            case_record_history,
+            is_deceased,
+            date_of_death,
+            cause_of_death,
+            covid_related
           ),
           updated_at
         )
@@ -154,7 +166,7 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
 
       let shouldShow = true;
 
-      if ((reqStatus === 'pending' || reqStatus === 'submitted' || reqStatus === 'staff_review') && steps.length > 0) {
+      if ((reqStatus === 'pending' || reqStatus === 'submitted' || reqStatus === 'staff_review' || reqStatus === 'returned') && steps.length > 0) {
         // For pending requests, only show assignments for the FIRST approval step
         const firstApprovalStep = steps.find(s => s.requiresApproval === true);
         if (firstApprovalStep) {
@@ -349,6 +361,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
             .eq('request_id', assignment.request_id)
             .eq('step_id', nextStep.id.toString())
             .eq('assigned_user_id', userId)
+            .eq('status', 'pending')
             .single();
 
           if (!existing) {
@@ -392,9 +405,9 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
         official_role: currentStep?.officialRole
       }]);
 
-    // Don't fail if history logging fails
+    // Don't fail if history logging fails, but log it clearly
     if (historyError) {
-      console.error('Failed to log workflow history:', historyError);
+      console.error(`❌ WORKFLOW HISTORY ERROR [${assignment.request_type}]:`, historyError.message, historyError.details);
     }
 
     res.json({

@@ -11,6 +11,8 @@ import IndigencyCertificateModal from '@/components/Forms/IndigencyCertificateMo
 import ResidencyCertificateModal from '@/components/Forms/ResidencyCertificateModal';
 import BusinessPermitModal from '@/components/Forms/BusinessPermitModal';
 import EducationalAssistanceModal from '@/components/Forms/EducationalAssistanceModal';
+import NaturalDeathCertificateModal from '@/components/Forms/NaturalDeathCertificateModal';
+import GuardianshipCertificateModal from '@/components/Forms/GuardianshipCertificateModal';
 
 export default function BarangayPortal() {
   // Version Check Log
@@ -29,6 +31,8 @@ export default function BarangayPortal() {
   const [showResidencyModal, setShowResidencyModal] = useState(false);
   const [showBusinessPermitModal, setShowBusinessPermitModal] = useState(false);
   const [showEducationalAssistanceModal, setShowEducationalAssistanceModal] = useState(false);
+  const [showNaturalDeathModal, setShowNaturalDeathModal] = useState(false);
+  const [showGuardianshipModal, setShowGuardianshipModal] = useState(false);
   const [showComingSoonModal, setShowComingSoonModal] = useState(false);
   const [currentFormSlide, setCurrentFormSlide] = useState(0);
   const [formData, setFormData] = useState({
@@ -107,7 +111,7 @@ export default function BarangayPortal() {
       icon: UserPlus,
       color: 'blue',
       features: ['Legal Guardian', 'Minor Support', 'Custody'],
-      onClick: () => setShowComingSoonModal(true)
+      onClick: () => setShowGuardianshipModal(true)
     },
     {
       title: 'Natural Death',
@@ -115,9 +119,9 @@ export default function BarangayPortal() {
       icon: Flower2,
       color: 'green',
       features: ['Certified', 'Family Record', 'Cemetery'],
-      onClick: () => setShowComingSoonModal(true)
+      onClick: () => setShowNaturalDeathModal(true)
     }
-  ], [setShowClearanceModal, setShowIndigencyModal, setShowResidencyModal, setShowBusinessPermitModal, setShowComingSoonModal]);
+  ], [setShowClearanceModal, setShowIndigencyModal, setShowResidencyModal, setShowBusinessPermitModal, setShowGuardianshipModal, setShowComingSoonModal]);
 
   // Responsive items per view for forms carousel
   useEffect(() => {
@@ -752,7 +756,7 @@ export default function BarangayPortal() {
 
         {/* Barangay Logo Watermark - Even Bigger & Impactful */}
         <div
-          className="absolute right-[-5%] md:right-[-2%] top-1/2 -translate-y-1/2 w-[600px] md:w-[1100px] h-[110%] md:h-[115%] bg-contain bg-right bg-no-repeat opacity-20 pointer-events-none z-0 hidden md:block"
+          className="absolute right-[-5%] md:right-[-2%] top-1/2 -translate-y-1/2 w-[600px] md:w-[1100px] h-[110%] md:h-[115%] bg-contain bg-right bg-no-repeat opacity-10 pointer-events-none z-0 hidden md:block"
           style={{ backgroundImage: 'url(/images/ibalogo.png)', backgroundPosition: 'right center' }}
         />
 
@@ -1724,6 +1728,10 @@ export default function BarangayPortal() {
         onClose={() => setShowEducationalAssistanceModal(false)}
       />
 
+      {/* Natural Death Certificate Modal */}
+      <NaturalDeathCertificateModal isOpen={showNaturalDeathModal} onClose={() => setShowNaturalDeathModal(false)} />
+      <GuardianshipCertificateModal isOpen={showGuardianshipModal} onClose={() => setShowGuardianshipModal(false)} />
+
 
 
 
@@ -1889,91 +1897,93 @@ export default function BarangayPortal() {
 
                         {/* Officials Flex Container for automatic centering of orphans */}
                         <div className={`flex flex-wrap gap-6 justify-center ${section.key === 'captain' || section.key === 'sk_chairman' ? 'max-w-md mx-auto' : ''}`}>
-                          {displayOfficials.map((official, index) => {
-                            const colors = [
-                              'from-[#112e1f] to-[#2d5a3d]',
-                              'from-teal-600 to-green-700',
-                              'from-emerald-600 to-green-700',
-                              'from-[#2d5a3d] to-emerald-800',
-                              'from-green-600 to-emerald-700',
-                              'from-teal-500 to-emerald-600',
-                              'from-[#112117] to-green-900',
-                              'from-emerald-700 to-teal-800',
-                              'from-green-700 to-emerald-900',
-                              'from-[#2d5a3d] to-teal-700',
-                              'from-emerald-500 to-green-600',
-                              'from-teal-400 to-emerald-500',
-                              'from-green-500 to-teal-600'
-                            ];
+                          {
+                            displayOfficials.map((official, index) => {
+                              const colors = [
+                                'from-[#112e1f] to-[#2d5a3d]',
+                                'from-teal-600 to-green-700',
+                                'from-emerald-600 to-green-700',
+                                'from-[#2d5a3d] to-emerald-800',
+                                'from-green-600 to-emerald-700',
+                                'from-teal-500 to-emerald-600',
+                                'from-[#112117] to-green-900',
+                                'from-emerald-700 to-teal-800',
+                                'from-green-700 to-emerald-900',
+                                'from-[#2d5a3d] to-teal-700',
+                                'from-emerald-500 to-green-600',
+                                'from-teal-400 to-emerald-500',
+                                'from-green-500 to-teal-600'
+                              ];
 
-                            // Use section-specific colors for consistency
-                            let colorClass;
-                            if (section.key === 'captain') {
-                              colorClass = 'from-green-800 to-green-950';
-                            } else if (section.key === 'kagawad') {
-                              colorClass = colors[index % colors.length];
-                            } else if (section.key === 'sk_chairman') {
-                              colorClass = 'from-orange-600 to-amber-700';
-                            } else if (section.key === 'sk_secretary') {
-                              colorClass = 'from-orange-500 to-amber-600';
-                            } else if (section.key === 'sk_treasurer') {
-                              colorClass = 'from-amber-600 to-orange-500';
-                            } else if (section.key === 'sk_kagawad') {
-                              colorClass = 'from-amber-500 to-orange-600';
-                            } else {
-                              colorClass = colors[(index + 8) % colors.length];
-                            }
+                              // Use section-specific colors for consistency
+                              let colorClass;
+                              if (section.key === 'captain') {
+                                colorClass = 'from-green-800 to-green-950';
+                              } else if (section.key === 'kagawad') {
+                                colorClass = colors[index % colors.length];
+                              } else if (section.key === 'sk_chairman') {
+                                colorClass = 'from-orange-600 to-amber-700';
+                              } else if (section.key === 'sk_secretary') {
+                                colorClass = 'from-orange-500 to-amber-600';
+                              } else if (section.key === 'sk_treasurer') {
+                                colorClass = 'from-amber-600 to-orange-500';
+                              } else if (section.key === 'sk_kagawad') {
+                                colorClass = 'from-amber-500 to-orange-600';
+                              } else {
+                                colorClass = colors[(index + 8) % colors.length];
+                              }
 
-                            const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
+                              const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
 
-                            // Dynamic width based on section type
-                            const widthClass = section.key === 'captain' || section.key === 'sk_chairman' ? 'w-full' :
-                              section.key === 'sk_kagawad' || section.key === 'staff' ? 'w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(25%-1.5rem)]' :
-                                'w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-1.5rem)]';
+                              // Dynamic width based on section type
+                              const widthClass = section.key === 'captain' || section.key === 'sk_chairman' ? 'w-full' :
+                                section.key === 'sk_kagawad' || section.key === 'staff' ? 'w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(25%-1.5rem)]' :
+                                  'w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-1.5rem)]';
 
-                            return (
-                              <div key={official.id || index} className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group ${widthClass}`}>
-                                <div className="relative aspect-square overflow-hidden group bg-white">
-                                  {official.image_url ? (
-                                    <img
-                                      src={official.image_url}
-                                      alt={official.name}
-                                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10"
-                                    />
-                                  ) : (
-                                    <div className={`w-full h-full bg-gradient-to-br ${colorClass} flex items-center justify-center`}>
-                                      <span className="text-5xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity">{initials}</span>
-                                    </div>
-                                  )}
-
-                                  {/* Position & Committee Overlay */}
-                                  <div className="absolute inset-0 bg-gradient-to-t from-[#112e1f]/90 via-[#112e1f]/40 to-transparent flex flex-col justify-end p-6 text-center z-20">
-                                    <h3 className="text-white font-bold text-xl mb-1 drop-shadow-lg">
-                                      {(() => {
-                                        const pos = official.position;
-                                        if (pos.includes('Kagawad')) return 'Brgy. Kagawad';
-                                        if (['Secretary', 'Treasurer', 'Administrator', 'Clerk', 'Record Keeper'].includes(pos)) return `Brgy. ${pos}`;
-                                        if (pos === 'Barangay Keeper') return 'Brgy. Record Keeper';
-                                        if (['Assistant Secretary', 'Assistant Administrator'].includes(pos)) {
-                                          return pos.replace('Assistant', 'Asst. Brgy.');
-                                        }
-                                        return pos;
-                                      })()}
-                                    </h3>
-                                    {official.committee && (
-                                      <p className="text-green-300 text-sm font-medium drop-shadow-md">{official.committee}</p>
+                              return (
+                                <div key={official.id || index} className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group ${widthClass}`}>
+                                  <div className="relative aspect-square overflow-hidden group bg-white">
+                                    {official.image_url ? (
+                                      <img
+                                        src={official.image_url}
+                                        alt={official.name}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10"
+                                      />
+                                    ) : (
+                                      <div className={`w-full h-full bg-gradient-to-br ${colorClass} flex items-center justify-center`}>
+                                        <span className="text-5xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity">{initials}</span>
+                                      </div>
                                     )}
+
+                                    {/* Position & Committee Overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#112e1f]/90 via-[#112e1f]/40 to-transparent flex flex-col justify-end p-6 text-center z-20">
+                                      <h3 className="text-white font-bold text-xl mb-1 drop-shadow-lg">
+                                        {(() => {
+                                          const pos = official.position;
+                                          if (pos.includes('Kagawad')) return 'Brgy. Kagawad';
+                                          if (['Secretary', 'Treasurer', 'Administrator', 'Clerk', 'Record Keeper'].includes(pos)) return `Brgy. ${pos}`;
+                                          if (pos === 'Barangay Keeper') return 'Brgy. Record Keeper';
+                                          if (['Assistant Secretary', 'Assistant Administrator'].includes(pos)) {
+                                            return pos.replace('Assistant', 'Asst. Brgy.');
+                                          }
+                                          return pos;
+                                        })()}
+                                      </h3>
+                                      {official.committee && (
+                                        <p className="text-green-300 text-sm font-medium drop-shadow-md">{official.committee}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="p-6">
+                                    <h4 className="text-lg font-semibold text-gray-900 mb-2">{official.name}</h4>
+                                    <p className="text-gray-600 text-sm leading-relaxed">
+                                      {official.description}
+                                    </p>
                                   </div>
                                 </div>
-                                <div className="p-6">
-                                  <h4 className="text-lg font-semibold text-gray-900 mb-2">{official.name}</h4>
-                                  <p className="text-gray-600 text-sm leading-relaxed">
-                                    {official.description}
-                                  </p>
-                                </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })
+                          }
                         </div>
                       </div>
                     );
@@ -2292,33 +2302,35 @@ export default function BarangayPortal() {
       `}</style>
 
       {/* Coming Soon Modal */}
-      {showComingSoonModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-white/20 relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-green-600"></div>
+      {
+        showComingSoonModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-white/20 relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-green-600"></div>
 
-            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
-              <Clock className="w-10 h-10 text-emerald-600 animate-pulse" />
+              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
+                <Clock className="w-10 h-10 text-emerald-600 animate-pulse" />
+              </div>
+
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon!</h3>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                We are currently finalizing this online service to serve you better. Please visit the Barangay Hall for manual processing in the meantime.
+              </p>
+
+              <button
+                onClick={() => setShowComingSoonModal(false)}
+                className="w-full bg-gradient-to-r from-[#2d5a3d] to-[#112e1f] text-white py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 group/btn"
+              >
+                Got it!
+                <CheckCircle className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
+              </button>
+
+              {/* Decorative background circle */}
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-emerald-50 rounded-full -z-10 opacity-50"></div>
             </div>
-
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon!</h3>
-            <p className="text-gray-600 mb-8 leading-relaxed">
-              We are currently finalizing this online service to serve you better. Please visit the Barangay Hall for manual processing in the meantime.
-            </p>
-
-            <button
-              onClick={() => setShowComingSoonModal(false)}
-              className="w-full bg-gradient-to-r from-[#2d5a3d] to-[#112e1f] text-white py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 group/btn"
-            >
-              Got it!
-              <CheckCircle className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
-            </button>
-
-            {/* Decorative background circle */}
-            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-emerald-50 rounded-full -z-10 opacity-50"></div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <style jsx>{`
         /* Smooth scrolling for navigation */

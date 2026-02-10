@@ -56,7 +56,9 @@ router.get('/next-reference/:type', async (req, res) => {
     const prefixMap = {
       'barangay_clearance': 'BC',
       'certificate_of_indigency': 'CI',
-      'barangay_residency': 'BR'
+      'barangay_residency': 'BR',
+      'natural_death': 'ND',
+      'barangay_guardianship': 'GD'
     };
 
     const prefix = prefixMap[type] || 'REF';
@@ -109,7 +111,9 @@ router.get('/next-reference/:type', async (req, res) => {
     const prefixMap = {
       'barangay_clearance': 'BC',
       'certificate_of_indigency': 'CI',
-      'barangay_residency': 'BR'
+      'barangay_residency': 'BR',
+      'natural_death': 'ND',
+      'barangay_guardianship': 'GD'
     };
     const prefix = prefixMap[type] || 'REF';
     const year = new Date().getFullYear();
@@ -135,7 +139,11 @@ router.get('/', async (req, res) => {
         residents:resident_id (
           id,
           pending_case,
-          case_record_history
+          case_record_history,
+          is_deceased,
+          date_of_death,
+          cause_of_death,
+          covid_related
         )
       `)
       .order('updated_at', { ascending: false, nullsFirst: false });
@@ -159,7 +167,18 @@ router.get('/:id', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('certificate_requests')
-      .select('*')
+      .select(`
+        *,
+        residents:resident_id (
+          id,
+          pending_case,
+          case_record_history,
+          is_deceased,
+          date_of_death,
+          cause_of_death,
+          covid_related
+        )
+      `)
       .eq('id', req.params.id)
       .single();
 
@@ -636,6 +655,290 @@ router.post('/residency', async (req, res) => {
   }
 });
 
+// Create new certificate request (Natural Death Certificate)
+router.post('/natural-death', async (req, res) => {
+  try {
+    const {
+      fullName, age, sex, civilStatus, address, contactNumber,
+      dateOfDeath, causeOfDeath, covidRelated, requestorName, residentId
+    } = req.body;
+
+    const year = new Date().getFullYear();
+    const prefix = 'ND';
+
+    // Get ALL natural_death records to find the highest number
+    const { data: records } = await supabase
+      .from('certificate_requests')
+      .select('reference_number')
+      .eq('certificate_type', 'natural_death')
+      .order('reference_number', { ascending: false });
+
+    let nextNumber = 1;
+    if (records && records.length > 0) {
+      let maxNumber = 0;
+      for (const record of records) {
+        if (record.reference_number && record.reference_number.startsWith(`${prefix}-${year}-`)) {
+          const parts = record.reference_number.split('-');
+          if (parts.length === 3) {
+            const num = parseInt(parts[2], 10);
+            if (!isNaN(num) && num > maxNumber) {
+              maxNumber = num;
+            }
+          }
+        }
+      }
+      nextNumber = maxNumber + 1;
+    }
+
+    const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
+    console.log(`Creating natural death certificate with reference: ${refNumber}`);
+
+    const { data, error } = await supabase
+      .from('certificate_requests')
+      .insert([{
+        reference_number: refNumber,
+        certificate_type: 'natural_death',
+        full_name: fullName?.toUpperCase() || '',
+        age: parseInt(age),
+        sex: sex?.toUpperCase() || '',
+        civil_status: civilStatus?.toUpperCase() || '',
+        address: address?.toUpperCase() || '',
+        contact_number: contactNumber,
+        date_of_death: dateOfDeath,
+        cause_of_death: causeOfDeath?.toUpperCase() || '',
+        covid_related: covidRelated === 'Yes',
+        requestor_name: requestorName?.toUpperCase() || '',
+        resident_id: residentId,
+        purpose: 'NATURAL DEATH CERTIFICATE',
+        status: 'staff_review',
+        date_issued: new Date().toISOString()
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Update resident details if residentId is provided
+    if (residentId) {
+      console.log(`[ND-Update] Syncing death details to resident ${residentId}`);
+      const { error: updateError } = await supabase
+        .from('residents')
+        .update({
+          contact_number: contactNumber,
+          is_deceased: true,
+          date_of_death: dateOfDeath,
+          cause_of_death: causeOfDeath?.toUpperCase() || '',
+          covid_related: covidRelated === 'Yes',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', residentId);
+
+      if (!updateError) {
+        console.log(`[ND-Update] ✅ Successfully updated resident ${residentId}`);
+      } else {
+        console.error(`[ND-Update] ❌ Failed to update resident ${residentId}:`, updateError);
+      }
+    }
+
+    // Create initial workflow assignments based on configuration
+    // Fetch workflow config for this type
+    const { data: workflowConfig } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', 'natural_death')
+      .single();
+
+    let staffUserIds = [];
+    let initialStepId = 111;
+    let initialStepName = 'Review Request';
+
+    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
+      const steps = workflowConfig.workflow_config.steps;
+      // Find the first step that requires approval
+      const firstActionableStep = steps.find(s => s.requiresApproval === true);
+
+      if (firstActionableStep && firstActionableStep.assignedUsers && firstActionableStep.assignedUsers.length > 0) {
+        staffUserIds = firstActionableStep.assignedUsers;
+        initialStepId = firstActionableStep.id;
+        initialStepName = firstActionableStep.name;
+      } else {
+        // Fallback
+        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 111 || s.id === 2);
+        if (fallbackStep) {
+          staffUserIds = fallbackStep.assignedUsers || [];
+          initialStepId = fallbackStep.id;
+          initialStepName = fallbackStep.name;
+        }
+      }
+    }
+
+    // Fallback if no config found (Legacy hardcoded)
+    if (staffUserIds.length === 0) {
+      console.log('Using fallback hardcoded staff assignment for natural death');
+      staffUserIds = ['9550a8b2-9e32-4f52-a260-52766afb49b1']; // Noriel Cruz
+    }
+
+    for (const staffUserId of staffUserIds) {
+      await supabase
+        .from('workflow_assignments')
+        .insert([{
+          request_id: data.id,
+          request_type: 'natural_death',
+          step_id: initialStepId,
+          step_name: initialStepName,
+          assigned_user_id: staffUserId,
+          status: 'pending'
+        }]);
+    }
+
+    // Send email notifications to next step approvers
+    notifyNextStepApprovers('natural_death', refNumber, fullName, data.id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Natural Death Certificate request submitted successfully',
+      data,
+      referenceNumber: refNumber
+    });
+  } catch (error) {
+    console.error('Error creating natural death request:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Create new certificate request (Guardianship Certificate)
+router.post('/guardianship', async (req, res) => {
+  try {
+    const {
+      fullName, age, sex, civilStatus, address, contactNumber,
+      dateOfBirth, guardianName, guardianRelationship, purpose, residentId
+    } = req.body;
+
+    const year = new Date().getFullYear();
+    const prefix = 'GD';
+
+    // Get ALL guardianship records to find the highest number
+    const { data: records } = await supabase
+      .from('certificate_requests')
+      .select('reference_number')
+      .eq('certificate_type', 'barangay_guardianship')
+      .order('reference_number', { ascending: false });
+
+    let nextNumber = 1;
+    if (records && records.length > 0) {
+      let maxNumber = 0;
+      for (const record of records) {
+        if (record.reference_number && record.reference_number.startsWith(`${prefix}-${year}-`)) {
+          const parts = record.reference_number.split('-');
+          if (parts.length === 3) {
+            const num = parseInt(parts[2], 10);
+            if (!isNaN(num) && num > maxNumber) {
+              maxNumber = num;
+            }
+          }
+        }
+      }
+      nextNumber = maxNumber + 1;
+    }
+
+    const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
+    console.log(`Creating guardianship certificate with reference: ${refNumber}`);
+
+    const { data, error } = await supabase
+      .from('certificate_requests')
+      .insert([{
+        reference_number: refNumber,
+        certificate_type: 'barangay_guardianship',
+        full_name: fullName?.toUpperCase() || '',
+        age: parseInt(age),
+        sex: sex?.toUpperCase() || '',
+        civil_status: civilStatus?.toUpperCase() || '',
+        address: address?.toUpperCase() || '',
+        contact_number: contactNumber,
+        date_of_birth: dateOfBirth,
+        guardian_name: guardianName?.toUpperCase() || '',
+        guardian_relationship: guardianRelationship?.toUpperCase() || '',
+        resident_id: residentId,
+        purpose: purpose?.toUpperCase() || 'GUARDIANSHIP CERTIFICATE',
+        status: 'staff_review',
+        date_issued: new Date().toISOString()
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Update resident details if residentId is provided
+    if (residentId && contactNumber) {
+      await supabase
+        .from('residents')
+        .update({
+          contact_number: contactNumber,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', residentId);
+    }
+
+    // Create initial workflow assignments based on configuration
+    const { data: workflowConfig } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', 'barangay_guardianship')
+      .single();
+
+    let staffUserIds = [];
+    let initialStepId = 111;
+    let initialStepName = 'Review Request';
+
+    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
+      const steps = workflowConfig.workflow_config.steps;
+      const firstActionableStep = steps.find(s => s.requiresApproval === true);
+
+      if (firstActionableStep && firstActionableStep.assignedUsers && firstActionableStep.assignedUsers.length > 0) {
+        staffUserIds = firstActionableStep.assignedUsers;
+        initialStepId = firstActionableStep.id;
+        initialStepName = firstActionableStep.name;
+      } else {
+        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 111 || s.id === 2);
+        if (fallbackStep) {
+          staffUserIds = fallbackStep.assignedUsers || [];
+          initialStepId = fallbackStep.id;
+          initialStepName = fallbackStep.name;
+        }
+      }
+    }
+
+    if (staffUserIds.length === 0) {
+      staffUserIds = ['9550a8b2-9e32-4f52-a260-52766afb49b1']; // Fallback
+    }
+
+    for (const staffUserId of staffUserIds) {
+      await supabase
+        .from('workflow_assignments')
+        .insert([{
+          request_id: data.id,
+          request_type: 'barangay_guardianship',
+          step_id: initialStepId,
+          step_name: initialStepName,
+          assigned_user_id: staffUserId,
+          status: 'pending'
+        }]);
+    }
+
+    notifyNextStepApprovers('barangay_guardianship', refNumber, fullName, data.id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Guardianship Certificate request submitted successfully',
+      data,
+      referenceNumber: refNumber
+    });
+  } catch (error) {
+    console.error('Error creating guardianship request:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Update certificate status (for admin)
 router.put('/:id/status', async (req, res) => {
   try {
@@ -687,6 +990,52 @@ router.put('/:id/status', async (req, res) => {
 
       if (error) throw error;
 
+      // NEW: Check if this is a Natural Death certificate being marked as completed
+      // If so, update the residents table to mark as deceased
+      if (req.params.id && (status === 'completed' || finalStatus === 'completed')) {
+        try {
+          // Fetch the request details to verify type and get resident_id
+          const { data: requestDetails, error: fetchError } = await supabase
+            .from('certificate_requests')
+            .select('certificate_type, resident_id, date_of_death, cause_of_death, covid_related')
+            .eq('id', req.params.id)
+            .single();
+
+          if (!fetchError && requestDetails && requestDetails.certificate_type === 'natural_death' && requestDetails.resident_id) {
+            console.log(`[Status Update] Natural Death certificate completed for resident ${requestDetails.resident_id}. Updating resident status...`);
+
+            // Verify columns exist first to avoid errors if migration didn't run
+            const { data: columnsCheck } = await supabase
+              .from('residents')
+              .select('is_deceased, date_of_death') // Check specific columns
+              .limit(1);
+
+            const residentUpdates = {
+              is_deceased: true,
+              date_of_death: requestDetails.date_of_death,
+              cause_of_death: requestDetails.cause_of_death,
+              covid_related: requestDetails.covid_related
+            };
+
+            const { error: residentUpdateError } = await supabase
+              .from('residents')
+              .update(residentUpdates)
+              .eq('id', requestDetails.resident_id);
+
+            if (residentUpdateError) {
+              console.error('[Status Update] Failed to update resident death status:', residentUpdateError);
+              if (residentUpdateError.message.includes('column')) {
+                console.warn('[Status Update] Columns likely missing in residents table. Skipping update.');
+              }
+            } else {
+              console.log(`[Status Update] ✅ successfully marked resident ${requestDetails.resident_id} as deceased.`);
+            }
+          }
+        } catch (innerCheckError) {
+          console.error('[Status Update] Error checking for natural death logic:', innerCheckError);
+        }
+      }
+
       res.json({ success: true, message: 'Status updated successfully', data });
     } catch (innerError) {
       // If error is about missing column, try without optional fields
@@ -705,6 +1054,55 @@ router.put('/:id/status', async (req, res) => {
           .single();
 
         if (error) throw error;
+
+        // NEW: Check if this is a Natural Death certificate being marked as completed
+        // If so, update the residents table to mark as deceased
+        if (req.params.id && (status === 'completed' || finalStatus === 'completed')) {
+          try {
+            // Fetch the request details to verify type and get resident_id
+            const { data: requestDetails, error: fetchError } = await supabase
+              .from('certificate_requests')
+              .select('certificate_type, resident_id, date_of_death, cause_of_death, covid_related')
+              .eq('id', req.params.id)
+              .single();
+
+            if (!fetchError && requestDetails && requestDetails.certificate_type === 'natural_death' && requestDetails.resident_id) {
+              console.log(`[Status Update] Natural Death certificate completed for resident ${requestDetails.resident_id}. Updating resident status...`);
+
+              // Verify columns exist first to avoid errors if migration didn't run
+              const { data: columnsCheck } = await supabase
+                .from('residents')
+                .select('is_deceased, date_of_death') // Check specific columns
+                .limit(1);
+
+              // If we didn't get an error about missing columns (or implicit error handling via keys check), proceed
+              // Note: The select above might throw error if column doesn't exist, so this try-catch wraps it.
+
+              const residentUpdates = {
+                is_deceased: true,
+                date_of_death: requestDetails.date_of_death,
+                cause_of_death: requestDetails.cause_of_death,
+                covid_related: requestDetails.covid_related
+              };
+
+              const { error: residentUpdateError } = await supabase
+                .from('residents')
+                .update(residentUpdates)
+                .eq('id', requestDetails.resident_id);
+
+              if (residentUpdateError) {
+                console.error('[Status Update] Failed to update resident death status:', residentUpdateError);
+                if (residentUpdateError.message.includes('column')) {
+                  console.warn('[Status Update] Columns likely missing in residents table. Skipping update.');
+                }
+              } else {
+                console.log(`[Status Update] ✅ successfully marked resident ${requestDetails.resident_id} as deceased.`);
+              }
+            }
+          } catch (innerCheckError) {
+            console.error('[Status Update] Error checking for natural death logic:', innerCheckError);
+          }
+        }
 
         res.json({ success: true, message: 'Status updated successfully', data });
       } else {
@@ -762,6 +1160,10 @@ router.put('/:id', async (req, res) => {
         place_of_birth: updatedCert.place_of_birth,
         residential_address: updatedCert.address, // Map address to residential_address
         contact_number: updatedCert.contact_number,
+        is_deceased: updatedCert.certificate_type === 'natural_death',
+        date_of_death: updatedCert.date_of_death,
+        cause_of_death: updatedCert.cause_of_death,
+        covid_related: updatedCert.covid_related,
         updated_at: new Date().toISOString()
       };
 

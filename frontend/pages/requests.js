@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import Layout from '@/components/Layout/Layout';
 import {
   FileText, Search, Eye, CheckCircle, XCircle, RotateCcw,
   Clock, User, Calendar, ChevronDown, X, AlertTriangle,
-  FileCheck, History, Filter, Shield, Printer, Download, PenTool, ShieldAlert, Info, Edit, Save, RefreshCw
+  FileCheck, History, Filter, Shield, Printer, Download, PenTool, ShieldAlert, Info, Edit, Save, RefreshCw,
+  Skull, Activity, Heart, Phone
 } from 'lucide-react';
 import { getAuthToken, getUserData } from '@/lib/auth';
 import SignaturePad from '@/components/UI/SignaturePad';
@@ -178,6 +180,16 @@ export default function RequestsPage() {
     setDateRange({ start: '', end: '' });
   };
 
+  // Handle Deep Linking from URL
+  useEffect(() => {
+    if (router.query.id && requests.length > 0 && !selectedRequest) {
+      const target = requests.find(r => r.id === router.query.id);
+      if (target) {
+        setSelectedRequest(target);
+      }
+    }
+  }, [router.query.id, requests]);
+
   // Check if current user is assigned to approve a request at its current step
   const isUserAssignedToRequest = (request) => {
     if (!currentUser) return false;
@@ -294,21 +306,29 @@ export default function RequestsPage() {
   };
 
   const getTypeLabel = (type) => {
-    const labels = {
-      'barangay_clearance': 'Barangay Clearance',
-      'certificate_of_indigency': 'Certificate of Indigency',
-      'barangay_residency': 'Barangay Residency'
-    };
-    return labels[type] || type;
+    if (!type) return 'N/A';
+    const s = String(type).toLowerCase().trim().replace(/[-_ ]/g, '_');
+
+    // Precise matches
+    if (s.includes('natural_death')) return 'Natural Death Certificate';
+    if (s.includes('clearance')) return 'Barangay Clearance';
+    if (s.includes('indigency')) return 'Certificate of Indigency';
+    if (s.includes('residency')) return 'Barangay Residency';
+
+    // Fallback: remove all underscores/dashes and capitalize
+    return String(type)
+      .replace(/[_-]/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase())
+      .trim();
   };
 
   const getTypeColor = (type) => {
-    const colors = {
-      'barangay_clearance': 'bg-blue-500',
-      'certificate_of_indigency': 'bg-green-500',
-      'barangay_residency': 'bg-orange-500'
-    };
-    return colors[type] || 'bg-gray-500';
+    const s = String(type || '').toLowerCase();
+    if (s.includes('death')) return 'bg-gray-800';
+    if (s.includes('clearance')) return 'bg-blue-500';
+    if (s.includes('indigency')) return 'bg-green-500';
+    if (s.includes('residency')) return 'bg-orange-500';
+    return 'bg-gray-500';
   };
 
   const formatDate = (dateString) => {
@@ -394,7 +414,7 @@ export default function RequestsPage() {
       let method = 'PUT';
       let body = {
         status: newStatus,
-        comment: overrideComment !== null ? overrideComment : (overrideAction ? '' : actionComment),
+        comment: (overrideComment !== undefined && overrideComment !== null) ? overrideComment : (overrideAction ? '' : actionComment),
         action: act,
         approvedBy: currentUser?.email,
         signatureData: signatureData
@@ -405,7 +425,7 @@ export default function RequestsPage() {
         url = `${API_URL}/api/workflow-assignments/${req.workflow_assignment.id}/status`;
         body = {
           action: act,
-          comment: overrideComment !== null ? overrideComment : (overrideAction ? '' : actionComment),
+          comment: (overrideComment !== undefined && overrideComment !== null) ? overrideComment : (overrideAction ? '' : actionComment),
           signatureData: signatureData
         };
       }
@@ -688,6 +708,8 @@ export default function RequestsPage() {
                     <option value="barangay_clearance">Clearance</option>
                     <option value="certificate_of_indigency">Indigency</option>
                     <option value="barangay_residency">Residency</option>
+                    <option value="natural_death">Natural Death</option>
+                    <option value="barangay_guardianship">Guardianship</option>
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
@@ -806,7 +828,24 @@ export default function RequestsPage() {
                         className={`hover:bg-gray-50 transition-colors cursor-pointer ${canAct ? 'bg-blue-50/30' : ''}`}
                       >
                         <td className="px-6 py-4">
-                          <span className="font-mono font-semibold text-blue-600">{request.reference_number}</span>
+                          <Link
+                            href={`/requests?id=${request.id}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+                                e.preventDefault();
+                                setSelectedRequest(request);
+                                router.push(
+                                  { pathname: router.pathname, query: { ...router.query, id: request.id } },
+                                  undefined,
+                                  { shallow: true }
+                                );
+                              }
+                            }}
+                            className="font-mono font-semibold text-blue-600 hover:underline relative z-10"
+                          >
+                            {request.reference_number}
+                          </Link>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
@@ -856,7 +895,13 @@ export default function RequestsPage() {
         {selectedRequest && !showActionModal && (
           <RequestDetailsModal
             request={selectedRequest}
-            onClose={() => setSelectedRequest(null)}
+            onClose={() => {
+              setSelectedRequest(null);
+              const { id, ...rest } = router.query;
+              if (id) {
+                router.push({ pathname: router.pathname, query: rest }, undefined, { shallow: true });
+              }
+            }}
             onAction={handleAction}
             onUpdate={handleUpdateDetails}
             getStatusColor={getStatusColor}
@@ -938,7 +983,11 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
     civil_status: request.civil_status || '',
     date_of_birth: request.date_of_birth || '',
     address: request.address || '',
-    purpose: request.purpose || ''
+    purpose: request.purpose || '',
+    date_of_death: request.date_of_death || '',
+    cause_of_death: request.cause_of_death || '',
+    covid_related: request.covid_related || false,
+    requestor_name: request.requestor_name || ''
   });
 
   // Split name if fields are empty but full_name exists
@@ -1053,7 +1102,11 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                         civil_status: request.civil_status || '',
                         date_of_birth: request.date_of_birth || '',
                         address: request.address || '',
-                        purpose: request.purpose || ''
+                        purpose: request.purpose || '',
+                        date_of_death: request.date_of_death || '',
+                        cause_of_death: request.cause_of_death || '',
+                        covid_related: request.covid_related || false,
+                        requestor_name: request.requestor_name || ''
                       });
                     }}
                     className="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600 flex items-center transition-colors"
@@ -1203,6 +1256,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                             className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
                           />
                         </div>
+
                       </>
                     ) : (
                       <div className={['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) ? "col-span-1" : "col-span-2 md:col-span-2"}>
@@ -1243,6 +1297,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                             {request.address || 'N/A'}
                           </p>
                         </div>
+
                       </>
                     )}
                   </div>
@@ -1292,6 +1347,120 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                           </div>
                         )}
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {(request.certificate_type === 'natural_death' || request.certificate_type === 'natural-death' || request.certificate_type?.toLowerCase().includes('death') || request.purpose?.toLowerCase().includes('death')) && (
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 mt-6">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
+                        <Activity className="w-4 h-4 text-blue-500" />
+                        Death Certification Details
+                      </h3>
+                    </div>
+
+                    <div className="grid gap-4 text-sm grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+                      {isEditing ? (
+                        <>
+                          <div className="col-span-1">
+                            <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Date of Death</p>
+                            <input
+                              type="date"
+                              name="date_of_death"
+                              value={editFormData.date_of_death ? new Date(editFormData.date_of_death).toISOString().split('T')[0] : ''}
+                              onChange={handleInputChange}
+                              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Cause of Death</p>
+                            <input
+                              type="text"
+                              name="cause_of_death"
+                              value={editFormData.cause_of_death}
+                              onChange={handleInputChange}
+                              placeholder="Cause of Death"
+                              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">COVID-19 Related</p>
+                            <select
+                              name="covid_related"
+                              value={editFormData.covid_related ? 'true' : 'false'}
+                              onChange={(e) => setEditFormData(prev => ({ ...prev, covid_related: e.target.value === 'true' }))}
+                              className="w-full px-3 py-1.5 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1 bg-white"
+                            >
+                              <option value="false">NO / NEGATIVE</option>
+                              <option value="true">YES / POSITIVE</option>
+                            </select>
+                          </div>
+                          <div className="col-span-1">
+                            <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Requestor Name</p>
+                            <input
+                              type="text"
+                              name="requestor_name"
+                              value={editFormData.requestor_name}
+                              onChange={handleInputChange}
+                              placeholder="Requestor Name"
+                              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Requestor Contact</p>
+                            <input
+                              type="text"
+                              name="contact_number"
+                              value={editFormData.contact_number}
+                              onChange={handleInputChange}
+                              placeholder="Contact Number"
+                              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase mb-0.5">Date of Death</p>
+                            <p className="font-bold text-gray-900 uppercase">
+                              {(request.date_of_death || request.residents?.date_of_death) ? new Date(request.date_of_death || request.residents.date_of_death).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'NOT RECORDED'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase mb-0.5">Cause of Death</p>
+                            <p className="font-bold text-gray-900 uppercase truncate" title={request.cause_of_death || request.residents?.cause_of_death || 'NOT STATED'}>
+                              {request.cause_of_death || request.residents?.cause_of_death || 'NOT STATED'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase mb-0.5">COVID-19 Related</p>
+                            <div className="mt-1">
+                              {(() => {
+                                const covidVal = request.covid_related ?? request.residents?.covid_related;
+                                const isCovid = covidVal === true || covidVal === 'true' || covidVal === 'Yes';
+                                return (
+                                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black tracking-widest border ${isCovid ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}`}>
+                                    {isCovid ? 'YES / POSITIVE' : 'NO / NEGATIVE'}
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase mb-0.5">Requestor Name</p>
+                            <p className="font-bold text-gray-900 uppercase truncate" title={request.requestor_name || 'NOT SPECIFIED'}>
+                              {request.requestor_name || 'NOT SPECIFIED'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase mb-0.5">Requestor Contact</p>
+                            <p className="font-bold text-gray-900">
+                              {request.contact_number || 'NOT SPECIFIED'}
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1708,7 +1877,7 @@ const defaultOfficials = {
     barangayName: 'BARANGAY IBA O\' ESTE',
     officeName: 'Office of the Punong Barangay'
   },
-  logos: { leftLogo: '/iba-o-este.png', rightLogo: '/calumpit.png', logoSize: 80, captainImage: '/images/brgycaptain.png' },
+  logos: { leftLogo: '/iba-o-este.png', rightLogo: '/calumpit.png', logoSize: 115, captainImage: '/images/brgycaptain.png' },
   headerStyle: { bgColor: '#ffffff', borderColor: '#1e40af', fontFamily: 'default' },
   countryStyle: { color: '#4b5563', size: 12, fontWeight: 'normal', fontFamily: 'default' },
   provinceStyle: { color: '#4b5563', size: 12, fontWeight: 'normal', fontFamily: 'default' },
@@ -1862,7 +2031,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
       const imgHeight = canvas.height;
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 10;
+      const imgY = 0;
 
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       pdf.save(`${request.reference_number}.pdf`);
@@ -1964,8 +2133,23 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
     address: request.address || '',
     dateOfBirth: request.date_of_birth || '',
     placeOfBirth: request.place_of_birth || '',
-    purpose: request.purpose || ''
+    dateOfDeath: request.date_of_death || request.residents?.date_of_death || '',
+    causeOfDeath: request.cause_of_death || request.residents?.cause_of_death || '',
+    covidRelated: (request.covid_related ?? request.residents?.covid_related) ? 'Yes' : 'No',
+    requestorName: request.requestor_name || '',
+    guardianName: request.guardian_name || '',
+    guardianRelationship: request.guardian_relationship || '',
+    purpose: Array.isArray(request.purpose) ? request.purpose.join('\n') : (request.purpose || '')
   };
+
+  const isNaturalDeath =
+    String(request.certificate_type || '').toLowerCase().includes('death') ||
+    String(request.purpose || '').toLowerCase().includes('death') ||
+    String(request.reference_number || '').toUpperCase().startsWith('ND');
+
+  const isGuardianship =
+    String(request.certificate_type || '').toLowerCase().includes('guardian') ||
+    String(request.reference_number || '').toUpperCase().startsWith('GD');
 
   // Determine Issued Date (Final Approval Date or Current Date)
   const captainApproval = history?.find(h =>
@@ -1983,15 +2167,15 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
       <div ref={certificateRef} className={`certificate-container bg-white shadow-lg print:shadow-none flex flex-col ${getFontClass(bodyStyle.fontFamily)}`} style={{ width: '210mm', minHeight: '297mm', padding: '0', boxSizing: 'border-box' }}>
 
         {/* Header Section */}
-        <div className={`w-full border-b flex justify-center items-center p-8 flex-shrink-0 ${getFontClass(headerStyle.fontFamily)}`}
+        <div className={`w-full border-b flex justify-center items-center pt-4 pb-6 px-8 flex-shrink-0 ${getFontClass(headerStyle.fontFamily)}`}
           style={{
             backgroundColor: headerStyle.bgColor,
             borderColor: headerStyle.borderColor
           }}>
           {/* Left Logo */}
           <div style={{
-            width: `${logos.logoSize || 80}px`,
-            height: `${logos.logoSize || 80}px`,
+            width: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 130}px`,
+            height: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 130}px`,
             marginRight: `${headerStyle.logoSpacing || 0}px`
           }} className="flex-shrink-0">
             {logos.leftLogo && <img src={logos.leftLogo} className="w-full h-full object-contain" alt="Left" />}
@@ -2008,8 +2192,8 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
           {/* Right Logo */}
           <div style={{
-            width: `${logos.logoSize || 80}px`,
-            height: `${logos.logoSize || 80}px`,
+            width: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 130}px`,
+            height: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 130}px`,
             marginLeft: `${headerStyle.logoSpacing || 0}px`
           }} className="flex-shrink-0">
             {logos.rightLogo && <img src={logos.rightLogo} className="w-full h-full object-contain" alt="Right" />}
@@ -2046,7 +2230,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
           )}
 
           {/* Document Body */}
-          <div className="flex-1 px-20 py-12 relative flex flex-col" style={{ backgroundColor: bodyStyle.bgColor || '#ffffff', color: bodyStyle.textColor || '#000000', fontFamily: bodyStyle.fontFamily }}>
+          <div className="flex-1 px-20 pt-6 pb-2 relative flex flex-col" style={{ backgroundColor: bodyStyle.bgColor || '#ffffff', color: bodyStyle.textColor || '#000000', fontFamily: bodyStyle.fontFamily }}>
             {/* Watermark */}
             {logos.leftLogo && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.05]">
@@ -2059,9 +2243,11 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                 color: '#004d40',
                 fontSize: '24px',
               }}>
-                {request.certificate_type === 'barangay_clearance' ? 'BARANGAY CLEARANCE CERTIFICATE' :
-                  request.certificate_type === 'certificate_of_indigency' ? 'CERTIFICATE OF INDIGENCY' :
-                    request.certificate_type === 'barangay_residency' ? 'BARANGAY RESIDENCY CERTIFICATE' : 'CERTIFICATE'}
+                {isNaturalDeath ? 'NATURAL DEATH CERTIFICATION' :
+                  isGuardianship ? 'BARANGAY CERTIFICATION FOR GUARDIANSHIP' :
+                    request.certificate_type === 'barangay_clearance' ? 'BARANGAY CLEARANCE CERTIFICATE' :
+                      request.certificate_type === 'certificate_of_indigency' ? 'CERTIFICATE OF INDIGENCY' :
+                        request.certificate_type === 'barangay_residency' ? 'BARANGAY RESIDENCY CERTIFICATE' : 'CERTIFICATE'}
               </h2>
 
               <div className="w-full space-y-6 text-justify" style={{ fontSize: '15px' }}>
@@ -2071,23 +2257,37 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
                 <>
                   <p className="text-left mb-6 leading-relaxed">
-                    {request.certificate_type === 'barangay_clearance' ?
-                      'This is to certify that below mentioned person is a bona fide resident of this barangay and has no derogatory record as of date mentioned below:' :
-                      request.certificate_type === 'certificate_of_indigency' ?
-                        'This is to certify that below mentioned person is a bona fide resident and their family belongs to the "Indigent Families" of this barangay as of date mentioned below. Further certifying that their income is not enough to sustain and support their basic needs:' :
-                        'This is to certify that below mentioned person is a bona fide resident of this barangay as detailed below:'}
+                    {isNaturalDeath ?
+                      'This is to certify that below mentioned person, a bona fide resident of this barangay has died at his residence and classified as "Natural Death":' :
+                      isGuardianship ?
+                        `This is to certify that below person is under the guardianship of ${formData.guardianName?.toUpperCase() || "_________________________________"}, both bona fide residents of this barangay:` :
+                        request.certificate_type === 'barangay_clearance' ?
+                          'This is to certify that below mentioned person is a bona fide resident of this barangay and has no derogatory record as of date mentioned below:' :
+                          request.certificate_type === 'certificate_of_indigency' ?
+                            'This is to certify that below mentioned person is a bona fide resident and their family belongs to the "Indigent Families" of this barangay as of date mentioned below. Further certifying that their income is not enough to sustain and support their basic needs:' :
+                            'This is to certify that below mentioned person is a bona fide resident of this barangay as detailed below:'}
                   </p>
 
                   <div className="mb-6 space-y-1">
-                    {[
+                    {([
                       ['Name', formData.fullName?.toUpperCase()],
                       ['Age', formData.age],
                       ['Sex', formData.sex?.toUpperCase()],
                       ['Civil Status', formData.civilStatus?.toUpperCase()],
                       ['Residential Address', formData.address?.toUpperCase()],
-                      ['Date of Birth', formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
-                      ['Place of Birth', formData.placeOfBirth?.toUpperCase()]
-                    ].map(([label, value]) => (
+                    ]
+                      .concat(isNaturalDeath ? [
+                        ['Date of Death', formData.dateOfDeath ? new Date(formData.dateOfDeath).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
+                        ['Cause of Death', formData.causeOfDeath?.toUpperCase()],
+                        ['COVID-19 Related', formData.covidRelated?.toUpperCase()]
+                      ] : isGuardianship ? [
+                        ['Date of Birth', formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
+                        ["Guardian's Relationship", formData.guardianRelationship?.toUpperCase()]
+                      ] : [
+                        ['Date of Birth', formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
+                        ['Place of Birth', formData.placeOfBirth?.toUpperCase()]
+                      ])
+                    ).map(([label, value]) => (
                       <div key={label} className="grid grid-cols-[180px_10px_1fr] items-baseline text-black">
                         <span className="font-normal">{label}</span>
                         <span className="font-normal">:</span>
@@ -2096,39 +2296,50 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                     ))}
                   </div>
 
-                  <div className="mb-6">
-                    <p className="mb-3">
-                      Being issued upon the request of above mentioned person for below purpose(s):
+                  {isNaturalDeath ? (
+                    <p className="mb-10 text-left leading-relaxed">
+                      Issued this {issuedDate} at Barangay Iba O' Este, Calumpit, Bulacan upon the request of <span className="font-bold">{formData.requestorName ? formData.requestorName.toUpperCase() : "THE ABOVE PERSON'S RELATIVES"}</span> for any legal purposes it may serve.
                     </p>
-                    <div className="pl-8 space-y-1 font-bold">
-                      {formData.purpose ? (
-                        formData.purpose.split('\n').map((line, idx) => (
-                          <div key={idx} className="flex gap-2">
-                            <span>{idx + 1}.</span>
-                            <span>{line.toUpperCase()}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <p>• PURPOSE NOT SPECIFIED</p>
-                      )}
-                    </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="mb-6">
+                        <p className="mb-3">
+                          Being issued upon the request of above mentioned person for below purpose(s):
+                        </p>
+                        <div className="pl-8 space-y-1 font-bold">
+                          {formData.purpose ? (
+                            formData.purpose.split('\n').map((line, idx) => (
+                              <div key={idx} className="flex gap-2">
+                                <span>{idx + 1}.</span>
+                                <span>{line.toUpperCase()}</span>
+                              </div>
+                            ))
+                          ) : (
+                            <p>• PURPOSE NOT SPECIFIED</p>
+                          )}
+                        </div>
+                      </div>
 
-                  <p className="mb-10 text-left">
-                    Issued this {issuedDate} at Barangay Iba O' Este, Calumpit, Bulacan.
-                  </p>
+                      <p className="mb-10 text-left">
+                        Issued this {issuedDate} at Barangay Iba O' Este, Calumpit, Bulacan.
+                      </p>
+                    </>
+                  )}
 
                   {/* Unified Signature Section (Left Aligned for All) */}
-                  <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mt-8' : 'mt-16'} relative`}>
-                    <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mb-8' : 'mb-12'}`}>
-                      <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'h-12' : 'h-16'}`}></div>
-                      <div className="border-t border-black w-64 pt-1">
-                        <p className="text-[15px]">Resident's Signature / Thumb Mark</p>
+                  <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mt-8' : 'mt-16'} relative text-left`}>
+                    {isNaturalDeath && <div className="h-10"></div>}
+                    {!isNaturalDeath && (
+                      <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mb-8' : 'mb-12'}`}>
+                        <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'h-12' : 'h-16'}`}></div>
+                        <div className="border-t border-black w-64 pt-1">
+                          <p className="text-[15px]">Resident's Signature / Thumb Mark</p>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     <div className="text-left mb-4 self-start">
-                      <p className="font-bold text-[15px] mb-8">TRULY YOURS,</p>
+                      <p className="font-bold text-[15px] mb-12">TRULY YOURS,</p>
 
                       <div className="relative inline-block">
                         {/* Big Backdrop Signature centered horizontally but positioned above name */}
@@ -2147,37 +2358,52 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
                           {/* Additional Forwarder Signatures (Backdrop Overlay - does not affect text layout) */}
                           <div className="absolute left-32 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none" style={{ mixBlendMode: 'multiply' }}>
-                            {history?.filter(h =>
-                              h.action === 'approve' &&
-                              h.signature_data &&
-                              !(h.step_name?.toLowerCase().includes('captain') || h.step_name?.toLowerCase().includes('chairman') || h.officialRole === 'Brgy. Captain' || h.official_role === 'Brgy. Captain')
-                            ).map((sigEntry, idx) => (
-                              <div key={idx} className="h-12 w-28">
-                                <img
-                                  src={sigEntry.signature_data}
-                                  className="h-full w-full object-contain"
-                                  alt="Official Sig"
-                                />
-                              </div>
-                            ))}
+                            {(() => {
+                              const seenSignatories = new Set();
+                              return history
+                                ?.filter(h => {
+                                  if (h.action !== 'approve' || !h.signature_data) return false;
+
+                                  // Skip captain/chairman signatures as they are handled separately above
+                                  const isCaptain = h.step_name?.toLowerCase().includes('captain') ||
+                                    h.step_name?.toLowerCase().includes('chairman') ||
+                                    h.officialRole === 'Brgy. Captain' ||
+                                    h.official_role === 'Brgy. Captain';
+                                  if (isCaptain) return false;
+
+                                  // Unique per person
+                                  if (seenSignatories.has(h.performed_by)) return false;
+                                  seenSignatories.add(h.performed_by);
+                                  return true;
+                                })
+                                .map((sigEntry, idx) => (
+                                  <div key={idx} className="h-12 w-28">
+                                    <img
+                                      src={sigEntry.signature_data}
+                                      className="h-full w-full object-contain"
+                                      alt="Official Sig"
+                                    />
+                                  </div>
+                                ));
+                            })()}
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </>
+              </div>
 
-                {/* Reference Number Section */}
-                <div className="w-full text-left mt-12 mb-2">
-                  <p className="text-sm">Reference No: <strong>{request.reference_number || request.id}</strong></p>
-                </div>
+              {/* Reference Number Section */}
+              <div className="w-full text-right mt-auto mb-2">
+                <p className="text-sm">Reference No: <strong>{request.reference_number || request.id}</strong></p>
+              </div>
 
-                {/* Footer Divider and info */}
-                <div className="w-full border-t border-gray-400 pt-1 text-[11px] leading-tight">
-                  <div className="flex flex-col items-start text-gray-700 gap-0.5">
-                    <p><strong>Address:</strong> {officials.contactInfo?.address}</p>
-                    <p><strong>Contact:</strong> {officials.contactInfo?.contactPerson} Tel No.: {officials.contactInfo?.telephone} email: {officials.contactInfo?.email}</p>
-                  </div>
+              {/* Footer Divider and info */}
+              <div className="w-full border-t border-gray-400 pt-1 text-[11px] leading-tight pb-4">
+                <div className="flex flex-col items-start text-gray-700 gap-0.5">
+                  <p><strong>Address:</strong> {officials.contactInfo?.address}</p>
+                  <p><strong>Contact:</strong> {officials.contactInfo?.contactPerson} Tel No.: {officials.contactInfo?.telephone} email: {officials.contactInfo?.email}</p>
                 </div>
               </div>
             </div>

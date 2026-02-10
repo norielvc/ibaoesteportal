@@ -173,7 +173,7 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
     });
 
     // Process each certificate type
-    const certificateTypes = ['barangay_clearance', 'certificate_of_indigency', 'barangay_residency'];
+    const certificateTypes = ['barangay_clearance', 'certificate_of_indigency', 'barangay_residency', 'natural_death'];
     let syncResults = {
       totalAssignments: 0,
       updatedSteps: 0,
