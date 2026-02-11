@@ -1,6 +1,7 @@
 -- Add columns for Guardianship Certificate to certificate_requests table
 ALTER TABLE certificate_requests ADD COLUMN IF NOT EXISTS guardian_name TEXT;
 ALTER TABLE certificate_requests ADD COLUMN IF NOT EXISTS guardian_relationship TEXT;
+ALTER TABLE certificate_requests ADD COLUMN IF NOT EXISTS guardian_id UUID REFERENCES residents(id);
 
 -- Update the certificate_type constraint to include 'barangay_guardianship'
 ALTER TABLE certificate_requests DROP CONSTRAINT IF EXISTS certificate_requests_certificate_type_check;

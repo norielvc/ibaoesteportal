@@ -131,6 +131,7 @@ router.get('/next-reference/:type', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { type, status } = req.query;
+    console.log('Fetching certificates with filters:', { type, status });
 
     let query = supabase
       .from('certificate_requests')
@@ -145,19 +146,22 @@ router.get('/', async (req, res) => {
           cause_of_death,
           covid_related
         )
-      `)
-      .order('updated_at', { ascending: false, nullsFirst: false });
+      `);
 
-    if (type) query = query.eq('certificate_type', type);
-    if (status) query = query.eq('status', status);
+    // Only apply valid filters
+    if (type && type !== 'all') query = query.eq('certificate_type', type);
+    if (status && status !== 'all') query = query.eq('status', status);
 
-    const { data, error } = await query;
+    const { data, error } = await query.order('updated_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Supabase error fetching certificates:', error);
+      return res.status(500).json({ success: false, message: error.message, details: error.details });
+    }
 
-    res.json({ success: true, certificates: data });
+    res.json({ success: true, certificates: data || [] });
   } catch (error) {
-    console.error('Error fetching certificates:', error);
+    console.error('❌ Unexpected error fetching certificates:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -811,7 +815,7 @@ router.post('/guardianship', async (req, res) => {
   try {
     const {
       fullName, age, sex, civilStatus, address, contactNumber,
-      dateOfBirth, guardianName, guardianRelationship, purpose, residentId
+      dateOfBirth, guardianName, guardianRelationship, purpose, residentId, guardianId
     } = req.body;
 
     const year = new Date().getFullYear();
@@ -859,6 +863,7 @@ router.post('/guardianship', async (req, res) => {
         guardian_name: guardianName?.toUpperCase() || '',
         guardian_relationship: guardianRelationship?.toUpperCase() || '',
         resident_id: residentId,
+        guardian_id: guardianId,
         purpose: purpose?.toUpperCase() || 'GUARDIANSHIP CERTIFICATE',
         status: 'staff_review',
         date_issued: new Date().toISOString()
@@ -1128,7 +1133,11 @@ router.put('/:id', async (req, res) => {
     delete updateData.residents; // Don't try to update joined data
 
     // Convert strings to uppercase if they exist in updateData
-    const uppercaseFields = ['full_name', 'first_name', 'middle_name', 'last_name', 'suffix', 'sex', 'civil_status', 'address', 'place_of_birth', 'purpose'];
+    const uppercaseFields = [
+      'full_name', 'first_name', 'middle_name', 'last_name', 'suffix',
+      'sex', 'civil_status', 'address', 'place_of_birth', 'purpose',
+      'guardian_name', 'guardian_relationship'
+    ];
     uppercaseFields.forEach(field => {
       if (updateData[field] && typeof updateData[field] === 'string') {
         updateData[field] = updateData[field].toUpperCase();
@@ -1141,7 +1150,18 @@ router.put('/:id', async (req, res) => {
       .from('certificate_requests')
       .update(updateData)
       .eq('id', id)
-      .select('*, residents(*)')
+      .select(`
+        *,
+        residents:resident_id (
+          id,
+          pending_case,
+          case_record_history,
+          is_deceased,
+          date_of_death,
+          cause_of_death,
+          covid_related
+        )
+      `)
       .single();
 
     if (certError) throw certError;

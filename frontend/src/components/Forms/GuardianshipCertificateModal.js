@@ -84,35 +84,51 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
     const [referenceNumber, setReferenceNumber] = useState('');
     const [submittedReferenceNumber, setSubmittedReferenceNumber] = useState('');
     const [isResidentModalOpen, setIsResidentModalOpen] = useState(false);
+    const [searchType, setSearchType] = useState('ward'); // 'ward' or 'guardian'
     const [errors, setErrors] = useState({});
     const certificateRef = useRef(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
         fullName: '', age: '', sex: '', civilStatus: '', address: '', dateOfBirth: '',
-        guardianName: '', guardianRelationship: '', purpose: 'ANY LEGAL PURPOSES IT MAY SERVE',
-        contactNumber: '', residentId: null
+        guardianName: '', guardianRelationship: '',
+        contactNumber: '', residentId: null, guardianId: null
     });
 
     const handleResidentSelect = (resident) => {
-        setFormData(prev => ({
-            ...prev,
-            fullName: resident.full_name,
-            age: resident.age || '',
-            sex: resident.gender || '',
-            civilStatus: resident.civil_status || '',
-            address: resident.residential_address || '',
-            dateOfBirth: resident.date_of_birth || '',
-            contactNumber: resident.contact_number || prev.contactNumber,
-            residentId: resident.id
-        }));
+        if (searchType === 'ward') {
+            setFormData(prev => ({
+                ...prev,
+                fullName: resident.full_name,
+                age: resident.age || '',
+                sex: resident.gender || '',
+                civilStatus: resident.civil_status || '',
+                address: resident.residential_address || '',
+                dateOfBirth: resident.date_of_birth || '',
+                contactNumber: resident.contact_number || prev.contactNumber,
+                residentId: resident.id
+            }));
+            setErrors(prev => ({ ...prev, fullName: false }));
+            setNotification({
+                type: 'success',
+                title: 'Ward Selected',
+                message: `${resident.full_name}'s details have been auto-filled.`
+            });
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                guardianName: resident.full_name,
+                contactNumber: resident.contact_number || prev.contactNumber,
+                guardianId: resident.id
+            }));
+            setErrors(prev => ({ ...prev, guardianName: false }));
+            setNotification({
+                type: 'success',
+                title: 'Guardian Selected',
+                message: `${resident.full_name} set as guardian.`
+            });
+        }
         setIsResidentModalOpen(false);
-        setErrors(prev => ({ ...prev, fullName: false }));
-        setNotification({
-            type: 'success',
-            title: 'Profile Found',
-            message: `${resident.full_name}'s details have been auto-filled.`
-        });
     };
 
     useEffect(() => {
@@ -143,7 +159,7 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
     };
 
     const validateForm = () => {
-        const required = ['fullName', 'guardianName', 'guardianRelationship', 'purpose', 'contactNumber'];
+        const required = ['fullName', 'guardianName', 'guardianRelationship', 'contactNumber'];
         const newErrors = {};
         required.forEach(field => { if (!formData[field]) newErrors[field] = true; });
         if (Object.keys(newErrors).length > 0) {
@@ -158,6 +174,21 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
         e.preventDefault();
         if (!validateForm()) return;
         setShowConfirmationPopup(true);
+    };
+
+    const resetForm = () => {
+        setFormData({
+            fullName: '', age: '', sex: '', civilStatus: '', address: '', dateOfBirth: '',
+            guardianName: '', guardianRelationship: '',
+            contactNumber: '', residentId: null, guardianId: null
+        });
+        setShowPreview(false);
+        setShowConfirmationPopup(false);
+        setShowSuccessModal(false);
+        setNotification(null);
+        setReferenceNumber('');
+        setSubmittedReferenceNumber('');
+        setErrors({});
     };
 
     const handleProceedSubmission = async () => {
@@ -181,15 +212,6 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const resetForm = () => {
-        setFormData({
-            fullName: '', age: '', sex: '', civilStatus: '', address: '', dateOfBirth: '',
-            guardianName: '', guardianRelationship: '', purpose: 'ANY LEGAL PURPOSES IT MAY SERVE',
-            contactNumber: '', residentId: null
-        });
-        setErrors({});
     };
 
     if (!isOpen) return null;
@@ -226,16 +248,16 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
                                             <div className="w-8 h-8 bg-[#112e1f] text-white rounded-lg flex items-center justify-center font-bold shadow-md">1</div>
                                             <h3 className="text-lg font-bold text-gray-900 tracking-tight">Person Under Guardianship (Ward)</h3>
                                         </div>
-                                        <button type="button" onClick={() => setIsResidentModalOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-lg text-sm font-bold transition-all shadow-sm group">
+                                        <button type="button" onClick={() => { setSearchType('ward'); setIsResidentModalOpen(true); }} className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-lg text-sm font-bold transition-all shadow-sm group">
                                             <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                            Search Resident
+                                            Search Ward
                                         </button>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="md:col-span-2 space-y-2">
                                             <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
-                                            <input type="text" value={formData.fullName} readOnly onClick={() => setIsResidentModalOpen(true)} placeholder="TAP SEARCH BUTTON TO SELECT RESIDENT..." className={`w-full px-5 py-4 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-xl font-bold cursor-pointer transition-all hover:border-emerald-300 shadow-sm`} />
+                                            <input type="text" value={formData.fullName} readOnly onClick={() => { setSearchType('ward'); setIsResidentModalOpen(true); }} placeholder="TAP SEARCH BUTTON TO SELECT WARD..." className={`w-full px-5 py-4 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-xl font-bold cursor-pointer transition-all hover:border-emerald-300 shadow-sm`} />
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 text-center block">Age</label>
@@ -250,17 +272,23 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
 
                                 {/* Guardian Information */}
                                 <div className="space-y-6 pt-4 border-t border-gray-100">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-[#2d5a3d] text-white rounded-lg flex items-center justify-center font-bold shadow-md">2</div>
-                                        <h3 className="text-lg font-bold text-gray-900 tracking-tight">Guardian Information</h3>
+                                    <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-[#2d5a3d] text-white rounded-lg flex items-center justify-center font-bold shadow-md">2</div>
+                                            <h3 className="text-lg font-bold text-gray-900 tracking-tight">Guardian Information</h3>
+                                        </div>
+                                        <button type="button" onClick={() => { setSearchType('guardian'); setIsResidentModalOpen(true); }} className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#112e1f]/20 text-[#112e1f] hover:bg-[#112e1f] hover:text-white rounded-lg text-sm font-bold transition-all shadow-sm group">
+                                            <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                            Search Guardian
+                                        </button>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="md:col-span-2 space-y-2">
                                             <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Guardian's Full Name <span className="text-red-500">*</span></label>
-                                            <input type="text" name="guardianName" value={formData.guardianName} onChange={handleInputChange} placeholder="E.G. MRS. MARY EMERALD GALANG CENTENO" className={`w-full px-5 py-4 bg-white border-2 ${errors.guardianName ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none uppercase font-extrabold text-gray-800 shadow-sm`} />
+                                            <input type="text" name="guardianName" value={formData.guardianName} readOnly onClick={() => { setSearchType('guardian'); setIsResidentModalOpen(true); }} placeholder="TAP SEARCH BUTTON TO SELECT GUARDIAN..." className={`w-full px-5 py-4 bg-white border-2 ${errors.guardianName ? 'border-red-500 bg-red-50' : (formData.guardianName ? 'border-emerald-200 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-xl font-bold cursor-pointer transition-all hover:border-emerald-300 shadow-sm`} />
                                         </div>
-                                        <div className="space-y-2">
+                                        <div className="md:col-span-2 space-y-2">
                                             <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Relationship <span className="text-red-500">*</span></label>
                                             <div className="relative">
                                                 <select
@@ -281,10 +309,6 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
                                                 </select>
                                                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                                             </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Purpose <span className="text-red-500">*</span></label>
-                                            <input type="text" name="purpose" value={formData.purpose} onChange={handleInputChange} className={`w-full px-5 py-4 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl focus:border-[#2d5a3d] outline-none uppercase font-bold text-gray-800`} />
                                         </div>
                                     </div>
                                 </div>
@@ -348,17 +372,32 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
                 <div className="fixed inset-0 z-70 overflow-y-auto">
                     <div className="flex min-h-screen items-center justify-center p-4">
                         <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
-                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in text-center">
-                            <div className="bg-gradient-to-r from-[#112e1f] to-[#214431] p-10">
-                                <div className="w-20 h-20 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30"><CheckCircle className="w-12 h-12 text-emerald-400" /></div>
-                                <h2 className="text-2xl font-black text-white uppercase tracking-tight">Submission Successful!</h2>
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+                            <div className="bg-gradient-to-r from-[#112e1f] to-[#214431] px-8 py-10 text-center relative overflow-hidden">
+                                <div className="w-20 h-20 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30"><CheckCircle className="w-12 h-12 text-emerald-400 animate-bounce" /></div>
+                                <h2 className="text-2xl font-black text-white uppercase tracking-tight">Filing Complete!</h2>
                             </div>
-                            <div className="p-8">
-                                <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-                                    <p className="text-[10px] font-black text-green-800 uppercase tracking-widest mb-1">Your Reference Number:</p>
-                                    <p className="text-3xl font-black text-green-900 tracking-wider font-mono">{submittedReferenceNumber}</p>
+                            <div className="p-6 text-center">
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-6 text-green-900">
+                                    <p className="text-sm font-medium mb-1 uppercase tracking-widest">Reference Number:</p>
+                                    <p className="text-2xl font-black font-mono tracking-wider">{submittedReferenceNumber}</p>
                                 </div>
-                                <p className="text-sm text-gray-500 font-bold mb-8">Please save this number for tracking. We will notify you via SMS when it's ready for pickup.</p>
+                                <div className="bg-[#112e1f]/5 border border-[#112e1f]/10 rounded-2xl p-6 relative overflow-hidden text-left mb-6">
+                                    <div className="flex items-center gap-3 text-[#112e1f] mb-4">
+                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                                        <h4 className="text-xs font-black uppercase tracking-[0.1em]">Next Procedures</h4>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Clock className="w-4 h-4 text-emerald-700" /></div>
+                                            <p className="text-[11px] text-gray-600 font-bold leading-relaxed">Processing typically takes 1-3 business days. Your application is now in the queue for chairman approval.</p>
+                                        </div>
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Phone className="w-4 h-4 text-emerald-700" /></div>
+                                            <p className="text-[11px] text-gray-600 font-bold leading-relaxed">We will coordinate with <strong>{formData.guardianName}</strong> via <strong>SMS at {formData.contactNumber}</strong> to confirm the pickup schedule.</p>
+                                        </div>
+                                    </div>
+                                </div>
                                 <button onClick={() => { setShowSuccessModal(false); resetForm(); onClose(); }} className="w-full bg-[#112e1f] hover:bg-[#2d5a3d] text-white py-4 rounded-xl font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95">Return to Dashboard</button>
                             </div>
                         </div>
@@ -449,11 +488,11 @@ function GuardianshipPreview({ formData, referenceNumber, currentDate, officials
                                     Issued this <span className="font-bold">{currentDate}</span> at Barangay Iba O' Este, Calumpit, Bulacan upon the request of above mentioned persons for any legal purposes it may serve.
                                 </p>
 
-                                <div className="mt-20 flex flex-col items-end">
-                                    <div className="text-right">
+                                <div className="flex flex-col justify-end" style={{ marginTop: '120px' }}>
+                                    <div className="self-start text-left">
                                         <p className="font-bold text-[16px] mb-12">TRULY YOURS,</p>
                                         <p className="text-[22px] font-bold uppercase leading-tight text-[#1e40af]">{officials.chairman}</p>
-                                        <p className="text-sm font-bold mt-1 uppercase text-gray-700 text-right">BARANGAY CHAIRMAN</p>
+                                        <p className="text-sm font-bold mt-1 uppercase text-gray-700">BARANGAY CHAIRMAN</p>
                                     </div>
                                 </div>
                             </div>

@@ -952,6 +952,7 @@ export default function RequestsPage() {
 function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusColor, getTypeLabel, formatDate, canUserTakeAction, getCurrentWorkflowStep, history = [] }) {
   const currentStep = getCurrentWorkflowStep(request);
   const canAct = canUserTakeAction(request);
+  const isGuardianship = String(request.certificate_type || '').toLowerCase().includes('guardian') || String(request.reference_number || '').toUpperCase().startsWith('GD');
 
   // Helper to calculate age from date string
   const calculateAge = (dob) => {
@@ -987,7 +988,9 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
     date_of_death: request.date_of_death || '',
     cause_of_death: request.cause_of_death || '',
     covid_related: request.covid_related || false,
-    requestor_name: request.requestor_name || ''
+    requestor_name: request.requestor_name || '',
+    guardian_name: request.guardian_name || '',
+    guardian_relationship: request.guardian_relationship || ''
   });
 
   // Split name if fields are empty but full_name exists
@@ -1106,7 +1109,9 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                         date_of_death: request.date_of_death || '',
                         cause_of_death: request.cause_of_death || '',
                         covid_related: request.covid_related || false,
-                        requestor_name: request.requestor_name || ''
+                        requestor_name: request.requestor_name || '',
+                        guardian_name: request.guardian_name || '',
+                        guardian_relationship: request.guardian_relationship || ''
                       });
                     }}
                     className="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600 flex items-center transition-colors"
@@ -1306,24 +1311,79 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                 {/* Purpose & Timeline */}
                 {!['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 flex flex-col">
-                      <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
-                        <FileCheck className="w-4 h-4 text-blue-500" />
-                        Purpose
-                      </h3>
-                      {isEditing ? (
-                        <textarea
-                          name="purpose"
-                          value={editFormData.purpose}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 font-medium text-sm mt-1 uppercase h-24"
-                        />
-                      ) : (
-                        <p className="text-sm text-gray-700 leading-relaxed font-medium mt-1 flex-1">
-                          {request.purpose || 'Not specified'}
-                        </p>
-                      )}
-                    </div>
+                    {isGuardianship ? (
+                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex flex-col">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm uppercase">
+                          <User className="w-4 h-4 text-blue-500" />
+                          Guardian Information
+                        </h3>
+                        <div className="space-y-3 mt-1">
+                          {isEditing ? (
+                            <>
+                              <div>
+                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Guardian's Full Name</p>
+                                <input
+                                  type="text"
+                                  name="guardian_name"
+                                  value={editFormData.guardian_name}
+                                  onChange={handleInputChange}
+                                  className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase text-sm"
+                                />
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Relationship</p>
+                                <select
+                                  name="guardian_relationship"
+                                  value={editFormData.guardian_relationship}
+                                  onChange={handleInputChange}
+                                  className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase text-sm bg-white cursor-pointer"
+                                >
+                                  <option value="">SELECT RELATIONSHIP...</option>
+                                  <option value="PARENT">PARENT</option>
+                                  <option value="GRANDPARENT">GRANDPARENT</option>
+                                  <option value="SIBLING">SIBLING</option>
+                                  <option value="AUNT/UNCLE">AUNT/UNCLE</option>
+                                  <option value="COUSIN">COUSIN</option>
+                                  <option value="STEP-PARENT">STEP-PARENT</option>
+                                  <option value="LEGAL GUARDIAN">LEGAL GUARDIAN</option>
+                                  <option value="OTHER">OTHER</option>
+                                </select>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div>
+                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Guardian's Full Name</p>
+                                <p className="font-bold text-gray-900 uppercase">{request.guardian_name || 'NOT SPECIFIED'}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Relationship</p>
+                                <p className="font-bold text-gray-900 uppercase">{request.guardian_relationship || 'NOT SPECIFIED'}</p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 flex flex-col">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
+                          <FileCheck className="w-4 h-4 text-blue-500" />
+                          Purpose
+                        </h3>
+                        {isEditing ? (
+                          <textarea
+                            name="purpose"
+                            value={editFormData.purpose}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 font-medium text-sm mt-1 uppercase h-24"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-700 leading-relaxed font-medium mt-1 flex-1">
+                            {request.purpose || 'Not specified'}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                       <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
@@ -2256,17 +2316,23 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                 </div>  {/* Date removed for Indigency as per new layout */}
 
                 <>
-                  <p className="text-left mb-6 leading-relaxed">
-                    {isNaturalDeath ?
-                      'This is to certify that below mentioned person, a bona fide resident of this barangay has died at his residence and classified as "Natural Death":' :
-                      isGuardianship ?
-                        `This is to certify that below person is under the guardianship of ${formData.guardianName?.toUpperCase() || "_________________________________"}, both bona fide residents of this barangay:` :
-                        request.certificate_type === 'barangay_clearance' ?
+                  <div className="text-left mb-6 leading-relaxed">
+                    {isNaturalDeath ? (
+                      <p>This is to certify that below mentioned person, a bona fide resident of this barangay has died at his residence and classified as "Natural Death":</p>
+                    ) : isGuardianship ? (
+                      <p className="uppercase">
+                        THIS IS TO CERTIFY THAT BELOW PERSON IS UNDER THE GUARDIANSHIP OF <span className="font-bold">{formData.guardianName?.toUpperCase() || "_________________________________"}</span>, BOTH BONA FIDE RESIDENTS OF THIS BARANGAY:
+                      </p>
+                    ) : (
+                      <p>
+                        {request.certificate_type === 'barangay_clearance' ?
                           'This is to certify that below mentioned person is a bona fide resident of this barangay and has no derogatory record as of date mentioned below:' :
                           request.certificate_type === 'certificate_of_indigency' ?
                             'This is to certify that below mentioned person is a bona fide resident and their family belongs to the "Indigent Families" of this barangay as of date mentioned below. Further certifying that their income is not enough to sustain and support their basic needs:' :
                             'This is to certify that below mentioned person is a bona fide resident of this barangay as detailed below:'}
-                  </p>
+                      </p>
+                    )}
+                  </div>
 
                   <div className="mb-6 space-y-1">
                     {([
@@ -2297,8 +2363,8 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                   </div>
 
                   {isNaturalDeath || isGuardianship ? (
-                    <p className="mb-10 text-left leading-relaxed">
-                      Issued this {issuedDate} at Barangay Iba O' Este, Calumpit, Bulacan upon the request of <span className="font-bold">{isGuardianship ? "ABOVE MENTIONED PERSONS" : (formData.requestorName ? formData.requestorName.toUpperCase() : "THE ABOVE PERSON'S RELATIVES")}</span> for any legal purposes it may serve.
+                    <p className={`mb-10 text-left leading-relaxed ${isGuardianship ? 'uppercase' : ''}`}>
+                      Issued this {issuedDate.toUpperCase()} at Barangay Iba O' Este, Calumpit, Bulacan upon the request of <span className={isGuardianship ? "" : "font-bold"}>{isGuardianship ? "ABOVE MENTIONED PERSONS" : (formData.requestorName ? formData.requestorName.toUpperCase() : "THE ABOVE PERSON'S RELATIVES")}</span> for any legal purposes it may serve.
                     </p>
                   ) : (
                     <>
@@ -2327,7 +2393,12 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                   )}
 
                   {/* Unified Signature Section (Left Aligned for All) */}
-                  <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mt-8' : 'mt-16'} relative ${isGuardianship ? 'text-right flex flex-col items-end w-full' : 'text-left'}`}>
+                  <div
+                    className="relative text-left"
+                    style={{
+                      marginTop: isGuardianship ? '120px' : (request.certificate_type === 'certificate_of_indigency' ? '32px' : '64px')
+                    }}
+                  >
                     {isNaturalDeath && <div className="h-10"></div>}
                     {!isNaturalDeath && !isGuardianship && (
                       <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mb-8' : 'mb-12'}`}>
@@ -2338,7 +2409,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                       </div>
                     )}
 
-                    <div className={`${isGuardianship ? 'text-right self-end' : 'text-left self-start'} mb-4`}>
+                    <div className="text-left mb-4 self-start">
                       <p className="font-bold text-[15px] mb-12">TRULY YOURS,</p>
 
                       <div className="relative inline-block">
