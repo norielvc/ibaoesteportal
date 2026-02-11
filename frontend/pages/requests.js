@@ -2296,9 +2296,9 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                     ))}
                   </div>
 
-                  {isNaturalDeath ? (
+                  {isNaturalDeath || isGuardianship ? (
                     <p className="mb-10 text-left leading-relaxed">
-                      Issued this {issuedDate} at Barangay Iba O' Este, Calumpit, Bulacan upon the request of <span className="font-bold">{formData.requestorName ? formData.requestorName.toUpperCase() : "THE ABOVE PERSON'S RELATIVES"}</span> for any legal purposes it may serve.
+                      Issued this {issuedDate} at Barangay Iba O' Este, Calumpit, Bulacan upon the request of <span className="font-bold">{isGuardianship ? "ABOVE MENTIONED PERSONS" : (formData.requestorName ? formData.requestorName.toUpperCase() : "THE ABOVE PERSON'S RELATIVES")}</span> for any legal purposes it may serve.
                     </p>
                   ) : (
                     <>
@@ -2329,7 +2329,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                   {/* Unified Signature Section (Left Aligned for All) */}
                   <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mt-8' : 'mt-16'} relative text-left`}>
                     {isNaturalDeath && <div className="h-10"></div>}
-                    {!isNaturalDeath && (
+                    {!isNaturalDeath && !isGuardianship && (
                       <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mb-8' : 'mb-12'}`}>
                         <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'h-12' : 'h-16'}`}></div>
                         <div className="border-t border-black w-64 pt-1">
