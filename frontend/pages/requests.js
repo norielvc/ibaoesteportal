@@ -2327,7 +2327,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                   )}
 
                   {/* Unified Signature Section (Left Aligned for All) */}
-                  <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mt-8' : 'mt-16'} relative text-left`}>
+                  <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mt-8' : 'mt-16'} relative ${isGuardianship ? 'text-right flex flex-col items-end w-full' : 'text-left'}`}>
                     {isNaturalDeath && <div className="h-10"></div>}
                     {!isNaturalDeath && !isGuardianship && (
                       <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mb-8' : 'mb-12'}`}>
@@ -2338,7 +2338,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                       </div>
                     )}
 
-                    <div className="text-left mb-4 self-start">
+                    <div className={`${isGuardianship ? 'text-right self-end' : 'text-left self-start'} mb-4`}>
                       <p className="font-bold text-[15px] mb-12">TRULY YOURS,</p>
 
                       <div className="relative inline-block">

@@ -449,11 +449,11 @@ function GuardianshipPreview({ formData, referenceNumber, currentDate, officials
                                     Issued this <span className="font-bold">{currentDate}</span> at Barangay Iba O' Este, Calumpit, Bulacan upon the request of above mentioned persons for any legal purposes it may serve.
                                 </p>
 
-                                <div className="mt-20 flex flex-col justify-end">
-                                    <div className="self-start text-left">
+                                <div className="mt-20 flex flex-col items-end">
+                                    <div className="text-right">
                                         <p className="font-bold text-[16px] mb-12">TRULY YOURS,</p>
                                         <p className="text-[22px] font-bold uppercase leading-tight text-[#1e40af]">{officials.chairman}</p>
-                                        <p className="text-sm font-bold mt-1 uppercase text-gray-700">BARANGAY CHAIRMAN</p>
+                                        <p className="text-sm font-bold mt-1 uppercase text-gray-700 text-right">BARANGAY CHAIRMAN</p>
                                     </div>
                                 </div>
                             </div>
