@@ -655,182 +655,181 @@ export default function Residents() {
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Legal Status Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        {/* Pending Case Toggle */}
-                        <div className="bg-red-50 p-6 rounded-2xl border border-red-100 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Legal Status</p>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        checked={formData.pending_case}
-                                        onChange={(e) => setFormData({ ...formData, pending_case: e.target.checked })}
-                                    />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
-                                    <span className="ml-3 text-xs font-bold text-red-700 uppercase">With Case</span>
-                                </label>
+                        {/* Legal Status Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            {/* Pending Case Toggle */}
+                            <div className="bg-red-50 p-6 rounded-2xl border border-red-100 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Legal Status</p>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={formData.pending_case}
+                                            onChange={(e) => setFormData({ ...formData, pending_case: e.target.checked })}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                        <span className="ml-3 text-xs font-bold text-red-700 uppercase">With Case</span>
+                                    </label>
+                                </div>
+                                <textarea
+                                    className="input min-h-[80px] resize-none uppercase p-4 text-xs"
+                                    placeholder="Enter case records..."
+                                    value={formData.case_record_history}
+                                    onChange={(e) => setFormData({ ...formData, case_record_history: e.target.value })}
+                                />
                             </div>
+
+                            {/* Deceased Toggle */}
+                            <div className={`p-6 rounded-2xl border transition-all space-y-4 ${formData.is_deceased ? 'bg-[#FFE6E6] border-red-200 shadow-sm' : 'bg-gray-50 border-gray-100'}`}>
+                                <div className="flex items-center justify-between">
+                                    <p className={`text-[10px] font-black uppercase tracking-widest ${formData.is_deceased ? 'text-red-500' : 'text-gray-500'}`}>Deceased Status</p>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={formData.is_deceased}
+                                            onChange={(e) => setFormData({ ...formData, is_deceased: e.target.checked })}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-600"></div>
+                                        <span className={`ml-3 text-xs font-bold uppercase ${formData.is_deceased ? 'text-gray-900' : 'text-gray-700'}`}>Mark as Deceased</span>
+                                    </label>
+                                </div>
+                                {formData.is_deceased && (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-[9px] font-bold text-red-500 uppercase block mb-1">Date of Death</label>
+                                                <input
+                                                    type="date"
+                                                    className="w-full bg-white border border-red-200 text-gray-900 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-red-500"
+                                                    value={formData.date_of_death}
+                                                    onChange={(e) => setFormData({ ...formData, date_of_death: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="flex items-end pb-1">
+                                                <label className="flex items-center gap-2 cursor-pointer group">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="w-4 h-4 rounded border-red-200 bg-white text-red-600 focus:ring-red-500"
+                                                        checked={formData.covid_related}
+                                                        onChange={(e) => setFormData({ ...formData, covid_related: e.target.checked })}
+                                                    />
+                                                    <span className="text-[10px] font-black text-red-600 uppercase group-hover:text-red-500 transition-colors">COVID-19 Related</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[9px] font-bold text-red-500 uppercase block mb-1">Cause of Death</label>
+                                            <input
+                                                type="text"
+                                                className="w-full bg-white border border-red-200 text-gray-900 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-red-500 uppercase"
+                                                placeholder="Enter cause of death..."
+                                                value={formData.cause_of_death}
+                                                onChange={(e) => setFormData({ ...formData, cause_of_death: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Location Details</p>
+                            <label className="label">Full Residential Address</label>
                             <textarea
-                                className="input min-h-[80px] resize-none uppercase p-4 text-xs"
-                                placeholder="Enter case records..."
-                                value={formData.case_record_history}
-                                onChange={(e) => setFormData({ ...formData, case_record_history: e.target.value })}
+                                required
+                                className="input uppercase h-24 pt-3"
+                                value={formData.residential_address}
+                                onChange={(e) => setFormData({ ...formData, residential_address: e.target.value })}
                             />
                         </div>
 
-                        {/* Deceased Toggle */}
-                        <div className={`p-6 rounded-2xl border transition-all space-y-4 ${formData.is_deceased ? 'bg-[#FFE6E6] border-red-200 shadow-sm' : 'bg-gray-50 border-gray-100'}`}>
-                            <div className="flex items-center justify-between">
-                                <p className={`text-[10px] font-black uppercase tracking-widest ${formData.is_deceased ? 'text-red-500' : 'text-gray-500'}`}>Deceased Status</p>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        checked={formData.is_deceased}
-                                        onChange={(e) => setFormData({ ...formData, is_deceased: e.target.checked })}
-                                    />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-600"></div>
-                                    <span className={`ml-3 text-xs font-bold uppercase ${formData.is_deceased ? 'text-gray-900' : 'text-gray-700'}`}>Mark as Deceased</span>
-                                </label>
-                            </div>
-                            {formData.is_deceased && (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="text-[9px] font-bold text-red-500 uppercase block mb-1">Date of Death</label>
-                                            <input
-                                                type="date"
-                                                className="w-full bg-white border border-red-200 text-gray-900 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-red-500"
-                                                value={formData.date_of_death}
-                                                onChange={(e) => setFormData({ ...formData, date_of_death: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="flex items-end pb-1">
-                                            <label className="flex items-center gap-2 cursor-pointer group">
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 rounded border-red-200 bg-white text-red-600 focus:ring-red-500"
-                                                    checked={formData.covid_related}
-                                                    onChange={(e) => setFormData({ ...formData, covid_related: e.target.checked })}
-                                                />
-                                                <span className="text-[10px] font-black text-red-600 uppercase group-hover:text-red-500 transition-colors">COVID-19 Related</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-[9px] font-bold text-red-500 uppercase block mb-1">Cause of Death</label>
-                                        <input
-                                            type="text"
-                                            className="w-full bg-white border border-red-200 text-gray-900 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-red-500 uppercase"
-                                            placeholder="Enter cause of death..."
-                                            value={formData.cause_of_death}
-                                            onChange={(e) => setFormData({ ...formData, cause_of_death: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
+                        <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-4">
+                            {selectedResident && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsFormModalOpen(false);
+                                        setIsModalOpen(true);
+                                    }}
+                                    className="px-6 py-3 text-gray-500 font-bold hover:text-gray-800 transition-colors flex items-center gap-2"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Back to Profile
+                                </button>
                             )}
-                        </div>
-                    </div>
-
-                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Location Details</p>
-                        <label className="label">Full Residential Address</label>
-                        <textarea
-                            required
-                            className="input uppercase h-24 pt-3"
-                            value={formData.residential_address}
-                            onChange={(e) => setFormData({ ...formData, residential_address: e.target.value })}
-                        />
-                    </div>
-
-                    <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-4">
-                        {selectedResident && (
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setIsFormModalOpen(false);
-                                    setIsModalOpen(true);
-                                }}
-                                className="px-6 py-3 text-gray-500 font-bold hover:text-gray-800 transition-colors flex items-center gap-2"
+                                onClick={() => setIsFormModalOpen(false)}
+                                className="px-6 py-3 text-gray-400 font-bold hover:text-gray-600 transition-colors"
                             >
-                                <ArrowLeft className="w-4 h-4" />
-                                Back to Profile
+                                Cancel
                             </button>
-                        )}
-                        <button
-                            type="button"
-                            onClick={() => setIsFormModalOpen(false)}
-                            className="px-6 py-3 text-gray-400 font-bold hover:text-gray-600 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="px-10 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition-all flex items-center gap-3 shadow-xl shadow-blue-100 hover:scale-[1.02] active:scale-95"
-                        >
-                            {isSubmitting ? (
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                            ) : (
-                                <Save className="w-5 h-5" />
-                            )}
-                            {selectedResident ? 'COMMIT UPDATES' : 'FINALIZE REGISTRATION'}
-                        </button>
-                    </div>
-                </form>
-            </Modal>
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="px-10 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition-all flex items-center gap-3 shadow-xl shadow-blue-100 hover:scale-[1.02] active:scale-95"
+                            >
+                                {isSubmitting ? (
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                ) : (
+                                    <Save className="w-5 h-5" />
+                                )}
+                                {selectedResident ? 'COMMIT UPDATES' : 'FINALIZE REGISTRATION'}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
 
-            {/* Delete Confirmation */}
-            <Modal
-                isOpen={isDeleteConfirmOpen}
-                onClose={() => setIsDeleteConfirmOpen(false)}
-                title="Delete Resident"
-                size="sm"
-            >
-                <div className="space-y-4">
-                    <div className="p-4 bg-red-50 rounded-xl flex gap-3 items-start">
-                        <Trash2 className="w-6 h-6 text-red-600 shrink-0" />
-                        <div>
-                            <p className="text-sm font-bold text-red-900">Are you absolutely sure?</p>
-                            <p className="text-xs text-red-700 mt-1">
-                                This will permanently delete <strong>{selectedResident?.first_name} {selectedResident?.last_name}</strong> from the database. This action cannot be undone.
-                            </p>
+                {/* Delete Confirmation */}
+                <Modal
+                    isOpen={isDeleteConfirmOpen}
+                    onClose={() => setIsDeleteConfirmOpen(false)}
+                    title="Delete Resident"
+                    size="sm"
+                >
+                    <div className="space-y-4">
+                        <div className="p-4 bg-red-50 rounded-xl flex gap-3 items-start">
+                            <Trash2 className="w-6 h-6 text-red-600 shrink-0" />
+                            <div>
+                                <p className="text-sm font-bold text-red-900">Are you absolutely sure?</p>
+                                <p className="text-xs text-red-700 mt-1">
+                                    This will permanently delete <strong>{selectedResident?.first_name} {selectedResident?.last_name}</strong> from the database. This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setIsDeleteConfirmOpen(false)}
+                                className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700"
+                            >
+                                No, Keep Resident
+                            </button>
+                            <button
+                                onClick={handleDeleteResident}
+                                disabled={isSubmitting}
+                                className="px-6 py-2 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-red-100"
+                            >
+                                {isSubmitting ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : null}
+                                Yes, Delete Forever
+                            </button>
                         </div>
                     </div>
-                    <div className="flex justify-end gap-3">
-                        <button
-                            onClick={() => setIsDeleteConfirmOpen(false)}
-                            className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700"
-                        >
-                            No, Keep Resident
-                        </button>
-                        <button
-                            onClick={handleDeleteResident}
-                            disabled={isSubmitting}
-                            className="px-6 py-2 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-red-100"
-                        >
-                            {isSubmitting ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : null}
-                            Yes, Delete Forever
-                        </button>
-                    </div>
-                </div>
-            </Modal>
+                </Modal>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="pt-10 border-t border-gray-100">
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={(page) => setCurrentPage(page)}
-                    />
-                </div>
-            )}
-        </div>
-                </Layout >
-                );
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="pt-10 border-t border-gray-100">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => setCurrentPage(page)}
+                        />
+                    </div>
+                )}
+            </div>
+        </Layout >
+    );
 }
