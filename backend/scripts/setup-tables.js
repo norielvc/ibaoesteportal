@@ -135,38 +135,47 @@ async function setupTables() {
       console.log('✅ Default facilities inserted successfully');
     }
 
-    // Insert default events
-    console.log('📋 Inserting default events...');
-    const { error: insertEventsError } = await supabase
+    // Insert default events sparingly
+    console.log('📋 Checking for existing events...');
+    const { count, error: countError } = await supabase
       .from('events')
-      .insert([
-        {
-          title: 'Barangay Clean-Up Drive 2026',
-          description: 'Join us this Saturday for our monthly community clean-up initiative. Together, we can keep Iba O\' Este beautiful!',
-          date: 'January 5, 2026',
-          image: '/background.jpg',
-          order_index: 0
-        },
-        {
-          title: 'Free Medical Mission',
-          description: 'Free check-ups, medicines, and health consultations for all residents. Bring your Barangay ID.',
-          date: 'January 10, 2026',
-          image: '/background.jpg',
-          order_index: 1
-        },
-        {
-          title: 'Livelihood Training Program',
-          description: 'Register now for free skills training in food processing, handicrafts, and more!',
-          date: 'January 15, 2026',
-          image: '/background.jpg',
-          order_index: 2
-        }
-      ]);
+      .select('*', { count: 'exact', head: true });
 
-    if (insertEventsError) {
-      console.error('❌ Error inserting events:', insertEventsError);
+    if (!countError && (count === 0 || count === null)) {
+      console.log('📋 Inserting default events...');
+      const { error: insertEventsError } = await supabase
+        .from('events')
+        .insert([
+          {
+            title: 'Barangay Clean-Up Drive 2026',
+            description: 'Join us this Saturday for our monthly community clean-up initiative. Together, we can keep Iba O\' Este beautiful!',
+            date: 'January 5, 2026',
+            image: '/background.jpg',
+            order_index: 0
+          },
+          {
+            title: 'Free Medical Mission',
+            description: 'Free check-ups, medicines, and health consultations for all residents. Bring your Barangay ID.',
+            date: 'January 10, 2026',
+            image: '/background.jpg',
+            order_index: 1
+          },
+          {
+            title: 'Livelihood Training Program',
+            description: 'Register now for free skills training in food processing, handicrafts, and more!',
+            date: 'January 15, 2026',
+            image: '/background.jpg',
+            order_index: 2
+          }
+        ]);
+
+      if (insertEventsError) {
+        console.error('❌ Error inserting events:', insertEventsError);
+      } else {
+        console.log('✅ Default events inserted successfully');
+      }
     } else {
-      console.log('✅ Default events inserted successfully');
+      console.log('✅ Events already exist, skipping insertion');
     }
 
     // Insert barangay officials

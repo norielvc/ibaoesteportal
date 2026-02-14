@@ -16,6 +16,11 @@ async function checkColumns() {
     if (assignments && assignments.length > 0) {
         console.log('workflow_assignments columns:', Object.keys(assignments[0]));
     }
+
+    const { data: configs } = await supabase.from('workflow_configurations').select('*').limit(1);
+    if (configs && configs.length > 0) {
+        console.log('workflow_configurations columns:', Object.keys(configs[0]));
+    }
 }
 
 checkColumns();

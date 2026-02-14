@@ -34,6 +34,12 @@ const mainMenuItems = [
     description: 'Overview & Analytics'
   },
   {
+    name: 'Resident Database',
+    href: '/residents',
+    icon: Users,
+    description: 'Master Census Record'
+  },
+  {
     name: 'Certificate Requests',
     href: '/requests',
     icon: ClipboardList,
@@ -72,7 +78,7 @@ const mainMenuItems = [
   },
   {
     name: 'Management',
-    icon: Users,
+    icon: UserCog,
     description: 'Content management',
     adminOnly: true,
     children: [
@@ -110,13 +116,6 @@ const mainMenuItems = [
         icon: Calendar,
         adminOnly: true,
         description: 'Homepage events'
-      },
-      {
-        name: 'Residents Database',
-        href: '/residents',
-        icon: UserCog,
-        adminOnly: true,
-        description: 'View uploaded data'
       }
     ]
   },
@@ -166,6 +165,7 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
   const router = useRouter();
   const [expandedItems, setExpandedItems] = useState({});
   const user = getUserData();
+  const adminRoles = ['super_admin', 'admin', 'captain', 'secretary'];
 
   const handleLogout = () => {
     logout();
@@ -191,7 +191,7 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
   };
 
   const filteredMenuItems = mainMenuItems.filter(item => {
-    if (item.adminOnly && user?.role !== 'admin') {
+    if (item.adminOnly && !adminRoles.includes(user?.role)) {
       return false;
     }
     return true;
@@ -296,7 +296,7 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
               {hasChildren && isExpanded && (
                 <div className="ml-8 space-y-1 border-l border-white/10 pl-4 mt-1">
                   {item.children
-                    .filter(child => !child.adminOnly || user?.role === 'admin')
+                    .filter(child => !child.adminOnly || adminRoles.includes(user?.role))
                     .map((child) => {
                       const isChildActive = router.pathname === child.href;
                       return (

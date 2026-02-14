@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { requireAdmin, authenticateToken } = require('../middleware/auth-supabase');
 const { supabase } = require('../services/supabaseClient');
+const workflowService = require('../services/workflowService');
 
 const router = express.Router();
 
@@ -15,27 +16,7 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// Default workflows
-const defaultWorkflows = {
-  barangay_clearance: [
-    { id: 111, name: 'Review Request', description: 'Initial review of submitted requests', status: 'staff_review', icon: 'Eye', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 2, name: 'Barangay Secretary Approval', description: 'Awaiting Barangay Secretary approval', status: 'secretary_approval', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Secretary' },
-    { id: 3, name: 'Barangay Captain Approval', description: 'Awaiting Barangay Captain approval', status: 'captain_approval', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Captain' },
-    { id: 999, name: 'Releasing Team', description: 'Certificate is ready for release', status: 'oic_review', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true }
-  ],
-  certificate_of_indigency: [
-    { id: 111, name: 'Review Request', description: 'Initial review of submitted requests', status: 'staff_review', icon: 'Eye', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 2, name: 'Barangay Secretary Approval', description: 'Awaiting Barangay Secretary approval', status: 'secretary_approval', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Secretary' },
-    { id: 3, name: 'Barangay Captain Approval', description: 'Awaiting Barangay Captain approval', status: 'captain_approval', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Captain' },
-    { id: 999, name: 'Releasing Team', description: 'Certificate is ready for release', status: 'oic_review', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true }
-  ],
-  barangay_residency: [
-    { id: 111, name: 'Review Request', description: 'Initial review of submitted requests', status: 'staff_review', icon: 'Eye', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true },
-    { id: 2, name: 'Barangay Secretary Approval', description: 'Awaiting Barangay Secretary approval', status: 'secretary_approval', icon: 'Clock', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Secretary' },
-    { id: 3, name: 'Barangay Captain Approval', description: 'Awaiting Barangay Captain approval', status: 'captain_approval', icon: 'UserCheck', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true, officialRole: 'Brgy. Captain' },
-    { id: 999, name: 'Releasing Team', description: 'Certificate is ready for release', status: 'oic_review', icon: 'CheckCircle', autoApprove: false, assignedUsers: [], requiresApproval: true, sendEmail: true }
-  ]
-};
+const defaultWorkflows = workflowService.defaultWorkflows;
 
 // Helper to get workflows from DB
 const getWorkflowsFromDB = async () => {
@@ -173,7 +154,15 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
     });
 
     // Process each certificate type
-    const certificateTypes = ['barangay_clearance', 'certificate_of_indigency', 'barangay_residency', 'natural_death'];
+    const certificateTypes = [
+      'barangay_clearance',
+      'certificate_of_indigency',
+      'barangay_residency',
+      'natural_death',
+      'barangay_guardianship',
+      'barangay_cohabitation',
+      'medico_legal'
+    ];
     let syncResults = {
       totalAssignments: 0,
       updatedSteps: 0,
@@ -212,7 +201,7 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
           certificate_type
         `)
         .eq('certificate_type', certType)
-        .in('status', ['pending', 'submitted', 'staff_review', 'processing', 'oic_review', 'ready', 'ready_for_pickup']);
+        .in('status', ['pending', 'submitted', 'staff_review', 'processing', 'secretary_approval', 'captain_approval', 'oic_review', 'ready', 'ready_for_pickup']);
 
       if (requestsError) {
         console.error(`Error fetching requests for ${certType}:`, requestsError);
@@ -228,24 +217,16 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
 
         // Determination based on status
         if (request.status === 'staff_review' || request.status === 'pending' || request.status === 'submitted') {
-          // 🛡️ ENFORCED SEQUENTIAL FLOW: Initial requests ALWAYS go to the first step (index 0)
-          // which we forced to be the "Review Request Team" in the UI save logic.
-          currentStep = workflowSteps[0];
+          currentStep = workflowSteps.find(s => s.status === 'staff_review' || s.id === 111 || s.id === 1);
+        } else if (request.status === 'secretary_approval') {
+          currentStep = workflowSteps.find(s => s.status === 'secretary_approval' || s.id === 2);
+        } else if (request.status === 'captain_approval') {
+          currentStep = workflowSteps.find(s => s.status === 'captain_approval' || s.id === 3);
         } else if (['oic_review', 'ready', 'ready_for_pickup'].includes(request.status)) {
-          // It's at the Releasing phase
-          currentStep = workflowSteps.find(s => s.status === 'oic_review');
+          currentStep = workflowSteps.find(s => s.status === 'oic_review' || s.id === 999);
         } else if (request.status === 'processing') {
-          // It's in the middle approval flow
-          // find the first step that is NOT staff_review or oic_review
+          // Fallback for generic processing status
           const approvalSteps = workflowSteps.filter(s => s.status !== 'staff_review' && s.status !== 'oic_review' && s.requiresApproval);
-
-          // To be precise, we should check history to see which steps are done, 
-          // but for now we assume the first approval step if it's "processing"
-          // In a multi-step approval, the status might stay "processing"
-          // but for simplicity in syncing, we target all users in the approval chain 
-          // that could potentially be next.
-
-          // Actually, let's just find the first defined approval step.
           currentStep = approvalSteps[0];
         }
 

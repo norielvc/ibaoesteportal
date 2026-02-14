@@ -13,6 +13,9 @@ import BusinessPermitModal from '@/components/Forms/BusinessPermitModal';
 import EducationalAssistanceModal from '@/components/Forms/EducationalAssistanceModal';
 import NaturalDeathCertificateModal from '@/components/Forms/NaturalDeathCertificateModal';
 import GuardianshipCertificateModal from '@/components/Forms/GuardianshipCertificateModal';
+import CohabitationCertificateModal from '@/components/Forms/CohabitationCertificateModal';
+import MedicoLegalModal from '@/components/Forms/MedicoLegalModal';
+import SamePersonCertificateModal from '@/components/Forms/SamePersonCertificateModal';
 
 export default function BarangayPortal() {
   // Version Check Log
@@ -33,6 +36,9 @@ export default function BarangayPortal() {
   const [showEducationalAssistanceModal, setShowEducationalAssistanceModal] = useState(false);
   const [showNaturalDeathModal, setShowNaturalDeathModal] = useState(false);
   const [showGuardianshipModal, setShowGuardianshipModal] = useState(false);
+  const [showCohabitationModal, setShowCohabitationModal] = useState(false);
+  const [showMedicoLegalModal, setShowMedicoLegalModal] = useState(false);
+  const [showSamePersonModal, setShowSamePersonModal] = useState(false);
   const [showComingSoonModal, setShowComingSoonModal] = useState(false);
   const [currentFormSlide, setCurrentFormSlide] = useState(0);
   const [formData, setFormData] = useState({
@@ -87,7 +93,7 @@ export default function BarangayPortal() {
       icon: Heart,
       color: 'green',
       features: ['Live-in', 'Relationship', 'Proof'],
-      onClick: () => setShowComingSoonModal(true)
+      onClick: () => setShowCohabitationModal(true)
     },
     {
       title: 'Medico-legal',
@@ -95,7 +101,7 @@ export default function BarangayPortal() {
       icon: Stethoscope,
       color: 'orange',
       features: ['Accident', 'Legal Case', 'Medical Report'],
-      onClick: () => setShowComingSoonModal(true)
+      onClick: () => setShowMedicoLegalModal(true)
     },
     {
       title: 'Certification of Same Person',
@@ -103,7 +109,7 @@ export default function BarangayPortal() {
       icon: Fingerprint,
       color: 'purple',
       features: ['ID Match', 'Affidavit', 'Verification'],
-      onClick: () => setShowComingSoonModal(true)
+      onClick: () => setShowSamePersonModal(true)
     },
     {
       title: 'Guardianship',
@@ -1731,6 +1737,9 @@ export default function BarangayPortal() {
       {/* Natural Death Certificate Modal */}
       <NaturalDeathCertificateModal isOpen={showNaturalDeathModal} onClose={() => setShowNaturalDeathModal(false)} />
       <GuardianshipCertificateModal isOpen={showGuardianshipModal} onClose={() => setShowGuardianshipModal(false)} />
+      <CohabitationCertificateModal isOpen={showCohabitationModal} onClose={() => setShowCohabitationModal(false)} />
+      <MedicoLegalModal isOpen={showMedicoLegalModal} onClose={() => setShowMedicoLegalModal(false)} />
+      <SamePersonCertificateModal isOpen={showSamePersonModal} onClose={() => setShowSamePersonModal(false)} />
 
 
 

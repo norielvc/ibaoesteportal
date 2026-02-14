@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { supabase } = require('../services/supabaseClient');
 const { sendWorkflowNotifications } = require('../services/emailService');
+const workflowService = require('../services/workflowService');
 
 // Helper function to send workflow notifications
 const notifyNextStepApprovers = async (certificateType, referenceNumber, applicantName, requestId) => {
@@ -58,7 +59,8 @@ router.get('/next-reference/:type', async (req, res) => {
       'certificate_of_indigency': 'CI',
       'barangay_residency': 'BR',
       'natural_death': 'ND',
-      'barangay_guardianship': 'GD'
+      'barangay_guardianship': 'GD',
+      'medico_legal': 'ML'
     };
 
     const prefix = prefixMap[type] || 'REF';
@@ -113,7 +115,8 @@ router.get('/next-reference/:type', async (req, res) => {
       'certificate_of_indigency': 'CI',
       'barangay_residency': 'BR',
       'natural_death': 'ND',
-      'barangay_guardianship': 'GD'
+      'barangay_guardianship': 'GD',
+      'barangay_cohabitation': 'CH'
     };
     const prefix = prefixMap[type] || 'REF';
     const year = new Date().getFullYear();
@@ -138,13 +141,7 @@ router.get('/', async (req, res) => {
       .select(`
         *,
         residents:resident_id (
-          id,
-          pending_case,
-          case_record_history,
-          is_deceased,
-          date_of_death,
-          cause_of_death,
-          covid_related
+          *
         )
       `);
 
@@ -174,13 +171,7 @@ router.get('/:id', async (req, res) => {
       .select(`
         *,
         residents:resident_id (
-          id,
-          pending_case,
-          case_record_history,
-          is_deceased,
-          date_of_death,
-          cause_of_death,
-          covid_related
+          *
         )
       `)
       .eq('id', req.params.id)
@@ -262,20 +253,7 @@ router.post('/clearance', async (req, res) => {
 
     if (error) throw error;
 
-    // Update resident contact number if residentId is provided
-    if (residentId && contactNumber) {
-      console.log(`[BC-Update] Attempting to update resident ${residentId} with contact: ${contactNumber}`);
-      const { error: updateError } = await supabase
-        .from('residents')
-        .update({ contact_number: contactNumber })
-        .eq('id', residentId);
-
-      if (updateError) {
-        console.error(`[BC-Update Error] Failed to update resident contact:`, updateError);
-      } else {
-        console.log(`[BC-Update] ✅ Successfully updated resident ${residentId}`);
-      }
-    }
+    // Note: Automatic resident update disabled. Staff must verify and sync manually.
 
     // Create initial workflow assignments based on configuration
     // Fetch workflow config for this type
@@ -335,6 +313,18 @@ router.post('/clearance', async (req, res) => {
         console.error('Failed to create workflow assignment:', assignmentError);
       }
     }
+
+    // Create initial history entry
+    await supabase.from('workflow_history').insert([{
+      request_id: data.id,
+      request_type: 'barangay_clearance',
+      step_id: 0,
+      step_name: 'Request Submission',
+      action: 'submitted',
+      performed_by: residentId || null, // Use resident ID if available
+      comments: 'Barangay Clearance request submitted and queued for review.',
+      new_status: 'staff_review'
+    }]);
 
     // Send email notifications to next step approvers
     notifyNextStepApprovers('barangay_clearance', refNumber, fullName, data.id);
@@ -419,20 +409,7 @@ router.post('/indigency', async (req, res) => {
 
     if (error) throw error;
 
-    // Update resident contact number if residentId is provided
-    if (residentId && contactNumber) {
-      console.log(`[CI-Update] Attempting to update resident ${residentId} with contact: ${contactNumber}`);
-      const { error: updateError } = await supabase
-        .from('residents')
-        .update({ contact_number: contactNumber })
-        .eq('id', residentId);
-
-      if (updateError) {
-        console.error(`[CI-Update Error] Failed to update resident contact:`, updateError);
-      } else {
-        console.log(`[CI-Update] ✅ Successfully updated resident ${residentId}`);
-      }
-    }
+    // Note: Automatic resident update disabled. Staff must verify and sync manually.
 
     // Create initial workflow assignments based on configuration
     // Fetch workflow config for this type
@@ -492,6 +469,18 @@ router.post('/indigency', async (req, res) => {
     }
 
     // Send email notifications to next step approvers
+    // Create initial history entry
+    await supabase.from('workflow_history').insert([{
+      request_id: data.id,
+      request_type: 'certificate_of_indigency',
+      step_id: 0,
+      step_name: 'Request Submission',
+      action: 'submitted',
+      performed_by: residentId || null,
+      comments: 'Certificate of Indigency request submitted and queued for review.',
+      new_status: 'staff_review'
+    }]);
+
     notifyNextStepApprovers('certificate_of_indigency', refNumber, fullName, data.id);
 
     res.status(201).json({
@@ -572,20 +561,7 @@ router.post('/residency', async (req, res) => {
 
     if (error) throw error;
 
-    // Update resident contact number if residentId is provided
-    if (residentId && contactNumber) {
-      console.log(`[BR-Update] Attempting to update resident ${residentId} with contact: ${contactNumber}`);
-      const { error: updateError } = await supabase
-        .from('residents')
-        .update({ contact_number: contactNumber })
-        .eq('id', residentId);
-
-      if (updateError) {
-        console.error(`[BR-Update Error] Failed to update resident contact:`, updateError);
-      } else {
-        console.log(`[BR-Update] ✅ Successfully updated resident ${residentId}`);
-      }
-    }
+    // Note: Automatic resident update disabled. Staff must verify and sync manually.
 
     // Create initial workflow assignments based on configuration
     // Fetch workflow config for this type
@@ -599,26 +575,13 @@ router.post('/residency', async (req, res) => {
     let initialStepId = 111;
     let initialStepName = 'Review Request';
 
-    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
-      const steps = workflowConfig.workflow_config.steps;
+    const steps = workflowService.getWorkflowSteps('barangay_residency', workflowConfig?.workflow_config?.steps);
+    const firstActionableStep = steps.find(s => s.requiresApproval === true);
 
-      // Find the first step that requires approval
-      const firstActionableStep = steps.find(s => s.requiresApproval === true);
-
-      if (firstActionableStep && firstActionableStep.assignedUsers && firstActionableStep.assignedUsers.length > 0) {
-        staffUserIds = firstActionableStep.assignedUsers;
-        initialStepId = firstActionableStep.id;
-        initialStepName = firstActionableStep.name;
-        console.log(`Starting residency workflow at step: ${initialStepName} (ID: ${initialStepId})`);
-      } else {
-        console.warn('No actionable first step found in config, trying legacy fallback');
-        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 111 || s.id === 2);
-        if (fallbackStep) {
-          staffUserIds = fallbackStep.assignedUsers || [];
-          initialStepId = fallbackStep.id;
-          initialStepName = fallbackStep.name;
-        }
-      }
+    if (firstActionableStep) {
+      staffUserIds = firstActionableStep.assignedUsers || [];
+      initialStepId = firstActionableStep.id;
+      initialStepName = firstActionableStep.name;
     }
 
     // Fallback if no config found (Legacy hardcoded)
@@ -645,6 +608,18 @@ router.post('/residency', async (req, res) => {
     }
 
     // Send email notifications to next step approvers
+    // Create initial history entry
+    await supabase.from('workflow_history').insert([{
+      request_id: data.id,
+      request_type: 'barangay_residency',
+      step_id: 0,
+      step_name: 'Request Submission',
+      action: 'submitted',
+      performed_by: residentId || null,
+      comments: 'Barangay Residency Certificate request submitted and queued for review.',
+      new_status: 'staff_review'
+    }]);
+
     notifyNextStepApprovers('barangay_residency', refNumber, fullName, data.id);
 
     res.status(201).json({
@@ -722,30 +697,7 @@ router.post('/natural-death', async (req, res) => {
 
     if (error) throw error;
 
-    // Update resident details if residentId is provided
-    if (residentId) {
-      console.log(`[ND-Update] Syncing death details to resident ${residentId}`);
-      const { error: updateError } = await supabase
-        .from('residents')
-        .update({
-          contact_number: contactNumber,
-          is_deceased: true,
-          date_of_death: dateOfDeath,
-          cause_of_death: causeOfDeath?.toUpperCase() || '',
-          covid_related: covidRelated === 'Yes',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', residentId);
-
-      if (!updateError) {
-        console.log(`[ND-Update] ✅ Successfully updated resident ${residentId}`);
-      } else {
-        console.error(`[ND-Update] ❌ Failed to update resident ${residentId}:`, updateError);
-      }
-    }
-
     // Create initial workflow assignments based on configuration
-    // Fetch workflow config for this type
     const { data: workflowConfig } = await supabase
       .from('workflow_configurations')
       .select('workflow_config')
@@ -756,30 +708,16 @@ router.post('/natural-death', async (req, res) => {
     let initialStepId = 111;
     let initialStepName = 'Review Request';
 
-    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
-      const steps = workflowConfig.workflow_config.steps;
-      // Find the first step that requires approval
-      const firstActionableStep = steps.find(s => s.requiresApproval === true);
-
-      if (firstActionableStep && firstActionableStep.assignedUsers && firstActionableStep.assignedUsers.length > 0) {
-        staffUserIds = firstActionableStep.assignedUsers;
-        initialStepId = firstActionableStep.id;
-        initialStepName = firstActionableStep.name;
-      } else {
-        // Fallback
-        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 111 || s.id === 2);
-        if (fallbackStep) {
-          staffUserIds = fallbackStep.assignedUsers || [];
-          initialStepId = fallbackStep.id;
-          initialStepName = fallbackStep.name;
-        }
-      }
+    const steps = workflowService.getWorkflowSteps('natural_death', workflowConfig?.workflow_config?.steps);
+    const firstActionableStep = steps.find(s => s.requiresApproval === true);
+    if (firstActionableStep) {
+      staffUserIds = firstActionableStep.assignedUsers || [];
+      initialStepId = firstActionableStep.id;
+      initialStepName = firstActionableStep.name;
     }
 
-    // Fallback if no config found (Legacy hardcoded)
     if (staffUserIds.length === 0) {
-      console.log('Using fallback hardcoded staff assignment for natural death');
-      staffUserIds = ['9550a8b2-9e32-4f52-a260-52766afb49b1']; // Noriel Cruz
+      staffUserIds = ['9550a8b2-9e32-4f52-a260-52766afb49b1']; // Fallback
     }
 
     for (const staffUserId of staffUserIds) {
@@ -795,7 +733,18 @@ router.post('/natural-death', async (req, res) => {
         }]);
     }
 
-    // Send email notifications to next step approvers
+    // Create initial history entry
+    await supabase.from('workflow_history').insert([{
+      request_id: data.id,
+      request_type: 'natural_death',
+      step_id: 0,
+      step_name: 'Request Submission',
+      action: 'submitted',
+      performed_by: residentId || null,
+      comments: 'Natural Death Certification request submitted and queued for review.',
+      new_status: 'staff_review'
+    }]);
+
     notifyNextStepApprovers('natural_death', refNumber, fullName, data.id);
 
     res.status(201).json({
@@ -806,6 +755,133 @@ router.post('/natural-death', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating natural death request:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Create new certificate request (Medico Legal Request)
+router.post('/medico-legal', async (req, res) => {
+  try {
+    const {
+      fullName, age, sex, civilStatus, address, contactNumber, dateOfBirth,
+      dateOfExamination, usapingBarangay, dateOfHearing, residentId
+    } = req.body;
+
+    const year = new Date().getFullYear();
+    const prefix = 'ML';
+
+    // Get ALL medico_legal records to find the highest number
+    const { data: records } = await supabase
+      .from('certificate_requests')
+      .select('reference_number')
+      .eq('certificate_type', 'medico_legal')
+      .order('reference_number', { ascending: false });
+
+    let nextNumber = 1;
+    if (records && records.length > 0) {
+      let maxNumber = 0;
+      for (const record of records) {
+        if (record.reference_number && record.reference_number.startsWith(`${prefix}-${year}-`)) {
+          const parts = record.reference_number.split('-');
+          if (parts.length === 3) {
+            const num = parseInt(parts[2], 10);
+            if (!isNaN(num) && num > maxNumber) {
+              maxNumber = num;
+            }
+          }
+        }
+      }
+      nextNumber = maxNumber + 1;
+    }
+
+    const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
+    console.log(`Creating medico legal request with reference: ${refNumber}`);
+
+    const { data, error } = await supabase
+      .from('certificate_requests')
+      .insert([{
+        reference_number: refNumber,
+        certificate_type: 'medico_legal',
+        full_name: fullName?.toUpperCase() || '',
+        age: parseInt(age) || 0,
+        sex: sex?.toUpperCase() || '',
+        civil_status: civilStatus?.toUpperCase() || '',
+        address: address?.toUpperCase() || '',
+        contact_number: contactNumber || '',
+        date_of_birth: dateOfBirth,
+        date_of_examination: dateOfExamination,
+        usaping_barangay: usapingBarangay?.toUpperCase() || '',
+        date_of_hearing: dateOfHearing,
+        resident_id: residentId,
+        purpose: 'MEDICO LEGAL REQUEST',
+        status: 'staff_review',
+        date_issued: new Date().toISOString()
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Create initial workflow assignments
+    const { data: workflowConfig } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', 'medico_legal')
+      .single();
+
+    let staffUserIds = [];
+    let initialStepId = 1;
+    let initialStepName = 'Review Request Team';
+
+    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
+      const steps = workflowConfig.workflow_config.steps;
+      const firstActionableStep = steps.find(s => s.requiresApproval === true);
+      if (firstActionableStep) {
+        staffUserIds = firstActionableStep.assignedUsers || [];
+        initialStepId = firstActionableStep.id;
+        initialStepName = firstActionableStep.name;
+      }
+    }
+
+    if (staffUserIds.length === 0) {
+      // Default to Luffy Dono and Noriel Cruz
+      staffUserIds = ['1b1a2e3b-eb05-4de9-b792-4c330ca1d9ae', '9550a8b2-9e32-4f52-a260-52766afb49b1'];
+    }
+
+    for (const staffUserId of staffUserIds) {
+      await supabase
+        .from('workflow_assignments')
+        .insert([{
+          request_id: data.id,
+          request_type: 'medico_legal',
+          step_id: initialStepId,
+          step_name: initialStepName,
+          assigned_user_id: staffUserId,
+          status: 'pending'
+        }]);
+    }
+
+    // Workflow history
+    await supabase.from('workflow_history').insert([{
+      request_id: data.id,
+      request_type: 'medico_legal',
+      action: 'submitted',
+      step_id: 0,
+      step_name: 'Request Submission',
+      comments: 'Medico Legal request submitted via online portal.',
+      new_status: 'staff_review'
+    }]);
+
+    notifyNextStepApprovers('medico_legal', refNumber, fullName, data.id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Medico Legal request submitted successfully',
+      referenceNumber: refNumber,
+      data
+    });
+  } catch (error) {
+    console.error('Error creating medico legal request:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -873,16 +949,7 @@ router.post('/guardianship', async (req, res) => {
 
     if (error) throw error;
 
-    // Update resident details if residentId is provided
-    if (residentId && contactNumber) {
-      await supabase
-        .from('residents')
-        .update({
-          contact_number: contactNumber,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', residentId);
-    }
+    // Note: Automatic resident update disabled. Staff must verify and sync manually.
 
     // Create initial workflow assignments based on configuration
     const { data: workflowConfig } = await supabase
@@ -895,22 +962,13 @@ router.post('/guardianship', async (req, res) => {
     let initialStepId = 111;
     let initialStepName = 'Review Request';
 
-    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
-      const steps = workflowConfig.workflow_config.steps;
-      const firstActionableStep = steps.find(s => s.requiresApproval === true);
+    const steps = workflowService.getWorkflowSteps('barangay_guardianship', workflowConfig?.workflow_config?.steps);
+    const firstActionableStep = steps.find(s => s.requiresApproval === true);
 
-      if (firstActionableStep && firstActionableStep.assignedUsers && firstActionableStep.assignedUsers.length > 0) {
-        staffUserIds = firstActionableStep.assignedUsers;
-        initialStepId = firstActionableStep.id;
-        initialStepName = firstActionableStep.name;
-      } else {
-        const fallbackStep = steps.find(s => s.status === 'staff_review' || s.id === 111 || s.id === 2);
-        if (fallbackStep) {
-          staffUserIds = fallbackStep.assignedUsers || [];
-          initialStepId = fallbackStep.id;
-          initialStepName = fallbackStep.name;
-        }
-      }
+    if (firstActionableStep) {
+      staffUserIds = firstActionableStep.assignedUsers || [];
+      initialStepId = firstActionableStep.id;
+      initialStepName = firstActionableStep.name;
     }
 
     if (staffUserIds.length === 0) {
@@ -930,6 +988,18 @@ router.post('/guardianship', async (req, res) => {
         }]);
     }
 
+    // Create initial history entry
+    await supabase.from('workflow_history').insert([{
+      request_id: data.id,
+      request_type: 'barangay_guardianship',
+      step_id: 0,
+      step_name: 'Request Submission',
+      action: 'submitted',
+      performed_by: residentId || null,
+      comments: 'Barangay Guardianship Certificate request submitted and queued for review.',
+      new_status: 'staff_review'
+    }]);
+
     notifyNextStepApprovers('barangay_guardianship', refNumber, fullName, data.id);
 
     res.status(201).json({
@@ -940,6 +1010,141 @@ router.post('/guardianship', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating guardianship request:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Create new certificate request (Co-habitation Certificate)
+router.post('/cohabitation', async (req, res) => {
+  try {
+    const {
+      fullName, age, gender, dateOfBirth, residentId,
+      partnerFullName, partnerAge, partnerGender, partnerDateOfBirth, partnerResidentId,
+      address, noOfChildren, livingTogetherYears, livingTogetherMonths,
+      purpose, contactNumber, partnerAddress, partnerCivilStatus
+    } = req.body;
+
+    const year = new Date().getFullYear();
+    const prefix = 'CH';
+
+    // Get ALL cohabitation records to find the highest number
+    const { data: records } = await supabase
+      .from('certificate_requests')
+      .select('reference_number')
+      .eq('certificate_type', 'barangay_cohabitation')
+      .order('reference_number', { ascending: false });
+
+    let nextNumber = 1;
+    if (records && records.length > 0) {
+      let maxNumber = 0;
+      for (const record of records) {
+        if (record.reference_number && record.reference_number.startsWith(`${prefix}-${year}-`)) {
+          const parts = record.reference_number.split('-');
+          if (parts.length === 3) {
+            const num = parseInt(parts[2], 10);
+            if (!isNaN(num) && num > maxNumber) {
+              maxNumber = num;
+            }
+          }
+        }
+      }
+      nextNumber = maxNumber + 1;
+    }
+
+    const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
+    console.log(`Creating cohabitation certificate with reference: ${refNumber}`);
+
+    const { data, error } = await supabase
+      .from('certificate_requests')
+      .insert([{
+        reference_number: refNumber,
+        certificate_type: 'barangay_cohabitation',
+        full_name: fullName?.toUpperCase() || '',
+        age: parseInt(age) || 0,
+        sex: gender?.toUpperCase() || '',
+        date_of_birth: dateOfBirth,
+        resident_id: residentId,
+        partner_full_name: partnerFullName?.toUpperCase() || '',
+        partner_age: parseInt(partnerAge) || 0,
+        partner_sex: partnerGender?.toUpperCase() || '',
+        partner_date_of_birth: partnerDateOfBirth,
+        // partner_resident_id: partnerResidentId,
+        civil_status: 'COHABITATION',
+        address: address?.toUpperCase() || '',
+        partner_address: (partnerAddress || address)?.toUpperCase() || '',
+        partner_civil_status: partnerCivilStatus?.toUpperCase() || 'CO-HABITING',
+        no_of_children: parseInt(noOfChildren) || 0,
+        living_together_years: parseInt(livingTogetherYears) || 0,
+        living_together_months: parseInt(livingTogetherMonths) || 0,
+        purpose: purpose?.toUpperCase() || 'CO-HABITATION CERTIFICATE',
+        contact_number: contactNumber || '',
+        status: 'staff_review',
+        date_issued: new Date().toISOString()
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Create initial workflow assignments based on configuration
+    const { data: workflowConfig } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', 'barangay_cohabitation')
+      .single();
+
+    let staffUserIds = [];
+    let initialStepId = 111;
+    let initialStepName = 'Review Request';
+
+    const steps = workflowService.getWorkflowSteps('barangay_cohabitation', workflowConfig?.workflow_config?.steps);
+    const firstActionableStep = steps.find(s => s.requiresApproval === true);
+
+    if (firstActionableStep) {
+      staffUserIds = firstActionableStep.assignedUsers || [];
+      initialStepId = firstActionableStep.id;
+      initialStepName = firstActionableStep.name;
+    }
+
+    if (staffUserIds.length === 0) {
+      staffUserIds = ['9550a8b2-9e32-4f52-a260-52766afb49b1']; // Fallback
+    }
+
+    for (const staffUserId of staffUserIds) {
+      await supabase
+        .from('workflow_assignments')
+        .insert([{
+          request_id: data.id,
+          request_type: 'barangay_cohabitation',
+          step_id: initialStepId,
+          step_name: initialStepName,
+          assigned_user_id: staffUserId,
+          status: 'pending'
+        }]);
+    }
+
+    // Create initial history entry
+    await supabase.from('workflow_history').insert([{
+      request_id: data.id,
+      request_type: 'barangay_cohabitation',
+      step_id: 0,
+      step_name: 'Request Submission',
+      action: 'submitted',
+      performed_by: null, // Public submission
+      comments: 'Barangay Co-habitation Certificate request submitted and queued for review.',
+      new_status: 'staff_review'
+    }]);
+
+    notifyNextStepApprovers('barangay_cohabitation', refNumber, fullName, data.id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Co-habitation Certificate request submitted successfully',
+      data,
+      referenceNumber: refNumber
+    });
+  } catch (error) {
+    console.error('Error creating cohabitation request:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -1136,7 +1341,9 @@ router.put('/:id', async (req, res) => {
     const uppercaseFields = [
       'full_name', 'first_name', 'middle_name', 'last_name', 'suffix',
       'sex', 'civil_status', 'address', 'place_of_birth', 'purpose',
-      'guardian_name', 'guardian_relationship'
+      'guardian_name', 'guardian_relationship',
+      'partner_full_name', 'partner_sex', 'partner_address', 'partner_civil_status',
+      'usaping_barangay'
     ];
     uppercaseFields.forEach(field => {
       if (updateData[field] && typeof updateData[field] === 'string') {
@@ -1166,37 +1373,7 @@ router.put('/:id', async (req, res) => {
 
     if (certError) throw certError;
 
-    // Synchronize with residents table if linked
-    if (updatedCert.resident_id) {
-      const residentUpdates = {
-        first_name: updatedCert.first_name,
-        middle_name: updatedCert.middle_name,
-        last_name: updatedCert.last_name,
-        suffix: updatedCert.suffix,
-        age: updatedCert.age,
-        gender: updatedCert.sex, // Map sex to gender
-        civil_status: updatedCert.civil_status,
-        date_of_birth: updatedCert.date_of_birth,
-        place_of_birth: updatedCert.place_of_birth,
-        residential_address: updatedCert.address, // Map address to residential_address
-        contact_number: updatedCert.contact_number,
-        is_deceased: updatedCert.certificate_type === 'natural_death',
-        date_of_death: updatedCert.date_of_death,
-        cause_of_death: updatedCert.cause_of_death,
-        covid_related: updatedCert.covid_related,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error: residentError } = await supabase
-        .from('residents')
-        .update(residentUpdates)
-        .eq('id', updatedCert.resident_id);
-
-      if (residentError) {
-        console.error('Error synchronizing resident data:', residentError);
-        // We don't throw here to ensure the cert update is still considered successful
-      }
-    }
+    // Note: Automatic synchronization removed to ensure staff explicitly verify changes via the 'Sync' action.
 
     res.json({ success: true, message: 'Certificate and resident updated successfully', data: updatedCert });
   } catch (error) {
@@ -1222,6 +1399,94 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Sync certificate request data to resident profile
+router.post('/:id/sync-resident', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { adminId } = req.body;
+
+    // Fetch the request details
+    const { data: cert, error: fetchError } = await supabase
+      .from('certificate_requests')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !cert) {
+      return res.status(404).json({ success: false, message: 'Request not found' });
+    }
+
+    if (!cert.resident_id) {
+      return res.status(400).json({ success: false, message: 'Request is not linked to a resident profile' });
+    }
+
+    // Prepare the update data for the residents table
+    // Only include fields that are actually provided in the certificate to avoid overwriting with nulls
+    const residentUpdates = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (cert.first_name) residentUpdates.first_name = cert.first_name;
+    if (cert.middle_name) residentUpdates.middle_name = cert.middle_name;
+    if (cert.last_name) residentUpdates.last_name = cert.last_name;
+    if (cert.suffix) residentUpdates.suffix = cert.suffix;
+    if (cert.age) residentUpdates.age = parseInt(cert.age);
+    if (cert.sex) residentUpdates.gender = cert.sex;
+    if (cert.civil_status) residentUpdates.civil_status = cert.civil_status;
+    if (cert.date_of_birth) residentUpdates.date_of_birth = cert.date_of_birth;
+    if (cert.place_of_birth) residentUpdates.place_of_birth = cert.place_of_birth;
+    if (cert.address) residentUpdates.residential_address = cert.address;
+    if (cert.contact_number) residentUpdates.contact_number = cert.contact_number;
+
+    // Additional fields for natural death if applicable
+    if (cert.certificate_type === 'natural_death') {
+      residentUpdates.is_deceased = true;
+      if (cert.date_of_death) residentUpdates.date_of_death = cert.date_of_death;
+      if (cert.cause_of_death) residentUpdates.cause_of_death = cert.cause_of_death;
+      if (cert.covid_related !== null && cert.covid_related !== undefined) {
+        residentUpdates.covid_related = cert.covid_related;
+      }
+    }
+
+    // Additional fields for same person if applicable
+    if (cert.certificate_type === 'certification_same_person' && cert.details) {
+      try {
+        const details = typeof cert.details === 'string' ? JSON.parse(cert.details) : cert.details;
+        const secondName = details.fullName2 || details.name_2 || details.name2;
+        if (secondName) {
+          residentUpdates.second_name = secondName.toUpperCase();
+        }
+      } catch (e) {
+        console.error('Error parsing details for sync:', e);
+      }
+    }
+
+    const { error: updateError } = await supabase
+      .from('residents')
+      .update(residentUpdates)
+      .eq('id', cert.resident_id);
+
+    if (updateError) throw updateError;
+
+    // Record this action in the history
+    await supabase.from('workflow_history').insert([{
+      request_id: id,
+      request_type: cert.certificate_type,
+      step_id: 999,
+      step_name: 'Database Sync',
+      action: 'synced',
+      performed_by: adminId || null,
+      comments: 'Resident profile information manually synchronized with verified request data.',
+      new_status: cert.status
+    }]);
+
+    res.json({ success: true, message: 'Resident profile successfully synchronized' });
+  } catch (error) {
+    console.error('Error syncing resident data:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Get statistics
 router.get('/stats/summary', async (req, res) => {
   try {
@@ -1235,7 +1500,8 @@ router.get('/stats/summary', async (req, res) => {
       total: all.length,
       byType: {
         barangay_clearance: all.filter(c => c.certificate_type === 'barangay_clearance').length,
-        certificate_of_indigency: all.filter(c => c.certificate_type === 'certificate_of_indigency').length
+        certificate_of_indigency: all.filter(c => c.certificate_type === 'certificate_of_indigency').length,
+        barangay_cohabitation: all.filter(c => c.certificate_type === 'barangay_cohabitation').length
       },
       byStatus: {
         pending: all.filter(c => c.status === 'pending').length,
@@ -1248,6 +1514,140 @@ router.get('/stats/summary', async (req, res) => {
     res.json({ success: true, data: stats });
   } catch (error) {
     console.error('Error fetching stats:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Generic create endpoint for new certificate types
+router.post('/create', async (req, res) => {
+  try {
+    const { certificate_type } = req.body;
+
+    if (certificate_type === 'certification_same_person') {
+      const {
+        full_name, firstName, lastName,
+        age, sex, civilStatus, address, contactNumber,
+        dateOfBirth, residentId, details
+      } = req.body;
+
+      const year = new Date().getFullYear();
+      const prefix = 'SP'; // Same Person
+
+      // Get ALL records of this type to find the highest number
+      const { data: records } = await supabase
+        .from('certificate_requests')
+        .select('reference_number')
+        .eq('certificate_type', 'certification_same_person')
+        .order('reference_number', { ascending: false });
+
+      let nextNumber = 1;
+      if (records && records.length > 0) {
+        let maxNumber = 0;
+        for (const record of records) {
+          if (record.reference_number && record.reference_number.startsWith(`${prefix}-${year}-`)) {
+            const parts = record.reference_number.split('-');
+            if (parts.length === 3) {
+              const num = parseInt(parts[2], 10);
+              if (!isNaN(num) && num > maxNumber) {
+                maxNumber = num;
+              }
+            }
+          }
+        }
+        nextNumber = maxNumber + 1;
+      }
+
+      const refNumber = `${prefix}-${year}-${String(nextNumber).padStart(5, '0')}`;
+      console.log(`Creating Same Person Certification with reference: ${refNumber}`);
+
+      const { data, error } = await supabase
+        .from('certificate_requests')
+        .insert([{
+          reference_number: refNumber,
+          certificate_type: 'certification_same_person',
+          full_name: full_name?.toUpperCase() || '',
+          first_name: firstName?.toUpperCase() || '',
+          last_name: lastName?.toUpperCase() || '',
+          age: parseInt(age),
+          sex: sex?.toUpperCase() || '',
+          civil_status: civilStatus?.toUpperCase() || '',
+          address: address?.toUpperCase() || '',
+          contact_number: contactNumber,
+          date_of_birth: dateOfBirth,
+          purpose: 'CERTIFICATION OF SAME PERSON',
+          details: details,
+          resident_id: residentId,
+          status: 'staff_review',
+          date_issued: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Create workflow assignments based on configuration
+      const { data: workflowConfig } = await supabase
+        .from('workflow_configurations')
+        .select('workflow_config')
+        .eq('certificate_type', 'certification_same_person')
+        .single();
+
+      let staffUserIds = [];
+      let initialStepId = 111;
+      let initialStepName = 'Review Request';
+
+      const steps = workflowService.getWorkflowSteps('certification_same_person', workflowConfig?.workflow_config?.steps);
+      const firstActionableStep = steps.find(s => s.requiresApproval === true);
+
+      if (firstActionableStep) {
+        staffUserIds = firstActionableStep.assignedUsers || [];
+        initialStepId = firstActionableStep.id;
+        initialStepName = firstActionableStep.name;
+      }
+
+      // Fallback staff assignment if no config exists or no users assigned
+      if (staffUserIds.length === 0) {
+        staffUserIds = ['1b1a2e3b-eb05-4de9-b792-4c330ca1d9ae']; // Luffy Dono (Review Team)
+      }
+
+      for (const staffUserId of staffUserIds) {
+        await supabase
+          .from('workflow_assignments')
+          .insert([{
+            request_id: data.id,
+            request_type: 'certification_same_person',
+            step_id: initialStepId,
+            step_name: initialStepName,
+            assigned_user_id: staffUserId,
+            status: 'pending'
+          }]);
+      }
+
+      // Create initial history entry
+      await supabase.from('workflow_history').insert([{
+        request_id: data.id,
+        request_type: 'note', // Use 'note' for certification_same_person compatibility
+        step_id: 0,
+        step_name: 'Request Submission',
+        action: 'submitted',
+        performed_by: residentId || null,
+        comments: 'Same Person Certification request submitted and queued for review.',
+        new_status: 'staff_review'
+      }]);
+
+      notifyNextStepApprovers('certification_same_person', refNumber, full_name, data.id);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Same Person Certification request submitted successfully',
+        data,
+        referenceNumber: refNumber
+      });
+    }
+
+    return res.status(400).json({ success: false, message: 'Invalid or unsupported certificate type' });
+  } catch (error) {
+    console.error('Error creating certificate request:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

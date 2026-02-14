@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout/Layout';
-import { 
-  Users, 
-  UserCheck, 
-  Shield, 
-  TrendingUp, 
+import {
+  Users,
+  UserCheck,
+  Shield,
+  TrendingUp,
   TrendingDown,
   Activity,
   AlertTriangle,
@@ -24,7 +24,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
+
     if (!token) {
       window.location.href = '/login';
       return;
@@ -53,9 +53,9 @@ export default function Dashboard() {
           'Content-Type': 'application/json',
         },
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setStats(data.data);
       } else {
@@ -70,46 +70,64 @@ export default function Dashboard() {
 
   const MetricCard = ({ title, value, icon: Icon, trend, trendValue, color = "blue", description }) => {
     const colorClasses = {
-      blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
-      green: { bg: 'bg-green-100', text: 'text-green-600' },
-      purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
-      orange: { bg: 'bg-orange-100', text: 'text-orange-600' }
+      blue: {
+        gradient: 'from-blue-600 to-indigo-800',
+        iconBg: 'bg-white/10',
+        iconColor: 'text-white',
+        shadow: 'shadow-blue-200'
+      },
+      green: {
+        gradient: 'from-emerald-600 to-teal-800',
+        iconBg: 'bg-white/10',
+        iconColor: 'text-white',
+        shadow: 'shadow-emerald-200'
+      },
+      purple: {
+        gradient: 'from-purple-600 to-fuchsia-800',
+        iconBg: 'bg-white/10',
+        iconColor: 'text-white',
+        shadow: 'shadow-purple-200'
+      },
+      orange: {
+        gradient: 'from-orange-600 to-amber-800',
+        iconBg: 'bg-white/10',
+        iconColor: 'text-white',
+        shadow: 'shadow-orange-200'
+      }
     };
-    
+
     const colors = colorClasses[color] || colorClasses.blue;
-    
+
     return (
-      <div className="card">
-        <div className="card-body">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center">
-                <div className={`p-2 rounded-lg ${colors.bg} mr-3`}>
-                  <Icon className={`w-6 h-6 ${colors.text}`} />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{title}</p>
-                  <p className="text-2xl font-bold text-gray-900">{value}</p>
-                </div>
-              </div>
-              {description && (
-                <p className="text-xs text-gray-500 mt-2">{description}</p>
-              )}
+      <div className={`bg-gradient-to-br ${colors.gradient} rounded-2xl p-6 text-white shadow-xl ${colors.shadow} border border-white/10 relative overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98]`}>
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className={`p-2.5 rounded-xl ${colors.iconBg} border border-white/10`}>
+              <Icon className={`w-5 h-5 ${colors.iconColor}`} />
             </div>
             {trend && (
-              <div className="flex items-center">
+              <div className="flex items-center bg-white/10 px-2 py-0.5 rounded-lg border border-white/10">
                 {trend === 'up' ? (
-                  <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400 mr-1" />
                 ) : (
-                  <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
+                  <TrendingDown className="w-3.5 h-3.5 text-rose-400 mr-1" />
                 )}
-                <span className={`text-sm font-medium ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${trend === 'up' ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {trendValue}%
                 </span>
               </div>
             )}
           </div>
+          <div>
+            <p className="text-white/70 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{title}</p>
+            <p className="text-4xl font-black tracking-tighter leading-none mb-3">{value}</p>
+            {description && (
+              <p className="text-[11px] font-bold text-white/50 uppercase tracking-tight">{description}</p>
+            )}
+          </div>
         </div>
+        {/* Decorative background icon */}
+        <Icon className="absolute -bottom-6 -right-6 w-32 h-32 text-white/5 -rotate-12" />
       </div>
     );
   };
@@ -118,7 +136,7 @@ export default function Dashboard() {
     const getStatusBadge = (status) => {
       const badges = {
         active: 'badge-success',
-        inactive: 'badge-warning', 
+        inactive: 'badge-warning',
         suspended: 'badge-danger'
       };
       return badges[status] || 'badge-info';
@@ -134,7 +152,7 @@ export default function Dashboard() {
       const loginDate = new Date(date);
       const diffTime = Math.abs(now - loginDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       if (diffDays === 1) return 'Today';
       if (diffDays === 2) return 'Yesterday';
       if (diffDays <= 7) return `${diffDays - 1} days ago`;
@@ -153,57 +171,56 @@ export default function Dashboard() {
 
     return (
       <div className="overflow-hidden">
-        <table className="table">
-          <thead className="table-header">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th className="table-header-cell">Employee</th>
-              <th className="table-header-cell">Role</th>
-              <th className="table-header-cell">Status</th>
-              <th className="table-header-cell">Last Login</th>
-              <th className="table-header-cell">Actions</th>
+              <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Employee Profile</th>
+              <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Role / Designation</th>
+              <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">System Status</th>
+              <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Last Activity</th>
+              <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
             </tr>
           </thead>
-          <tbody className="table-body">
+          <tbody className="divide-y divide-gray-100 bg-white">
             {employees.map((employee, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="table-cell">
+              <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                <td className="px-6 py-4">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                      <span className="text-sm font-medium text-gray-600">
+                    <div className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+                      <span className="text-xs font-black text-indigo-600 uppercase">
                         {employee.firstName?.charAt(0)}{employee.lastName?.charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">
+                      <div className="font-extrabold text-gray-900 uppercase text-[13px] tracking-tight">
                         {employee.firstName} {employee.lastName}
                       </div>
-                      <div className="text-sm text-gray-500">{employee.email}</div>
+                      <div className="text-[11px] font-mono font-bold text-gray-400 tracking-tighter">{employee.email}</div>
                     </div>
                   </div>
                 </td>
-                <td className="table-cell">
-                  <span className={`badge ${getRoleBadge(employee.role)}`}>
+                <td className="px-6 py-4">
+                  <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${employee.role === 'admin' ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-gray-50 text-gray-600 border-gray-100'}`}>
                     {employee.role}
                   </span>
                 </td>
-                <td className="table-cell">
-                  <span className={`badge ${getStatusBadge(employee.status)}`}>
+                <td className="px-6 py-4">
+                  <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${employee.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
                     {employee.status}
                   </span>
                 </td>
-                <td className="table-cell text-gray-500">
-                  {formatLastLogin(employee.lastLogin)}
+                <td className="px-6 py-4">
+                  <span className="text-[12px] font-black text-gray-500 uppercase tracking-tight">
+                    {formatLastLogin(employee.lastLogin)}
+                  </span>
                 </td>
-                <td className="table-cell">
-                  <div className="flex items-center space-x-2">
-                    <button className="p-1 text-gray-400 hover:text-blue-600 transition-colors">
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-center space-x-2">
+                    <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
                       <Eye className="w-4 h-4" />
                     </button>
-                    <button className="p-1 text-gray-400 hover:text-green-600 transition-colors">
+                    <button className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all">
                       <Edit className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 text-gray-400 hover:text-red-600 transition-colors">
-                      <UserX className="w-4 h-4" />
                     </button>
                   </div>
                 </td>
@@ -216,28 +233,34 @@ export default function Dashboard() {
   };
 
   const SystemAlerts = () => (
-    <div className="space-y-3">
-      <div className="flex items-start p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <AlertTriangle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5" />
+    <div className="space-y-4">
+      <div className="flex items-start p-4 bg-amber-50 border border-amber-100 rounded-2xl shadow-sm">
+        <div className="bg-amber-100 p-2 rounded-xl border border-amber-200 mr-4">
+          <AlertTriangle className="w-5 h-5 text-amber-700" />
+        </div>
         <div>
-          <h4 className="text-sm font-medium text-yellow-800">Pending Security Review</h4>
-          <p className="text-sm text-yellow-700">3 employees require security clearance updates</p>
+          <h4 className="text-[11px] font-black text-amber-900 uppercase tracking-widest mb-1">Security Audit Required</h4>
+          <p className="text-[12px] text-amber-700 font-bold uppercase tracking-tight">3 Staff members require credential verification</p>
         </div>
       </div>
-      
-      <div className="flex items-start p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <CheckCircle className="w-5 h-5 text-blue-600 mr-3 mt-0.5" />
+
+      <div className="flex items-start p-4 bg-blue-50 border border-blue-100 rounded-2xl shadow-sm">
+        <div className="bg-blue-100 p-2 rounded-xl border border-blue-200 mr-4">
+          <CheckCircle className="w-5 h-5 text-blue-700" />
+        </div>
         <div>
-          <h4 className="text-sm font-medium text-blue-800">System Backup Complete</h4>
-          <p className="text-sm text-blue-700">Daily backup completed successfully at 2:00 AM</p>
+          <h4 className="text-[11px] font-black text-blue-900 uppercase tracking-widest mb-1">System Integrity Check</h4>
+          <p className="text-[12px] text-blue-700 font-bold uppercase tracking-tight">Daily backup vault synchronized at 02:00 AM</p>
         </div>
       </div>
-      
-      <div className="flex items-start p-3 bg-green-50 border border-green-200 rounded-lg">
-        <Activity className="w-5 h-5 text-green-600 mr-3 mt-0.5" />
+
+      <div className="flex items-start p-4 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-sm">
+        <div className="bg-emerald-100 p-2 rounded-xl border border-emerald-200 mr-4">
+          <Activity className="w-5 h-5 text-emerald-700" />
+        </div>
         <div>
-          <h4 className="text-sm font-medium text-green-800">Performance Update</h4>
-          <p className="text-sm text-green-700">System performance improved by 15% this week</p>
+          <h4 className="text-[11px] font-black text-emerald-900 uppercase tracking-widest mb-1">Performance Index</h4>
+          <p className="text-[12px] text-emerald-700 font-bold uppercase tracking-tight">Server response latency improved by 15%</p>
         </div>
       </div>
     </div>
@@ -267,7 +290,12 @@ export default function Dashboard() {
   }
 
   return (
-    <Layout title="Dashboard" subtitle="Company Internal Management System" onSearch={setSearchTerm} searchTerm={searchTerm}>
+    <Layout
+      title="Unified Command Dashboard"
+      subtitle="BARANGAY MANAGEMENT & INTERNAL MONITORING"
+      onSearch={setSearchTerm}
+      searchTerm={searchTerm}
+    >
       <div className="space-y-6">
         {/* Enhanced Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -280,7 +308,7 @@ export default function Dashboard() {
             color="blue"
             description="All registered employees"
           />
-          
+
           <MetricCard
             title="Active Employees"
             value={stats?.overview?.activeUsers || 0}
@@ -290,7 +318,7 @@ export default function Dashboard() {
             color="green"
             description="Currently active staff"
           />
-          
+
           <MetricCard
             title="Administrators"
             value={stats?.overview?.adminUsers || 0}
@@ -298,7 +326,7 @@ export default function Dashboard() {
             color="purple"
             description="System administrators"
           />
-          
+
           <MetricCard
             title="New This Month"
             value={stats?.overview?.currentMonthUsers || 0}
@@ -313,22 +341,22 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Employee Management Table */}
           <div className="lg:col-span-2">
-            <div className="card">
-              <div className="card-header">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-50 bg-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">Employee Directory</h3>
-                    <p className="text-sm text-gray-500">Manage your team members and their access</p>
+                    <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-none mb-1">Administrative Directory</h3>
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Active Personnel and Authorization Levels</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => router.push('/employees')}
-                    className="btn-primary"
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
                   >
-                    Add Employee
+                    Register Personnel
                   </button>
                 </div>
               </div>
-              <div className="card-body p-0">
+              <div className="p-0">
                 <EmployeeTable employees={filteredEmployees} />
               </div>
             </div>
@@ -336,42 +364,42 @@ export default function Dashboard() {
 
           {/* System Alerts */}
           <div className="space-y-6">
-            <div className="card">
-              <div className="card-header">
-                <h3 className="text-lg font-medium text-gray-900">System Alerts</h3>
-                <p className="text-sm text-gray-500">Important notifications and updates</p>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-5 border-b border-gray-50 bg-white">
+                <h3 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.2em] leading-none">System Intelligence</h3>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight mt-1">Real-time status monitoring</p>
               </div>
-              <div className="card-body">
+              <div className="p-5 bg-gray-50/30">
                 <SystemAlerts />
               </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="card">
-              <div className="card-header">
-                <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-5 border-b border-gray-50 bg-white">
+                <h3 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.2em] leading-none">Command Center</h3>
               </div>
-              <div className="card-body space-y-3">
-                <button 
+              <div className="p-5 space-y-3">
+                <button
                   onClick={() => router.push('/employees')}
-                  className="w-full btn-secondary justify-start"
+                  className="w-full px-5 py-3.5 bg-indigo-50 text-indigo-700 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center group transition-all hover:bg-indigo-100 hover:translate-x-1"
                 >
-                  <Users className="w-4 h-4 mr-2" />
-                  Manage Users
+                  <Users className="w-4 h-4 mr-3" />
+                  Personnel Control
                 </button>
-                <button 
+                <button
                   onClick={() => router.push('/settings')}
-                  className="w-full btn-secondary justify-start"
+                  className="w-full px-5 py-3.5 bg-gray-50 text-gray-700 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center group transition-all hover:bg-gray-100 hover:translate-x-1"
                 >
-                  <Shield className="w-4 h-4 mr-2" />
-                  Security Settings
+                  <Shield className="w-4 h-4 mr-3" />
+                  Vault Settings
                 </button>
-                <button 
+                <button
                   onClick={() => router.push('/reports')}
-                  className="w-full btn-secondary justify-start"
+                  className="w-full px-5 py-3.5 bg-emerald-50 text-emerald-700 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center group transition-all hover:bg-emerald-100 hover:translate-x-1"
                 >
-                  <Activity className="w-4 h-4 mr-2" />
-                  View Reports
+                  <Activity className="w-4 h-4 mr-3" />
+                  Analytics Hub
                 </button>
               </div>
             </div>

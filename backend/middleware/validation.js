@@ -5,7 +5,7 @@ const { body, query, validationResult } = require('express-validator');
  */
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
     return res.status(400).json({
       success: false,
@@ -17,7 +17,7 @@ const handleValidationErrors = (req, res, next) => {
       }))
     });
   }
-  
+
   next();
 };
 
@@ -58,8 +58,8 @@ const validateUserCreation = [
     .withMessage('Password must contain at least one lowercase letter, one uppercase letter, and one number'),
   body('role')
     .optional()
-    .isIn(['admin', 'user'])
-    .withMessage('Role must be either admin or user'),
+    .isIn(['super_admin', 'admin', 'captain', 'secretary', 'staff', 'user'])
+    .withMessage('Role must be valid (super_admin, admin, captain, secretary, staff)'),
   body('status')
     .optional()
     .isIn(['active', 'inactive', 'suspended'])
@@ -94,8 +94,8 @@ const validateUserUpdate = [
     .withMessage('Password must contain at least one lowercase letter, one uppercase letter, and one number'),
   body('role')
     .optional()
-    .isIn(['admin', 'user'])
-    .withMessage('Role must be either admin or user'),
+    .isIn(['super_admin', 'admin', 'captain', 'secretary', 'staff', 'user'])
+    .withMessage('Role must be valid'),
   body('status')
     .optional()
     .isIn(['active', 'inactive', 'suspended'])
@@ -130,8 +130,8 @@ const validateQuery = [
     .withMessage('Search term must not exceed 100 characters'),
   query('role')
     .optional()
-    .isIn(['admin', 'user'])
-    .withMessage('Role filter must be admin or user'),
+    .isIn(['super_admin', 'admin', 'captain', 'secretary', 'staff', 'user'])
+    .withMessage('Role filter must be valid'),
   query('status')
     .optional()
     .isIn(['active', 'inactive', 'suspended'])

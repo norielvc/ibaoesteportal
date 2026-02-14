@@ -18,14 +18,14 @@ const authenticateToken = async (req, res, next) => {
 
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Find the user in Supabase
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', decoded.userId)
       .single();
-    
+
     if (error || !user) {
       return res.status(401).json({
         success: false,
@@ -54,7 +54,7 @@ const authenticateToken = async (req, res, next) => {
       createdAt: user.created_at,
       updatedAt: user.updated_at
     };
-    
+
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
@@ -63,7 +63,7 @@ const authenticateToken = async (req, res, next) => {
         message: 'Invalid token'
       });
     }
-    
+
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
@@ -82,11 +82,15 @@ const authenticateToken = async (req, res, next) => {
 /**
  * Middleware to check if user has admin role
  */
+/**
+ * Middleware to check if user has admin role
+ */
 const requireAdmin = (req, res, next) => {
-  if (req.user.role !== 'admin') {
+  const allowedRoles = ['super_admin', 'admin', 'captain', 'secretary'];
+  if (!allowedRoles.includes(req.user.role)) {
     return res.status(403).json({
       success: false,
-      message: 'Admin access required'
+      message: 'Elevated privileges required'
     });
   }
   next();
@@ -97,11 +101,12 @@ const requireAdmin = (req, res, next) => {
  */
 const requireAdminOrOwner = (req, res, next) => {
   const userId = req.params.id || req.params.userId;
-  
-  if (req.user.role === 'admin' || req.user._id === userId) {
+  const allowedRoles = ['super_admin', 'admin', 'captain', 'secretary'];
+
+  if (allowedRoles.includes(req.user.role) || req.user._id === userId) {
     return next();
   }
-  
+
   return res.status(403).json({
     success: false,
     message: 'Access denied - insufficient permissions'

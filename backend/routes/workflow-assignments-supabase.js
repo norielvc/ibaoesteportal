@@ -4,6 +4,7 @@ const { supabase } = require('../services/supabaseClient');
 const { authenticateToken } = require('../middleware/auth-supabase');
 const certificateGenerationService = require('../services/certificateGenerationService');
 const qrCodeService = require('../services/qrCodeService');
+const workflowService = require('../services/workflowService');
 
 // Helper to handle Supabase errors gracefully
 const handleSupabaseError = (res, error, context) => {
@@ -41,7 +42,20 @@ router.get('/user/:userId', authenticateToken, async (req, res) => {
           requestor_name,
           guardian_name,
           guardian_relationship,
-          guardian_id
+          guardian_id,
+          partner_full_name,
+          partner_age,
+          partner_sex,
+          partner_date_of_birth,
+          partner_address,
+          partner_civil_status,
+          no_of_children,
+          living_together_years,
+          living_together_months,
+          date_of_examination,
+          usaping_barangay,
+          date_of_hearing,
+          details
         )
       `)
       .eq('assigned_user_id', userId);
@@ -97,15 +111,20 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
           guardian_relationship,
           guardian_id,
           resident_id,
-          residents:resident_id (
-            id,
-            pending_case,
-            case_record_history,
-            is_deceased,
-            date_of_death,
-            cause_of_death,
-            covid_related
-          ),
+          partner_full_name,
+          partner_age,
+          partner_sex,
+          partner_date_of_birth,
+          partner_address,
+          partner_civil_status,
+          no_of_children,
+          living_together_years,
+          living_together_months,
+          date_of_examination,
+          usaping_barangay,
+          date_of_hearing,
+          details,
+          residents:resident_id (*),
           updated_at
         )
       `)
@@ -217,7 +236,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       .eq('certificate_type', assignment.request_type)
       .single();
 
-    let steps = workflowConfig?.workflow_config?.steps || [];
+    let steps = workflowService.getWorkflowSteps(assignment.request_type, workflowConfig?.workflow_config?.steps);
     const currentStepIndex = steps.findIndex(s => s.id.toString() === assignment.step_id.toString());
     const currentStep = steps[currentStepIndex];
     let nextStep = null;
@@ -286,7 +305,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       }
     }
 
-    const historyRequestType = assignment.request_type === 'barangay_guardianship' ? 'note' : assignment.request_type;
+    const historyRequestType = ['barangay_guardianship', 'certification_same_person'].includes(assignment.request_type) ? 'note' : assignment.request_type;
     await supabase.from('workflow_history').insert([{
       request_id: assignment.request_id,
       request_type: historyRequestType,

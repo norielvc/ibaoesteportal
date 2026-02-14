@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 import Layout from '@/components/Layout/Layout';
 import {
   FileText, Search, Eye, CheckCircle, XCircle, RotateCcw,
   Clock, User, Calendar, ChevronDown, X, AlertTriangle,
-  FileCheck, History, Filter, Shield, Printer, Download, PenTool, ShieldAlert, Info, Edit, Save, RefreshCw,
-  Skull, Activity, Heart, Phone
+  FileCheck, History, Filter, Shield, Printer, Download, PenTool, ShieldAlert, Info, Edit, Save, RefreshCw, Database,
+  Skull, Activity, Heart, Phone, MessageCircle, MapPin, Home, ShieldCheck, Users
 } from 'lucide-react';
 import { getAuthToken, getUserData } from '@/lib/auth';
+import Modal from '@/components/UI/Modal';
 import SignaturePad from '@/components/UI/SignaturePad';
 // API Configuration
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
@@ -314,6 +316,8 @@ export default function RequestsPage() {
     if (s.includes('clearance')) return 'Barangay Clearance';
     if (s.includes('indigency')) return 'Certificate of Indigency';
     if (s.includes('residency')) return 'Barangay Residency';
+    if (s.includes('cohabitation')) return 'Co-habitation Certificate';
+    if (s.includes('same_person') || s.includes('same person')) return 'Certification of Same Person';
 
     // Fallback: remove all underscores/dashes and capitalize
     return String(type)
@@ -710,6 +714,7 @@ export default function RequestsPage() {
                     <option value="barangay_residency">Residency</option>
                     <option value="natural_death">Natural Death</option>
                     <option value="barangay_guardianship">Guardianship</option>
+                    <option value="barangay_cohabitation">Co-habitation</option>
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
@@ -904,6 +909,7 @@ export default function RequestsPage() {
             }}
             onAction={handleAction}
             onUpdate={handleUpdateDetails}
+            setSelectedRequest={setSelectedRequest}
             getStatusColor={getStatusColor}
             getTypeLabel={getTypeLabel}
             formatDate={formatDate}
@@ -949,10 +955,12 @@ export default function RequestsPage() {
 
 // Request Details Modal Component
 // RequestDetailsModal Component
-function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusColor, getTypeLabel, formatDate, canUserTakeAction, getCurrentWorkflowStep, history = [] }) {
+function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelectedRequest, getStatusColor, getTypeLabel, formatDate, canUserTakeAction, getCurrentWorkflowStep, history = [] }) {
   const currentStep = getCurrentWorkflowStep(request);
   const canAct = canUserTakeAction(request);
   const isGuardianship = String(request.certificate_type || '').toLowerCase().includes('guardian') || String(request.reference_number || '').toUpperCase().startsWith('GD');
+  const isMedicoLegal = String(request.certificate_type || '').toLowerCase().includes('medico') || String(request.reference_number || '').toUpperCase().startsWith('ML');
+  const isDeath = String(request.certificate_type || '').toLowerCase().includes('death') || String(request.purpose || '').toLowerCase().includes('death');
 
   // Helper to calculate age from date string
   const calculateAge = (dob) => {
@@ -970,7 +978,10 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
 
   const displayAge = calculateAge(request.date_of_birth) || request.age;
   const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [showResidentDb, setShowResidentDb] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
+  const [isEditResidentMode, setIsEditResidentMode] = useState(false);
+  const [residentFormData, setResidentFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     first_name: request.first_name || '',
@@ -983,6 +994,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
     sex: request.sex || '',
     civil_status: request.civil_status || '',
     date_of_birth: request.date_of_birth || '',
+    place_of_birth: request.place_of_birth || '',
     address: request.address || '',
     purpose: request.purpose || '',
     date_of_death: request.date_of_death || '',
@@ -990,7 +1002,18 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
     covid_related: request.covid_related || false,
     requestor_name: request.requestor_name || '',
     guardian_name: request.guardian_name || '',
-    guardian_relationship: request.guardian_relationship || ''
+    guardian_relationship: request.guardian_relationship || '',
+    partner_full_name: request.partner_full_name || '',
+    partner_sex: request.partner_sex || '',
+    partner_date_of_birth: request.partner_date_of_birth || '',
+    partner_address: request.partner_address || request.address || '',
+    partner_civil_status: request.partner_civil_status || 'CO-HABITING',
+    no_of_children: request.no_of_children || '0',
+    living_together_years: request.living_together_years || '0',
+    living_together_months: request.living_together_months || '0',
+    date_of_examination: request.date_of_examination || '',
+    usaping_barangay: request.usaping_barangay || '',
+    date_of_hearing: request.date_of_hearing || ''
   });
 
   // Split name if fields are empty but full_name exists
@@ -1023,11 +1046,147 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
       }
     }
   }, [editFormData.date_of_birth]);
+
+  // Calculate partner age when partner_date_of_birth changes
+  useEffect(() => {
+    if (editFormData.partner_date_of_birth) {
+      const birthDate = new Date(editFormData.partner_date_of_birth);
+      const today = new Date();
+      if (!isNaN(birthDate.getTime())) {
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        setEditFormData(prev => ({ ...prev, partner_age: age >= 0 ? age : '' }));
+      }
+    }
+  }, [editFormData.partner_date_of_birth]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [showSyncConfirm, setShowSyncConfirm] = useState(false);
+
+  // Mismatch Detection Logic
+  const resident = request.residents;
+  const mismatches = [];
+  if (resident) {
+    const normalize = (val) => String(val || '').trim().toUpperCase();
+    if (request.first_name && resident.first_name && normalize(request.first_name) !== normalize(resident.first_name)) mismatches.push('First Name');
+    if (request.middle_name && resident.middle_name && normalize(request.middle_name) !== normalize(resident.middle_name)) mismatches.push('Middle Name');
+    if (request.last_name && resident.last_name && normalize(request.last_name) !== normalize(resident.last_name)) mismatches.push('Last Name');
+    if (request.suffix && resident.suffix && normalize(request.suffix) !== normalize(resident.suffix)) mismatches.push('Suffix');
+    if (request.contact_number && resident.contact_number && normalize(request.contact_number) !== normalize(resident.contact_number)) mismatches.push('Contact Number');
+    if (request.address && resident.residential_address && normalize(request.address) !== normalize(resident.residential_address)) mismatches.push('Address');
+    if (request.date_of_birth && resident.date_of_birth && request.date_of_birth !== resident.date_of_birth) mismatches.push('Date of Birth');
+    if (request.place_of_birth && resident.place_of_birth && normalize(request.place_of_birth) !== normalize(resident.place_of_birth)) mismatches.push('Place of Birth');
+    if (request.sex && resident.gender && normalize(request.sex) !== normalize(resident.gender)) mismatches.push('Gender');
+    if (request.civil_status && resident.civil_status && normalize(request.civil_status) !== normalize(resident.civil_status)) mismatches.push('Civil Status');
+
+    // Check for deceased status mismatch
+    if (request.certificate_type === 'natural_death' && !resident.is_deceased) {
+      mismatches.push('Deceased Status');
+    }
+
+    // Check for Second Name mismatch for Same Person certificates
+    if (request.certificate_type === 'certification_same_person') {
+      try {
+        const details = typeof request.details === 'string' ? JSON.parse(request.details || '{}') : (request.details || {});
+        const requestSecondName = details.fullName2 || details.name_2 || details.name2;
+        if (requestSecondName && normalize(requestSecondName) !== normalize(resident.second_name)) {
+          mismatches.push('Second Name');
+        }
+      } catch (e) {
+        console.error('Error detecting second name mismatch:', e);
+      }
+    }
+  }
+  const hasMismatch = mismatches.length > 0;
+
+  const handleSyncToResident = () => {
+    setShowSyncConfirm(true);
+  };
+
+  const executeSync = async () => {
+    setShowSyncConfirm(false);
+    setIsSyncing(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005'}/api/certificates/${request.id}/sync-resident`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminId: request.assigned_user_id || 'manual-sync' })
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast.success('Resident profile successfully updated!');
+        if (onUpdate) await onUpdate(request.id, {});
+      } else {
+        toast.error('Sync failed: ' + result.message);
+      }
+    } catch (error) {
+      toast.error('Error syncing data: ' + error.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditResident = () => {
+    setIsEditResidentMode(true);
+    setResidentFormData({
+      ...request.residents,
+      first_name: request.residents.first_name || '',
+      middle_name: request.residents.middle_name || '',
+      last_name: request.residents.last_name || '',
+      suffix: request.residents.suffix || '',
+      contact_number: request.residents.contact_number || '',
+      age: request.residents.age || '',
+      gender: request.residents.gender || request.residents.sex || 'MALE',
+      civil_status: request.residents.civil_status || 'SINGLE',
+      date_of_birth: request.residents.date_of_birth || '',
+      place_of_birth: request.residents.place_of_birth || '',
+      residential_address: request.residents.residential_address || '',
+      pending_case: request.residents.pending_case || false,
+      case_record_history: request.residents.case_record_history || '',
+      is_deceased: request.residents.is_deceased || false,
+      date_of_death: request.residents.date_of_death || '',
+      covid_related: request.residents.covid_related || false,
+      cause_of_death: request.residents.cause_of_death || '',
+      second_name: request.residents.second_name || '',
+    });
+  };
+
+  const handleSaveResident = async (e) => {
+    e.preventDefault();
+    try {
+      const token = getAuthToken();
+      const submitData = { ...residentFormData };
+      delete submitData.id;
+      delete submitData.created_at;
+
+      const response = await fetch(`${API_URL}/api/residents/${request.residents.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(submitData)
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Resident profile updated successfully');
+        setIsEditResidentMode(false);
+        setShowResidentDb(false); // Close modal to refresh data on next open
+      } else {
+        toast.error(data.message || 'Failed to update resident');
+      }
+    } catch (error) {
+      console.error('Error updating resident:', error);
+      toast.error('An error occurred while updating.');
+    }
   };
 
   const handleSave = async () => {
@@ -1104,6 +1263,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                         sex: request.sex || '',
                         civil_status: request.civil_status || '',
                         date_of_birth: request.date_of_birth || '',
+                        place_of_birth: request.place_of_birth || '',
                         address: request.address || '',
                         purpose: request.purpose || '',
                         date_of_death: request.date_of_death || '',
@@ -1111,7 +1271,17 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                         covid_related: request.covid_related || false,
                         requestor_name: request.requestor_name || '',
                         guardian_name: request.guardian_name || '',
-                        guardian_relationship: request.guardian_relationship || ''
+                        guardian_relationship: request.guardian_relationship || '',
+                        partner_full_name: request.partner_full_name || '',
+                        partner_age: request.partner_age || '',
+                        partner_sex: request.partner_sex || '',
+                        partner_date_of_birth: request.partner_date_of_birth || '',
+                        no_of_children: request.no_of_children || '',
+                        living_together_years: request.living_together_years || '',
+                        living_together_months: request.living_together_months || '',
+                        date_of_examination: request.date_of_examination || '',
+                        usaping_barangay: request.usaping_barangay || '',
+                        date_of_hearing: request.date_of_hearing || ''
                       });
                     }}
                     className="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600 flex items-center transition-colors"
@@ -1159,7 +1329,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
             </button>
           </div>
 
-          <div className="p-6 overflow-y-auto flex-1 space-y-4">
+          <div className="p-8 overflow-y-auto overflow-x-hidden flex-1 space-y-8 custom-scrollbar">
             {activeTab === 'details' && (
               <>
                 {/* OIC / Ready Guidance Banner */}
@@ -1177,168 +1347,407 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                   </div>
                 )}
                 {/* Status and Step */}
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(request.status)}`}>
+                {/* Status, Type, and Step Layout */}
+                {/* Status, Type, and Step Layout */}
+                <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black tracking-[0.1em] border shadow-sm ${getStatusColor(request.status)}`}>
                       {request.status?.replace(/_/g, ' ').toUpperCase()}
                     </span>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span className="font-medium text-gray-700">{getTypeLabel(request.certificate_type)}</span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-gray-900 font-extrabold text-[13.5px] tracking-tight">{getTypeLabel(request.certificate_type)}</span>
                       {currentStep && (
                         <>
-                          <span className="text-gray-300">•</span>
-                          <span className="text-blue-600 font-medium">{currentStep.name}</span>
+                          <span className="text-gray-300 font-light text-xl">/</span>
+                          <span className="text-blue-600 font-extrabold text-[13.5px] uppercase tracking-wide">{currentStep.name}</span>
                         </>
                       )}
                     </div>
                   </div>
-                  {request.residents?.pending_case && (
-                    <span className="bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse flex items-center gap-1">
-                      <ShieldAlert className="w-3 h-3" />
-                      CRITICAL: PENDING CASE RECORDED
-                    </span>
-                  )}
+
+                  <div className="flex flex-col items-end">
+                    <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-tighter bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{formatDate(request.created_at)}</span>
+                    </div>
+                    {request.residents?.pending_case && (
+                      <span className="mt-2 bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse flex items-center gap-1 shadow-sm uppercase tracking-widest">
+                        <ShieldAlert className="w-3 h-3" />
+                        CRITICAL: CASE RECORDED
+                      </span>
+                    )}
+                  </div>
                 </div>
 
+                {/* Data Mismatch Warning */}
+                {hasMismatch && !isEditing && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-amber-100 p-2 rounded-lg text-amber-600">
+                        <AlertTriangle className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-[11px] font-black text-amber-900 uppercase tracking-widest">Information Mismatch Detected</h4>
+                        <p className="text-xs text-amber-800 mt-1 font-medium italic">
+                          Request data differs from record for: <span className="font-extrabold not-italic text-amber-900">{mismatches.join(', ').toUpperCase()}</span>.
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleSyncToResident}
+                        disabled={isSyncing}
+                        className="self-center px-4 py-2 bg-amber-600 text-white rounded-lg text-[11px] font-black hover:bg-amber-700 transition-all shadow-sm flex items-center gap-2 disabled:opacity-50 tracking-widest"
+                      >
+                        {isSyncing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Database className="w-3 h-3" />}
+                        {isSyncing ? 'SYNCING...' : 'SYNC TO RESIDENT'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Compact Applicant Info Grid */}
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
+                <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                  <div className="flex justify-between items-center mb-5 border-l-4 border-blue-500 pl-3">
+                    <h3 className="font-black text-gray-900 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em]">
                       <User className="w-4 h-4 text-blue-500" />
                       Applicant Information
                     </h3>
                     {isEditing && (
                       <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-100 italic flex items-center gap-1">
                         <Info className="w-3 h-3" />
-                        Note: Changes will sync with the Residents Database
+                        Master DB sync required after save
                       </span>
                     )}
                   </div>
-                  <div className={`grid gap-4 text-sm ${['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
+                  <div className={`grid gap-8 ${['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5'}`}>
                     {isEditing ? (
                       <>
                         <div className="col-span-1">
-                          <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">First Name</p>
+                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">First Name</p>
                           <input
                             type="text"
                             name="first_name"
                             value={editFormData.first_name}
                             onChange={handleInputChange}
-                            placeholder="First Name"
-                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
                           />
                         </div>
                         <div className="col-span-1">
-                          <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Middle Name</p>
+                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Middle Name</p>
                           <input
                             type="text"
                             name="middle_name"
                             value={editFormData.middle_name}
                             onChange={handleInputChange}
-                            placeholder="Middle Name"
-                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
                           />
                         </div>
                         <div className="col-span-1">
-                          <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Last Name</p>
+                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Last Name</p>
                           <input
                             type="text"
                             name="last_name"
                             value={editFormData.last_name}
                             onChange={handleInputChange}
-                            placeholder="Last Name"
-                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
                           />
                         </div>
                         <div className="col-span-1">
-                          <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Suffix</p>
+                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Suffix</p>
                           <input
                             type="text"
                             name="suffix"
                             value={editFormData.suffix}
                             onChange={handleInputChange}
-                            placeholder="e.g. Jr., III"
-                            className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
                           />
                         </div>
-
                       </>
                     ) : (
-                      <div className={['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) ? "col-span-1" : "col-span-2 md:col-span-2"}>
-                        <p className="text-xs text-gray-500 uppercase mb-0.5">Full Name</p>
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-gray-900 uppercase truncate text-base" title={request.applicant_name || request.full_name}>
-                            {request.applicant_name || request.full_name || 'N/A'}
+                      <div className="col-span-full">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Applicant Identity</p>
+                          {request.residents && !isEditing && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  // Force refresh resident data to ensure all fields are available
+                                  const token = getAuthToken();
+                                  const res = await fetch(`${API_URL}/api/certificates/${request.id}`, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                  });
+                                  const data = await res.json();
+                                  if (data.success && data.data) {
+                                    // Merge fresh data into selected request
+                                    setSelectedRequest(prev => ({ ...prev, ...data.data }));
+                                  }
+                                } catch (err) {
+                                  console.error("Failed to refresh resident data:", err);
+                                }
+                                setShowResidentDb(true);
+                              }}
+                              className="p-1.5 text-blue-600 hover:text-blue-800 transition-all bg-blue-50/50 hover:bg-blue-100 rounded-lg border border-blue-100/50 group relative active:scale-90"
+                              title="VIEW MASTER RECORD"
+                            >
+                              <Database className="w-4 h-4" />
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-[8px] font-black uppercase tracking-widest rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl z-50">
+                                View Master Record
+                              </span>
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pb-2">
+                          <p className="font-black text-gray-900 uppercase text-xl tracking-tight" title={request.applicant_name || request.full_name}>
+                            {request.applicant_name || request.full_name || 'NOT RECORDED'}
                           </p>
-                          {request.residents?.pending_case && (
-                            <div className="text-red-600" title="With Pending Case">
-                              <AlertTriangle className="w-4 h-4" />
+
+                          {request.certificate_type === 'certification_same_person' && (
+                            <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 shadow-sm animate-in fade-in zoom-in duration-300">
+                              <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest leading-none border-r border-blue-200 pr-2">AKA</span>
+                              <span className="font-black text-blue-700 uppercase text-sm tracking-tight leading-none">
+                                {(() => {
+                                  try {
+                                    const details = typeof request.details === 'string' ? JSON.parse(request.details || '{}') : (request.details || {});
+                                    return details.fullName2 || details.name_2 || details.name2 || 'NOT RECORDED';
+                                  } catch (e) {
+                                    return 'NOT RECORDED';
+                                  }
+                                })()}
+                              </span>
                             </div>
                           )}
                         </div>
                       </div>
                     )}
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase mb-0.5">Contact</p>
-                      <p className="font-medium text-gray-900 truncate">{request.contact_number || 'N/A'}</p>
-                    </div>
-                    {!['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) && (
-                      <>
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase mb-0.5">Date of Birth</p>
-                          <p className="font-medium text-gray-900">{request.date_of_birth || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase mb-0.5">Civil Status</p>
-                          <p className="font-medium text-gray-900 uppercase">{request.civil_status || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase mb-0.5">Age / Sex</p>
-                          <p className="font-medium text-gray-900">{displayAge || '-'} / {request.sex || '-'}</p>
-                        </div>
-                        <div className="col-span-2 md:col-span-2">
-                          <p className="text-xs text-gray-500 uppercase mb-0.5">Address</p>
-                          <p className="font-medium text-gray-900 whitespace-pre-line leading-relaxed" title={request.address}>
-                            {request.address || 'N/A'}
-                          </p>
-                        </div>
 
-                      </>
-                    )}
+                    <div className="col-span-1">
+                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Date of Birth</p>
+                      {isEditing ? (
+                        <input
+                          type="date"
+                          name="date_of_birth"
+                          value={editFormData.date_of_birth}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
+                        />
+                      ) : (
+                        <p className="font-black text-gray-900 text-[13px] font-mono">
+                          {request.date_of_birth || (request.residents?.date_of_birth ? new Date(request.residents.date_of_birth).toISOString().split('T')[0] : 'NOT RECORDED')}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="col-span-1">
+                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Civil Status</p>
+                      {isEditing ? (
+                        <select
+                          name="civil_status"
+                          value={editFormData.civil_status}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
+                        >
+                          <option value="SINGLE">SINGLE</option>
+                          <option value="MARRIED">MARRIED</option>
+                          <option value="WIDOWED">WIDOWED</option>
+                          <option value="SEPARATED">SEPARATED</option>
+                          <option value="CO-HABITING">CO-HABITING</option>
+                        </select>
+                      ) : (
+                        <p className="font-black text-gray-900 text-[13px] uppercase">{request.civil_status || 'NOT RECORDED'}</p>
+                      )}
+                    </div>
+
+                    <div className="col-span-1">
+                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Age / Sex</p>
+                      <p className="font-black text-gray-900 text-[13px] uppercase">
+                        {displayAge || '-'} / {request.sex || '-'}
+                      </p>
+                    </div>
+
+                    <div className="col-span-1">
+                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Contact No.</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-black text-gray-900 text-[12.5px] font-mono tracking-tighter">{request.contact_number || 'NOT RECORDED'}</p>
+                        {!isEditing && request.contact_number && (
+                          <div className="flex items-center gap-1">
+                            <a href={`tel:${request.contact_number}`} className="p-1 hover:bg-blue-50 rounded text-blue-500 transition-colors">
+                              <Phone className="w-3.5 h-3.5" />
+                            </a>
+                            <a href={`sms:${request.contact_number}`} className="p-1 hover:bg-emerald-50 rounded text-emerald-500 transition-colors">
+                              <MessageCircle className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="col-span-full md:col-span-2">
+                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Residential Address</p>
+                      {isEditing ? (
+                        <textarea
+                          name="address"
+                          value={editFormData.address}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
+                          rows="2"
+                        />
+                      ) : (
+                        <p className="font-bold text-gray-800 text-[13px] uppercase leading-relaxed truncate" title={request.address}>
+                          {request.address || 'NOT RECORDED'}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
+                {request.certificate_type === 'barangay_cohabitation' && (
+                  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm mt-4">
+                    <div className="flex justify-between items-center mb-5 border-l-4 border-rose-500 pl-3">
+                      <h3 className="font-black text-gray-900 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em]">
+                        <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                        Partner Information
+                      </h3>
+                    </div>
+                    <div className={`grid gap-6 ${['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
+                      {isEditing ? (
+                        <>
+                          <div className="col-span-1 md:col-span-2">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Partner Full Name</p>
+                            <input
+                              type="text"
+                              name="partner_full_name"
+                              value={editFormData.partner_full_name}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Date of Birth</p>
+                            <input
+                              type="date"
+                              name="partner_date_of_birth"
+                              value={editFormData.partner_date_of_birth ? new Date(editFormData.partner_date_of_birth).toISOString().split('T')[0] : ''}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 text-sm"
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Sex</p>
+                            <select
+                              name="partner_sex"
+                              value={editFormData.partner_sex}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
+                            >
+                              <option value="">SELECT...</option>
+                              <option value="MALE">MALE</option>
+                              <option value="FEMALE">FEMALE</option>
+                            </select>
+                          </div>
+                          <div className="col-span-1 md:col-span-2">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Civil Status</p>
+                            <input
+                              type="text"
+                              name="partner_civil_status"
+                              value={editFormData.partner_civil_status}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Partner Address</p>
+                            <input
+                              type="text"
+                              name="partner_address"
+                              value={editFormData.partner_address}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
+                            />
+                          </div>
+                          <div className="col-span-2 md:col-span-1">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Years Living Together</p>
+                            <input type="number" name="living_together_years" value={editFormData.living_together_years} onChange={handleInputChange} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg font-extrabold text-gray-900" />
+                          </div>
+                          <div className="col-span-2 md:col-span-1">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Months</p>
+                            <input type="number" name="living_together_months" value={editFormData.living_together_months} onChange={handleInputChange} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg font-extrabold text-gray-900" />
+                          </div>
+                          <div className="col-span-2 md:col-span-2">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">No. of Children</p>
+                            <input type="number" name="no_of_children" value={editFormData.no_of_children} onChange={handleInputChange} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg font-extrabold text-gray-900" />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className={['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) ? "col-span-1" : "col-span-2 md:col-span-2"}>
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Partner Name</p>
+                            <p className="font-extrabold text-gray-900 uppercase text-[15px] tracking-tight truncate">{request.partner_full_name || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Date of Birth</p>
+                            <p className="font-black text-gray-900 text-[13px] font-mono whitespace-nowrap">{request.partner_date_of_birth || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Age / Sex</p>
+                            <p className="font-black text-gray-900 text-[13px] uppercase">{(calculateAge(request.partner_date_of_birth) || request.partner_age || '-') + ' / ' + (request.partner_sex || '-')}</p>
+                          </div>
+                          <div className="col-span-2 md:col-span-2">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Partner Address</p>
+                            <p className="font-extrabold text-gray-900 text-[13px] uppercase leading-relaxed" title={request.partner_address || request.address}>
+                              {request.partner_address || request.address || 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Previous Status</p>
+                            <p className="font-black text-gray-900 text-[13px] uppercase">{request.partner_civil_status || 'CO-HABITING'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">No. of Children</p>
+                            <p className="font-black text-gray-900 text-sm font-mono tracking-tighter">{request.no_of_children || 0}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Partnership Length</p>
+                            <p className="font-black text-gray-900 text-[13px] uppercase">{request.living_together_years || '0'} YRS, {request.living_together_months || '0'} MOS</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Purpose & Timeline */}
                 {!['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {isGuardianship ? (
-                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex flex-col">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm uppercase">
-                          <User className="w-4 h-4 text-blue-500" />
-                          Guardian Information
-                        </h3>
-                        <div className="space-y-3 mt-1">
+                  <div className={`grid gap-6 ${isMedicoLegal ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+                    {isGuardianship && (
+                      <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex flex-col">
+                        <div className="border-l-4 border-blue-500 pl-3 mb-5">
+                          <h3 className="font-black text-gray-900 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em]">
+                            <User className="w-4 h-4 text-blue-500" />
+                            Guardian Information
+                          </h3>
+                        </div>
+                        <div className="space-y-5 flex-1">
                           {isEditing ? (
                             <>
                               <div>
-                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Guardian's Full Name</p>
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Guardian's Full Name</p>
                                 <input
                                   type="text"
                                   name="guardian_name"
                                   value={editFormData.guardian_name}
                                   onChange={handleInputChange}
-                                  className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase text-sm"
+                                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
                                 />
                               </div>
                               <div>
-                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Relationship</p>
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Relationship</p>
                                 <select
                                   name="guardian_relationship"
                                   value={editFormData.guardian_relationship}
                                   onChange={handleInputChange}
-                                  className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase text-sm bg-white cursor-pointer"
+                                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm select-none"
                                 >
-                                  <option value="">SELECT RELATIONSHIP...</option>
+                                  <option value="">SELECT...</option>
                                   <option value="PARENT">PARENT</option>
                                   <option value="GRANDPARENT">GRANDPARENT</option>
                                   <option value="SIBLING">SIBLING</option>
@@ -1353,171 +1762,169 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
                           ) : (
                             <>
                               <div>
-                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Guardian's Full Name</p>
-                                <p className="font-bold text-gray-900 uppercase">{request.guardian_name || 'NOT SPECIFIED'}</p>
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Guardian Name</p>
+                                <p className="font-extrabold text-gray-900 uppercase text-[15px] tracking-tight">{request.guardian_name || 'NOT SPECIFIED'}</p>
                               </div>
                               <div>
-                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Relationship</p>
-                                <p className="font-bold text-gray-900 uppercase">{request.guardian_relationship || 'NOT SPECIFIED'}</p>
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Relationship</p>
+                                <p className="font-black text-gray-900 text-[13px] uppercase">{request.guardian_relationship || 'NOT SPECIFIED'}</p>
                               </div>
                             </>
                           )}
                         </div>
                       </div>
-                    ) : (
-                      <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 flex flex-col">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
-                          <FileCheck className="w-4 h-4 text-blue-500" />
-                          Purpose
-                        </h3>
-                        {isEditing ? (
-                          <textarea
-                            name="purpose"
-                            value={editFormData.purpose}
-                            onChange={handleInputChange}
-                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 font-medium text-sm mt-1 uppercase h-24"
-                          />
-                        ) : (
-                          <p className="text-sm text-gray-700 leading-relaxed font-medium mt-1 flex-1">
-                            {request.purpose || 'Not specified'}
-                          </p>
-                        )}
-                      </div>
                     )}
 
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                      <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-2 text-sm">
-                        <History className="w-4 h-4 text-blue-500" />
-                        Timeline
-                      </h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Submitted</span>
-                          <span className="font-medium">{formatDate(request.created_at)}</span>
+
+
+                    {request.admin_comment && (
+                      <div className="bg-orange-50 rounded-xl p-5 border border-orange-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="bg-orange-100 p-1.5 rounded-lg">
+                            <FileText className="w-4 h-4 text-orange-600" />
+                          </div>
+                          <h3 className="font-black text-orange-900 text-[11px] uppercase tracking-[0.2em]">
+                            Admin Remarks
+                          </h3>
                         </div>
-                        {request.updated_at && request.updated_at !== request.created_at && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Updated</span>
-                            <span className="font-medium">{formatDate(request.updated_at)}</span>
-                          </div>
-                        )}
-                        {request.admin_comment && (
-                          <div className="mt-2 text-xs bg-orange-50 text-orange-800 p-2 rounded border border-orange-100 italic">
-                            <span className="font-bold not-italic">Admin Note:</span> {request.admin_comment}
-                          </div>
-                        )}
+                        <p className="text-sm text-orange-800 italic leading-relaxed font-medium">
+                          "{request.admin_comment}"
+                        </p>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 
-                {(request.certificate_type === 'natural_death' || request.certificate_type === 'natural-death' || request.certificate_type?.toLowerCase().includes('death') || request.purpose?.toLowerCase().includes('death')) && (
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 mt-6">
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
+                {(isDeath || isMedicoLegal) && (
+                  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm mt-6">
+                    <div className="flex justify-between items-center mb-5 border-l-4 border-blue-600 pl-3">
+                      <h3 className="font-black text-gray-900 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em]">
                         <Activity className="w-4 h-4 text-blue-500" />
-                        Death Certification Details
+                        {isMedicoLegal ? 'Investigation Details' : 'Death Certification Details'}
                       </h3>
                     </div>
 
-                    <div className="grid gap-4 text-sm grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+                    <div className="grid gap-6 text-sm grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
                       {isEditing ? (
                         <>
-                          <div className="col-span-1">
-                            <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Date of Death</p>
-                            <input
-                              type="date"
-                              name="date_of_death"
-                              value={editFormData.date_of_death ? new Date(editFormData.date_of_death).toISOString().split('T')[0] : ''}
-                              onChange={handleInputChange}
-                              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
-                            />
-                          </div>
-                          <div className="col-span-1">
-                            <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Cause of Death</p>
-                            <input
-                              type="text"
-                              name="cause_of_death"
-                              value={editFormData.cause_of_death}
-                              onChange={handleInputChange}
-                              placeholder="Cause of Death"
-                              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
-                            />
-                          </div>
-                          <div className="col-span-1">
-                            <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">COVID-19 Related</p>
-                            <select
-                              name="covid_related"
-                              value={editFormData.covid_related ? 'true' : 'false'}
-                              onChange={(e) => setEditFormData(prev => ({ ...prev, covid_related: e.target.value === 'true' }))}
-                              className="w-full px-3 py-1.5 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1 bg-white"
-                            >
-                              <option value="false">NO / NEGATIVE</option>
-                              <option value="true">YES / POSITIVE</option>
-                            </select>
-                          </div>
-                          <div className="col-span-1">
-                            <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Requestor Name</p>
-                            <input
-                              type="text"
-                              name="requestor_name"
-                              value={editFormData.requestor_name}
-                              onChange={handleInputChange}
-                              placeholder="Requestor Name"
-                              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
-                            />
-                          </div>
-                          <div className="col-span-1">
-                            <p className="text-xs text-gray-500 uppercase mb-0.5 font-semibold text-blue-600">Requestor Contact</p>
-                            <input
-                              type="text"
-                              name="contact_number"
-                              value={editFormData.contact_number}
-                              onChange={handleInputChange}
-                              placeholder="Contact Number"
-                              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold uppercase mt-1"
-                            />
-                          </div>
+                          {isDeath && (
+                            <>
+                              <div className="col-span-1">
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Date of Death</p>
+                                <input
+                                  type="date"
+                                  name="date_of_death"
+                                  value={editFormData.date_of_death ? new Date(editFormData.date_of_death).toISOString().split('T')[0] : ''}
+                                  onChange={handleInputChange}
+                                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-black uppercase text-sm"
+                                />
+                              </div>
+                              <div className="col-span-1">
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Cause of Death</p>
+                                <input
+                                  type="text"
+                                  name="cause_of_death"
+                                  value={editFormData.cause_of_death}
+                                  onChange={handleInputChange}
+                                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-black uppercase text-sm"
+                                />
+                              </div>
+                              <div className="col-span-1">
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">COVID-19</p>
+                                <select
+                                  name="covid_related"
+                                  value={editFormData.covid_related ? 'true' : 'false'}
+                                  onChange={(e) => setEditFormData(prev => ({ ...prev, covid_related: e.target.value === 'true' }))}
+                                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-black uppercase text-sm"
+                                >
+                                  <option value="false">NO / NEGATIVE</option>
+                                  <option value="true">YES / POSITIVE</option>
+                                </select>
+                              </div>
+                            </>
+                          )}
+                          {isMedicoLegal && (
+                            <>
+                              <div className="col-span-1">
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Date of Exam</p>
+                                <input
+                                  type="date"
+                                  name="date_of_examination"
+                                  value={editFormData.date_of_examination ? new Date(editFormData.date_of_examination).toISOString().split('T')[0] : ''}
+                                  onChange={handleInputChange}
+                                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-black uppercase text-sm"
+                                />
+                              </div>
+                              <div className="col-span-1">
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Usaping Brgy</p>
+                                <input
+                                  type="text"
+                                  name="usaping_barangay"
+                                  value={editFormData.usaping_barangay}
+                                  onChange={handleInputChange}
+                                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-black uppercase text-sm"
+                                />
+                              </div>
+                              <div className="col-span-1">
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Date of Hearing</p>
+                                <input
+                                  type="date"
+                                  name="date_of_hearing"
+                                  value={editFormData.date_of_hearing ? new Date(editFormData.date_of_hearing).toISOString().split('T')[0] : ''}
+                                  onChange={handleInputChange}
+                                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-black uppercase text-sm"
+                                />
+                              </div>
+                            </>
+                          )}
                         </>
                       ) : (
                         <>
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase mb-0.5">Date of Death</p>
-                            <p className="font-bold text-gray-900 uppercase">
-                              {(request.date_of_death || request.residents?.date_of_death) ? new Date(request.date_of_death || request.residents.date_of_death).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'NOT RECORDED'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase mb-0.5">Cause of Death</p>
-                            <p className="font-bold text-gray-900 uppercase truncate" title={request.cause_of_death || request.residents?.cause_of_death || 'NOT STATED'}>
-                              {request.cause_of_death || request.residents?.cause_of_death || 'NOT STATED'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase mb-0.5">COVID-19 Related</p>
-                            <div className="mt-1">
-                              {(() => {
-                                const covidVal = request.covid_related ?? request.residents?.covid_related;
-                                const isCovid = covidVal === true || covidVal === 'true' || covidVal === 'Yes';
-                                return (
-                                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black tracking-widest border ${isCovid ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}`}>
-                                    {isCovid ? 'YES / POSITIVE' : 'NO / NEGATIVE'}
-                                  </span>
-                                );
-                              })()}
+                          {isDeath && (
+                            <div>
+                              <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Date of Death</p>
+                              <p className="font-black text-gray-900 text-[13px] font-mono">
+                                {(request.date_of_death || request.residents?.date_of_death) ? new Date(request.date_of_death || request.residents.date_of_death).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : 'NOT RECORDED'}
+                              </p>
                             </div>
-                          </div>
+                          )}
+
+                          {isMedicoLegal && (
+                            <>
+                              <div>
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Date of Exam</p>
+                                <p className="font-black text-gray-900 text-[13px] font-mono whitespace-nowrap">
+                                  {request.date_of_examination ? new Date(request.date_of_examination).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : 'NOT RECORDED'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Usaping Brgy No.</p>
+                                <p className="font-black text-gray-900 text-[13px] font-mono">
+                                  {request.usaping_barangay || 'NOT RECORDED'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Date of Hearing</p>
+                                <p className="font-black text-gray-900 text-[13px] font-mono whitespace-nowrap">
+                                  {request.date_of_hearing ? new Date(request.date_of_hearing).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : 'NOT RECORDED'}
+                                </p>
+                              </div>
+                            </>
+                          )}
+
                           <div>
-                            <p className="text-xs text-gray-500 uppercase mb-0.5">Requestor Name</p>
-                            <p className="font-bold text-gray-900 uppercase truncate" title={request.requestor_name || 'NOT SPECIFIED'}>
-                              {request.requestor_name || 'NOT SPECIFIED'}
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Cause / Purpose</p>
+                            <p className="font-black text-gray-900 text-[13px] uppercase truncate" title={request.cause_of_death || request.purpose || 'NOT STATED'}>
+                              {request.cause_of_death || request.purpose || 'NOT STATED'}
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500 uppercase mb-0.5">Requestor Contact</p>
-                            <p className="font-bold text-gray-900">
-                              {request.contact_number || 'NOT SPECIFIED'}
-                            </p>
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Current Status</p>
+                            <div className="mt-1">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black tracking-widest border ${request.status === 'released' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                                {String(request.status || 'PENDING').toUpperCase()}
+                              </span>
+                            </div>
                           </div>
                         </>
                       )}
@@ -1528,153 +1935,560 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, getStatusCo
             )}
 
             {activeTab === 'history' && (
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 min-h-[400px]">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3 text-sm">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  Request History & Comments
-                </h3>
+              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm min-h-[400px]">
+                <div className="flex justify-between items-center mb-6 border-l-4 border-indigo-500 pl-3">
+                  <h3 className="font-black text-gray-900 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em]">
+                    <Clock className="w-4 h-4 text-indigo-500" />
+                    Activity Log & Comments
+                  </h3>
+                </div>
 
                 {Array.isArray(history) && history.length > 0 ? (
-                  <div className="space-y-4">
-                    {history.map((entry, index) => (
-                      <div key={index} className="flex gap-3 text-sm">
-                        <div className="flex-shrink-0 mt-0.5">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${entry.action === 'approve' ? 'bg-green-100 text-green-600' :
-                            entry.action === 'reject' ? 'bg-red-100 text-red-600' :
-                              entry.action === 'return' ? 'bg-orange-100 text-orange-600' :
-                                'bg-blue-100 text-blue-600'
-                            }`}>
-                            {entry.action === 'approve' ? <CheckCircle className="w-4 h-4" /> :
-                              entry.action === 'reject' ? <XCircle className="w-4 h-4" /> :
-                                entry.action === 'return' ? <RotateCcw className="w-4 h-4" /> :
-                                  <FileText className="w-4 h-4" />}
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start">
-                            <p className="font-medium text-gray-900">
-                              {entry.users
-                                ? `${entry.users.first_name || ''} ${entry.users.last_name || ''}`.trim() || entry.users.email
-                                : (entry.performed_by_name || entry.performed_by_email || 'System Log')}
-                            </p>
-                            <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
-                              {new Date(entry.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 mb-1">
-                            {entry.action === 'approve' ? 'Approved -' :
-                              entry.action === 'reject' ? 'Rejected -' :
-                                entry.action === 'return' ? 'Returned -' :
-                                  'Updated -'} {entry.step_name}
-                          </p>
-                          {(entry.comments || entry.comment) && (
-                            <div className="bg-white p-2 rounded border border-gray-200 text-gray-700 italic">
-                              "{entry.comments || entry.comment}"
+                  <div className="space-y-6">
+                    {history
+                      .filter(entry =>
+                        entry.step_name !== 'Request Submission' &&
+                        entry.step_name !== 'Request submitted' &&
+                        !(entry.step_id === 0 && entry.action === 'submitted')
+                      )
+                      .map((entry, index) => (
+                        <div key={index} className="flex gap-4 group">
+                          <div className="flex-shrink-0">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm border ${entry.action === 'approve' ? 'bg-green-50 text-green-600 border-green-100' :
+                              entry.action === 'reject' ? 'bg-red-50 text-red-600 border-red-100' :
+                                entry.action === 'return' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                  'bg-blue-50 text-blue-600 border-blue-100'
+                              }`}>
+                              {entry.action === 'approve' ? <CheckCircle className="w-5 h-5" /> :
+                                entry.action === 'reject' ? <XCircle className="w-5 h-5" /> :
+                                  entry.action === 'return' ? <RotateCcw className="w-5 h-5" /> :
+                                    <FileText className="w-5 h-5" />}
                             </div>
-                          )}
+                          </div>
+                          <div className="flex-1 bg-gray-50/50 rounded-2xl p-4 border border-gray-100/50 group-hover:bg-gray-50 transition-colors">
+                            <div className="flex justify-between items-start mb-1">
+                              <p className="font-extrabold text-gray-900 uppercase text-[12px] tracking-tight">
+                                {entry.users
+                                  ? `${entry.users.first_name || ''} ${entry.users.last_name || ''}`.trim() || entry.users.email
+                                  : (entry.performed_by_name || entry.performed_by_email || 'System Log')}
+                              </p>
+                              <span className="text-[10px] font-bold text-gray-400 font-mono tracking-tighter bg-white px-2 py-0.5 rounded border border-gray-100">
+                                {new Date(entry.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-[0.1em] ${entry.action === 'approve' ? 'bg-green-100 text-green-700' :
+                                entry.action === 'reject' ? 'bg-red-100 text-red-700' :
+                                  entry.action === 'return' ? 'bg-amber-100 text-amber-700' :
+                                    'bg-blue-100 text-blue-700'
+                                }`}>
+                                {entry.action.toUpperCase()}
+                              </span>
+                              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{entry.step_name}</span>
+                            </div>
+                            {(entry.comments || entry.comment) && (
+                              <div className="bg-white p-3 rounded-xl border border-gray-100 text-[13px] text-gray-700 italic font-medium leading-relaxed shadow-sm">
+                                "{entry.comments || entry.comment}"
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 ) : (
-                  <div className="text-center py-4 text-gray-500 text-sm italic">
-                    No activity or comments recorded yet.
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-400 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                    <Clock className="w-8 h-8 mb-2 opacity-20" />
+                    <p className="text-[11px] font-bold uppercase tracking-widest italic">No activity recorded yet.</p>
                   </div>
                 )}
               </div>
             )}
           </div>
 
-          {/* Footer Actions */}
-          {canAct && ['pending', 'processing', 'staff_review', 'secretary_approval', 'captain_approval', 'oic_review', 'ready', 'ready_for_pickup', 'returned'].includes(request.status) && (
-            <div className="border-t bg-gray-50 px-6 py-4 pb-6 shrink-0 mt-auto">
-              {request.residents?.pending_case && (
-                <div className="bg-red-600 p-4 rounded-xl shadow-lg border-2 border-red-400 text-white mb-6">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-white/20 p-2 rounded-lg">
-                      <ShieldAlert className="w-6 h-6 text-white" />
+
+          {/* Official Resident Record Modal */}
+          {showResidentDb && request.residents && (
+            <Modal
+              isOpen={showResidentDb}
+              onClose={() => setShowResidentDb(false)}
+              title={isEditResidentMode ? "Edit Resident Profile" : "Resident Official Profile"}
+              size="xl"
+            >
+              {!isEditResidentMode ? (
+                <div className="space-y-5">
+                  {/* Profile Header */}
+                  <div className="flex items-center gap-5 p-5 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl text-white shadow-xl relative overflow-hidden">
+                    <div className="h-20 w-20 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 text-white text-3xl font-black shadow-lg relative z-10 shrink-0">
+                      {request.residents.last_name?.charAt(0)}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-1">Legal Hold Notification</p>
-                      <h4 className="text-lg font-black uppercase leading-tight">This applicant has a PENDING CASE</h4>
-                      <div className="mt-3 p-3 bg-black/20 rounded-lg border border-white/20">
-                        <p className="text-[10px] font-bold uppercase mb-1 opacity-70">Official Record History / Remarks:</p>
-                        <p className="text-sm font-semibold italic">"{request.residents.case_record_history || 'No detail remarks provided.'}"</p>
+                    <div className="space-y-1 relative z-10 flex-1">
+                      <h2 className="text-3xl font-black uppercase tracking-tight leading-none mb-1">
+                        {request.residents.last_name}, {request.residents.first_name} {request.residents.middle_name} {request.residents.suffix}
+                      </h2>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-xl border border-white/20 text-[10px] font-black tracking-widest uppercase flex items-center gap-2">
+                          <Shield className="w-3.5 h-3.5 text-blue-200" /> OFFICIAL DATABASE RECORD
+                        </span>
+                        {request.residents.is_deceased ? (
+                          <span className="bg-rose-500 px-3 py-1 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 shadow-lg shadow-rose-900/20">
+                            <Skull className="w-3.5 h-3.5" /> DECEASED RECORD
+                          </span>
+                        ) : (
+                          <span className="bg-emerald-500 px-3 py-1 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 shadow-lg shadow-emerald-900/20">
+                            <Activity className="w-3.5 h-3.5" /> ACTIVE RESIDENT
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {request.residents.second_name && (
+                      <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 text-right z-10">
+                        <p className="text-[9px] font-black text-white/60 uppercase tracking-widest mb-0.5 whitespace-nowrap">Also Known As</p>
+                        <p className="text-[14px] font-black text-white uppercase tracking-tight truncate">{request.residents.second_name}</p>
+                      </div>
+                    )}
+                    {/* Decorative background icons */}
+                    <Users className="absolute -bottom-8 -right-8 w-48 h-48 text-white/5 -rotate-12" />
+                  </div>
+
+                  {/* Info Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <div className="space-y-3">
+                      <div className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm h-full">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b border-gray-50 pb-3">
+                          <User className="w-3.5 h-3.5 text-blue-500" />
+                          Personal Metrics
+                        </p>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Gender & Maturity</p>
+                            <p className="text-[14px] font-black text-gray-800 uppercase tracking-tight">{request.residents.gender || request.residents.sex} • {calculateAge(request.residents.date_of_birth) || request.residents.age} YEARS OLD</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Social Status</p>
+                            <p className="text-[14px] font-black text-gray-800 uppercase tracking-tight">{request.residents.civil_status || 'SINGLE'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Birth Information</p>
+                            <p className="text-[14px] font-black text-gray-800 font-mono tracking-tighter">{request.residents.date_of_birth || 'NOT RECORDED'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm h-full">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b border-gray-50 pb-3">
+                          <MapPin className="w-3.5 h-3.5 text-purple-500" />
+                          Location Profile
+                        </p>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Residential Address</p>
+                            <p className="text-[13px] font-black text-gray-800 uppercase leading-relaxed font-medium">{request.residents.residential_address || request.residents.address}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Place of Birth</p>
+                            <p className="text-[13px] font-black text-gray-800 uppercase leading-relaxed font-medium">{request.residents.place_of_birth || 'NOT SPECIFIED'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className={`p-5 border rounded-2xl h-full flex flex-col ${request.residents.is_deceased ? 'bg-rose-50 border-rose-100' : 'bg-white border-gray-100 shadow-sm'}`}>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b border-gray-50 pb-3">
+                          <Phone className="w-3.5 h-3.5 text-orange-500" />
+                          Contact Channels
+                        </p>
+
+                        <div className="space-y-4 flex-1">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                              <Phone className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-gray-400 uppercase">Primary Phone</p>
+                              <p className="text-[14px] font-black text-gray-800 font-mono tracking-tighter">{request.residents.contact_number || 'NONE'}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 opacity-40 grayscale">
+                            <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                              <MessageCircle className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-gray-400 uppercase">Email Sync</p>
+                              <p className="text-[12px] font-bold text-gray-500 uppercase italic">Not Connected</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {!request.residents.is_deceased && (
+                          <div className="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-3">
+                            <div className="bg-emerald-100 p-1.5 rounded-lg">
+                              <Activity className="w-4 h-4 text-emerald-600" />
+                            </div>
+                            <span className="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em]">Live Status Active</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {currentStep?.status === 'staff_review' ? (
-                <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={() => onAction(request, 'reject')}
-                    disabled={isEditing}
-                    className={`px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-red-200'}`}
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Not Legitimate
-                  </button>
-                  <button
-                    onClick={() => onAction(request, 'approve')}
-                    disabled={isEditing}
-                    className={`px-4 py-2 bg-blue-600 text-white rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Verify & Forward
-                  </button>
+                  {/* Legal Records Section */}
+                  <div className={`mt-6 p-5 rounded-2xl border-2 shadow-xl ${request.residents.pending_case ? 'bg-rose-50/50 border-rose-200' : 'bg-white border-gray-100'}`}>
+                    <div className="flex items-center gap-3 mb-5 border-b border-gray-100 pb-3">
+                      <div className={`p-1.5 rounded-lg border ${request.residents.pending_case ? 'bg-rose-100 border-rose-200 text-rose-600' : 'bg-gray-100 border-gray-200 text-gray-400'}`}>
+                        <Shield className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className={`text-[12px] font-black uppercase tracking-[0.2em] leading-none ${request.residents.pending_case ? 'text-rose-900' : 'text-gray-900'}`}>Official Clearance Status</h3>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight mt-0.5">Verification against Barangay Law Records</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                      <div className="md:col-span-1">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Electronic Tag</p>
+                        <div className={`inline-flex items-center px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${request.residents.pending_case
+                          ? 'bg-rose-600 text-white border-rose-500 shadow-rose-200 animate-pulse'
+                          : 'bg-emerald-600 text-white border-emerald-500 shadow-emerald-200'
+                          }`}>
+                          {request.residents.pending_case ? 'HOLD / PENDING CASE' : 'CLEARED / ACTIVE'}
+                        </div>
+                      </div>
+
+                      <div className="md:col-span-3">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Case History & Administrative Remarks</p>
+                        <div className={`p-4 rounded-xl border-2 text-[12px] font-extrabold leading-relaxed min-h-[80px] shadow-inner ${request.residents.pending_case
+                          ? 'bg-white border-rose-100 text-rose-900 italic'
+                          : 'bg-gray-50 border-gray-100 text-gray-400 border-dashed'
+                          }`}>
+                          {request.residents.case_record_history || 'NO PREVIOUS LEGAL HISTORY OR PENDING CASES REPORTED FOR THIS RESIDENT RECORD.'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Actions */}
+                  <div className="pt-5 flex justify-end items-center border-t border-gray-100">
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleEditResident}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-100 flex items-center gap-2"
+                      >
+                        <Edit className="w-4 h-4" /> Edit Profile
+                      </button>
+                      <button
+                        onClick={() => setShowResidentDb(false)}
+                        className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 active:scale-95 transition-all"
+                      >
+                        Close Window
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className="flex gap-3 justify-end">
-                  {['ready', 'ready_for_pickup'].includes(request.status) ? (
+                <form onSubmit={handleSaveResident} className="space-y-6 max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar p-1">
+                  <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-4">
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Identity Details</p>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="md:col-span-1">
+                        <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">First Name</label>
+                        <input type="text" required className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none"
+                          value={residentFormData.first_name} onChange={(e) => setResidentFormData({ ...residentFormData, first_name: e.target.value })} />
+                      </div>
+                      <div className="md:col-span-1">
+                        <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">Middle Name</label>
+                        <input type="text" className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none"
+                          value={residentFormData.middle_name} onChange={(e) => setResidentFormData({ ...residentFormData, middle_name: e.target.value })} />
+                      </div>
+                      <div className="md:col-span-1">
+                        <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">Last Name</label>
+                        <input type="text" required className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none"
+                          value={residentFormData.last_name} onChange={(e) => setResidentFormData({ ...residentFormData, last_name: e.target.value })} />
+                      </div>
+                      <div className="md:col-span-1">
+                        <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">Suffix</label>
+                        <input type="text" className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none" placeholder="JR/SR"
+                          value={residentFormData.suffix} onChange={(e) => setResidentFormData({ ...residentFormData, suffix: e.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 bg-white/50 p-4 rounded-xl border border-blue-100 shadow-inner">
+                    <p className="text-[10px] font-black text-blue-400 uppercase font-black tracking-widest mb-2 flex items-center gap-2">
+                      <User className="w-3 h-3" />
+                      Also Known As / Second Name
+                    </p>
+                    <input
+                      type="text"
+                      className="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-xs font-black uppercase focus:ring-2 focus:ring-blue-500 outline-none text-blue-700 placeholder:text-blue-200"
+                      placeholder="E.G. NICKNAME OR SECOND NAME"
+                      value={residentFormData.second_name || ''}
+                      onChange={(e) => setResidentFormData({ ...residentFormData, second_name: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+                      <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Personal Info</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">Age</label>
+                          <input type="number" required className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                            value={residentFormData.age} onChange={(e) => setResidentFormData({ ...residentFormData, age: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">Gender</label>
+                          <select className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                            value={residentFormData.gender} onChange={(e) => setResidentFormData({ ...residentFormData, gender: e.target.value })}>
+                            <option value="MALE">MALE</option>
+                            <option value="FEMALE">FEMALE</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">Civil Status</label>
+                        <select className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                          value={residentFormData.civil_status} onChange={(e) => setResidentFormData({ ...residentFormData, civil_status: e.target.value })}>
+                          <option value="SINGLE">SINGLE</option>
+                          <option value="MARRIED">MARRIED</option>
+                          <option value="WIDOWED">WIDOWED</option>
+                          <option value="SEPARATED">SEPARATED</option>
+                          <option value="CO-HABITING">CO-HABITING</option>
+                        </select>
+                      </div>
+                      {/* Address */}
+                      <div>
+                        <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">Residential Address</label>
+                        <textarea className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500 uppercase resize-none" rows="2"
+                          value={residentFormData.residential_address} onChange={(e) => setResidentFormData({ ...residentFormData, residential_address: e.target.value })} />
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+                      <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Birth & Contact</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">Birth Date</label>
+                          <input type="date" className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                            value={residentFormData.date_of_birth} onChange={(e) => setResidentFormData({ ...residentFormData, date_of_birth: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">Contact No.</label>
+                          <input type="text" className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="09..."
+                            value={residentFormData.contact_number} onChange={(e) => setResidentFormData({ ...residentFormData, contact_number: e.target.value })} />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-gray-500 uppercase block mb-1">Birth Place</label>
+                        <input type="text" className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                          value={residentFormData.place_of_birth} onChange={(e) => setResidentFormData({ ...residentFormData, place_of_birth: e.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Legal Status Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="bg-red-50 p-6 rounded-2xl border border-red-100 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Legal Status</p>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" className="sr-only peer" checked={residentFormData.pending_case} onChange={(e) => setResidentFormData({ ...residentFormData, pending_case: e.target.checked })} />
+                          <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                          <span className="ml-2 text-[10px] font-bold text-red-700 uppercase">With Case</span>
+                        </label>
+                      </div>
+                      <textarea className="w-full bg-white border border-red-200 text-gray-900 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-red-500 min-h-[80px] resize-none uppercase" placeholder="Enter case records..."
+                        value={residentFormData.case_record_history} onChange={(e) => setResidentFormData({ ...residentFormData, case_record_history: e.target.value })} />
+                    </div>
+
+                    <div className={`p-6 rounded-2xl border transition-all space-y-4 ${residentFormData.is_deceased ? 'bg-[#FFE6E6] border-red-200 shadow-sm' : 'bg-gray-50 border-gray-100'}`}>
+                      <div className="flex items-center justify-between">
+                        <p className={`text-[10px] font-black uppercase tracking-widest ${residentFormData.is_deceased ? 'text-red-500' : 'text-gray-500'}`}>Deceased Status</p>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" className="sr-only peer" checked={residentFormData.is_deceased} onChange={(e) => setResidentFormData({ ...residentFormData, is_deceased: e.target.checked })} />
+                          <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gray-600"></div>
+                          <span className={`ml-2 text-[10px] font-bold uppercase ${residentFormData.is_deceased ? 'text-gray-900' : 'text-gray-700'}`}>Deceased</span>
+                        </label>
+                      </div>
+                      {residentFormData.is_deceased && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-[9px] font-bold text-red-500 uppercase block mb-1">Date of Death</label>
+                              <input type="date" className="w-full bg-white border border-red-200 text-gray-900 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-red-500"
+                                value={residentFormData.date_of_death} onChange={(e) => setResidentFormData({ ...residentFormData, date_of_death: e.target.value })} />
+                            </div>
+                            <div className="flex items-end pb-1">
+                              <label className="flex items-center gap-2 cursor-pointer group">
+                                <input type="checkbox" className="w-4 h-4 rounded border-red-200 bg-white text-red-600 focus:ring-red-500"
+                                  checked={residentFormData.covid_related} onChange={(e) => setResidentFormData({ ...residentFormData, covid_related: e.target.checked })} />
+                                <span className="text-[10px] font-black text-red-600 uppercase group-hover:text-red-500 transition-colors">COVID-19 Related</span>
+                              </label>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-[9px] font-bold text-red-500 uppercase block mb-1">Cause of Death</label>
+                            <input type="text" className="w-full bg-white border border-red-200 text-gray-900 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-red-500 uppercase" placeholder="Enter cause..."
+                              value={residentFormData.cause_of_death} onChange={(e) => setResidentFormData({ ...residentFormData, cause_of_death: e.target.value })} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-5 flex justify-end gap-3 border-t border-gray-100">
+                    <button type="button" onClick={() => setIsEditResidentMode(false)} className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 active:scale-95 transition-all">
+                      Cancel
+                    </button>
+                    <button type="submit" className="px-8 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all flex items-center gap-2">
+                      <Save className="w-4 h-4" /> Save Changes
+                    </button>
+                  </div>
+                </form>
+              )}
+            </Modal>
+          )}
+
+          {/* Sync Confirmation Modal */}
+          {
+            showSyncConfirm && (
+              <Modal
+                isOpen={showSyncConfirm}
+                onClose={() => setShowSyncConfirm(false)}
+                title="Confirm Database Synchronization"
+                size="sm"
+              >
+                <div className="space-y-4">
+                  <div className="p-4 bg-amber-50 rounded-xl flex gap-3 items-start border border-amber-100">
+                    <RefreshCw className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-amber-900 leading-tight">Sync information to Master Database?</p>
+                      <p className="text-xs text-amber-700 mt-2 leading-relaxed">
+                        This will update the permanent Resident Profile for <span className="font-bold underline">{request.full_name || request.applicant_name}</span> with the information from this certificate request.
+                      </p>
+                      <div className="mt-3 bg-white/50 p-2 rounded border border-amber-100">
+                        <p className="text-[10px] font-bold text-amber-800 uppercase mb-1 underline">Updates to be applied:</p>
+                        <ul className="text-[10px] text-amber-700 list-disc pl-4 space-y-0.5 font-medium">
+                          {mismatches.map((m, i) => <li key={i}>{m}</li>)}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      onClick={() => setShowSyncConfirm(false)}
+                      className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={executeSync}
+                      className="px-6 py-2 bg-amber-600 text-white rounded-xl font-bold text-sm hover:bg-amber-700 transition-all flex items-center gap-2 shadow-lg shadow-amber-100"
+                    >
+                      <Database className="w-4 h-4" />
+                      YES, UPDATE PROFILE
+                    </button>
+                  </div>
+                </div>
+              </Modal>
+            )
+          }
+
+          {/* Footer Actions */}
+          {
+            canAct && ['pending', 'processing', 'staff_review', 'secretary_approval', 'captain_approval', 'oic_review', 'ready', 'ready_for_pickup', 'returned'].includes(request.status) && (
+              <div className="border-t bg-gray-50 px-6 py-4 pb-6 shrink-0 mt-auto">
+                {request.residents?.pending_case && (
+                  <div className="bg-red-600 p-4 rounded-xl shadow-lg border-2 border-red-400 text-white mb-6">
+                    <div className="flex items-start gap-4">
+                      <div className="bg-white/20 p-2 rounded-lg">
+                        <ShieldAlert className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-1">Legal Hold Notification</p>
+                        <h4 className="text-lg font-black uppercase leading-tight">This applicant has a PENDING CASE</h4>
+                        <div className="mt-3 p-3 bg-black/20 rounded-lg border border-white/20">
+                          <p className="text-[10px] font-bold uppercase mb-1 opacity-70">Official Record History / Remarks:</p>
+                          <p className="text-sm font-semibold italic">"{request.residents.case_record_history || 'No detail remarks provided.'}"</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {currentStep?.status === 'staff_review' ? (
+                  <div className="flex gap-4 justify-end">
+                    <button
+                      onClick={() => onAction(request, 'reject')}
+                      disabled={isEditing}
+                      className={`px-8 py-3.5 bg-white border-2 border-red-200 text-red-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-red-50 hover:border-red-300 transform active:scale-95'}`}
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Mark as Ineligible
+                    </button>
                     <button
                       onClick={() => onAction(request, 'approve')}
                       disabled={isEditing}
-                      className={`px-4 py-2 bg-green-600 text-white rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}`}
+                      className={`px-10 py-3.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-blue-200 ${isEditing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-blue-700 hover:shadow-blue-300 transform hover:-translate-y-0.5 active:scale-95'}`}
                     >
                       <CheckCircle className="w-4 h-4" />
-                      Mark as Released
+                      Verify & Forward
                     </button>
-                  ) : (
-                    <>
-                      {!['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) && (
-                        <>
-                          <button
-                            onClick={() => onAction(request, 'return')}
-                            disabled={isEditing}
-                            className={`px-4 py-2 bg-orange-100 text-orange-700 rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-orange-200'}`}
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                            Send Back
-                          </button>
-                          <button
-                            onClick={() => onAction(request, 'reject')}
-                            disabled={isEditing}
-                            className={`px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-red-200'}`}
-                          >
-                            <XCircle className="w-4 h-4" />
-                            Reject
-                          </button>
-                        </>
-                      )}
+                  </div>
+                ) : (
+                  <div className="flex gap-4 justify-end">
+                    {['ready', 'ready_for_pickup'].includes(request.status) ? (
                       <button
                         onClick={() => onAction(request, 'approve')}
                         disabled={isEditing}
-                        className={`px-4 py-2 bg-green-600 text-white rounded-lg font-medium flex items-center gap-2 transition-all ${isEditing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}`}
+                        className={`px-10 py-3.5 bg-emerald-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-emerald-200 ${isEditing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-700 hover:shadow-emerald-300 transform hover:-translate-y-0.5 active:scale-95'}`}
                       >
                         <CheckCircle className="w-4 h-4" />
-                        {request.status === 'captain_approval' ? 'Approve' : (request.status === 'oic_review' ? 'Ready to Pickup' : 'Forward')}
+                        Confirm Official Release
                       </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+                    ) : (
+                      <>
+                        {!['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) && (
+                          <>
+                            <button
+                              onClick={() => onAction(request, 'return')}
+                              disabled={isEditing}
+                              className={`px-6 py-3.5 bg-white border-2 border-amber-200 text-amber-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-amber-50 hover:border-amber-300 active:scale-95'}`}
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                              Send Back
+                            </button>
+                            <button
+                              onClick={() => onAction(request, 'reject')}
+                              disabled={isEditing}
+                              className={`px-6 py-3.5 bg-white border-2 border-red-200 text-red-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-red-50 hover:border-red-300 active:scale-95'}`}
+                            >
+                              <XCircle className="w-4 h-4" />
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => onAction(request, 'approve')}
+                          disabled={isEditing}
+                          className={`px-10 py-3.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-blue-200 ${isEditing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-blue-700 hover:shadow-blue-300 transform hover:-translate-y-0.5 active:scale-95'}`}
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          {request.status === 'captain_approval' ? 'Official Approval' : (request.status === 'oic_review' ? 'Set as Ready' : 'Forward to Next')}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          }
+        </div >
+      </div >
+    </div >
   );
 }
 
@@ -1755,150 +2569,158 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
   const canUseEsign = actionType === 'approve' && !['oic_review', 'ready', 'ready_for_pickup'].includes(request.status); // Disable sign pad for OIC/Ready steps
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
+      <div className="fixed inset-0 bg-gray-900/70 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-          <div className="p-6">
-            {/* Icon */}
-            <div className={`w-16 h-16 ${cfg.iconBg} rounded-full flex items-center justify-center mx-auto mb-4`}>
-              <Icon className={`w-8 h-8 ${cfg.iconColor}`} />
-            </div>
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 overflow-hidden">
 
-            {/* Title */}
-            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">{cfg.title}</h2>
-            <p className="text-gray-500 text-center mb-6">{cfg.description}</p>
-
-            {/* Request Info */}
-            <div className="bg-gray-50 rounded-lg p-3 mb-4">
-              <p className="text-sm text-gray-500">Reference Number</p>
-              <p className="font-mono font-semibold text-blue-600">{request.reference_number}</p>
-              <p className="text-sm text-gray-500 mt-2">Applicant</p>
-              <p className="font-medium text-gray-900">{request.applicant_name || request.full_name}</p>
-            </div>
-
-
-
-
-            {/* Comment */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {actionType === 'approve' ? 'Comments (Optional)' : 'Reason / Comments *'}
-              </label>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                rows={3}
-                placeholder={actionType === 'approve'
-                  ? 'Add any notes or comments...'
-                  : 'Please provide a reason...'}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
-              />
-            </div>
-
-            {/* Signature Section - Unified and Clear */}
-            {canUseEsign && (
-              <div className="mb-6 border-t pt-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-semibold text-gray-900">Digital Signature Preview</span>
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="text-xs font-medium text-blue-600 flex items-center gap-1 uppercase tracking-wider">
-                      {isEsignRole ? `Signing as: ${currentStep.officialRole}` : 'Digital Signature'}
-                    </p>
-
-                  </div>
-
-                  {!showSignPad && (userSignature || tempSignature) ? (
-                    <div className="bg-white rounded-lg h-24 flex items-center justify-center border border-blue-200 relative group">
-                      <img
-                        src={tempSignature || userSignature}
-                        alt="Signature Preview"
-                        className="max-h-full max-w-full object-contain p-2"
-                      />
-                      <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/5 transition-colors pointer-events-none rounded-lg" />
-                    </div>
-                  ) : (
-                    <div className="bg-white rounded-lg overflow-hidden border border-blue-200">
-                      <SignaturePad
-                        onSignatureChange={(sig) => setTempSignature(sig)}
-                        height={120}
-                        label=""
-                      />
-                      <div className="bg-blue-100 p-2 text-center">
-                        <button
-                          type="button"
-                          onClick={() => setShowSignPad(false)}
-                          disabled={!tempSignature}
-                          className="text-xs font-bold text-blue-700 hover:text-blue-900 disabled:opacity-50"
-                        >
-                          USE THIS SIGNATURE
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-[10px] text-gray-500 mt-2 text-center text-italic">
-                    Your signature will be attached only if you click "Sign & {currentStep?.status === 'captain_approval' ? 'Approve' : 'Forward'}".
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-2">
-              <button
-                onClick={onClose}
-                disabled={processing}
-                className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50 order-3 sm:order-1"
-              >
-                Cancel
-              </button>
-
-              {actionType === 'approve' && canUseEsign ? (
-                <>
-                  <button
-                    onClick={() => onSubmit(null)}
-                    disabled={processing}
-                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 disabled:opacity-50 order-2"
-                  >
-                    {(currentStep?.status === 'captain_approval' || request.status === 'captain_approval') ? 'Approve Only' : 'Forward Only'}
-                  </button>
-                  <button
-                    onClick={() => onSubmit(tempSignature || userSignature)}
-                    disabled={processing || (!tempSignature && !userSignature)}
-                    className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center justify-center gap-2 disabled:opacity-50 order-1"
-                  >
-                    {processing ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <PenTool className="w-4 h-4" />
-                    )}
-                    {(currentStep?.status === 'captain_approval' || request.status === 'captain_approval') ? 'Sign & Approve' : 'Sign & Forward'}
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => onSubmit(null)}
-                  disabled={processing || (['reject', 'return'].includes(actionType) && !comment.trim())}
-                  className={`flex-1 px-4 py-3 ${cfg.buttonBg} text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 order-1`}
-                >
-                  {processing ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <cfg.icon className="w-4 h-4" />
-                  )}
-                  {cfg.buttonText}
-                </button>
-              )}
-            </div>
+        {/* Landscape Header */}
+        <div className="px-8 py-6 border-b border-gray-100 flex items-center gap-5 bg-white shrink-0">
+          <div className={`w-14 h-14 ${cfg.iconBg} rounded-2xl flex items-center justify-center shrink-0 shadow-sm transform rotate-3`}>
+            <Icon className={`w-7 h-7 ${cfg.iconColor}`} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-gray-900 tracking-tight leading-none mb-1.5">{cfg.title}</h2>
+            <p className="text-sm font-medium text-gray-500 leading-none">{cfg.description}</p>
           </div>
         </div>
+
+        {/* Landscape Body - Split Grid */}
+        <div className="flex-1 overflow-y-auto p-8 bg-gray-50/30">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-full">
+
+            {/* LEFT COLUMN: Context (Span 5) */}
+            <div className="md:col-span-5 flex flex-col gap-6">
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-xl shadow-gray-100/50 space-y-5">
+                <div className="flex items-center gap-2 pb-3 border-b border-gray-50">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Request Context</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Reference No</p>
+                    <p className="font-mono font-black text-blue-600 text-lg tracking-tighter leading-none">{request.reference_number}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Applicant Name</p>
+                    <p className="font-extrabold text-gray-900 uppercase text-sm tracking-tight leading-relaxed">{request.applicant_name || request.full_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Current Stage</p>
+                    <div className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 border border-gray-200 text-[10px] font-bold text-gray-600 uppercase">
+                      {request.status.replace(/_/g, ' ')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-blue-50 border border-blue-100">
+                <p className="text-[10px] font-bold text-blue-800 uppercase leading-relaxed opacity-80">
+                  Review the details carefully. This action will be logged in the official audit trail and cannot be undone once confirmed.
+                </p>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: Actions (Span 7) */}
+            <div className="md:col-span-7 flex flex-col gap-6">
+
+              {/* Comments Section */}
+              <div className="flex-1 bg-white rounded-2xl border border-gray-200 shadow-sm p-1 transition-all focus-within:ring-4 focus-within:ring-blue-50 focus-within:border-blue-300">
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="w-full h-full p-5 bg-transparent border-none focus:ring-0 text-sm font-semibold text-gray-700 placeholder:text-gray-300 resize-none rounded-xl"
+                  placeholder={actionType === 'approve'
+                    ? "Add optional notes, remarks, or specific instructions for the next step..."
+                    : "REQUIRED: Please provide a detailed justification for this decision..."}
+                />
+              </div>
+
+              {/* Signature Block (Conditional) */}
+              {canUseEsign && (
+                <div className="mt-auto border-t-2 border-dashed border-gray-200 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-blue-50 rounded-lg text-blue-600">
+                        <Shield className="w-4 h-4" />
+                      </div>
+                      <p className="text-[10px] font-black  text-gray-900 uppercase tracking-widest">Digital Authorization</p>
+                    </div>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase">{isEsignRole ? currentStep.officialRole : 'Official Sign'}</p>
+                  </div>
+
+                  <div className="bg-white rounded-xl border border-blue-200 p-1 shadow-sm">
+                    {!showSignPad && (userSignature || tempSignature) ? (
+                      <div
+                        className="relative h-28 flex items-center justify-center rounded-lg bg-gray-50 border-2 border-dashed border-gray-200 hover:border-blue-400 cursor-pointer overflow-hidden group transition-all"
+                        onClick={() => setShowSignPad(true)}
+                      >
+                        <img src={tempSignature || userSignature} className="h-full object-contain p-2" alt="Sign" />
+                        <div className="absolute inset-0 bg-white/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest border border-blue-200 px-3 py-1 rounded bg-blue-50">Click to Resign</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-white rounded-lg overflow-hidden border border-gray-100">
+                        <SignaturePad onSignatureChange={setTempSignature} height={120} label="" />
+                        <div className="flex bg-gray-50 border-t border-gray-200">
+                          <button onClick={() => setTempSignature(null)} className="flex-1 py-2 text-[10px] font-bold text-gray-500 hover:text-gray-800 uppercase">Clear</button>
+                          <div className="w-px bg-gray-200"></div>
+                          <button onClick={() => setShowSignPad(false)} className="flex-1 py-2 text-[10px] font-black text-blue-600 hover:bg-blue-50 uppercase">Confirm</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+
+        {/* Landscape Footer */}
+        <div className="px-8 py-5 bg-white border-t border-gray-100 flex items-center justify-between shrink-0">
+          <button
+            onClick={onClose}
+            disabled={processing}
+            className="px-6 py-3 rounded-xl text-[11px] font-black text-gray-400 uppercase tracking-widest hover:bg-gray-50 hover:text-gray-600 transition-colors"
+          >
+            Cancel
+          </button>
+
+          <div className="flex items-center gap-3">
+            {actionType === 'approve' && canUseEsign ? (
+              <>
+                <button
+                  onClick={() => onSubmit(null)}
+                  disabled={processing}
+                  className="px-6 py-3 rounded-xl border-2 border-gray-100 text-[11px] font-black text-gray-600 uppercase tracking-widest hover:border-gray-300 hover:bg-gray-50 transition-all"
+                >
+                  Skip Signature
+                </button>
+                <button
+                  onClick={() => onSubmit(tempSignature || userSignature)}
+                  disabled={processing || (!tempSignature && !userSignature)}
+                  className="px-8 py-3 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300 transform active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {processing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <PenTool className="w-4 h-4" />}
+                  Sign & {currentStep?.status === 'captain_approval' ? 'Approve' : 'Forward'}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => onSubmit(null)}
+                disabled={processing || (['reject', 'return'].includes(actionType) && !comment.trim())}
+                className={`px-8 py-3 ${cfg.buttonBg} text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {processing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <cfg.icon className="w-4 h-4" />}
+                {cfg.buttonText}
+              </button>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   );
@@ -2125,29 +2947,25 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {(request.status === 'oic_review' || (history?.some(h => h.step_name?.toLowerCase().includes('oic')) && request.status === 'ready')) && (
-                <>
-                  <button
-                    onClick={handlePrint}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all font-medium text-sm"
-                  >
-                    <Printer className="w-4 h-4" />
-                    Print
-                  </button>
-                  <button
-                    onClick={handleDownloadPDF}
-                    disabled={isDownloading}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all font-medium text-sm disabled:opacity-50"
-                  >
-                    {isDownloading ? (
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4" />
-                    )}
-                    Download
-                  </button>
-                </>
-              )}              <button onClick={onClose} className="text-white/80 hover:text-white p-2 hover:bg-white/10 rounded-lg ml-2">
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all font-medium text-sm"
+              >
+                <Printer className="w-4 h-4" />
+                Print
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
+                className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all font-medium text-sm disabled:opacity-50"
+              >
+                {isDownloading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                Download
+              </button>              <button onClick={onClose} className="text-white/80 hover:text-white p-2 hover:bg-white/10 rounded-lg ml-2">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -2199,6 +3017,16 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
     requestorName: request.requestor_name || '',
     guardianName: request.guardian_name || '',
     guardianRelationship: request.guardian_relationship || '',
+    partnerFullName: request.partner_full_name || '',
+    partnerAge: request.partner_age || '',
+    partnerSex: request.partner_sex || '',
+    partnerDateOfBirth: request.partner_date_of_birth || '',
+    noOfChildren: request.no_of_children || '',
+    livingTogetherYears: request.living_together_years || '',
+    livingTogetherMonths: request.living_together_months || '',
+    dateOfExamination: request.date_of_examination || '',
+    usapingBarangay: request.usaping_barangay || '',
+    dateOfHearing: request.date_of_hearing || '',
     purpose: Array.isArray(request.purpose) ? request.purpose.join('\n') : (request.purpose || '')
   };
 
@@ -2210,6 +3038,31 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
   const isGuardianship =
     String(request.certificate_type || '').toLowerCase().includes('guardian') ||
     String(request.reference_number || '').toUpperCase().startsWith('GD');
+
+  const isCohabitation =
+    String(request.certificate_type || '').toLowerCase().includes('cohabitation') ||
+    String(request.reference_number || '').toUpperCase().startsWith('CH');
+
+  const isMedicoLegal =
+    String(request.certificate_type || '').toLowerCase().includes('medico') ||
+    String(request.reference_number || '').toUpperCase().startsWith('CDL');
+
+  const isSamePerson =
+    String(request.certificate_type || '').toLowerCase().includes('same_person') ||
+    String(request.certificate_type || '').toLowerCase().includes('same person');
+
+  // Parse details if string
+  let additionalDetails = {};
+  try {
+    if (typeof request.details === 'string') {
+      additionalDetails = JSON.parse(request.details);
+    } else if (typeof request.details === 'object') {
+      additionalDetails = request.details || {};
+    }
+  } catch (e) { console.error('Error parsing details', e); }
+
+  const name1 = request.name_1 || additionalDetails.name_1 || additionalDetails.fullName1 || formData.fullName;
+  const name2 = request.name_2 || additionalDetails.name_2 || additionalDetails.fullName2 || '';
 
   // Determine Issued Date (Final Approval Date or Current Date)
   const captainApproval = history?.find(h =>
@@ -2262,8 +3115,8 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
         {/* Main Content Area */}
         <div className="flex flex-1 relative">
-          {/* Sidebar (Conditional) - Only show if enabled AND content exists */}
-          {sidebarStyle.showSidebar && (
+          {/* Sidebar (Conditional) - Only show if enabled AND content exists AND not Medico Legal */}
+          {(sidebarStyle.showSidebar && !isMedicoLegal) && (
             <div className={`w-64 p-6 flex flex-col text-center flex-shrink-0 ${getFontClass(sidebarStyle.fontFamily)}`} style={{
               background: `linear-gradient(to bottom, ${sidebarStyle.bgColor || '#1e40af'}, ${sidebarStyle.gradientEnd || '#1e3a8a'})`,
               color: sidebarStyle.textColor || '#ffffff'
@@ -2300,14 +3153,18 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
             <div className="relative z-10 flex flex-col items-center flex-1">
               <h2 className="text-center font-bold mb-10 border-b-4 border-black inline-block pb-1 px-4 uppercase leading-normal" style={{
-                color: '#004d40',
+                color: isMedicoLegal ? '#000000' : '#004d40',
                 fontSize: '24px',
+                borderBottom: isMedicoLegal ? '2px solid black' : '4px solid black'
               }}>
                 {isNaturalDeath ? 'NATURAL DEATH CERTIFICATION' :
                   isGuardianship ? 'BARANGAY CERTIFICATION FOR GUARDIANSHIP' :
-                    request.certificate_type === 'barangay_clearance' ? 'BARANGAY CLEARANCE CERTIFICATE' :
-                      request.certificate_type === 'certificate_of_indigency' ? 'CERTIFICATE OF INDIGENCY' :
-                        request.certificate_type === 'barangay_residency' ? 'BARANGAY RESIDENCY CERTIFICATE' : 'CERTIFICATE'}
+                    isCohabitation ? 'BARANGAY CERTIFICATION OF CO-HABITATION' :
+                      isSamePerson ? 'BARANGAY CERTIFICATION BEING THE SAME PERSON' :
+                        isMedicoLegal ? 'REQUEST FOR MEDICO LEGAL (COPY)' :
+                          request.certificate_type === 'barangay_clearance' ? 'BARANGAY CLEARANCE CERTIFICATE' :
+                            request.certificate_type === 'certificate_of_indigency' ? 'CERTIFICATE OF INDIGENCY' :
+                              request.certificate_type === 'barangay_residency' ? 'BARANGAY RESIDENCY CERTIFICATE' : 'CERTIFICATE'}
               </h2>
 
               <div className="w-full space-y-6 text-justify" style={{ fontSize: '15px' }}>
@@ -2323,6 +3180,19 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                       <p className="uppercase">
                         THIS IS TO CERTIFY THAT BELOW PERSON IS UNDER THE GUARDIANSHIP OF <span className="font-bold">{formData.guardianName?.toUpperCase() || "_________________________________"}</span>, BOTH BONA FIDE RESIDENTS OF THIS BARANGAY:
                       </p>
+                    ) : isCohabitation ? (
+                      <p className="uppercase">
+                        THIS IS TO CERTIFY THAT BELOW MENTIONED PERSONS, BONA FIDE RESIDENTS OF THIS BARANGAY AT <span className="font-bold">{formData.address?.toUpperCase() || '____________________'}</span>, ARE LIVING TOGETHER IN COMMON HOUSE (YET TO UNDERGO CHURCH / CIVIL WEDDING) AS DETAILED BELOW:
+                      </p>
+                    ) : isMedicoLegal ? (
+                      <div className="space-y-6">
+                        <p className="font-bold uppercase">GREETINGS!</p>
+                        <p className="uppercase">
+                          KINDLY REQUESTING YOUR GOOD OFFICE TO FURNISH US A COPY OF "MEDICO LEGAL" OF YOUR BELOW MENTIONED PATIENT IN AIDE OF RECONCILIATORY MEETING / HEARING OF INVOLVED INDIVIDUALS TO BE HELD IN THIS BARANGAY AS DETAILED BELOW:
+                        </p>
+                      </div>
+                    ) : isSamePerson ? (
+                      <p>This is to certify that below names belongs to one and the same person, bona fide resident of this barangay as described herein:</p>
                     ) : (
                       <p>
                         {request.certificate_type === 'barangay_clearance' ?
@@ -2335,37 +3205,118 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                   </div>
 
                   <div className="mb-6 space-y-1">
-                    {([
-                      ['Name', formData.fullName?.toUpperCase()],
-                      ['Age', formData.age],
-                      ['Sex', formData.sex?.toUpperCase()],
-                      ['Civil Status', formData.civilStatus?.toUpperCase()],
-                      ['Residential Address', formData.address?.toUpperCase()],
-                    ]
-                      .concat(isNaturalDeath ? [
-                        ['Date of Death', formData.dateOfDeath ? new Date(formData.dateOfDeath).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
-                        ['Cause of Death', formData.causeOfDeath?.toUpperCase()],
-                        ['COVID-19 Related', formData.covidRelated?.toUpperCase()]
-                      ] : isGuardianship ? [
-                        ['Date of Birth', formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
-                        ["Guardian's Relationship", formData.guardianRelationship?.toUpperCase()]
-                      ] : [
-                        ['Date of Birth', formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
-                        ['Place of Birth', formData.placeOfBirth?.toUpperCase()]
-                      ])
-                    ).map(([label, value]) => (
-                      <div key={label} className="grid grid-cols-[180px_10px_1fr] items-baseline text-black">
-                        <span className="font-normal">{label}</span>
-                        <span className="font-normal">:</span>
-                        <span className={label === 'Name' ? 'font-bold' : 'font-normal'}>{value || '_________________'}</span>
-                      </div>
-                    ))}
+                    {(() => {
+                      const getLabels = () => {
+                        if (isMedicoLegal) {
+                          return [
+                            ['REQUEST DATE', issuedDate.toUpperCase()],
+                            ['NAME', formData.fullName?.toUpperCase()],
+                            ['AGE', formData.age],
+                            ['SEX', (request.sex || formData.sex || 'N/A').toUpperCase()],
+                            ['RESIDENTIAL ADDRESS', formData.address?.toUpperCase()],
+                            ['DATE OF BIRTH', formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : 'N/A'],
+                            ['DATE OF EXAMINATION', formData.date_of_examination || formData.dateOfExamination ? new Date(formData.date_of_examination || formData.dateOfExamination).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : 'NOT RECORDED'],
+                            ['USAPING BARANGAY NO.', formData.usaping_barangay || formData.usapingBarangay || 'NOT RECORDED'],
+                            ['DATE OF HEARING', formData.date_of_hearing || formData.dateOfHearing ? new Date(formData.date_of_hearing || formData.dateOfHearing).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : 'NOT RECORDED']
+                          ];
+                        }
+
+                        let baseLabels = [
+                          ['NAME', formData.fullName?.toUpperCase()],
+                          ['AGE', formData.age],
+                          ['SEX', formData.sex?.toUpperCase()],
+                        ];
+
+                        if (!isCohabitation) {
+                          baseLabels.push(['CIVIL STATUS', formData.civilStatus?.toUpperCase()]);
+                          baseLabels.push(['RESIDENTIAL ADDRESS', formData.address?.toUpperCase()]);
+                        }
+
+                        let extraLabels = [];
+                        if (isNaturalDeath) {
+                          extraLabels = [
+                            ['DATE OF DEATH', formData.dateOfDeath ? new Date(formData.dateOfDeath).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
+                            ['CAUSE OF DEATH', formData.causeOfDeath?.toUpperCase()],
+                            ['COVID-19 RELATED', formData.covidRelated?.toUpperCase()]
+                          ];
+                        } else if (isGuardianship) {
+                          extraLabels = [
+                            ['DATE OF BIRTH', formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
+                            ["GUARDIAN'S RELATIONSHIP", formData.guardianRelationship?.toUpperCase()]
+                          ];
+                        } else if (isCohabitation) {
+                          extraLabels = [
+                            ['NAME', formData.partnerFullName?.toUpperCase()],
+                            ['AGE', formData.partnerAge],
+                            ['SEX', formData.partnerSex?.toUpperCase()],
+                            ['DATE OF BIRTH', formData.partnerDateOfBirth ? new Date(formData.partnerDateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
+                            ['NO. OF CHILDREN', formData.noOfChildren],
+                            ['DURATION', `${formData.livingTogetherYears} YEAR(S) AND ${formData.livingTogetherMonths} MONTH(S)`]
+                          ];
+                        } else {
+                          extraLabels = [
+                            ['DATE OF BIRTH', formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : ''],
+                            ['PLACE OF BIRTH', formData.placeOfBirth?.toUpperCase()]
+                          ];
+                        }
+
+                        if (isSamePerson) {
+                          // Override entirely for same person
+                          return [
+                            ['Name (1)', name1?.toUpperCase()],
+                            ['Name (2)', name2?.toUpperCase()],
+                            ['Residential Address', formData.address?.toUpperCase()],
+                            ['Age', formData.age],
+                            ['Sex', formData.sex?.toUpperCase()],
+                            ['Civil Status', formData.civilStatus?.toUpperCase()],
+                            ['Date of Birth', formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase() : '']
+                          ];
+                        }
+
+
+                        return baseLabels.concat(extraLabels);
+                      };
+
+                      return getLabels().map(([label, value], idx) => {
+                        const isPartnerSeparator = isCohabitation && idx === 3;
+                        const isCohabChildrenSeparator = isCohabitation && idx === 7;
+                        const isMedicoExam = isMedicoLegal && label === 'DATE OF EXAMINATION';
+                        const isBoldRow = isMedicoLegal && (label === 'USAPING BARANGAY NO.' || label === 'DATE OF HEARING');
+
+                        return (
+                          <div
+                            key={`${label}-${idx}`}
+                            className={`grid grid-cols-[180px_10px_1fr] items-baseline text-black ${isBoldRow ? 'font-bold' : ''}`}
+                            style={{ marginTop: (isPartnerSeparator || isCohabChildrenSeparator) ? '24px' : '0' }}
+                          >
+                            <span className={isSamePerson ? "font-bold" : "font-normal"}>
+                              {isMedicoExam ? (
+                                <div className="flex flex-col">
+                                  <span>DATE OF EXAMINATION /</span>
+                                  <span>CONFINEMENT</span>
+                                </div>
+                              ) : label}
+                            </span>
+                            <span className="font-normal">:</span>
+                            <span className={label === 'NAME' || label === 'Name' || isBoldRow || isSamePerson ? 'font-bold' : 'font-normal'}>
+                              {String(value || '_________________').toUpperCase()}
+                            </span>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
 
-                  {isNaturalDeath || isGuardianship ? (
-                    <p className={`mb-10 text-left leading-relaxed ${isGuardianship ? 'uppercase' : ''}`}>
-                      Issued this {issuedDate.toUpperCase()} at Barangay Iba O' Este, Calumpit, Bulacan upon the request of <span className={isGuardianship ? "" : "font-bold"}>{isGuardianship ? "ABOVE MENTIONED PERSONS" : (formData.requestorName ? formData.requestorName.toUpperCase() : "THE ABOVE PERSON'S RELATIVES")}</span> for any legal purposes it may serve.
+                  {isNaturalDeath || isGuardianship || isCohabitation || isSamePerson ? (
+                    <p className={`mb-10 text-left leading-relaxed ${(isGuardianship || isCohabitation) ? 'uppercase' : ''}`}>
+                      Issued this {isSamePerson ? issuedDate : issuedDate.toUpperCase()} at Barangay Iba O' Este, Calumpit, Bulacan upon the request of <span className={(isGuardianship || isCohabitation || isSamePerson) ? "" : "font-bold"}>{(isGuardianship || isCohabitation || isSamePerson) ? (isSamePerson ? "above mentioned persons" : "ABOVE MENTIONED PERSONS") : (formData.requestorName ? formData.requestorName.toUpperCase() : "THE ABOVE PERSON'S RELATIVES")}</span> for any legal purposes it may serve.
                     </p>
+                  ) : isMedicoLegal ? (
+                    <div className="space-y-6">
+                      <p className="text-left leading-relaxed uppercase">
+                        YOU MAY PLEASE HANDOVER THE REQUESTED "MEDICO LEGAL" TO YOUR ABOVE PATIENT DIRECTLY. PRAYING FOR YOUR FAVORABLE RESPONSE AND ASSISTANCE. KEEP SAFE AND GOD BLESS!
+                      </p>
+                    </div>
                   ) : (
                     <>
                       <div className="mb-6">
@@ -2396,11 +3347,11 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                   <div
                     className="relative text-left"
                     style={{
-                      marginTop: isGuardianship ? '120px' : (request.certificate_type === 'certificate_of_indigency' ? '32px' : '64px')
+                      marginTop: (isGuardianship || isCohabitation || isMedicoLegal || isSamePerson) ? '120px' : (request.certificate_type === 'certificate_of_indigency' ? '32px' : '64px')
                     }}
                   >
                     {isNaturalDeath && <div className="h-10"></div>}
-                    {!isNaturalDeath && !isGuardianship && (
+                    {!isNaturalDeath && !isGuardianship && !isCohabitation && !isMedicoLegal && !isSamePerson && (
                       <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mb-8' : 'mb-12'}`}>
                         <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'h-12' : 'h-16'}`}></div>
                         <div className="border-t border-black w-64 pt-1">
