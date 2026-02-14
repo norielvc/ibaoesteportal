@@ -127,7 +127,18 @@ export default function BarangayPortal() {
       features: ['Certified', 'Family Record', 'Cemetery'],
       onClick: () => setShowNaturalDeathModal(true)
     }
-  ], [setShowClearanceModal, setShowIndigencyModal, setShowResidencyModal, setShowBusinessPermitModal, setShowGuardianshipModal, setShowComingSoonModal]);
+  ], [
+    setShowClearanceModal,
+    setShowIndigencyModal,
+    setShowResidencyModal,
+    setShowBusinessPermitModal,
+    setShowGuardianshipModal,
+    setShowComingSoonModal,
+    setShowNaturalDeathModal,
+    setShowCohabitationModal,
+    setShowMedicoLegalModal,
+    setShowSamePersonModal
+  ]);
 
   // Responsive items per view for forms carousel
   useEffect(() => {
