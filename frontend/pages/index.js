@@ -491,16 +491,7 @@ export default function BarangayPortal() {
     setFacilityImageSlides(initial);
   }, [facilities]);
 
-  // Forms carousel auto-slide
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentFormSlide((prev) => {
-        const maxSlide = Math.max(0, forms.length - itemsPerView);
-        return prev >= maxSlide ? 0 : prev + 1;
-      });
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [forms.length, itemsPerView]);
+  // Forms carousel auto-slide removed as per user request
 
   // Facilities auto-transition
   useEffect(() => {
