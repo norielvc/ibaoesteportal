@@ -12,7 +12,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+  const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
