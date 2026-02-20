@@ -378,8 +378,8 @@ router.post('/clearance', async (req, res) => {
       new_status: 'staff_review'
     }]);
 
-    // Send email notifications to next step approvers
-    await notifyNextStepApprovers('barangay_clearance', refNumber, fullName, data.id, req.body.email);
+    // Send email notifications to next step approvers (Background process)
+    notifyNextStepApprovers('barangay_clearance', refNumber, fullName, data.id, req.body.email).catch(err => console.error('Background email error:', err));
 
     res.status(201).json({
       success: true,
@@ -674,7 +674,7 @@ router.post('/residency', async (req, res) => {
       new_status: 'staff_review'
     }]);
 
-    await notifyNextStepApprovers('barangay_residency', refNumber, fullName, data.id, req.body.email);
+    notifyNextStepApprovers('barangay_residency', refNumber, fullName, data.id, req.body.email).catch(err => console.error('Background email error:', err));
 
     res.status(201).json({
       success: true,
