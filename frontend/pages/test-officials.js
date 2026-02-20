@@ -9,19 +9,19 @@ export default function TestOfficials() {
     const fetchOfficials = async () => {
       try {
         console.log('🔍 Testing officials API...');
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
         console.log('🔍 API URL:', API_URL);
-        
-        const response = await fetch(`${API_URL}/api/officials`);
+
+        const response = await fetch(`${API_URL}/officials`);
         console.log('📊 Response status:', response.status);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('📋 API Response:', data);
-        
+
         if (data.success && data.data) {
           setOfficials(data.data);
           console.log('✅ Officials loaded:', data.data.length);
@@ -46,7 +46,7 @@ export default function TestOfficials() {
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Officials API Test</h1>
       <p className="mb-4">Found {officials.length} officials</p>
-      
+
       <div className="grid gap-4">
         {officials.map((official, index) => (
           <div key={official.id} className="border p-4 rounded">

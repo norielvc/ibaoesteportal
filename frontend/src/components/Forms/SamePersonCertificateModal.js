@@ -3,7 +3,7 @@ import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Search
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 const defaultOfficials = {
     chairman: 'ALEXANDER C. MANIO',
@@ -88,6 +88,7 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
         address: '',
         dateOfBirth: '',
         contactNumber: '',
+        email: '',
         residentId: null
     });
 
@@ -106,8 +107,9 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
             sex: formatSelectValue(resident.gender),
             civilStatus: formatSelectValue(resident.civil_status),
             address: resident.residential_address || '',
-            dateOfBirth: resident.date_of_birth ? new Date(resident.date_of_birth).toISOString().split('T')[0] : '',
+            dateOfBirth: resident.dateOfBirth ? new Date(resident.dateOfBirth).toISOString().split('T')[0] : (resident.date_of_birth ? new Date(resident.date_of_birth).toISOString().split('T')[0] : ''),
             contactNumber: resident.contact_number || prev.contactNumber,
+            email: resident.email || prev.email,
             residentId: resident.id
         }));
         setIsResidentModalOpen(false);
@@ -158,7 +160,7 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         // Auto-uppercase all text inputs
-        const finalValue = name === 'contactNumber' || name === 'dateOfBirth' ? value : value.toUpperCase();
+        const finalValue = name === 'contactNumber' || name === 'dateOfBirth' || name === 'email' ? value : value.toUpperCase();
         setFormData(prev => ({ ...prev, [name]: finalValue }));
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: false }));
@@ -211,7 +213,7 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
                 }
             };
 
-            const response = await fetch(`${API_URL}/api/certificates/create`, {
+            const response = await fetch(`${API_URL}/certificates/create`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -240,7 +242,7 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
     const handleCustomizeForm = () => setShowConfirmationPopup(false);
 
     const resetForm = () => {
-        setFormData({ fullName1: '', fullName2: '', age: '', sex: '', civilStatus: '', address: '', dateOfBirth: '', contactNumber: '' });
+        setFormData({ fullName1: '', fullName2: '', age: '', sex: '', civilStatus: '', address: '', dateOfBirth: '', contactNumber: '', email: '' });
         setShowConfirmationPopup(false);
         setShowSuccessModal(false);
         setNotification(null);
@@ -359,6 +361,10 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
                                                 <label className="text-xs font-bold text-blue-900 uppercase tracking-widest ml-1 block">SMS Contact Number <span className="text-red-500">*</span></label>
                                                 <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full px-4 py-3 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-blue-100'} rounded-xl focus:border-blue-500 transition-all shadow-sm`} />
                                             </div>
+                                            <div className="space-y-6">
+                                                <label className="text-xs font-bold text-blue-900 uppercase tracking-widest ml-1 block">Email Address (Optional)</label>
+                                                <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className={`w-full px-4 py-3 bg-white border-2 border-blue-100 rounded-xl focus:border-blue-500 transition-all shadow-sm font-normal`} />
+                                            </div>
                                         </div>
                                     </div>
                                 </form>
@@ -406,42 +412,43 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
                 </div>
             )}
 
-            {showSuccessModal && (
-                <div className="fixed inset-0 z-70 overflow-y-auto">
-                    <div className="flex min-h-screen items-center justify-center p-4">
-                        <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
-                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
-                            <div className="bg-gradient-to-r from-blue-900 to-indigo-900 px-8 py-10 text-center relative">
-                                <div className="w-20 h-20 bg-blue-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30"><CheckCircle className="w-12 h-12 text-blue-400 animate-bounce" /></div>
-                                <h2 className="text-2xl font-black text-white uppercase tracking-tight">Filing Complete!</h2>
-                            </div>
-                            <div className="p-6 text-center">
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
-                                    <p className="text-sm font-medium text-blue-800 mb-1">REFERENCE NO:</p>
-                                    <p className="text-2xl font-black text-blue-900 font-mono tracking-wider">{submittedReferenceNumber}</p>
+            {
+                showSuccessModal && (
+                    <div className="fixed inset-0 z-70 overflow-y-auto">
+                        <div className="flex min-h-screen items-center justify-center p-4">
+                            <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
+                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+                                <div className="bg-gradient-to-r from-blue-900 to-indigo-900 px-8 py-10 text-center relative">
+                                    <div className="w-20 h-20 bg-blue-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30"><CheckCircle className="w-12 h-12 text-blue-400 animate-bounce" /></div>
+                                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Filing Complete!</h2>
                                 </div>
-                                <div className="bg-blue-900/5 border border-blue-900/10 rounded-2xl p-6 relative overflow-hidden text-left mb-6">
-                                    <div className="flex items-center gap-3 text-blue-900 mb-4">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
-                                        <h4 className="text-xs font-black uppercase tracking-[0.1em]">Next Procedures</h4>
+                                <div className="p-6 text-center">
+                                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                        <p className="text-sm font-medium text-blue-800 mb-1">REFERENCE NO:</p>
+                                        <p className="text-2xl font-black text-blue-900 font-mono tracking-wider">{submittedReferenceNumber}</p>
                                     </div>
-                                    <div className="space-y-4">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Clock className="w-4 h-4 text-blue-700" /></div>
-                                            <p className="text-[11px] text-gray-600 font-bold leading-relaxed">Processing typically takes 1-3 business days. Your application is now in the queue for chairman approval.</p>
+                                    <div className="bg-blue-900/5 border border-blue-900/10 rounded-2xl p-6 relative overflow-hidden text-left mb-6">
+                                        <div className="flex items-center gap-3 text-blue-900 mb-4">
+                                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                                            <h4 className="text-xs font-black uppercase tracking-[0.1em]">Next Procedures</h4>
                                         </div>
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Phone className="w-4 h-4 text-blue-700" /></div>
-                                            <p className="text-[11px] text-gray-600 font-bold leading-relaxed">We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your pickup schedule at the Barangay Hall.</p>
+                                        <div className="space-y-4">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Clock className="w-4 h-4 text-blue-700" /></div>
+                                                <p className="text-[11px] text-gray-600 font-bold leading-relaxed">Processing typically takes 1-3 business days. Your application is now in the queue for chairman approval.</p>
+                                            </div>
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Phone className="w-4 h-4 text-blue-700" /></div>
+                                                <p className="text-[11px] text-gray-600 font-bold leading-relaxed">We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your pickup schedule at the Barangay Hall.</p>
+                                            </div>
                                         </div>
                                     </div>
+                                    <button onClick={() => { setShowSuccessModal(false); resetForm(); onClose(); }} className="w-full bg-blue-900 text-white py-4 rounded-xl font-bold uppercase transition-all shadow-lg active:scale-95">Return to Dashboard</button>
                                 </div>
-                                <button onClick={() => { setShowSuccessModal(false); resetForm(); onClose(); }} className="w-full bg-blue-900 text-white py-4 rounded-xl font-bold uppercase transition-all shadow-lg active:scale-95">Return to Dashboard</button>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
             <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
             <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.3s ease-out; }`}</style>

@@ -13,7 +13,7 @@ import { getAuthToken, getUserData } from '@/lib/auth';
 import Modal from '@/components/UI/Modal';
 import SignaturePad from '@/components/UI/SignaturePad';
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 export default function RequestsPage() {
   const router = useRouter();
@@ -53,7 +53,7 @@ export default function RequestsPage() {
 
       try {
         const token = getAuthToken();
-        const response = await fetch(`${API_URL}/api/workflow-assignments/history/${selectedRequest.id}`, {
+        const response = await fetch(`${API_URL}/workflow-assignments/history/${selectedRequest.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -80,7 +80,7 @@ export default function RequestsPage() {
     const loadWorkflows = async () => {
       try {
         const token = getAuthToken();
-        const response = await fetch(`${API_URL}/api/workflows`, {
+        const response = await fetch(`${API_URL}/workflows`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -113,7 +113,7 @@ export default function RequestsPage() {
       const token = getAuthToken();
       if (!token) return;
 
-      const response = await fetch(`${API_URL}/api/user/signatures`, {
+      const response = await fetch(`${API_URL}/user/signatures`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -145,7 +145,7 @@ export default function RequestsPage() {
 
       // Always fetch BOTH or at least counts to keep badges accurate
       // 1. Fetch My Assignments
-      const assignedRes = await fetch(`${API_URL}/api/workflow-assignments/my-assignments`, {
+      const assignedRes = await fetch(`${API_URL}/workflow-assignments/my-assignments`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const assignedData = await assignedRes.json();
@@ -153,7 +153,7 @@ export default function RequestsPage() {
       setAssignedCount(myAssigned.length);
 
       // 2. Fetch All Requests
-      const allRes = await fetch(`${API_URL}/api/certificates`, {
+      const allRes = await fetch(`${API_URL}/certificates`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const allData = await allRes.json();
@@ -414,7 +414,7 @@ export default function RequestsPage() {
       const token = getAuthToken();
       const newStatus = getNextStatus(req.status, act, req);
 
-      let url = `${API_URL}/api/certificates/${req.id}/status`;
+      let url = `${API_URL}/certificates/${req.id}/status`;
       let method = 'PUT';
       let body = {
         status: newStatus,
@@ -426,7 +426,7 @@ export default function RequestsPage() {
 
       // If this is a workflow assignment, use the assignment-specific endpoint
       if (req.workflow_assignment) {
-        url = `${API_URL}/api/workflow-assignments/${req.workflow_assignment.id}/status`;
+        url = `${API_URL}/workflow-assignments/${req.workflow_assignment.id}/status`;
         body = {
           action: act,
           comment: (overrideComment !== undefined && overrideComment !== null) ? overrideComment : (overrideAction ? '' : actionComment),
@@ -481,7 +481,7 @@ export default function RequestsPage() {
 
       // Use history endpoint to insert a note/comment (we'll implement this backend route shortly)
       // Or use a dedicated endpoint
-      const response = await fetch(`${API_URL}/api/workflow-assignments/add-note`, {
+      const response = await fetch(`${API_URL}/workflow-assignments/add-note`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -499,7 +499,7 @@ export default function RequestsPage() {
       const data = await response.json();
       if (data.success) {
         // Refresh history
-        const historyRes = await fetch(`${API_URL}/api/workflow-assignments/history/${selectedRequest.id}`, {
+        const historyRes = await fetch(`${API_URL}/workflow-assignments/history/${selectedRequest.id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const historyData = await historyRes.json();
@@ -520,7 +520,7 @@ export default function RequestsPage() {
   const handleUpdateDetails = async (requestId, updatedData) => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/certificates/${requestId}`, {
+      const response = await fetch(`${API_URL}/certificates/${requestId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1099,6 +1099,17 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
         console.error('Error detecting second name mismatch:', e);
       }
     }
+
+    // Check for Guardian mismatch for Guardianship certificates
+    if (request.certificate_type === 'barangay_guardianship') {
+      const reqGName = normalize(request.guardian_name);
+      const resGName = normalize(resident.guardian_name);
+      if (reqGName && reqGName !== resGName) mismatches.push('Guardian Name');
+
+      const reqGRel = normalize(request.guardian_relationship);
+      const resGRel = normalize(resident.guardian_relationship);
+      if (reqGRel && reqGRel !== resGRel) mismatches.push('Guardian Relationship');
+    }
   }
   const hasMismatch = mismatches.length > 0;
 
@@ -1110,7 +1121,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
     setShowSyncConfirm(false);
     setIsSyncing(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005'}/api/certificates/${request.id}/sync-resident`, {
+      const response = await fetch(`${API_URL}/certificates/${request.id}/sync-resident`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminId: request.assigned_user_id || 'manual-sync' })
@@ -1167,7 +1178,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
       delete submitData.id;
       delete submitData.created_at;
 
-      const response = await fetch(`${API_URL}/api/residents/${request.residents.id}`, {
+      const response = await fetch(`${API_URL}/residents/${request.residents.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1473,7 +1484,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                                 try {
                                   // Force refresh resident data to ensure all fields are available
                                   const token = getAuthToken();
-                                  const res = await fetch(`${API_URL}/api/certificates/${request.id}`, {
+                                  const res = await fetch(`${API_URL}/certificates/${request.id}`, {
                                     headers: { 'Authorization': `Bearer ${token}` }
                                   });
                                   const data = await res.json();
@@ -2782,7 +2793,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
   const fetchHistory = async () => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/workflow-assignments/history/${request.id}`, {
+      const response = await fetch(`${API_URL}/workflow-assignments/history/${request.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -2802,7 +2813,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
     const fetchOfficials = async () => {
       try {
         const token = getAuthToken();
-        const response = await fetch(`${API_URL}/api/officials/config`, {
+        const response = await fetch(`${API_URL}/officials/config`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

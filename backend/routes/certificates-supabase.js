@@ -1,47 +1,69 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../services/supabaseClient');
-const { sendWorkflowNotifications } = require('../services/emailService');
+const { sendWorkflowNotifications, sendProcessNotification } = require('../services/emailService');
 const workflowService = require('../services/workflowService');
 
 // Helper function to send workflow notifications
-const notifyNextStepApprovers = async (certificateType, referenceNumber, applicantName, requestId) => {
+const notifyNextStepApprovers = async (certificateType, referenceNumber, applicantName, requestId, applicantEmail = null) => {
   try {
-    // Get workflow configuration from request body or use default
-    // In production, this would be fetched from a database
-    const defaultWorkflow = [
-      { status: 'pending', sendEmail: false, assignedUsers: [] },
-      { status: 'staff_review', sendEmail: true, assignedUsers: [] },
-      { status: 'captain_approval', sendEmail: true, assignedUsers: [] },
-      { status: 'ready', sendEmail: false, assignedUsers: [] },
-      { status: 'released', sendEmail: false, assignedUsers: [] }
-    ];
+    // 1. Send confirmation to applicant if email is provided
+    if (applicantEmail) {
+      await sendProcessNotification({
+        recipientEmail: applicantEmail,
+        recipientName: applicantName,
+        eventType: 'RECEIVED',
+        certificateType,
+        referenceNumber,
+        applicantName,
+        requestId
+      });
+      console.log(`✅ Confirmation email sent to applicant: ${applicantEmail}`);
+    }
 
-    // Find the first step that requires email notification (staff_review)
-    const nextStep = defaultWorkflow.find(step => step.status === 'staff_review');
+    // 2. Notify staff approvers
+    const { data: workflowConfig } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', certificateType)
+      .single();
 
-    if (nextStep && nextStep.sendEmail && nextStep.assignedUsers.length > 0) {
-      // Get user details for assigned users
-      const { data: users } = await supabase
-        .from('users')
-        .select('id, email, first_name, last_name')
-        .in('id', nextStep.assignedUsers);
+    let approverIds = [];
+    let stepTitle = 'Initial Review';
 
-      if (users && users.length > 0) {
-        const recipients = users.map(u => ({
-          email: u.email,
-          name: `${u.first_name} ${u.last_name}`
-        }));
-
-        await sendWorkflowNotifications({
-          recipients,
-          certificateType,
-          referenceNumber,
-          applicantName,
-          stepName: 'Staff Review',
-          requestId
-        });
+    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
+      const firstStep = workflowConfig.workflow_config.steps.find(s => s.requiresApproval === true);
+      if (firstStep) {
+        approverIds = firstStep.assignedUsers || [];
+        stepTitle = firstStep.name;
       }
+    }
+
+    // Fallback approvers if none found
+    if (approverIds.length === 0) {
+      approverIds = ['9550a8b2-9e32-4f52-a260-52766afb49b1']; // Noriel Cruz
+    }
+
+    const { data: users } = await supabase
+      .from('users')
+      .select('email, first_name, last_name')
+      .in('id', approverIds);
+
+    if (users && users.length > 0) {
+      const recipients = users.map(u => ({
+        email: u.email,
+        name: `${u.first_name} ${u.last_name}`
+      }));
+
+      await sendWorkflowNotifications({
+        recipients,
+        eventType: 'SUBMITTED',
+        certificateType,
+        referenceNumber,
+        applicantName,
+        requestId
+      });
+      console.log(`✅ Notifications sent to ${recipients.length} approvers for step: ${stepTitle}`);
     }
   } catch (error) {
     console.error('Error sending workflow notifications:', error);
@@ -187,6 +209,35 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Get certificate by reference number
+router.get('/reference/:refNumber', async (req, res) => {
+  try {
+    const { refNumber } = req.params;
+    const { data, error } = await supabase
+      .from('certificate_requests')
+      .select(`
+        *,
+        residents:resident_id (
+          *
+        )
+      `)
+      .eq('reference_number', refNumber.toUpperCase())
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows found
+        return res.status(404).json({ success: false, message: 'Reference number not found' });
+      }
+      throw error;
+    }
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Error fetching certificate by ref:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Create new certificate request (Barangay Clearance)
 router.post('/clearance', async (req, res) => {
   try {
@@ -241,6 +292,7 @@ router.post('/clearance', async (req, res) => {
         civil_status: civilStatus?.toUpperCase() || '',
         address: address?.toUpperCase() || '',
         contact_number: contactNumber,
+        email: req.body.email || '',
         date_of_birth: dateOfBirth,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
@@ -327,7 +379,7 @@ router.post('/clearance', async (req, res) => {
     }]);
 
     // Send email notifications to next step approvers
-    notifyNextStepApprovers('barangay_clearance', refNumber, fullName, data.id);
+    notifyNextStepApprovers('barangay_clearance', refNumber, fullName, data.id, req.body.email);
 
     res.status(201).json({
       success: true,
@@ -397,6 +449,7 @@ router.post('/indigency', async (req, res) => {
         civil_status: civilStatus?.toUpperCase() || '',
         address: address?.toUpperCase() || '',
         contact_number: contactNumber,
+        email: req.body.email || '',
         date_of_birth: dateOfBirth,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
@@ -481,7 +534,7 @@ router.post('/indigency', async (req, res) => {
       new_status: 'staff_review'
     }]);
 
-    notifyNextStepApprovers('certificate_of_indigency', refNumber, fullName, data.id);
+    notifyNextStepApprovers('certificate_of_indigency', refNumber, fullName, data.id, req.body.email);
 
     res.status(201).json({
       success: true,
@@ -549,6 +602,7 @@ router.post('/residency', async (req, res) => {
         civil_status: civilStatus?.toUpperCase() || '',
         address: address?.toUpperCase() || '',
         contact_number: contactNumber,
+        email: req.body.email || '',
         date_of_birth: dateOfBirth,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
@@ -620,7 +674,7 @@ router.post('/residency', async (req, res) => {
       new_status: 'staff_review'
     }]);
 
-    notifyNextStepApprovers('barangay_residency', refNumber, fullName, data.id);
+    notifyNextStepApprovers('barangay_residency', refNumber, fullName, data.id, req.body.email);
 
     res.status(201).json({
       success: true,
@@ -683,6 +737,7 @@ router.post('/natural-death', async (req, res) => {
         civil_status: civilStatus?.toUpperCase() || '',
         address: address?.toUpperCase() || '',
         contact_number: contactNumber,
+        email: req.body.email || '',
         date_of_death: dateOfDeath,
         cause_of_death: causeOfDeath?.toUpperCase() || '',
         covid_related: covidRelated === 'Yes',
@@ -745,7 +800,7 @@ router.post('/natural-death', async (req, res) => {
       new_status: 'staff_review'
     }]);
 
-    notifyNextStepApprovers('natural_death', refNumber, fullName, data.id);
+    notifyNextStepApprovers('natural_death', refNumber, fullName, data.id, req.body.email);
 
     res.status(201).json({
       success: true,
@@ -808,6 +863,7 @@ router.post('/medico-legal', async (req, res) => {
         civil_status: civilStatus?.toUpperCase() || '',
         address: address?.toUpperCase() || '',
         contact_number: contactNumber || '',
+        email: req.body.email || '',
         date_of_birth: dateOfBirth,
         date_of_examination: dateOfExamination,
         usaping_barangay: usapingBarangay?.toUpperCase() || '',
@@ -872,7 +928,7 @@ router.post('/medico-legal', async (req, res) => {
       new_status: 'staff_review'
     }]);
 
-    notifyNextStepApprovers('medico_legal', refNumber, fullName, data.id);
+    notifyNextStepApprovers('medico_legal', refNumber, fullName, data.id, req.body.email);
 
     res.status(201).json({
       success: true,
@@ -935,6 +991,7 @@ router.post('/guardianship', async (req, res) => {
         civil_status: civilStatus?.toUpperCase() || '',
         address: address?.toUpperCase() || '',
         contact_number: contactNumber,
+        email: req.body.email || '',
         date_of_birth: dateOfBirth,
         guardian_name: guardianName?.toUpperCase() || '',
         guardian_relationship: guardianRelationship?.toUpperCase() || '',
@@ -1000,7 +1057,7 @@ router.post('/guardianship', async (req, res) => {
       new_status: 'staff_review'
     }]);
 
-    notifyNextStepApprovers('barangay_guardianship', refNumber, fullName, data.id);
+    notifyNextStepApprovers('barangay_guardianship', refNumber, fullName, data.id, req.body.email);
 
     res.status(201).json({
       success: true,
@@ -1078,6 +1135,7 @@ router.post('/cohabitation', async (req, res) => {
         living_together_months: parseInt(livingTogetherMonths) || 0,
         purpose: purpose?.toUpperCase() || 'CO-HABITATION CERTIFICATE',
         contact_number: contactNumber || '',
+        email: req.body.email || '',
         status: 'staff_review',
         date_issued: new Date().toISOString()
       }])
@@ -1135,7 +1193,7 @@ router.post('/cohabitation', async (req, res) => {
       new_status: 'staff_review'
     }]);
 
-    notifyNextStepApprovers('barangay_cohabitation', refNumber, fullName, data.id);
+    notifyNextStepApprovers('barangay_cohabitation', refNumber, fullName, data.id, req.body.email);
 
     res.status(201).json({
       success: true,
@@ -1461,6 +1519,12 @@ router.post('/:id/sync-resident', async (req, res) => {
       }
     }
 
+    // Additional fields for guardianship if applicable
+    if (cert.certificate_type === 'barangay_guardianship') {
+      if (cert.guardian_name) residentUpdates.guardian_name = cert.guardian_name;
+      if (cert.guardian_relationship) residentUpdates.guardian_relationship = cert.guardian_relationship;
+    }
+
     const { error: updateError } = await supabase
       .from('residents')
       .update(residentUpdates)
@@ -1573,6 +1637,7 @@ router.post('/create', async (req, res) => {
           civil_status: civilStatus?.toUpperCase() || '',
           address: address?.toUpperCase() || '',
           contact_number: contactNumber,
+          email: req.body.email || '',
           date_of_birth: dateOfBirth,
           purpose: 'CERTIFICATION OF SAME PERSON',
           details: details,
@@ -1635,7 +1700,7 @@ router.post('/create', async (req, res) => {
         new_status: 'staff_review'
       }]);
 
-      notifyNextStepApprovers('certification_same_person', refNumber, full_name, data.id);
+      notifyNextStepApprovers('certification_same_person', refNumber, full_name, data.id, req.body.email);
 
       return res.status(201).json({
         success: true,

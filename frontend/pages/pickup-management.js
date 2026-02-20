@@ -10,7 +10,7 @@ import {
 import { getAuthToken } from '@/lib/auth';
 
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 export default function PickupManagementPage() {
   const router = useRouter();
@@ -37,7 +37,7 @@ export default function PickupManagementPage() {
     try {
       const token = getAuthToken();
       // Using the standard status update endpoint for manual release
-      const response = await fetch(`${API_URL}/api/certificates/${certificateId}/status`, {
+      const response = await fetch(`${API_URL}/certificates/${certificateId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export default function PickupManagementPage() {
     setLoading(true);
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/certificates`, {
+      const response = await fetch(`${API_URL}/certificates`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -110,7 +110,7 @@ export default function PickupManagementPage() {
     try {
       const token = getAuthToken();
       // This would be a new endpoint to get all pickup records
-      const response = await fetch(`${API_URL}/api/pickup/all`, {
+      const response = await fetch(`${API_URL}/pickup/all`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {

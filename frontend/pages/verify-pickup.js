@@ -10,7 +10,7 @@ import { getAuthToken } from '@/lib/auth';
 import Layout from '@/components/Layout/Layout';
 
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 export default function VerifyPickupPage() {
   const router = useRouter();
@@ -39,9 +39,9 @@ export default function VerifyPickupPage() {
       // Priority 2: Use ref if only ref is available (staff dashboard method)
       let url;
       if (token) {
-        url = `${API_URL}/api/pickup/verify?token=${token}&ref=${ref || ''}`;
+        url = `${API_URL}/pickup/verify?token=${token}&ref=${ref || ''}`;
       } else if (ref) {
-        url = `${API_URL}/api/pickup/verify-ref?ref=${ref}`;
+        url = `${API_URL}/pickup/verify-ref?ref=${ref}`;
       } else {
         setVerification({ valid: false, message: 'No verification information provided' });
         setLoading(false);
@@ -97,7 +97,7 @@ export default function VerifyPickupPage() {
       const endpoint = token ? 'confirm' : 'confirm-manual';
       const body = token ? { token, pickedUpBy: pickedUpBy.trim() } : { ref, pickedUpBy: pickedUpBy.trim() };
 
-      const response = await fetch(`${API_URL}/api/pickup/${endpoint}`, {
+      const response = await fetch(`${API_URL}/pickup/${endpoint}`, {
         method: 'POST',
         headers,
         body: JSON.stringify(body)

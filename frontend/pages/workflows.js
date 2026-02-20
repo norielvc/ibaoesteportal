@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { isAuthenticated, getUserData, getAuthToken } from '@/lib/auth';
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 const MASTER_WORKFLOW_ID = 'master_certificate_flow';
 
 // Certificate types
@@ -76,7 +76,7 @@ export default function WorkflowsPage() {
         console.error('No auth token found');
         return;
       }
-      const response = await fetch(`${API_URL}/api/users`, {
+      const response = await fetch(`${API_URL}/users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ export default function WorkflowsPage() {
     // First try to load from API (database)
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/workflows`, {
+      const response = await fetch(`${API_URL}/workflows`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -177,7 +177,7 @@ export default function WorkflowsPage() {
     // Also save to API (database) so other users can access
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/workflows`, {
+      const response = await fetch(`${API_URL}/workflows`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -210,7 +210,7 @@ export default function WorkflowsPage() {
       });
 
       // Save workflows to DB first
-      const saveResponse = await fetch(`${API_URL}/api/workflows`, {
+      const saveResponse = await fetch(`${API_URL}/workflows`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -226,7 +226,7 @@ export default function WorkflowsPage() {
       console.log('Workflows saved to DB, now syncing assignments...');
 
       // THEN: Sync assignments (reads from DB)
-      const response = await fetch(`${API_URL}/api/workflows/sync-assignments`, {
+      const response = await fetch(`${API_URL}/workflows/sync-assignments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

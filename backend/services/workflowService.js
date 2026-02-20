@@ -2,7 +2,7 @@ const defaultAssignments = {
     staff: ["1b1a2e3b-eb05-4de9-b792-4c330ca1d9ae"],     // Luffy Dono (Review Team)
     secretary: ["ca847635-fd64-4e69-9cc7-01998200ddfe"], // Franky Dono (Brgy. Secretary)
     captain: ["9550a8b2-9e32-4f52-a260-52766afb49b1"],   // Noriel Cruz (Brgy. Captain)
-    releasing: ["379898b5-06e9-43a7-b51d-213aec975825"]  // Sarah Wilson (Releasing)
+    releasing: ["0daafd45-47d3-40a9-bb2b-3a337226b3af"]  // Brook Dono (Releasing Team)
 };
 
 const defaultWorkflows = {

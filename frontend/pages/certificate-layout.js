@@ -3,7 +3,7 @@ import Layout from '@/components/Layout/Layout';
 import { Save, FileText, Globe, MapPin, Building, Shield, Palette, Image, Type, Upload, Trash2, AlertCircle, CheckCircle, Phone, UserCog, Mail, Eye } from 'lucide-react';
 import { getAuthToken } from '@/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 const defaultOfficials = {
     // We need the full structure to avoid breaking things, even if we don't edit names here
@@ -138,7 +138,7 @@ export default function CertificateLayoutPage() {
         const fetchConfig = async () => {
             try {
                 const token = getAuthToken();
-                const res = await fetch(`${API_URL}/api/officials/config`, {
+                const res = await fetch(`${API_URL}/officials/config`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -228,7 +228,7 @@ export default function CertificateLayoutPage() {
         setIsSaving(true);
         try {
             const token = getAuthToken();
-            const res = await fetch(`${API_URL}/api/officials/config`, {
+            const res = await fetch(`${API_URL}/officials/config`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

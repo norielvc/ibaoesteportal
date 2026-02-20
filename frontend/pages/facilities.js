@@ -1,56 +1,56 @@
 import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout/Layout';
-import { 
-  Save, Plus, Edit2, Trash2, Image, Building2, 
+import {
+  Save, Plus, Edit2, Trash2, Image, Building2,
   ChevronUp, ChevronDown, Eye, X, Check, AlertCircle, CheckCircle,
   Upload, Loader2, Heart, Baby, Home, Award
 } from 'lucide-react';
 import { getAuthToken } from '@/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 const defaultFacilities = [
-  { 
+  {
     id: 1,
-    name: 'Health Center', 
-    icon: 'Heart', 
-    description: 'Primary healthcare services for residents', 
+    name: 'Health Center',
+    icon: 'Heart',
+    description: 'Primary healthcare services for residents',
     color: 'bg-red-500',
     images: ['/background.jpg', '/background.jpg', '/background.jpg'],
     features: ['Free Checkups', 'Vaccination', 'First Aid']
   },
-  { 
+  {
     id: 2,
-    name: 'Multi-purpose Hall', 
-    icon: 'Building2', 
-    description: 'Events, meetings, and community gatherings', 
+    name: 'Multi-purpose Hall',
+    icon: 'Building2',
+    description: 'Events, meetings, and community gatherings',
     color: 'bg-blue-500',
     images: ['/background.jpg', '/background.jpg', '/background.jpg'],
     features: ['500 Capacity', 'AC Equipped', 'Stage']
   },
-  { 
+  {
     id: 3,
-    name: 'Daycare Center', 
-    icon: 'Baby', 
-    description: 'Early childhood education and care', 
+    name: 'Daycare Center',
+    icon: 'Baby',
+    description: 'Early childhood education and care',
     color: 'bg-pink-500',
     images: ['/background.jpg', '/background.jpg', '/background.jpg'],
     features: ['Ages 3-5', 'Free Education', 'Meals']
   },
-  { 
+  {
     id: 4,
-    name: 'Barangay Hall', 
-    icon: 'Home', 
-    description: 'Administrative services and assistance', 
+    name: 'Barangay Hall',
+    icon: 'Home',
+    description: 'Administrative services and assistance',
     color: 'bg-green-500',
     images: ['/background.jpg', '/background.jpg', '/background.jpg'],
     features: ['Documents', 'Assistance', 'Info Desk']
   },
-  { 
+  {
     id: 5,
-    name: 'Sports Complex', 
-    icon: 'Award', 
-    description: 'Basketball court and fitness area', 
+    name: 'Sports Complex',
+    icon: 'Award',
+    description: 'Basketball court and fitness area',
     color: 'bg-orange-500',
     images: ['/background.jpg', '/background.jpg', '/background.jpg'],
     features: ['Basketball', 'Volleyball', 'Gym']
@@ -104,9 +104,9 @@ export default function FacilitiesPage() {
   const fetchFacilities = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/facilities`);
+      const response = await fetch(`${API_URL}/facilities`);
       const data = await response.json();
-      
+
       if (data.success && data.data.length > 0) {
         setFacilities(data.data);
       } else {
@@ -140,8 +140,8 @@ export default function FacilitiesPage() {
     try {
       setSaving(true);
       const token = getAuthToken();
-      
-      const response = await fetch(`${API_URL}/api/facilities/bulk/update`, {
+
+      const response = await fetch(`${API_URL}/facilities/bulk/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -171,8 +171,8 @@ export default function FacilitiesPage() {
     try {
       setSaving(true);
       const token = getAuthToken();
-      
-      const response = await fetch(`${API_URL}/api/facilities/bulk/update`, {
+
+      const response = await fetch(`${API_URL}/facilities/bulk/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -387,7 +387,7 @@ export default function FacilitiesPage() {
 
             {facilities.map((facility, index) => {
               const IconComponent = iconOptions.find(opt => opt.name === facility.icon)?.component || Building2;
-              
+
               return (
                 <div key={facility.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all">
                   {editingFacility?.id === facility.id ? (
@@ -443,9 +443,9 @@ export default function FacilitiesPage() {
                             <div className="flex-1 flex gap-2">
                               {image.startsWith('data:') && (
                                 <div className="w-12 h-12 flex-shrink-0">
-                                  <img 
-                                    src={image} 
-                                    alt={`Preview ${idx + 1}`} 
+                                  <img
+                                    src={image}
+                                    alt={`Preview ${idx + 1}`}
                                     className="w-full h-full object-cover rounded border"
                                   />
                                 </div>
@@ -480,23 +480,23 @@ export default function FacilitiesPage() {
                                 className="hidden"
                               />
                             </div>
-                            <button 
+                            <button
                               onClick={() => {
                                 const newImages = editingFacility.images.filter((_, i) => i !== idx);
                                 if (newImages.length === 0) newImages.push('/background.jpg');
                                 setEditingFacility({ ...editingFacility, images: newImages });
-                              }} 
+                              }}
                               className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
                             >
                               <X className="w-4 h-4" />
                             </button>
                           </div>
                         ))}
-                        <button 
+                        <button
                           onClick={() => {
                             const newImages = [...editingFacility.images, '/background.jpg'];
                             setEditingFacility({ ...editingFacility, images: newImages });
-                          }} 
+                          }}
                           className="text-blue-600 hover:text-blue-800 text-sm mb-3"
                         >
                           + Add Image
@@ -534,10 +534,10 @@ export default function FacilitiesPage() {
                   ) : (
                     <div className="flex">
                       <div className="w-32 h-24 flex-shrink-0 relative">
-                        <img 
-                          src={facility.images[0]} 
-                          alt={facility.name} 
-                          className="w-full h-full object-cover rounded-l-xl" 
+                        <img
+                          src={facility.images[0]}
+                          alt={facility.name}
+                          className="w-full h-full object-cover rounded-l-xl"
                           onError={(e) => {
                             e.target.src = '/background.jpg';
                           }}
@@ -713,9 +713,9 @@ export default function FacilitiesPage() {
                       <div className="flex-1 flex gap-2">
                         {image.startsWith('data:') && (
                           <div className="w-12 h-12 flex-shrink-0">
-                            <img 
-                              src={image} 
-                              alt={`Preview ${idx + 1}`} 
+                            <img
+                              src={image}
+                              alt={`Preview ${idx + 1}`}
                               className="w-full h-full object-cover rounded border"
                             />
                           </div>
@@ -750,23 +750,23 @@ export default function FacilitiesPage() {
                           className="hidden"
                         />
                       </div>
-                      <button 
+                      <button
                         onClick={() => {
                           const newImages = formData.images.filter((_, i) => i !== idx);
                           if (newImages.length === 0) newImages.push('/background.jpg');
                           setFormData({ ...formData, images: newImages });
-                        }} 
+                        }}
                         className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
-                  <button 
+                  <button
                     onClick={() => {
                       const newImages = [...formData.images, '/background.jpg'];
                       setFormData({ ...formData, images: newImages });
-                    }} 
+                    }}
                     className="text-blue-600 hover:text-blue-800 text-sm mb-4"
                   >
                     + Add Image

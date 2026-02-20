@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone, Users, User, ChevronDown } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 // Default officials data (fallback)
 const defaultOfficials = {
@@ -51,7 +51,8 @@ const defaultOfficials = {
 };
 
 // Enhanced Notification Component
-function Notification({ type, title, message, onClose }) {
+// Memoized Notification Component
+const Notification = React.memo(({ type, title, message, onClose }) => {
     const styles = {
         success: { bg: 'bg-gradient-to-r from-green-50 to-emerald-50', border: 'border-green-200', icon: 'bg-green-100 text-green-600', title: 'text-green-800', message: 'text-green-700' },
         error: { bg: 'bg-gradient-to-r from-red-50 to-rose-50', border: 'border-red-200', icon: 'bg-red-100 text-red-600', title: 'text-red-800', message: 'text-red-700' },
@@ -72,7 +73,9 @@ function Notification({ type, title, message, onClose }) {
             </div>
         </div>
     );
-}
+});
+
+Notification.displayName = 'Notification';
 
 export default function GuardianshipCertificateModal({ isOpen, onClose }) {
     const [showPreview, setShowPreview] = useState(false);
@@ -92,7 +95,7 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
     const [formData, setFormData] = useState({
         fullName: '', age: '', sex: '', civilStatus: '', address: '', dateOfBirth: '',
         guardianName: '', guardianRelationship: '',
-        contactNumber: '', residentId: null, guardianId: null
+        contactNumber: '', email: '', residentId: null, guardianId: null
     });
 
     const handleResidentSelect = (resident) => {
@@ -106,6 +109,7 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
                 address: resident.residential_address || '',
                 dateOfBirth: resident.date_of_birth || '',
                 contactNumber: resident.contact_number || prev.contactNumber,
+                email: resident.email || prev.email,
                 residentId: resident.id
             }));
             setErrors(prev => ({ ...prev, fullName: false }));
@@ -119,6 +123,7 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
                 ...prev,
                 guardianName: resident.full_name,
                 contactNumber: resident.contact_number || prev.contactNumber,
+                email: resident.email || prev.email,
                 guardianId: resident.id
             }));
             setErrors(prev => ({ ...prev, guardianName: false }));
@@ -180,7 +185,7 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
         setFormData({
             fullName: '', age: '', sex: '', civilStatus: '', address: '', dateOfBirth: '',
             guardianName: '', guardianRelationship: '',
-            contactNumber: '', residentId: null, guardianId: null
+            contactNumber: '', email: '', residentId: null, guardianId: null
         });
         setShowPreview(false);
         setShowConfirmationPopup(false);
@@ -194,7 +199,7 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
     const handleProceedSubmission = async () => {
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${API_URL}/api/certificates/guardianship`, {
+            const response = await fetch(`${API_URL}/certificates/guardianship`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -319,9 +324,15 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
                                         <div className="w-8 h-8 bg-[#112117] text-white rounded-lg flex items-center justify-center font-bold shadow-md">3</div>
                                         <h3 className="text-lg font-bold text-gray-900 tracking-tight">Contact Information</h3>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-[#112117] uppercase tracking-widest ml-1 block">Requestor's Contact Number <span className="text-red-500">*</span></label>
-                                        <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full px-5 py-4 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl focus:border-[#112117] outline-none font-extrabold text-gray-800 shadow-sm`} />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-[#112117] uppercase tracking-widest ml-1 block">Requestor's Contact Number <span className="text-red-500">*</span></label>
+                                            <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full px-5 py-4 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl focus:border-[#112117] outline-none font-extrabold text-gray-800 shadow-sm`} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-[#112117] uppercase tracking-widest ml-1 block">Email Address (Optional)</label>
+                                            <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className="w-full px-5 py-4 bg-white border-2 border-gray-100 rounded-xl focus:border-[#112117] outline-none font-normal text-gray-800 shadow-sm" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -405,23 +416,36 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
                 </div>
             )}
 
-            <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+            {isResidentModalOpen && (
+                <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+            )}
             <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.3s ease-out; }`}</style>
         </>
     );
 }
 
-function GuardianshipPreview({ formData, referenceNumber, currentDate, officials, certificateRef }) {
+// Memoized Preview Component
+const GuardianshipPreview = React.memo(({ formData, referenceNumber, currentDate, officials, certificateRef }) => {
     const containerRef = useRef(null);
     const [scale, setScale] = useState(1);
     const logos = officials.logos || {};
     const headerStyle = officials.headerStyle || {};
 
     useEffect(() => {
+        let timeoutId;
         const updateScale = () => { if (containerRef.current) setScale(Math.min(containerRef.current.offsetWidth / 794, 1)); };
+
+        const debouncedScale = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(updateScale, 100);
+        };
+
         updateScale();
-        window.addEventListener('resize', updateScale);
-        return () => window.removeEventListener('resize', updateScale);
+        window.addEventListener('resize', debouncedScale);
+        return () => {
+            window.removeEventListener('resize', debouncedScale);
+            clearTimeout(timeoutId);
+        };
     }, []);
 
     const formatDate = (dateString) => {
@@ -436,7 +460,7 @@ function GuardianshipPreview({ formData, referenceNumber, currentDate, officials
                 <div ref={certificateRef} className="bg-white shadow-lg flex flex-col" style={{ width: '794px', height: '1123px', transform: `scale(${scale}) translateZ(0)`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0, backfaceVisibility: 'hidden' }}>
                     {/* Header */}
                     <div className="w-full border-b flex justify-center items-center p-8 border-[#1e40af]" style={{ backgroundColor: '#ffffff' }}>
-                        <div className="flex-shrink-0" style={{ width: '115px' }}>{logos.leftLogo && <img src={logos.leftLogo} className="w-full h-full object-contain" />}</div>
+                        <div className="flex-shrink-0" style={{ width: '115px' }}>{logos.leftLogo && <img src={logos.leftLogo} className="w-full h-full object-contain" alt="Left" />}</div>
                         <div className="text-center px-4 flex-1">
                             <p className="text-[13px]">{officials.headerInfo?.country}</p>
                             <p className="text-[13px]">{officials.headerInfo?.province}</p>
@@ -444,14 +468,14 @@ function GuardianshipPreview({ formData, referenceNumber, currentDate, officials
                             <p className="text-[18px] font-bold text-[#1e40af] uppercase leading-tight mt-1">{officials.headerInfo?.barangayName}</p>
                             <p className="text-[14px] font-extrabold text-[#b91c1c] uppercase mt-2">OFFICE OF THE PUNONG BARANGAY</p>
                         </div>
-                        <div className="flex-shrink-0" style={{ width: '115px' }}>{logos.rightLogo && <img src={logos.rightLogo} className="w-full h-full object-contain" />}</div>
+                        <div className="flex-shrink-0" style={{ width: '115px' }}>{logos.rightLogo && <img src={logos.rightLogo} className="w-full h-full object-contain" alt="Right" />}</div>
                     </div>
 
                     {/* Body */}
                     <div className="flex-1 px-16 pt-12 pb-16 flex flex-col relative overflow-hidden">
                         {/* Background Watermark */}
                         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none">
-                            <img src="/iba-o-este.png" className="w-3/4 object-contain" />
+                            <img src="/iba-o-este.png" className="w-3/4 object-contain" alt="Watermark" />
                         </div>
 
                         <div className="relative z-10 flex flex-col items-center">
@@ -512,4 +536,6 @@ function GuardianshipPreview({ formData, referenceNumber, currentDate, officials
             </div>
         </div>
     );
-}
+});
+
+GuardianshipPreview.displayName = 'GuardianshipPreview';

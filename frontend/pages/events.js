@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout/Layout';
-import { 
-  Save, Plus, Edit2, Trash2, Image, Calendar, 
+import {
+  Save, Plus, Edit2, Trash2, Image, Calendar,
   ChevronUp, ChevronDown, Eye, X, Check, AlertCircle, CheckCircle,
   Upload, Loader2
 } from 'lucide-react';
 import { getAuthToken } from '@/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 const defaultEvents = [
   {
@@ -59,9 +59,9 @@ export default function EventsPage() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/events`);
+      const response = await fetch(`${API_URL}/events`);
       const data = await response.json();
-      
+
       if (data.success && data.data.length > 0) {
         setEvents(data.data);
       } else {
@@ -95,8 +95,8 @@ export default function EventsPage() {
     try {
       setSaving(true);
       const token = getAuthToken();
-      
-      const response = await fetch(`${API_URL}/api/events/bulk/update`, {
+
+      const response = await fetch(`${API_URL}/events/bulk/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -126,8 +126,8 @@ export default function EventsPage() {
     try {
       setSaving(true);
       const token = getAuthToken();
-      
-      const response = await fetch(`${API_URL}/api/events/bulk/update`, {
+
+      const response = await fetch(`${API_URL}/events/bulk/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

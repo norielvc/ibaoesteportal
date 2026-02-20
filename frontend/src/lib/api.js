@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -32,27 +32,27 @@ api.interceptors.response.use(
   },
   (error) => {
     const { response } = error;
-    
+
     if (response) {
       const { status, data } = response;
-      
+
       // Handle authentication errors
       if (status === 401) {
         Cookies.remove('token');
         Cookies.remove('user');
-        
+
         // Only redirect if not already on login page
         if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
           window.location.href = '/login';
         }
-        
+
         toast.error('Session expired. Please login again.');
         return Promise.reject(error);
       }
-      
+
       // Handle other HTTP errors
       const message = data?.message || `HTTP Error ${status}`;
-      
+
       if (status >= 500) {
         toast.error('Server error. Please try again later.');
       } else if (status === 403) {
@@ -69,7 +69,7 @@ api.interceptors.response.use(
     } else {
       toast.error('An unexpected error occurred.');
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -80,17 +80,17 @@ export const authAPI = {
     const response = await api.post('/auth/login', credentials);
     return response.data;
   },
-  
+
   logout: async () => {
     const response = await api.post('/auth/logout');
     return response.data;
   },
-  
+
   getProfile: async () => {
     const response = await api.get('/auth/me');
     return response.data;
   },
-  
+
   updateProfile: async (data) => {
     const response = await api.put('/auth/profile', data);
     return response.data;
@@ -103,27 +103,27 @@ export const usersAPI = {
     const response = await api.get('/users', { params });
     return response.data;
   },
-  
+
   getUser: async (id) => {
     const response = await api.get(`/users/${id}`);
     return response.data;
   },
-  
+
   createUser: async (userData) => {
     const response = await api.post('/users', userData);
     return response.data;
   },
-  
+
   updateUser: async (id, userData) => {
     const response = await api.put(`/users/${id}`, userData);
     return response.data;
   },
-  
+
   deleteUser: async (id) => {
     const response = await api.delete(`/users/${id}`);
     return response.data;
   },
-  
+
   getUserStats: async () => {
     const response = await api.get('/users/stats/overview');
     return response.data;
@@ -136,11 +136,34 @@ export const dashboardAPI = {
     const response = await api.get('/dashboard/stats');
     return response.data;
   },
-  
+
   getAnalytics: async (period = '30d') => {
     const response = await api.get('/dashboard/analytics', {
       params: { period }
     });
+    return response.data;
+  },
+};
+
+// Certificates API functions
+export const certificatesAPI = {
+  getRequests: async (params = {}) => {
+    const response = await api.get('/certificates', { params });
+    return response.data;
+  },
+
+  getRequest: async (id) => {
+    const response = await api.get(`/certificates/${id}`);
+    return response.data;
+  },
+
+  getRequestByReference: async (refNumber) => {
+    const response = await api.get(`/certificates/reference/${refNumber}`);
+    return response.data;
+  },
+
+  getWorkflowHistory: async (requestId) => {
+    const response = await api.get(`/workflow-assignments/history/${requestId}`);
     return response.data;
   },
 };

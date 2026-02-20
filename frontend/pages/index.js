@@ -4,7 +4,7 @@ import {
   Menu, X, ChevronRight, ChevronLeft, Plus, Send, Phone, MapPin, Mail,
   Clock, Sun, Moon, Cloud, CloudRain, Users, FileText, Award, Building2, Heart, Baby,
   AlertTriangle, Shield, Home, Calendar, TrendingUp, CheckCircle, GraduationCap, User,
-  Store, Briefcase, Stethoscope, Fingerprint, UserPlus, Flower2
+  Store, Briefcase, Stethoscope, Fingerprint, UserPlus, Flower2, Search
 } from 'lucide-react';
 import BarangayClearanceModal from '@/components/Forms/BarangayClearanceModal';
 import IndigencyCertificateModal from '@/components/Forms/IndigencyCertificateModal';
@@ -301,9 +301,9 @@ export default function BarangayPortal() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
-        console.log('Fetching events from:', `${API_URL}/api/events`);
-        const response = await fetch(`${API_URL}/api/events`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+        console.log('Fetching events from:', `${API_URL}/events`);
+        const response = await fetch(`${API_URL}/events`);
         console.log('Events API response status:', response.status);
 
         if (!response.ok) {
@@ -333,9 +333,9 @@ export default function BarangayPortal() {
   useEffect(() => {
     const fetchFacilities = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
-        console.log('Fetching facilities from:', `${API_URL}/api/facilities`);
-        const response = await fetch(`${API_URL}/api/facilities`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+        console.log('Fetching facilities from:', `${API_URL}/facilities`);
+        const response = await fetch(`${API_URL}/facilities`);
         console.log('Facilities API response status:', response.status);
 
         if (!response.ok) {
@@ -370,9 +370,9 @@ export default function BarangayPortal() {
   useEffect(() => {
     const fetchOfficials = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
-        console.log('🔍 Fetching officials from:', `${API_URL}/api/officials`);
-        const response = await fetch(`${API_URL}/api/officials`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+        console.log('🔍 Fetching officials from:', `${API_URL}/officials`);
+        const response = await fetch(`${API_URL}/officials`);
         console.log('📊 Officials API response status:', response.status);
 
         if (!response.ok) {
@@ -403,8 +403,8 @@ export default function BarangayPortal() {
     // Fetch Hero Settings
     const fetchSettings = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
-        const res = await fetch(`${API_URL}/api/officials/config`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+        const res = await fetch(`${API_URL}/officials/config`);
         const data = await res.json();
         if (data.success && data.data.heroSection) {
           console.log('✅ Hero settings fetched:', data.data.heroSection);
@@ -856,10 +856,11 @@ export default function BarangayPortal() {
                       onTouchEnd={() => {
                         if (!touchStart || !touchEnd) return;
                         const distance = touchStart - touchEnd;
+                        const maxSlide = Math.max(0, forms.length - itemsPerView);
                         if (distance > 50) {
-                          setCurrentFormSlide((prev) => (prev + 1) % (forms.length - (itemsPerView - 1)));
+                          setCurrentFormSlide((prev) => (prev + 1) % (maxSlide + 1));
                         } else if (distance < -50) {
-                          setCurrentFormSlide((prev) => (prev - 1 + forms.length) % (forms.length - (itemsPerView - 1)));
+                          setCurrentFormSlide((prev) => (prev - 1 + (maxSlide + 1)) % (maxSlide + 1));
                         }
                         setTouchStart(null);
                         setTouchEnd(null);
@@ -950,13 +951,19 @@ export default function BarangayPortal() {
 
                     {/* Navigation Arrows - Improved positioning */}
                     <button
-                      onClick={() => setCurrentFormSlide((prev) => (prev - 1 + forms.length) % (forms.length - (itemsPerView - 1)))}
+                      onClick={() => {
+                        const maxSlide = Math.max(0, forms.length - itemsPerView);
+                        setCurrentFormSlide((prev) => (prev - 1 + (maxSlide + 1)) % (maxSlide + 1));
+                      }}
                       className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
                     >
                       <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </button>
                     <button
-                      onClick={() => setCurrentFormSlide((prev) => (prev + 1) % (forms.length - (itemsPerView - 1)))}
+                      onClick={() => {
+                        const maxSlide = Math.max(0, forms.length - itemsPerView);
+                        setCurrentFormSlide((prev) => (prev + 1) % (maxSlide + 1));
+                      }}
                       className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
                     >
                       <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white" />

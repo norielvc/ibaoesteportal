@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, FileText, Eye, Send, CheckCircle, AlertCircle, Info, Search, Clock, Phone, Heart, Users, MapPin } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 // Default officials data (fallback)
 const defaultOfficials = {
@@ -24,7 +24,8 @@ const defaultOfficials = {
     logos: { leftLogo: '/iba-o-este.png', rightLogo: '/calumpit.png', logoSize: 115 }
 };
 
-function Notification({ type, title, message, onClose }) {
+// Memoized Notification Component
+const Notification = React.memo(({ type, title, message, onClose }) => {
     const styles = {
         success: { bg: 'bg-gradient-to-r from-green-50 to-emerald-50', border: 'border-green-200', icon: 'bg-green-100 text-green-600', title: 'text-green-800', message: 'text-green-700' },
         error: { bg: 'bg-gradient-to-r from-red-50 to-rose-50', border: 'border-red-200', icon: 'bg-red-100 text-red-600', title: 'text-red-800', message: 'text-red-700' },
@@ -44,7 +45,9 @@ function Notification({ type, title, message, onClose }) {
             </div>
         </div>
     );
-}
+});
+
+Notification.displayName = 'Notification';
 
 export default function CohabitationCertificateModal({ isOpen, onClose }) {
     const [showPreview, setShowPreview] = useState(false);
@@ -65,7 +68,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
         fullName: '', age: '', gender: '', dateOfBirth: '', residentId: null,
         partnerFullName: '', partnerAge: '', partnerGender: '', partnerDateOfBirth: '', partnerResidentId: null,
         address: '', noOfChildren: '0', livingTogetherYears: '0', livingTogetherMonths: '0',
-        purpose: '', contactNumber: '',
+        purpose: '', contactNumber: '', email: '',
         person1DbAddress: '', partnerDbAddress: ''
     });
 
@@ -78,6 +81,8 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                 gender: resident.gender || '',
                 dateOfBirth: resident.date_of_birth ? new Date(resident.date_of_birth).toISOString().split('T')[0] : '',
                 address: resident.residential_address || prev.address,
+                contactNumber: resident.contact_number || prev.contactNumber,
+                email: resident.email || prev.email,
                 residentId: resident.id,
                 person1DbAddress: resident.residential_address || ''
             }));
@@ -89,7 +94,8 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                 partnerGender: resident.gender || '',
                 partnerDateOfBirth: resident.date_of_birth ? new Date(resident.date_of_birth).toISOString().split('T')[0] : '',
                 partnerResidentId: resident.id,
-                partnerDbAddress: resident.residential_address || ''
+                partnerDbAddress: resident.residential_address || '',
+                email: resident.email || prev.email
             }));
         }
         setIsResidentModalOpen(false);
@@ -101,7 +107,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
             setCurrentDate(now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
 
             // Fetch next reference number
-            fetch(`${API_URL}/api/certificates/next-reference/barangay_cohabitation`)
+            fetch(`${API_URL}/certificates/next-reference/barangay_cohabitation`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) setReferenceNumber(data.referenceNumber);
@@ -152,7 +158,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
     const handleProceedSubmission = async () => {
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${API_URL}/api/certificates/cohabitation`, {
+            const response = await fetch(`${API_URL}/certificates/cohabitation`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -366,9 +372,13 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                                                 <input type="number" name="livingTogetherMonths" value={formData.livingTogetherMonths} onChange={handleInputChange} className="w-full px-5 py-3.5 bg-white border border-gray-100 rounded-xl font-bold focus:border-rose-500 outline-none" />
                                             </div>
                                         </div>
-                                        <div className="md:col-span-2 space-y-2">
+                                        <div className="space-y-2">
                                             <label className="text-xs font-bold text-rose-800 uppercase tracking-widest ml-1 block">SMS Contact Number</label>
                                             <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} className={`w-full px-5 py-4 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl font-bold text-gray-900 focus:border-rose-500 outline-none`} placeholder="09XX XXX XXXX" />
+                                        </div>
+                                        <div className="space-y-2 text-sm">
+                                            <label className="text-xs font-bold text-rose-800 uppercase tracking-widest ml-1 block">Email Address (Optional)</label>
+                                            <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className="w-full px-5 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-rose-500 outline-none font-normal text-gray-900 transition-all shadow-sm" />
                                         </div>
                                     </div>
                                 </div>
@@ -434,27 +444,38 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                 </div>
             )}
 
-            <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+            {isResidentModalOpen && (
+                <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+            )}
             <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in { animation: fade-in 0.2s ease-out; }`}</style>
         </>
     );
 }
 
-function CohabitationPreview({ formData, currentDate, officials, referenceNumber }) {
-    // Ensure officials object is robust
-    const safeOfficials = officials || defaultOfficials;
-    const logos = safeOfficials.logos || defaultOfficials.logos;
-    const headerInfo = safeOfficials.headerInfo || defaultOfficials.headerInfo;
-    const headerStyle = safeOfficials.headerStyle || { bgColor: '#ffffff', borderColor: '#1e40af' };
+// Memoized Preview Component
+const CohabitationPreview = React.memo(({ formData, currentDate, officials, referenceNumber }) => {
+    const logos = officials.logos || defaultOfficials.logos;
+    const headerInfo = officials.headerInfo || defaultOfficials.headerInfo;
+    const headerStyle = officials.headerStyle || { bgColor: '#ffffff', borderColor: '#1e40af' };
 
     const [scale, setScale] = useState(1);
     const containerRef = useRef(null);
 
     useEffect(() => {
+        let timeoutId;
         const updateScale = () => { if (containerRef.current) setScale(Math.min(containerRef.current.offsetWidth / 794, 1)); };
+
+        const debouncedScale = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(updateScale, 100);
+        };
+
         updateScale();
-        window.addEventListener('resize', updateScale);
-        return () => window.removeEventListener('resize', updateScale);
+        window.addEventListener('resize', debouncedScale);
+        return () => {
+            window.removeEventListener('resize', debouncedScale);
+            clearTimeout(timeoutId);
+        };
     }, []);
 
     const formatBday = (date) => {
@@ -467,7 +488,7 @@ function CohabitationPreview({ formData, currentDate, officials, referenceNumber
             <div style={{ width: `${794 * scale}px`, height: `${1123 * scale}px`, position: 'relative' }}>
                 <div className="bg-white shadow-xl flex flex-col text-black font-sans leading-tight" style={{ width: '794px', height: '1123px', transform: `scale(${scale})`, transformOrigin: 'top left', position: 'absolute' }}>
 
-                    {/* Official Header - MATCH INDIGENCY STRUCTURE */}
+                    {/* Official Header */}
                     <div className="w-full border-b flex justify-center items-center p-8 flex-shrink-0" style={{ backgroundColor: headerStyle.bgColor || '#ffffff', borderColor: headerStyle.borderColor || '#1e40af' }}>
                         <div className="flex-shrink-0" style={{ width: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 115}px`, height: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 115}px` }}>
                             {logos.leftLogo && <img src={logos.leftLogo} className="w-full h-full object-contain" alt="Left" />}
@@ -595,4 +616,6 @@ function CohabitationPreview({ formData, currentDate, officials, referenceNumber
             </div>
         </div>
     );
-}
+});
+
+CohabitationPreview.displayName = 'CohabitationPreview';

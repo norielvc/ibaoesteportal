@@ -3,7 +3,7 @@ import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Downlo
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 // Default officials data (fallback)
 const defaultOfficials = {
@@ -77,7 +77,7 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
 
     const [formData, setFormData] = useState({
         fullName: '', age: '', sex: '', civilStatus: '',
-        address: '', contactNumber: '', dateOfBirth: '',
+        address: '', contactNumber: '', email: '', dateOfBirth: '',
         dateOfExamination: '', usapingBarangay: '', dateOfHearing: '',
         residentId: null
     });
@@ -92,6 +92,7 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
             address: resident.residential_address || '',
             dateOfBirth: resident.date_of_birth || '',
             contactNumber: resident.contact_number || prev.contactNumber,
+            email: resident.email || prev.email,
             residentId: resident.id
         }));
         setIsResidentModalOpen(false);
@@ -146,7 +147,7 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
     const handleProceedSubmission = async () => {
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${API_URL}/api/certificates/medico-legal`, {
+            const response = await fetch(`${API_URL}/certificates/medico-legal`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -172,7 +173,7 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
     const resetForm = () => {
         setFormData({
             fullName: '', age: '', sex: '', civilStatus: '',
-            address: '', contactNumber: '', dateOfBirth: '',
+            address: '', contactNumber: '', email: '', dateOfBirth: '',
             dateOfExamination: '', usapingBarangay: '', dateOfHearing: '',
             residentId: null
         });
@@ -329,12 +330,26 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3 items-start shadow-sm">
-                                            <Info className="w-5 h-5 text-amber-600 shrink-0" />
-                                            <p className="text-xs text-amber-800 font-medium leading-relaxed">
-                                                <span className="font-bold underline">Note:</span> The Barangay Administrator will contact you via this number regarding the official status or schedule of your request.
-                                            </p>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-blue-700 uppercase tracking-widest ml-1">Email Address (Optional)</label>
+                                            <div className="relative">
+                                                <Info className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                <input
+                                                    type="email"
+                                                    name="email"
+                                                    value={formData.email}
+                                                    onChange={handleInputChange}
+                                                    placeholder="username@example.com"
+                                                    className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl font-normal focus:ring-2 focus:ring-blue-500 outline-none`}
+                                                />
+                                            </div>
                                         </div>
+                                    </div>
+                                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3 items-start shadow-sm mt-4 tracking-tight">
+                                        <Info className="w-5 h-5 text-amber-600 shrink-0" />
+                                        <p className="text-xs text-amber-800 font-medium leading-relaxed">
+                                            <span className="font-bold underline">Note:</span> The Barangay Administrator will contact you via this number regarding the official status or schedule of your request.
+                                        </p>
                                     </div>
                                 </div>
                             </form>
@@ -354,82 +369,86 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
 
             <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
 
-            {showConfirmationPopup && (
-                <div className="fixed inset-0 z-[60] overflow-y-auto">
-                    <div className="flex min-h-screen items-center justify-center p-4">
-                        <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" onClick={() => setShowConfirmationPopup(false)} />
-                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
-                            <div className="bg-blue-900 px-8 py-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
-                                <h2 className="text-xl font-extrabold text-white tracking-tight uppercase">Confirm Application Details</h2>
-                                <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white"><X className="w-6 h-6" /></button>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4 bg-gray-200">
-                                <div className="flex justify-center">
-                                    <MedicoLegalPreview formData={formData} currentDate={currentDate} officials={officials} referenceNumber={referenceNumber || 'PENDING'} />
+            {
+                showConfirmationPopup && (
+                    <div className="fixed inset-0 z-[60] overflow-y-auto">
+                        <div className="flex min-h-screen items-center justify-center p-4">
+                            <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" onClick={() => setShowConfirmationPopup(false)} />
+                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
+                                <div className="bg-blue-900 px-8 py-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
+                                    <h2 className="text-xl font-extrabold text-white tracking-tight uppercase">Confirm Application Details</h2>
+                                    <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white"><X className="w-6 h-6" /></button>
                                 </div>
-                            </div>
-                            <div className="px-8 py-6 bg-gray-50 border-t flex flex-col sm:flex-row justify-between items-center gap-4 flex-shrink-0">
-                                <button onClick={() => setShowConfirmationPopup(false)} disabled={isSubmitting} className="px-6 py-3 text-gray-500 font-bold hover:text-gray-700 uppercase tracking-widest text-xs">Back to Edit</button>
-                                <button onClick={handleProceedSubmission} disabled={isSubmitting} className="px-10 py-3 bg-blue-900 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg transition-all disabled:opacity-50">
-                                    {isSubmitting ? 'Submitting...' : 'Proceed to Submission'}
-                                </button>
+                                <div className="flex-1 overflow-y-auto p-4 bg-gray-200">
+                                    <div className="flex justify-center">
+                                        <MedicoLegalPreview formData={formData} currentDate={currentDate} officials={officials} referenceNumber={referenceNumber || 'PENDING'} />
+                                    </div>
+                                </div>
+                                <div className="px-8 py-6 bg-gray-50 border-t flex flex-col sm:flex-row justify-between items-center gap-4 flex-shrink-0">
+                                    <button onClick={() => setShowConfirmationPopup(false)} disabled={isSubmitting} className="px-6 py-3 text-gray-500 font-bold hover:text-gray-700 uppercase tracking-widest text-xs">Back to Edit</button>
+                                    <button onClick={handleProceedSubmission} disabled={isSubmitting} className="px-10 py-3 bg-blue-900 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg transition-all disabled:opacity-50">
+                                        {isSubmitting ? 'Submitting...' : 'Proceed to Submission'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
-            {showSuccessModal && (
-                <div className="fixed inset-0 z-[70] overflow-y-auto">
-                    <div className="flex min-h-screen items-center justify-center p-4">
-                        <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
-                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
-                            <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-8 py-10 text-center relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                                <div className="w-20 h-20 bg-blue-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
-                                    <CheckCircle className="w-12 h-12 text-blue-400 animate-bounce" />
-                                </div>
-                                <h2 className="text-2xl font-black text-white uppercase tracking-tight">Filing Complete!</h2>
-                            </div>
-                            <div className="p-6 text-center">
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6 text-blue-900">
-                                    <p className="text-sm font-medium mb-1 uppercase tracking-widest">Reference Number:</p>
-                                    <p className="text-2xl font-black font-mono tracking-wider">{submittedReferenceNumber}</p>
-                                </div>
-
-                                <div className="bg-blue-900/5 border border-blue-900/10 rounded-2xl p-6 relative overflow-hidden text-left mb-6">
-                                    <div className="flex items-center gap-3 text-blue-900 mb-4">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
-                                        <h4 className="text-xs font-black uppercase tracking-[0.1em]">Next Procedures</h4>
+            {
+                showSuccessModal && (
+                    <div className="fixed inset-0 z-[70] overflow-y-auto">
+                        <div className="flex min-h-screen items-center justify-center p-4">
+                            <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
+                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+                                <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-8 py-10 text-center relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                                    <div className="w-20 h-20 bg-blue-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
+                                        <CheckCircle className="w-12 h-12 text-blue-400 animate-bounce" />
                                     </div>
-                                    <div className="space-y-4">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5">
-                                                <Clock className="w-4 h-4 text-blue-700" />
-                                            </div>
-                                            <p className="text-[11px] text-gray-600 font-bold leading-relaxed">
-                                                Processing typically takes 1-3 business days. Your application is now in the queue for staff review and initial verification.
-                                            </p>
+                                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Filing Complete!</h2>
+                                </div>
+                                <div className="p-6 text-center">
+                                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6 text-blue-900">
+                                        <p className="text-sm font-medium mb-1 uppercase tracking-widest">Reference Number:</p>
+                                        <p className="text-2xl font-black font-mono tracking-wider">{submittedReferenceNumber}</p>
+                                    </div>
+
+                                    <div className="bg-blue-900/5 border border-blue-900/10 rounded-2xl p-6 relative overflow-hidden text-left mb-6">
+                                        <div className="flex items-center gap-3 text-blue-900 mb-4">
+                                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                                            <h4 className="text-xs font-black uppercase tracking-[0.1em]">Next Procedures</h4>
                                         </div>
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5">
-                                                <Phone className="w-4 h-4 text-blue-700" />
+                                        <div className="space-y-4">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5">
+                                                    <Clock className="w-4 h-4 text-blue-700" />
+                                                </div>
+                                                <p className="text-[11px] text-gray-600 font-bold leading-relaxed">
+                                                    Processing typically takes 1-3 business days. Your application is now in the queue for staff review and initial verification.
+                                                </p>
                                             </div>
-                                            <p className="text-[11px] text-gray-600 font-bold leading-relaxed">
-                                                We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your schedule or provide updates regarding your request.
-                                            </p>
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5">
+                                                    <Phone className="w-4 h-4 text-blue-700" />
+                                                </div>
+                                                <p className="text-[11px] text-gray-600 font-bold leading-relaxed">
+                                                    We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your schedule or provide updates regarding your request.
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <button onClick={() => { resetForm(); onClose(); }} className="w-full bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95">
-                                    Return to Dashboard
-                                </button>
+                                    <button onClick={() => { resetForm(); onClose(); }} className="w-full bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95">
+                                        Return to Dashboard
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.3s ease-out; }`}</style>
         </>

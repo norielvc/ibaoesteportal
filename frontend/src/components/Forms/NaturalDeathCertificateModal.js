@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 // Build Trigger: 2026-02-07 17:09
 import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 // Default officials data (fallback)
 const defaultOfficials = {
@@ -51,7 +51,8 @@ const defaultOfficials = {
 };
 
 // Enhanced Notification Component
-function Notification({ type, title, message, onClose }) {
+// Enhanced Notification Component - Memoized
+const Notification = React.memo(({ type, title, message, onClose }) => {
   const styles = {
     success: { bg: 'bg-gradient-to-r from-green-50 to-emerald-50', border: 'border-green-200', icon: 'bg-green-100 text-green-600', title: 'text-green-800', message: 'text-green-700' },
     error: { bg: 'bg-gradient-to-r from-red-50 to-rose-50', border: 'border-red-200', icon: 'bg-red-100 text-red-600', title: 'text-red-800', message: 'text-red-700' },
@@ -72,7 +73,9 @@ function Notification({ type, title, message, onClose }) {
       </div>
     </div>
   );
-}
+});
+
+Notification.displayName = 'Notification';
 
 export default function NaturalDeathCertificateModal({ isOpen, onClose }) {
   const [formCounter, setFormCounter] = useState(1);
@@ -93,7 +96,7 @@ export default function NaturalDeathCertificateModal({ isOpen, onClose }) {
   // Updated form data for Natural Death Certificate
   const [formData, setFormData] = useState({
     fullName: '', age: '', sex: '', civilStatus: '',
-    address: '', contactNumber: '',
+    address: '', contactNumber: '', email: '',
     dateOfDeath: '', causeOfDeath: '', covidRelated: 'No', residentId: null,
     requestorName: ''
   });
@@ -107,6 +110,7 @@ export default function NaturalDeathCertificateModal({ isOpen, onClose }) {
       civilStatus: resident.civil_status || '',
       address: resident.residential_address || '',
       contactNumber: resident.contact_number || prev.contactNumber,
+      email: resident.email || prev.email,
       residentId: resident.id
     }));
     setIsResidentModalOpen(false);
@@ -194,7 +198,7 @@ export default function NaturalDeathCertificateModal({ isOpen, onClose }) {
   const handleProceedSubmission = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_URL}/api/certificates/natural-death`, {
+      const response = await fetch(`${API_URL}/certificates/natural-death`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -224,7 +228,7 @@ export default function NaturalDeathCertificateModal({ isOpen, onClose }) {
 
   const resetForm = () => {
     setFormData({
-      fullName: '', age: '', sex: '', civilStatus: '', address: '', contactNumber: '',
+      fullName: '', age: '', sex: '', civilStatus: '', address: '', contactNumber: '', email: '',
       dateOfDeath: '', causeOfDeath: '', covidRelated: 'No', requestorName: ''
     });
     setShowPreview(false);
@@ -357,6 +361,10 @@ export default function NaturalDeathCertificateModal({ isOpen, onClose }) {
                         <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Requestor Contact Number <span className="text-red-500">*</span></label>
                         <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full px-4 py-3 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none font-black text-emerald-900 transition-all shadow-sm`} />
                       </div>
+                      <div className="space-y-6 text-sm md:col-span-2">
+                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Requestor Email Address (Optional)</label>
+                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className="w-full px-4 py-3 bg-white border-2 border-emerald-100 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none font-normal text-emerald-900 transition-all shadow-sm" />
+                      </div>
                     </div>
                   </div>
                 </form>
@@ -441,27 +449,40 @@ export default function NaturalDeathCertificateModal({ isOpen, onClose }) {
         </div>
       )}
 
-      <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+      {isResidentModalOpen && (
+        <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+      )}
       <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.3s ease-out; }`}</style>
     </>
   );
 }
 
-function ClearancePreview({ formData, referenceNumber, currentDate, officials, certificateRef }) {
+// Memoized Preview component
+const ClearancePreview = React.memo(({ formData, referenceNumber, currentDate, officials, certificateRef }) => {
   const logos = officials.logos || {};
   const headerStyle = officials.headerStyle || {};
   const containerRef = useRef(null);
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
+    let timeoutId;
     const updateScale = () => {
       if (containerRef.current) {
         setScale(Math.min(containerRef.current.offsetWidth / 794, 1));
       }
     };
+
+    const debouncedScale = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateScale, 100);
+    };
+
     updateScale();
-    window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
+    window.addEventListener('resize', debouncedScale);
+    return () => {
+      window.removeEventListener('resize', debouncedScale);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // Format Date for preview
@@ -543,4 +564,6 @@ function ClearancePreview({ formData, referenceNumber, currentDate, officials, c
       </div>
     </div>
   );
-}
+});
+
+ClearancePreview.displayName = 'ClearancePreview';

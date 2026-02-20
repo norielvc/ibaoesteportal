@@ -22,6 +22,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
     schoolAttending: '',
     academicAwards: '',
     gwa: '',
+    email: '',
     residentId: null
   });
 
@@ -43,6 +44,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
       gender: resident.gender ? (resident.gender.charAt(0).toUpperCase() + resident.gender.slice(1).toLowerCase()) : '',
       civilStatus: resident.civil_status ? (resident.civil_status.charAt(0).toUpperCase() + resident.civil_status.slice(1).toLowerCase()) : '',
       cellphoneNumber: resident.contact_number || prev.cellphoneNumber,
+      email: resident.email || prev.email,
       residentId: resident.id
     }));
     setIsResidentModalOpen(false);
@@ -69,6 +71,10 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
         newErrors[field] = true;
       }
     });
+
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = true;
+    }
 
     if (formData.purok === 'NV9') {
       if (!formData.phaseNumber) newErrors.phaseNumber = true;
@@ -111,7 +117,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
     setSubmitStatus(null);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
       const submissionData = {
         ...formData,
@@ -121,7 +127,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
         signature: signature // Include signature data
       };
 
-      const response = await fetch(`${API_URL}/api/educational-assistance`, {
+      const response = await fetch(`${API_URL}/educational-assistance`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +156,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
     setFormData({
       firstName: '', middleName: '', lastName: '', age: '', gender: '', civilStatus: '',
       purok: '', houseNumber: '', phaseNumber: '', blockNumber: '', lotNumber: '',
-      cellphoneNumber: '', yearGrade: '', schoolToAttend: '', schoolAttending: '',
+      cellphoneNumber: '', email: '', yearGrade: '', schoolToAttend: '', schoolAttending: '',
       academicAwards: '', gwa: '', residentId: null
     });
     setSignature(null);
@@ -163,7 +169,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-0 md:p-4 overflow-hidden">
-      <div className="relative bg-white md:rounded-3xl shadow-2xl w-full max-w-4xl h-full md:h-auto md:max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
+      <div className="relative bg-white md:rounded-3xl shadow-2xl w-full max-w-4xl h-full md:h-auto md:max-h-[95vh] flex flex-col overflow-hidden animate-fade-in no-scrollbar">
         {/* Premium Nature Header */}
         <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-4 md:px-8 md:py-8 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
           {/* Decorative elements */}
@@ -175,7 +181,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
               <GraduationCap className="w-6 h-6 md:w-8 md:h-8 text-white" />
             </div>
             <div>
-              <h2 className="text-lg md:text-2xl font-black text-white tracking-tight leading-none">Educational Assistance</h2>
+              <h2 className="text-lg md:text-2xl font-black text-white leading-none tracking-tight">Educational Assistance</h2>
               <div className="flex items-center gap-2 mt-1.5">
                 <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
                 <p className="text-green-100/80 text-[10px] md:text-sm font-bold uppercase tracking-widest leading-none">Scholarship Filing Portal</p>
@@ -205,8 +211,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                     Official Program Notice
                   </h4>
                   <p className="text-emerald-800/90 leading-relaxed text-sm font-medium">
-                    KAMI PO AY MAKIKIPAG-UGNAYAN SA INYO KUNG KAYO PO AY KUWALIPIKADO. Ang serbisyong ito ay eksklusibo para sa mga
-                    benepisyaryong nakatala sa <span className="font-bold underline decoration-emerald-300/50 italic text-emerald-950">latest barangay census</span>.
+                    KAMI PO AY MAKIKIPAG-UGNAYAN SA INYO KUNG KAYO PO AY KUWALIPIKADO. You will receive email and SMS updates once processed.
                   </p>
                 </div>
               </div>
@@ -273,7 +278,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 ">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
                     <input type="number" value={formData.age} readOnly disabled className="w-full px-4 py-3 md:px-5 md:py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-600 font-black focus:outline-none shadow-inner" />
@@ -289,13 +294,35 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* Step 2: Residence Details */}
+              {/* Step 2: Contact & Identification */}
               <div className="space-y-8 animate-fade-in-up [animation-delay:0.1s]">
                 <div className="flex items-center gap-4 border-b border-gray-100 pb-5">
                   <div className="w-12 h-12 bg-emerald-700 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl ring-4 ring-emerald-50">2</div>
                   <div>
-                    <h3 className="text-xl font-black text-gray-900 tracking-tight">Residence Location</h3>
-                    <p className="text-sm text-gray-500 font-bold uppercase tracking-widest opacity-60">Barangay Address Registry</p>
+                    <h3 className="text-xl font-black text-gray-900 tracking-tight">Notification & Residency</h3>
+                    <p className="text-sm text-gray-500 font-bold uppercase tracking-widest opacity-60">Where to receive your updates</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-3 relative group">
+                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Email Address (Optional)</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none border-r pr-3 border-gray-100">
+                        <Pen className="w-4 h-4 text-emerald-600/50" />
+                      </div>
+                      <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className={`w-full pl-14 pr-6 py-4 bg-white border-2 ${errors.email ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-2xl focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-normal text-emerald-900 shadow-sm`} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 relative group">
+                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">SMS Alert Receiver <span className="text-red-500">*</span></label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none border-r pr-3 border-gray-100">
+                        <Phone className="w-4 h-4 text-emerald-600/50" />
+                      </div>
+                      <input type="tel" name="cellphoneNumber" value={formData.cellphoneNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full pl-14 pr-6 py-4 bg-white border-2 ${errors.cellphoneNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-2xl focus:border-emerald-500 outline-none font-black text-emerald-900 shadow-sm`} />
+                    </div>
                   </div>
                 </div>
 

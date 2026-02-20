@@ -6,10 +6,10 @@ export default function TestSimpleOfficials() {
   useEffect(() => {
     const fetchOfficials = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
-        const response = await fetch(`${API_URL}/api/officials`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+        const response = await fetch(`${API_URL}/officials`);
         const data = await response.json();
-        
+
         if (data.success && data.data) {
           setOfficials(data.data);
         }
@@ -24,13 +24,13 @@ export default function TestSimpleOfficials() {
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold mb-8 text-center">Barangay Officials</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {officials.length > 0 ? (
           officials.map((official, index) => {
             const colors = [
               'from-blue-600 to-indigo-700',
-              'from-teal-600 to-green-700', 
+              'from-teal-600 to-green-700',
               'from-emerald-600 to-green-700',
               'from-cyan-600 to-blue-700',
               'from-green-600 to-emerald-700',
@@ -46,7 +46,7 @@ export default function TestSimpleOfficials() {
               'from-amber-600 to-orange-700',
               'from-lime-600 to-green-700'
             ];
-            
+
             const colorClass = colors[index % colors.length];
             const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
 

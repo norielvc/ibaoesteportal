@@ -29,7 +29,7 @@ export default function Settings() {
   const [isExporting, setIsExporting] = useState(false);
 
   // API Configuration
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
   const [settings, setSettings] = useState({
     // General
@@ -80,7 +80,7 @@ export default function Settings() {
       const token = getAuthToken();
       console.log('Fetching signatures with token:', token ? 'Token exists' : 'No token');
 
-      const response = await fetch(`${API_URL}/api/user/signatures`, {
+      const response = await fetch(`${API_URL}/user/signatures`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -146,7 +146,7 @@ export default function Settings() {
       const token = getAuthToken();
       console.log('Save signature with token:', token ? 'Token exists' : 'No token');
 
-      const response = await fetch(`${API_URL}/api/user/signatures`, {
+      const response = await fetch(`${API_URL}/user/signatures`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -186,7 +186,7 @@ export default function Settings() {
 
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/user/signatures/${signatureId}`, {
+      const response = await fetch(`${API_URL}/user/signatures/${signatureId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -213,7 +213,7 @@ export default function Settings() {
   const setDefaultSignature = async (signatureId) => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/user/signatures/${signatureId}/default`, {
+      const response = await fetch(`${API_URL}/user/signatures/${signatureId}/default`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -245,7 +245,7 @@ export default function Settings() {
     try {
       setIsExporting(true);
       // Fetch ALL residents without pagination for export
-      const response = await fetch(`${API_URL}/api/residents/search?name=&page=1&limit=100000`);
+      const response = await fetch(`${API_URL}/residents/search?name=&page=1&limit=100000`);
       const data = await response.json();
 
       if (data.success && data.residents.length > 0) {
@@ -865,7 +865,7 @@ export default function Settings() {
                               contact_number: row.contact_number || row['Contact Number'] || ''
                             }));
 
-                            const res = await fetch(`${API_URL}/api/residents/bulk-insert`, {
+                            const res = await fetch(`${API_URL}/residents/bulk-insert`, {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ residents: mappedData })

@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout/Layout';
 import SignatureInput from '@/components/UI/SignatureInput';
-import { 
-  Save, Trash2, Eye, EyeOff, User, Shield, 
-  CheckCircle, AlertCircle, Info, Pen 
+import {
+  Save, Trash2, Eye, EyeOff, User, Shield,
+  CheckCircle, AlertCircle, Info, Pen
 } from 'lucide-react';
 import { getAuthToken, getUserData } from '@/lib/auth';
 
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 export default function SignatureSettings() {
   const router = useRouter();
@@ -36,7 +36,7 @@ export default function SignatureSettings() {
     try {
       setLoading(true);
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/user/signatures`, {
+      const response = await fetch(`${API_URL}/user/signatures`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -73,7 +73,7 @@ export default function SignatureSettings() {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/user/signatures`, {
+      const response = await fetch(`${API_URL}/user/signatures`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -119,7 +119,7 @@ export default function SignatureSettings() {
 
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/user/signatures/${signatureId}`, {
+      const response = await fetch(`${API_URL}/user/signatures/${signatureId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -155,7 +155,7 @@ export default function SignatureSettings() {
   const setDefaultSignature = async (signatureId) => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/user/signatures/${signatureId}/default`, {
+      const response = await fetch(`${API_URL}/user/signatures/${signatureId}/default`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -225,13 +225,12 @@ export default function SignatureSettings() {
 
         {/* Notification */}
         {notification && (
-          <div className={`mb-6 p-4 rounded-lg border ${
-            notification.type === 'success' 
+          <div className={`mb-6 p-4 rounded-lg border ${notification.type === 'success'
               ? 'bg-green-50 border-green-200 text-green-800'
               : notification.type === 'error'
-              ? 'bg-red-50 border-red-200 text-red-800'
-              : 'bg-blue-50 border-blue-200 text-blue-800'
-          }`}>
+                ? 'bg-red-50 border-red-200 text-red-800'
+                : 'bg-blue-50 border-blue-200 text-blue-800'
+            }`}>
             <div className="flex items-center gap-2">
               {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
               {notification.type === 'error' && <AlertCircle className="w-5 h-5" />}
@@ -247,7 +246,7 @@ export default function SignatureSettings() {
         {/* Create New Signature */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Create New Signature</h2>
-          
+
           <SignatureInput
             onSignatureChange={setNewSignature}
             label="Your Digital Signature"
@@ -287,11 +286,10 @@ export default function SignatureSettings() {
               {signatures.map((signature) => (
                 <div
                   key={signature.id}
-                  className={`border rounded-lg p-4 ${
-                    signature.id === defaultSignatureId
+                  className={`border rounded-lg p-4 ${signature.id === defaultSignatureId
                       ? 'border-blue-200 bg-blue-50'
                       : 'border-gray-200'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">

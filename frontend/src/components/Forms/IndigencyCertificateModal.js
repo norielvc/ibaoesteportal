@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone, Mail } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 // Default officials data (fallback)
 const defaultOfficials = {
@@ -44,7 +44,8 @@ const defaultOfficials = {
   footerStyle: { bgColor: '#f9fafb', textColor: '#374151', borderColor: '#d1d5db', textSize: 9, fontFamily: 'default' }
 };
 
-function Notification({ type, title, message, onClose }) {
+// Memoized Notification component
+const Notification = React.memo(({ type, title, message, onClose }) => {
   const styles = {
     success: { bg: 'bg-gradient-to-r from-green-50 to-emerald-50', border: 'border-green-200', icon: 'bg-green-100 text-green-600', title: 'text-green-800', message: 'text-green-700' },
     error: { bg: 'bg-gradient-to-r from-red-50 to-rose-50', border: 'border-red-200', icon: 'bg-red-100 text-red-600', title: 'text-red-800', message: 'text-red-700' },
@@ -64,7 +65,9 @@ function Notification({ type, title, message, onClose }) {
       </div>
     </div>
   );
-}
+});
+
+Notification.displayName = 'Notification';
 
 export default function IndigencyCertificateModal({ isOpen, onClose }) {
   const [formCounter, setFormCounter] = useState(1);
@@ -84,8 +87,9 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
 
   const [formData, setFormData] = useState({
     fullName: '', age: '', gender: '', civilStatus: '',
-    address: '', dateOfBirth: '', placeOfBirth: '',
-    purpose: '', contactNumber: '', residentId: null
+    address: '', contactNumber: '', email: '',
+    dateOfBirth: '', placeOfBirth: '',
+    purpose: '', residentId: null
   });
 
   const handleResidentSelect = (resident) => {
@@ -99,6 +103,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
       dateOfBirth: resident.date_of_birth ? new Date(resident.date_of_birth).toISOString().split('T')[0] : '',
       placeOfBirth: resident.place_of_birth || '',
       contactNumber: resident.contact_number || prev.contactNumber,
+      email: resident.email || prev.email,
       residentId: resident.id
     }));
     setIsResidentModalOpen(false);
@@ -164,12 +169,17 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
       }
     }
 
+    // Email validation
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = true;
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setNotification({
         type: 'error',
         title: 'Validation Error',
-        message: 'Please fill in all required fields highlighted in red.'
+        message: 'Please fill in all required fields correctly.'
       });
       return false;
     }
@@ -185,7 +195,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
   const handleProceedSubmission = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_URL}/api/certificates/indigency`, {
+      const response = await fetch(`${API_URL}/certificates/indigency`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -214,7 +224,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
   const handleCustomizeForm = () => setShowConfirmationPopup(false);
 
   const resetForm = () => {
-    setFormData({ fullName: '', age: '', gender: '', civilStatus: '', address: '', dateOfBirth: '', placeOfBirth: '', purpose: '', contactNumber: '' });
+    setFormData({ fullName: '', age: '', gender: '', civilStatus: '', address: '', contactNumber: '', email: '', dateOfBirth: '', placeOfBirth: '', purpose: '', residentId: null });
     setShowPreview(false);
     setShowConfirmationPopup(false);
     setShowSuccessModal(false);
@@ -233,7 +243,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
           <div className="flex min-h-screen items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
 
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in no-scrollbar">
               <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-4 md:px-8 md:py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
                 <div className="flex items-center gap-3 md:gap-5 relative z-10">
@@ -242,7 +252,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                     <h2 className="text-lg md:text-2xl font-extrabold text-white tracking-tight drop-shadow-md">Certificate of Indigency</h2>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
-                      <p className="text-emerald-50/90 text-[10px] md:text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">{referenceNumber || 'New Application Request'}</p>
+                      <p className="text-emerald-50/90 text-[10px] md:text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">{referenceNumber || 'New Indigency Request'}</p>
                     </div>
                   </div>
                 </div>
@@ -258,7 +268,7 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                       <div className="bg-emerald-100 p-3 rounded-xl border border-emerald-200 shadow-sm"><Info className="w-6 h-6 text-emerald-600" /></div>
                       <div className="space-y-2">
                         <h4 className="text-sm font-bold text-emerald-900 uppercase tracking-widest flex items-center gap-2">Official Requirement Notice</h4>
-                        <p className="text-emerald-800/90 leading-relaxed text-sm">Indigency certificates are strictly for residents requiring social or financial assistance.</p>
+                        <p className="text-emerald-800/90 leading-relaxed text-sm">Indigency certificates are strictly for residents requiring social or financial assistance. You will receive an email update once processed.</p>
                       </div>
                     </div>
                   </div>
@@ -284,24 +294,58 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
-                        <input type="number" name="age" value={formData.age} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
+                          <input type="number" name="age" value={formData.age} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex</label>
+                          <input type="text" value={formData.gender || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex</label>
-                        <input type="text" value={formData.gender || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Registered Residential Address</label>
+                        <input type="text" value={formData.address || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
                       </div>
-                    </div>
-
-                    <div className="space-y-2 pb-6">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Registered Residential Address</label>
-                      <input type="text" value={formData.address || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
                     </div>
 
                     <div className="pt-6 border-t border-gray-100">
                       <div className="flex items-center gap-3 mb-8">
                         <div className="w-10 h-10 bg-[#2d5a3d] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">2</div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">Notification & Contact</h3>
+                          <p className="text-sm text-gray-500 font-medium tracking-wide">Where to receive your updates</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2 relative group">
+                          <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Email Address (Optional)</label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none border-r pr-3 border-gray-100">
+                              <Mail className="w-5 h-5 text-[#2d5a3d]/50" />
+                            </div>
+                            <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className={`w-full pl-16 pr-6 py-4 bg-white border-2 ${errors.email ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-2xl focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-normal text-gray-800 shadow-sm`} />
+                          </div>
+                          <p className="text-[10px] text-gray-400 font-bold italic ml-2">Notifications will be sent here</p>
+                        </div>
+
+                        <div className="space-y-2 relative group">
+                          <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Contact Number <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none border-r pr-3 border-gray-100">
+                              <Phone className="w-5 h-5 text-[#2d5a3d]/50" />
+                            </div>
+                            <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full pl-16 pr-6 py-4 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-2xl focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-bold text-gray-800 shadow-sm`} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-gray-100">
+                      <div className="flex items-center gap-3 mb-8">
+                        <div className="w-10 h-10 bg-[#112117] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">3</div>
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">Application Intent</h3>
                         </div>
@@ -309,13 +353,6 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                       <div className="space-y-2 relative">
                         <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Request Purpose <span className="text-red-500">*</span></label>
                         <textarea name="purpose" value={formData.purpose} onChange={handleInputChange} rows={3} placeholder="e.g. Educational Assistance, Medical Subsidy..." className={`w-full px-6 py-5 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:shadow-lg transition-all outline-none uppercase font-extrabold text-gray-800 shadow-sm`} />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-100">
-                      <div className="space-y-6">
-                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">SMS Contact Number <span className="text-red-500">*</span></label>
-                        <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full px-4 py-3 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-xl focus:border-emerald-500 transition-all shadow-sm`} />
                       </div>
                     </div>
                   </div>
@@ -401,27 +438,40 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
         </div>
       )}
 
-      <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+      {isResidentModalOpen && (
+        <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+      )}
       <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.3s ease-out; }`}</style>
     </>
   );
 }
 
-function IndigencyPreview({ formData, referenceNumber, currentDate, officials, certificateRef }) {
+// Memoized Preview component
+const IndigencyPreview = React.memo(({ formData, referenceNumber, currentDate, officials, certificateRef }) => {
   const logos = officials.logos || {};
   const headerStyle = officials.headerStyle || {};
   const [scale, setScale] = useState(1);
   const containerRef = useRef(null);
 
   useEffect(() => {
+    let timeoutId;
     const updateScale = () => {
       if (containerRef.current) {
         setScale(Math.min(containerRef.current.offsetWidth / 794, 1));
       }
     };
+
+    const debouncedScale = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateScale, 100);
+    };
+
     updateScale();
-    window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
+    window.addEventListener('resize', debouncedScale);
+    return () => {
+      window.removeEventListener('resize', debouncedScale);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (
@@ -491,4 +541,6 @@ function IndigencyPreview({ formData, referenceNumber, currentDate, officials, c
       </div>
     </div>
   );
-}
+});
+
+IndigencyPreview.displayName = 'IndigencyPreview';

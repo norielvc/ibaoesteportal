@@ -166,7 +166,8 @@ router.post('/', requireAdmin, validateUserCreation, async (req, res) => {
     if (error) {
       return res.status(400).json({
         success: false,
-        message: 'Failed to create user'
+        message: 'Failed to create user',
+        error: error.message
       });
     }
 

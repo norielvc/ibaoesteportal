@@ -29,7 +29,7 @@ import { debounce } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 export default function Employees() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function Employees() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const apiUrl = `${API_URL}/api`;
+  const apiUrl = API_URL;
 
   useEffect(() => {
     fetchEmployees();

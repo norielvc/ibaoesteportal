@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, X, User, MapPin, Calendar, Phone, Check, AlertCircle, Database } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 export default function ResidentSearchModal({ isOpen, onClose, onSelect }) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -25,7 +25,7 @@ export default function ResidentSearchModal({ isOpen, onClose, onSelect }) {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/api/residents/search?name=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`${API_URL}/residents/search?name=${encodeURIComponent(searchTerm)}`);
             const data = await response.json();
             if (data.success) {
                 setResults(data.residents);

@@ -7,7 +7,7 @@ export default function TestImageDisplay() {
   const [testImage, setTestImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
   const createTestImage = () => {
     // Create a simple test image
@@ -15,11 +15,11 @@ export default function TestImageDisplay() {
     canvas.width = 200;
     canvas.height = 100;
     const ctx = canvas.getContext('2d');
-    
+
     // White background
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, 200, 100);
-    
+
     // Draw a simple signature
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 2;
@@ -28,7 +28,7 @@ export default function TestImageDisplay() {
     ctx.quadraticCurveTo(60, 20, 100, 50);
     ctx.quadraticCurveTo(140, 80, 180, 50);
     ctx.stroke();
-    
+
     const dataURL = canvas.toDataURL('image/png');
     setTestImage(dataURL);
     console.log('Created test image:', dataURL.substring(0, 100) + '...');
@@ -38,7 +38,7 @@ export default function TestImageDisplay() {
     setLoading(true);
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/user/signatures`, {
+      const response = await fetch(`${API_URL}/user/signatures`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -65,21 +65,21 @@ export default function TestImageDisplay() {
   return (
     <Layout title="Test Image Display" subtitle="Debug signature image display issues">
       <div className="max-w-4xl mx-auto space-y-6">
-        
+
         {/* Test Image */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             🧪 Test Image (Generated in Browser)
           </h2>
-          
+
           <div className="space-y-4">
             <div>
               <h3 className="font-medium mb-2">Generated Test Image:</h3>
               <div className="border border-gray-300 rounded p-4 bg-gray-50 inline-block">
                 {testImage ? (
-                  <img 
-                    src={testImage} 
-                    alt="Test signature" 
+                  <img
+                    src={testImage}
+                    alt="Test signature"
                     className="border border-gray-400"
                     onLoad={() => console.log('✅ Test image loaded successfully')}
                     onError={() => console.error('❌ Test image failed to load')}
@@ -89,7 +89,7 @@ export default function TestImageDisplay() {
                 )}
               </div>
             </div>
-            
+
             <div>
               <h3 className="font-medium mb-2">Test Image Data:</h3>
               <div className="bg-gray-100 p-3 rounded text-sm font-mono break-all">
@@ -104,7 +104,7 @@ export default function TestImageDisplay() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             🗄️ Database Signatures ({signatures.length})
           </h2>
-          
+
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -141,21 +141,21 @@ export default function TestImageDisplay() {
                             }}
                           />
                         ) : null}
-                        <div 
+                        <div
                           className="w-full h-full flex items-center justify-center text-red-500 text-xs"
-                          style={{display: sig.signature_data ? 'none' : 'flex'}}
+                          style={{ display: sig.signature_data ? 'none' : 'flex' }}
                         >
                           {sig.signature_data ? '❌ Load Failed' : 'No Data'}
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex-1">
                       <h4 className="font-medium">{sig.name}</h4>
                       <p className="text-sm text-gray-500 mb-2">
                         Created: {new Date(sig.created_at).toLocaleDateString()}
                       </p>
-                      
+
                       <div className="text-xs text-gray-600 space-y-1">
                         <p><strong>Has Data:</strong> {sig.signature_data ? 'Yes' : 'No'}</p>
                         {sig.signature_data && (
@@ -164,14 +164,14 @@ export default function TestImageDisplay() {
                             <p><strong>Valid Data URL:</strong> {sig.signature_data.startsWith('data:image/') ? 'Yes' : 'No'}</p>
                             <p><strong>Has Base64:</strong> {sig.signature_data.includes('base64,') ? 'Yes' : 'No'}</p>
                             <p><strong>MIME Type:</strong> {
-                              sig.signature_data.startsWith('data:image/') 
+                              sig.signature_data.startsWith('data:image/')
                                 ? sig.signature_data.split(';')[0].split(':')[1]
                                 : 'Unknown'
                             }</p>
                           </>
                         )}
                       </div>
-                      
+
                       {sig.signature_data && (
                         <details className="mt-2">
                           <summary className="text-xs text-blue-600 cursor-pointer">Show Raw Data</summary>
@@ -193,7 +193,7 @@ export default function TestImageDisplay() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             🔍 Comparison Test
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="font-medium mb-2">✅ Working Test Image:</h3>
@@ -203,14 +203,14 @@ export default function TestImageDisplay() {
                 )}
               </div>
             </div>
-            
+
             <div>
               <h3 className="font-medium mb-2">❓ Database Image:</h3>
               <div className="border border-blue-300 rounded p-4 bg-blue-50">
                 {signatures.length > 0 && signatures[0].signature_data ? (
-                  <img 
-                    src={signatures[0].signature_data} 
-                    alt="Database signature" 
+                  <img
+                    src={signatures[0].signature_data}
+                    alt="Database signature"
                     className="border border-gray-400"
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -218,7 +218,7 @@ export default function TestImageDisplay() {
                     }}
                   />
                 ) : null}
-                <div style={{display: 'none'}} className="text-red-600 text-center py-4">
+                <div style={{ display: 'none' }} className="text-red-600 text-center py-4">
                   ❌ Failed to load database image
                 </div>
               </div>

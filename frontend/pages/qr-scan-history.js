@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { isAuthenticated, getAuthToken } from '@/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 // Helper to parse complex QR scan data
 const parseQRData = (qrData) => {
@@ -90,7 +90,7 @@ export default function QRScanHistoryPage() {
     try {
       setDeletingId(id);
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/qr-scans/${id}`, {
+      const response = await fetch(`${API_URL}/qr-scans/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -128,7 +128,7 @@ export default function QRScanHistoryPage() {
     try {
       setDuplicatesLoading(true);
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/qr-scans/duplicates`, {
+      const response = await fetch(`${API_URL}/qr-scans/duplicates`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -148,7 +148,7 @@ export default function QRScanHistoryPage() {
   const loadStats = async () => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/qr-scans/stats`, {
+      const response = await fetch(`${API_URL}/qr-scans/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -173,7 +173,7 @@ export default function QRScanHistoryPage() {
       if (searchTerm) params.append('qr_data', searchTerm);
       if (selectedDate) params.append('date', selectedDate);
 
-      const response = await fetch(`${API_URL}/api/qr-scans?${params}`, {
+      const response = await fetch(`${API_URL}/qr-scans?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -207,7 +207,7 @@ export default function QRScanHistoryPage() {
     try {
       setClearing(true);
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/qr-scans`, {
+      const response = await fetch(`${API_URL}/qr-scans`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

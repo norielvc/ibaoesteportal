@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../services/supabaseClient');
+const { sendProcessNotification, sendWorkflowNotifications } = require('../services/emailService');
 
 // Get all educational assistance applications
 router.get('/', async (req, res) => {
@@ -170,6 +171,52 @@ router.post('/', async (req, res) => {
     }
 
     console.log('Application created successfully:', application.reference_number);
+
+    // --- ASYNC EMAIL NOTIFICATIONS ---
+    setImmediate(async () => {
+      try {
+        const applicantName = `${firstName} ${lastName}`;
+        const refNumber = application.reference_number;
+
+        // 1. Notify Applicant
+        if (req.body.email) {
+          await sendProcessNotification({
+            recipientEmail: req.body.email,
+            recipientName: applicantName,
+            eventType: 'RECEIVED',
+            certificateType: 'Educational Assistance',
+            referenceNumber: refNumber,
+            applicantName: applicantName,
+            requestId: application.id
+          });
+        }
+
+        // 2. Notify Staff Approvers
+        // Fetch Review Request Team members
+        const { data: users } = await supabase
+          .from('users')
+          .select('email, first_name, last_name')
+          .eq('role', 'admin'); // Fallback to all admins or specific team
+
+        if (users && users.length > 0) {
+          const recipients = users.map(u => ({
+            email: u.email,
+            name: `${u.first_name} ${u.last_name}`
+          }));
+
+          await sendWorkflowNotifications({
+            recipients,
+            eventType: 'SUBMITTED',
+            certificateType: 'Educational Assistance',
+            referenceNumber: refNumber,
+            applicantName: applicantName,
+            requestId: application.id
+          });
+        }
+      } catch (err) {
+        console.error('Educational assistance email error:', err);
+      }
+    });
 
     res.status(201).json({
       success: true,

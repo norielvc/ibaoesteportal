@@ -80,11 +80,11 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     setSubmitStatus(null);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
       // Generate reference number
       const currentYear = new Date().getFullYear();
-      const referenceResponse = await fetch(`${API_URL}/api/certificates/next-reference/BP`);
+      const referenceResponse = await fetch(`${API_URL}/certificates/next-reference/BP`);
       let refNum = `BP-${currentYear}-00001`;
 
       if (referenceResponse.ok) {
@@ -96,7 +96,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
 
       setReferenceNumber(refNum);
 
-      const response = await fetch(`${API_URL}/api/certificates/business-permit`, {
+      const response = await fetch(`${API_URL}/certificates/business-permit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -265,8 +265,8 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                     <input type="tel" name="businessPhone" value={formData.businessPhone} onChange={handleInputChange} placeholder="09XX XXX XXXX..." className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none" />
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Business Email Address</label>
-                    <input type="email" name="businessEmail" value={formData.businessEmail} onChange={handleInputChange} placeholder="BUSINESS@EXAMPLE.CO..." className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none" />
+                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Business Email Address (Optional)</label>
+                    <input type="email" name="businessEmail" value={formData.businessEmail} onChange={handleInputChange} placeholder="username@example.com" className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-normal text-emerald-900 outline-none" />
                   </div>
                 </div>
               </div>
@@ -304,7 +304,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Owner Email (Optional)</label>
-                    <input type="email" name="ownerEmail" value={formData.ownerEmail} onChange={handleInputChange} placeholder="OWNER@EMAIL.CO..." className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none" />
+                    <input type="email" name="ownerEmail" value={formData.ownerEmail} onChange={handleInputChange} placeholder="username@example.com" className="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-normal text-emerald-900 outline-none" />
                   </div>
                 </div>
               </div>

@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 // Build Trigger: 2026-02-07 17:09
-import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone } from 'lucide-react';
+import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone, Mail } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 // API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 // Default officials data (fallback)
 const defaultOfficials = {
@@ -50,8 +50,8 @@ const defaultOfficials = {
   footerStyle: { bgColor: '#f9fafb', textColor: '#374151', borderColor: '#d1d5db', textSize: 9, fontFamily: 'default' }
 };
 
-// Enhanced Notification Component
-function Notification({ type, title, message, onClose }) {
+// Enhanced Notification Component - Memoized for performance
+const Notification = React.memo(({ type, title, message, onClose }) => {
   const styles = {
     success: { bg: 'bg-gradient-to-r from-green-50 to-emerald-50', border: 'border-green-200', icon: 'bg-green-100 text-green-600', title: 'text-green-800', message: 'text-green-700' },
     error: { bg: 'bg-gradient-to-r from-red-50 to-rose-50', border: 'border-red-200', icon: 'bg-red-100 text-red-600', title: 'text-red-800', message: 'text-red-700' },
@@ -72,7 +72,9 @@ function Notification({ type, title, message, onClose }) {
       </div>
     </div>
   );
-}
+});
+
+Notification.displayName = 'Notification';
 
 export default function BarangayClearanceModal({ isOpen, onClose }) {
   const [formCounter, setFormCounter] = useState(1);
@@ -92,7 +94,7 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
 
   const [formData, setFormData] = useState({
     fullName: '', age: '', sex: '', civilStatus: '',
-    address: '', contactNumber: '',
+    address: '', contactNumber: '', email: '',
     dateOfBirth: '', placeOfBirth: '', purpose: '', residentId: null
   });
 
@@ -107,15 +109,16 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
       dateOfBirth: resident.date_of_birth ? new Date(resident.date_of_birth).toISOString().split('T')[0] : '',
       placeOfBirth: resident.place_of_birth || '',
       contactNumber: resident.contact_number || prev.contactNumber,
+      email: resident.email || prev.email,
       residentId: resident.id
     }));
     setIsResidentModalOpen(false);
-    setErrors(prev => ({ ...prev, fullName: false }));
     setNotification({
       type: 'success',
       title: 'Profile Found',
       message: `${resident.full_name}'s details have been auto-filled.`
     });
+    setErrors(prev => ({ ...prev, fullName: false }));
   };
 
   useEffect(() => {
@@ -164,7 +167,7 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
 
   const validateForm = () => {
     setErrors({});
-    const required = ['fullName', 'age', 'sex', 'civilStatus', 'dateOfBirth', 'placeOfBirth', 'purpose', 'contactNumber'];
+    const required = ['fullName', 'age', 'sex', 'civilStatus', 'dateOfBirth', 'placeOfBirth', 'address', 'purpose', 'contactNumber'];
     const newErrors = {};
 
     for (const field of required) {
@@ -173,12 +176,17 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
       }
     }
 
+    // Basic email validation
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = true;
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setNotification({
         type: 'error',
         title: 'Validation Error',
-        message: `Please fill in all required fields highlighted in red.`
+        message: 'Please fill in all required fields correctly.'
       });
       return false;
     }
@@ -194,7 +202,7 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
   const handleProceedSubmission = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_URL}/api/certificates/clearance`, {
+      const response = await fetch(`${API_URL}/certificates/clearance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -223,7 +231,7 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
   const handleCustomizeForm = () => setShowConfirmationPopup(false);
 
   const resetForm = () => {
-    setFormData({ fullName: '', age: '', sex: '', civilStatus: '', address: '', contactNumber: '', dateOfBirth: '', placeOfBirth: '', purpose: '' });
+    setFormData({ fullName: '', age: '', sex: '', civilStatus: '', address: '', contactNumber: '', email: '', dateOfBirth: '', placeOfBirth: '', purpose: '', residentId: null });
     setShowPreview(false);
     setShowConfirmationPopup(false);
     setShowSuccessModal(false);
@@ -242,24 +250,20 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
           <div className="flex min-h-screen items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
 
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in no-scrollbar">
               <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-4 md:px-8 md:py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
                 <div className="flex items-center gap-3 md:gap-5 relative z-10">
-                  <div className="bg-white/20 backdrop-blur-md p-2 md:p-3.5 rounded-xl md:rounded-2xl border border-white/30 shadow-xl">
-                    <FileText className="w-6 h-6 md:w-8 md:h-8 text-white shadow-sm" />
-                  </div>
+                  <div className="bg-white/20 backdrop-blur-md p-2 md:p-3.5 rounded-xl md:rounded-2xl border border-white/30 shadow-xl"><FileText className="w-6 h-6 md:w-8 md:h-8 text-white shadow-sm" /></div>
                   <div className="flex flex-col">
-                    <h2 className="text-lg md:text-2xl font-extrabold text-white tracking-tight drop-shadow-md">Barangay Clearance</h2>
+                    <h2 className="text-lg md:text-2xl font-extrabold text-white tracking-tight drop-shadow-md">Barangay Clearance Request</h2>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
-                      <p className="text-emerald-50/90 text-[10px] md:text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">{referenceNumber || 'New Application Request'}</p>
+                      <p className="text-emerald-50/90 text-[10px] md:text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-white/10 rounded-full border border-white/5">{referenceNumber || 'New Clearance Request'}</p>
                     </div>
                   </div>
                 </div>
-                <button onClick={onClose} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group">
-                  <X className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-90 transition-transform duration-300" />
-                </button>
+                <button onClick={onClose} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group"><X className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-90 transition-transform duration-300" /></button>
               </div>
 
               {notification && <div className="px-6 pt-4"><Notification type={notification.type} title={notification.title} message={notification.message} onClose={() => setNotification(null)} /></div>}
@@ -270,8 +274,8 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                     <div className="flex items-start gap-4 relative z-10">
                       <div className="bg-emerald-100 p-3 rounded-xl border border-emerald-200 shadow-sm"><Info className="w-6 h-6 text-emerald-600" /></div>
                       <div className="space-y-2">
-                        <h4 className="text-sm font-bold text-emerald-900 uppercase tracking-widest flex items-center gap-2">Official Requirement Notice</h4>
-                        <p className="text-emerald-800/90 leading-relaxed text-sm">Online processing is exclusively for residents registered in the latest barangay census.</p>
+                        <h4 className="text-sm font-bold text-emerald-900 uppercase tracking-widest flex items-center gap-2">Online Portal Guidelines</h4>
+                        <p className="text-emerald-800/90 leading-relaxed text-sm">Please ensure all information matches your official records. You will receive an email notification once your request is being processed.</p>
                       </div>
                     </div>
                   </div>
@@ -282,28 +286,30 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                         <div className="w-10 h-10 bg-[#112e1f] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">1</div>
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">Personal Information</h3>
-                          <p className="text-sm text-gray-500 font-medium">Auto-filled via community database</p>
+                          <p className="text-sm text-gray-500 font-medium tracking-wide">Select your profile from the directory</p>
                         </div>
                       </div>
                       <button type="button" onClick={() => setIsResidentModalOpen(true)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-xl text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-md group">
                         <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        Verify Identity Profile
+                        Search Resident Database
                       </button>
                     </div>
 
                     <div className="relative group">
                       <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Resident Full Name</label>
-                      <input type="text" name="fullName" value={formData.fullName} readOnly onClick={() => setIsResidentModalOpen(true)} placeholder="TAP HERE TO SELECT FROM RESIDENT DIRECTORY..." className={`w-full px-6 py-5 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-2xl transition-all duration-300 font-extrabold text-lg cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`} />
+                      <input type="text" name="fullName" value={formData.fullName} readOnly onClick={() => setIsResidentModalOpen(true)} placeholder="TAP HERE TO ACCESS DATABASE..." className={`w-full px-6 py-5 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-2xl transition-all duration-300 font-extrabold text-lg cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`} />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
-                        <input type="number" name="age" value={formData.age} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex</label>
-                        <input type="text" value={formData.sex || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Age</label>
+                          <input type="number" name="age" value={formData.age} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex</label>
+                          <input type="text" value={formData.sex || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Civil Status</label>
@@ -311,19 +317,8 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Date of Birth</label>
-                        <input type="text" value={formData.dateOfBirth || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold focus:outline-none" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Place of Birth</label>
-                        <input type="text" value={formData.placeOfBirth || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 pb-6">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Registered Residential Address</label>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Residential Address</label>
                       <input type="text" value={formData.address || 'N/A'} readOnly disabled className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase focus:outline-none" />
                     </div>
 
@@ -331,20 +326,45 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                       <div className="flex items-center gap-3 mb-8">
                         <div className="w-10 h-10 bg-[#2d5a3d] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">2</div>
                         <div>
-                          <h3 className="text-xl font-bold text-gray-900">Application Details</h3>
-                          <p className="text-sm text-gray-500 font-medium tracking-wide">Please specify the official intent of your request</p>
+                          <h3 className="text-xl font-bold text-gray-900">Notification & Contact</h3>
+                          <p className="text-sm text-gray-500 font-medium tracking-wide">Where to receive your updates</p>
                         </div>
                       </div>
-                      <div className="space-y-2 relative">
-                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Request Purpose <span className="text-red-500">*</span></label>
-                        <textarea name="purpose" value={formData.purpose} onChange={handleInputChange} rows={3} placeholder="Why do you need this clearance?" className={`w-full px-6 py-5 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none uppercase font-extrabold text-gray-800 shadow-sm`} />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2 relative group">
+                          <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Email Address (Optional)</label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none border-r pr-3 border-gray-100">
+                              <Mail className="w-5 h-5 text-[#2d5a3d]/50" />
+                            </div>
+                            <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className={`w-full pl-16 pr-6 py-4 bg-white border-2 ${errors.email ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-2xl focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-normal text-gray-800 shadow-sm`} />
+                          </div>
+                          <p className="text-[10px] text-gray-400 font-bold italic ml-2">Notifications will be sent here</p>
+                        </div>
+
+                        <div className="space-y-2 relative group">
+                          <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Contact Number <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none border-r pr-3 border-gray-100">
+                              <Phone className="w-5 h-5 text-[#2d5a3d]/50" />
+                            </div>
+                            <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full pl-16 pr-6 py-4 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-2xl focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-bold text-gray-800 shadow-sm`} />
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-100">
-                      <div className="space-y-6 text-sm">
-                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">SMS Contact Number <span className="text-red-500">*</span></label>
-                        <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full px-4 py-3 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none font-black text-emerald-900 transition-all shadow-sm`} />
+                    <div className="pt-6 border-t border-gray-100">
+                      <div className="flex items-center gap-3 mb-8">
+                        <div className="w-10 h-10 bg-[#112117] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">3</div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">Request Purpose</h3>
+                        </div>
+                      </div>
+                      <div className="space-y-2 relative">
+                        <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Purpose of Clearance <span className="text-red-500">*</span></label>
+                        <textarea name="purpose" value={formData.purpose} onChange={handleInputChange} rows={3} placeholder="e.g. For employment application, business requirement..." className={`w-full px-6 py-5 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:shadow-lg transition-all outline-none uppercase font-extrabold text-gray-800 shadow-sm`} />
                       </div>
                     </div>
                   </div>
@@ -430,27 +450,40 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
         </div>
       )}
 
-      <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+      {isResidentModalOpen && (
+        <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+      )}
       <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.3s ease-out; }`}</style>
     </>
   );
 }
 
-function ClearancePreview({ formData, referenceNumber, currentDate, officials, certificateRef }) {
+// Memoized Preview Component for maximum performance
+const ClearancePreview = React.memo(({ formData, referenceNumber, currentDate, officials, certificateRef }) => {
   const logos = officials.logos || {};
   const headerStyle = officials.headerStyle || {};
   const containerRef = useRef(null);
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
+    let timeoutId;
     const updateScale = () => {
       if (containerRef.current) {
         setScale(Math.min(containerRef.current.offsetWidth / 794, 1));
       }
     };
+
+    const debouncedScale = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateScale, 100);
+    };
+
     updateScale();
-    window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
+    window.addEventListener('resize', debouncedScale);
+    return () => {
+      window.removeEventListener('resize', debouncedScale);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (
@@ -523,4 +556,6 @@ function ClearancePreview({ formData, referenceNumber, currentDate, officials, c
       </div>
     </div>
   );
-}
+});
+
+ClearancePreview.displayName = 'ClearancePreview';

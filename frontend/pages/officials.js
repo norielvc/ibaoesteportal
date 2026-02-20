@@ -3,7 +3,7 @@ import Layout from '@/components/Layout/Layout';
 import { Save, Users, UserCog, Shield, Award, Edit2, Check, X, AlertCircle, CheckCircle, MapPin, Phone, Mail, Building, Crop, Camera, Layout as LayoutIcon } from 'lucide-react';
 import { getAuthToken } from '@/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 // Default officials data
 const defaultOfficials = {
@@ -150,7 +150,7 @@ export default function OfficialsPage() {
     const fetchConfig = async () => {
       try {
         const token = getAuthToken();
-        const res = await fetch(`${API_URL}/api/officials/config`, {
+        const res = await fetch(`${API_URL}/officials/config`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -464,7 +464,7 @@ export default function OfficialsPage() {
     setIsSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch(`${API_URL}/api/officials/config`, {
+      const res = await fetch(`${API_URL}/officials/config`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

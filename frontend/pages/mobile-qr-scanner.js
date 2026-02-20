@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout/Layout';
-import { 
-  Camera, CheckCircle, AlertCircle, 
+import {
+  Camera, CheckCircle, AlertCircle,
   Clock, Smartphone, Zap, User
 } from 'lucide-react';
 import { isAuthenticated, getAuthToken } from '@/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 export default function MobileQRScannerPage() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function MobileQRScannerPage() {
   const loadStats = async () => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/api/qr-scans/stats`, {
+      const response = await fetch(`${API_URL}/qr-scans/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -54,7 +54,7 @@ export default function MobileQRScannerPage() {
     }
 
     console.log('📱 Mobile QR scan started:', file.name);
-    
+
     setError(null);
     setScanResult(null);
     setScanTimestamp(null);
@@ -81,19 +81,19 @@ export default function MobileQRScannerPage() {
   const detectQRSimple = async (file) => {
     return new Promise((resolve) => {
       const img = new Image();
-      
+
       img.onload = async () => {
         try {
           console.log('📱 Processing image for QR detection...');
-          
+
           // Create canvas
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
-          
+
           // Optimize size for mobile
           const maxSize = 600;
           let { width, height } = img;
-          
+
           if (width > maxSize || height > maxSize) {
             const ratio = Math.min(maxSize / width, maxSize / height);
             width = Math.floor(width * ratio);
@@ -103,13 +103,13 @@ export default function MobileQRScannerPage() {
           canvas.width = width;
           canvas.height = height;
           ctx.drawImage(img, 0, 0, width, height);
-          
+
           const imageData = ctx.getImageData(0, 0, width, height);
-          
+
           // Try jsQR with simple import
           try {
             console.log('🔍 Trying jsQR detection...');
-            
+
             // Use dynamic import with CDN fallback
             let jsQR;
             try {
@@ -121,15 +121,15 @@ export default function MobileQRScannerPage() {
               const script = document.createElement('script');
               script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
               document.head.appendChild(script);
-              
+
               await new Promise((resolve, reject) => {
                 script.onload = () => resolve();
                 script.onerror = () => reject(new Error('CDN load failed'));
               });
-              
+
               jsQR = window.jsQR;
             }
-            
+
             if (typeof jsQR === 'function') {
               // Try multiple detection settings
               const detectionOptions = [
@@ -137,18 +137,18 @@ export default function MobileQRScannerPage() {
                 { inversionAttempts: "onlyInvert" },
                 { inversionAttempts: "attemptBoth" }
               ];
-              
+
               for (const options of detectionOptions) {
                 console.log('🔍 Trying detection with options:', options);
                 const code = jsQR(imageData.data, imageData.width, imageData.height, options);
-                
+
                 if (code && code.data) {
                   console.log('✅ QR Code detected:', code.data);
                   resolve(code.data);
                   return;
                 }
               }
-              
+
               console.log('❌ No QR code found with jsQR');
             } else {
               console.log('❌ jsQR not available');
@@ -156,9 +156,9 @@ export default function MobileQRScannerPage() {
           } catch (jsqrError) {
             console.log('❌ jsQR error:', jsqrError.message);
           }
-          
+
           resolve(null);
-          
+
         } catch (err) {
           console.error('❌ Detection error:', err);
           resolve(null);
@@ -177,10 +177,10 @@ export default function MobileQRScannerPage() {
   const handleScanSuccess = async (qrData) => {
     const timestamp = new Date();
     console.log('🎉 QR Code Scanned:', qrData);
-    
+
     // Save to database and check for duplicates
     const saved = await saveQRScan(qrData, timestamp);
-    
+
     // Only show success and update stats if successfully saved (not a duplicate)
     if (saved) {
       setScanResult(qrData);
@@ -197,13 +197,13 @@ export default function MobileQRScannerPage() {
   const saveQRScan = async (qrData, timestamp) => {
     try {
       const token = getAuthToken();
-      
+
       if (!token) {
         setError('❌ Authentication Error\n\nYou are not logged in. Please login and try again.');
         return false;
       }
 
-      const response = await fetch(`${API_URL}/api/qr-scans`, {
+      const response = await fetch(`${API_URL}/qr-scans`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -221,7 +221,7 @@ export default function MobileQRScannerPage() {
           }
         })
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           setError('❌ Authentication Error\n\nYour session has expired. Please login again.');
@@ -238,7 +238,7 @@ export default function MobileQRScannerPage() {
       }
 
       const result = await response.json();
-      
+
       if (response.status === 409 && result.isDuplicate) {
         // Handle duplicate QR code - require acknowledgment
         console.log('⚠️ Duplicate QR code detected');
@@ -294,7 +294,7 @@ export default function MobileQRScannerPage() {
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2">
         <div className="max-w-md mx-auto space-y-3">
-          
+
           {/* Header */}
           <div className="text-center bg-white rounded-2xl p-3 shadow-lg">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg">
@@ -332,7 +332,7 @@ export default function MobileQRScannerPage() {
                 <div className="bg-white bg-opacity-20 rounded-lg p-2 mb-2">
                   <p className="font-mono text-white text-xs font-bold break-all">{duplicateInfo.qrData}</p>
                 </div>
-                
+
                 <div className="border-t border-white border-opacity-20 pt-2">
                   <div className="text-xs font-semibold text-red-100 mb-1">ORIGINAL SCAN:</div>
                   <div className="bg-white bg-opacity-10 rounded-lg p-2">
@@ -351,13 +351,13 @@ export default function MobileQRScannerPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="text-center mb-2">
                 <p className="text-red-100 text-xs">
                   You must acknowledge this duplicate before scanning another QR code
                 </p>
               </div>
-              
+
               <button
                 onClick={acknowledgeDuplicate}
                 className="w-full bg-white bg-opacity-20 text-white py-2 rounded-xl font-bold text-xs backdrop-blur-sm border border-white border-opacity-30 active:scale-95 transition-transform"
@@ -383,7 +383,7 @@ export default function MobileQRScannerPage() {
                 <div className="bg-white bg-opacity-20 rounded-lg p-2 mb-2">
                   <p className="font-mono text-white text-xs font-bold break-all">{scanResult}</p>
                 </div>
-                
+
                 {scanTimestamp && (
                   <div className="border-t border-white border-opacity-20 pt-2">
                     <div className="text-xs font-semibold text-green-100 mb-1">SCAN TIME:</div>
@@ -406,7 +406,7 @@ export default function MobileQRScannerPage() {
                   </div>
                 </div>
               </div>
-              
+
               <button
                 onClick={resetScanner}
                 className="w-full bg-white bg-opacity-20 text-white py-2 rounded-xl font-bold text-xs backdrop-blur-sm border border-white border-opacity-30 active:scale-95 transition-transform"
@@ -421,46 +421,40 @@ export default function MobileQRScannerPage() {
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
               {!processing ? (
                 <div className="p-4 text-center">
-                  <div className={`w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-3 border-4 border-dashed ${
-                    awaitingAcknowledgment 
-                      ? 'bg-gray-100 border-gray-300' 
+                  <div className={`w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-3 border-4 border-dashed ${awaitingAcknowledgment
+                      ? 'bg-gray-100 border-gray-300'
                       : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300'
-                  }`}>
-                    <Camera className={`w-10 h-10 ${
-                      awaitingAcknowledgment ? 'text-gray-400' : 'text-blue-400'
-                    }`} />
+                    }`}>
+                    <Camera className={`w-10 h-10 ${awaitingAcknowledgment ? 'text-gray-400' : 'text-blue-400'
+                      }`} />
                   </div>
-                  
-                  <h3 className={`text-base font-bold mb-2 ${
-                    awaitingAcknowledgment ? 'text-gray-500' : 'text-gray-900'
-                  }`}>
+
+                  <h3 className={`text-base font-bold mb-2 ${awaitingAcknowledgment ? 'text-gray-500' : 'text-gray-900'
+                    }`}>
                     {awaitingAcknowledgment ? 'Scanner Disabled' : 'Ready to Scan'}
                   </h3>
-                  <p className={`mb-3 text-xs ${
-                    awaitingAcknowledgment ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    {awaitingAcknowledgment 
+                  <p className={`mb-3 text-xs ${awaitingAcknowledgment ? 'text-gray-400' : 'text-gray-600'
+                    }`}>
+                    {awaitingAcknowledgment
                       ? 'Please acknowledge the duplicate warning above to continue'
                       : 'Tap the button to take a photo of any QR code'
                     }
                   </p>
-                  
+
                   <button
                     onClick={triggerCamera}
                     disabled={awaitingAcknowledgment}
-                    className={`w-full py-3 px-6 rounded-xl font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2 ${
-                      awaitingAcknowledgment
+                    className={`w-full py-3 px-6 rounded-xl font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2 ${awaitingAcknowledgment
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white active:scale-95'
-                    }`}
+                      }`}
                   >
                     <Camera className="w-4 h-4" />
                     {awaitingAcknowledgment ? 'Scanner Disabled' : 'Take Photo & Scan'}
                   </button>
-                  
-                  <p className={`text-xs mt-2 flex items-center justify-center gap-1 ${
-                    awaitingAcknowledgment ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
+
+                  <p className={`text-xs mt-2 flex items-center justify-center gap-1 ${awaitingAcknowledgment ? 'text-gray-400' : 'text-gray-500'
+                    }`}>
                     <Zap className="w-3 h-3" />
                     {awaitingAcknowledgment ? 'Acknowledge duplicate to continue' : 'Optimized for mobile phones'}
                   </p>

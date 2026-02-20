@@ -34,7 +34,7 @@ export default function Residents() {
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
     const [residents, setResidents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -103,7 +103,9 @@ export default function Residents() {
             date_of_death: '',
             cause_of_death: '',
             covid_related: false,
-            second_name: ''
+            second_name: '',
+            guardian_name: '',
+            guardian_relationship: ''
         });
         setSelectedResident(null);
         setIsFormModalOpen(true);
@@ -121,8 +123,8 @@ export default function Residents() {
         try {
             const method = selectedResident ? 'PUT' : 'POST';
             const url = selectedResident
-                ? `${API_URL}/api/residents/${selectedResident.id}`
-                : `${API_URL}/api/residents`;
+                ? `${API_URL}/residents/${selectedResident.id}`
+                : `${API_URL}/residents`;
 
             const response = await fetch(url, {
                 method,
@@ -148,7 +150,7 @@ export default function Residents() {
     const handleDeleteResident = async () => {
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${API_URL}/api/residents/${selectedResident.id}`, {
+            const response = await fetch(`${API_URL}/residents/${selectedResident.id}`, {
                 method: 'DELETE'
             });
             const data = await response.json();
@@ -180,7 +182,7 @@ export default function Residents() {
     const fetchResidents = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`${API_URL}/api/residents/search?name=${encodeURIComponent(searchTerm || '')}&page=${currentPage}&limit=${limit}`);
+            const response = await fetch(`${API_URL}/residents/search?name=${encodeURIComponent(searchTerm || '')}&page=${currentPage}&limit=${limit}`);
             const data = await response.json();
 
             if (data.success) {
@@ -443,6 +445,26 @@ export default function Residents() {
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Guardian Information Section */}
+                                <div className="space-y-3">
+                                    <div className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm h-full">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b border-gray-50 pb-3">
+                                            <Shield className="w-3.5 h-3.5 text-emerald-500" />
+                                            Guardian Information
+                                        </p>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Guardian Name</p>
+                                                <p className="text-[14px] font-black text-gray-800 uppercase tracking-tight">{selectedResident.guardian_name || 'NOT RECORDED'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Relationship</p>
+                                                <p className="text-[14px] font-black text-gray-800 uppercase tracking-tight">{selectedResident.guardian_relationship || 'NOT RECORDED'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Legal Records Section */}
@@ -504,8 +526,9 @@ export default function Residents() {
                                 </div>
                             </div>
                         </div>
-                    )}
-                </Modal>
+                    )
+                    }
+                </Modal >
 
                 <Modal
                     isOpen={isFormModalOpen}
@@ -572,6 +595,35 @@ export default function Residents() {
                                             value={formData.second_name || ''}
                                             onChange={(e) => setFormData({ ...formData, second_name: e.target.value })}
                                             placeholder="E.G. 'BONG' OR NICKNAME"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100 space-y-4 shadow-inner">
+                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                    <Shield className="w-3 h-3 text-emerald-500" />
+                                    Guardian Information
+                                </p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="col-span-1">
+                                        <label className="label">Guardian Name</label>
+                                        <input
+                                            type="text"
+                                            className="input uppercase font-bold bg-white"
+                                            value={formData.guardian_name || ''}
+                                            onChange={(e) => setFormData({ ...formData, guardian_name: e.target.value })}
+                                            placeholder="FULL NAME OF GUARDIAN"
+                                        />
+                                    </div>
+                                    <div className="col-span-1">
+                                        <label className="label">Relationship</label>
+                                        <input
+                                            type="text"
+                                            className="input uppercase font-bold bg-white"
+                                            value={formData.guardian_relationship || ''}
+                                            onChange={(e) => setFormData({ ...formData, guardian_relationship: e.target.value })}
+                                            placeholder="E.G. PARENT, SIBLING"
                                         />
                                     </div>
                                 </div>
@@ -820,16 +872,18 @@ export default function Residents() {
                 </Modal>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="pt-10 border-t border-gray-100">
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={(page) => setCurrentPage(page)}
-                        />
-                    </div>
-                )}
-            </div>
+                {
+                    totalPages > 1 && (
+                        <div className="pt-10 border-t border-gray-100">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={(page) => setCurrentPage(page)}
+                            />
+                        </div>
+                    )
+                }
+            </div >
         </Layout >
     );
 }

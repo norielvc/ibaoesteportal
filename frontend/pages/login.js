@@ -12,22 +12,22 @@ export default function Login() {
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         login(data.data.token, data.data.user);
         router.push('/dashboard');
@@ -47,7 +47,7 @@ export default function Login() {
       <div className="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-blue-100">
         {/* Blue Accent Areas */}
         <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-blue-600/15" />
-        
+
         {/* Subtle Geometric Patterns */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-200/30 to-blue-300/20 rounded-full blur-3xl"></div>
@@ -61,7 +61,7 @@ export default function Login() {
         <div className="max-w-7xl mx-auto">
           {/* Mobile Layout - Only Back Button */}
           <div className="flex justify-start sm:hidden">
-            <button 
+            <button
               onClick={() => router.push('/')}
               className="group inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl text-sm"
             >
@@ -69,10 +69,10 @@ export default function Login() {
               <span className="font-medium">Back to Portal</span>
             </button>
           </div>
-          
+
           {/* Desktop Layout - Only Back Button */}
           <div className="hidden sm:flex justify-start">
-            <button 
+            <button
               onClick={() => router.push('/')}
               className="group inline-flex items-center gap-3 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
             >
@@ -87,7 +87,7 @@ export default function Login() {
       <div className="relative z-10 min-h-screen flex items-center justify-center p-6 pt-24 sm:pt-20 pb-24">
         <div className="w-full max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            
+
             {/* Left Side - Enlarged Branding */}
             <div className="text-center lg:text-left space-y-10">
               {/* Enlarged Main Title with BRGY. */}
@@ -100,9 +100,9 @@ export default function Login() {
                     </span>
                   </h1>
                 </div>
-                
+
                 <div className="w-40 h-1.5 bg-gradient-to-r from-blue-500 to-blue-700 rounded-full mx-auto lg:mx-0"></div>
-                
+
                 {/* Secure Portal Badge - moved here */}
                 <div className="flex justify-center lg:justify-start">
                   <div className="inline-flex items-center gap-4 px-8 py-4 bg-blue-600 text-white rounded-full shadow-lg">
@@ -110,7 +110,7 @@ export default function Login() {
                     <span className="text-lg font-bold">SECURE PORTAL</span>
                   </div>
                 </div>
-                
+
                 <p className="text-gray-700 text-xl md:text-2xl lg:text-3xl leading-relaxed max-w-2xl mx-auto lg:mx-0 font-semibold">
                   Your gateway to efficient barangay management and community services
                 </p>
@@ -119,22 +119,22 @@ export default function Login() {
 
             {/* Right Side - Login Form with Logo */}
             <div className="flex flex-col items-center justify-center">
-              
+
               {/* Login Card with Logo and Welcome Text */}
               <div className="w-full max-w-md">
                 {/* Login Form */}
                 <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-200 p-8 space-y-6">
-                  
+
                   {/* Logo and Welcome Section inside container */}
                   <div className="text-center mb-8">
                     <div className="mb-6">
-                      <img 
-                        src="/logo.png" 
-                        alt="Iba O' Este Logo" 
+                      <img
+                        src="/logo.png"
+                        alt="Iba O' Este Logo"
                         className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-lg mx-auto"
                       />
                     </div>
-                    
+
                     <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
                       Welcome Back
                     </h2>
@@ -225,7 +225,7 @@ export default function Login() {
                     >
                       {/* Button Background Animation */}
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                      
+
                       <span className="relative flex items-center justify-center gap-3">
                         {isLoading ? (
                           <>

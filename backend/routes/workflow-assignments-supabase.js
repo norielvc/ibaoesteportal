@@ -5,6 +5,7 @@ const { authenticateToken } = require('../middleware/auth-supabase');
 const certificateGenerationService = require('../services/certificateGenerationService');
 const qrCodeService = require('../services/qrCodeService');
 const workflowService = require('../services/workflowService');
+const { sendWorkflowNotifications, sendProcessNotification } = require('../services/emailService');
 
 // Helper to handle Supabase errors gracefully
 const handleSupabaseError = (res, error, context) => {
@@ -321,6 +322,114 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
     }]);
 
     res.json({ success: true, message: `Request ${action}d successfully`, newStatus: newRequestStatus });
+
+    // --- ASYNC EMAIL NOTIFICATIONS ---
+    setImmediate(async () => {
+      try {
+        const certReq = assignment.certificate_requests;
+        const applicantName = certReq.full_name;
+        const refNum = certReq.reference_number;
+        const certType = certReq.certificate_type;
+
+        console.log(`[Workflow Email Debug] Action: ${action}, Status: ${newRequestStatus}, RequestId: ${certReq.id}`);
+        console.log(`[Workflow Email Debug] CertEmail: ${certReq.email}, ResidentId: ${certReq.resident_id}`);
+
+        // 1. Notify Applicant of Rejection or Return
+        if (action === 'reject' || action === 'return') {
+          let recipientEmail = certReq.email;
+          let recipientName = certReq.requestor_name || certReq.full_name;
+
+          // Find applicant's email (check direct email first, then user link)
+          if (!recipientEmail && certReq.resident_id) {
+            const { data: applicantUser } = await supabase
+              .from('users')
+              .select('email, first_name, last_name')
+              .eq('id', certReq.resident_id)
+              .single();
+
+            if (applicantUser) {
+              recipientEmail = applicantUser.email;
+              recipientName = `${applicantUser.first_name} ${applicantUser.last_name}`;
+            }
+          }
+
+          if (recipientEmail) {
+            await sendProcessNotification({
+              recipientEmail: recipientEmail,
+              recipientName: recipientName,
+              eventType: action === 'reject' ? 'REJECTED' : 'RETURNED',
+              certificateType: certType,
+              referenceNumber: refNum,
+              applicantName: applicantName,
+              comments: comment,
+              requestId: certReq.id
+            });
+          }
+        }
+
+        // 2. Notify Next Approvers
+        if (action === 'approve' && nextStep) {
+          const nextStepAssignments = nextStep.assignedUsers || [];
+          if (nextStepAssignments.length > 0) {
+            const { data: users } = await supabase
+              .from('users')
+              .select('email, first_name, last_name')
+              .in('id', nextStepAssignments);
+
+            if (users && users.length > 0) {
+              const recipients = users.map(u => ({
+                email: u.email,
+                name: `${u.first_name} ${u.last_name}`
+              }));
+
+              await sendWorkflowNotifications({
+                recipients,
+                eventType: 'APPROVED_STEP',
+                certificateType: certType,
+                referenceNumber: refNum,
+                applicantName: applicantName,
+                requestId: certReq.id,
+                comments: `Moved to ${nextStep.name}`
+              });
+            }
+          }
+        }
+
+        // 3. Notify Applicant if Ready for Pickup
+        if ((newRequestStatus === 'ready' || newRequestStatus === 'ready_for_pickup') && action === 'approve') {
+          let recipientEmail = certReq.email;
+          let recipientName = certReq.requestor_name || certReq.full_name;
+
+          // Find applicant's email (check direct email first, then user link)
+          if (!recipientEmail && certReq.resident_id) {
+            const { data: applicantUser } = await supabase
+              .from('users')
+              .select('email, first_name, last_name')
+              .eq('id', certReq.resident_id)
+              .single();
+
+            if (applicantUser) {
+              recipientEmail = applicantUser.email;
+              recipientName = `${applicantUser.first_name} ${applicantUser.last_name}`;
+            }
+          }
+
+          if (recipientEmail) {
+            await sendProcessNotification({
+              recipientEmail: recipientEmail,
+              recipientName: recipientName,
+              eventType: 'READY_FOR_PICKUP',
+              certificateType: certType,
+              referenceNumber: refNum,
+              applicantName: applicantName,
+              requestId: certReq.id
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Workflow email notification error:', err);
+      }
+    });
   } catch (error) {
     console.error('Error updating workflow assignment:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -354,8 +463,8 @@ router.post('/add-note', authenticateToken, async (req, res) => {
   }
 });
 
-// Get workflow history for a request
-router.get('/history/:requestId', authenticateToken, async (req, res) => {
+// Get workflow history for a request (Public for tracking)
+router.get('/history/:requestId', async (req, res) => {
   try {
     const { requestId } = req.params;
 
