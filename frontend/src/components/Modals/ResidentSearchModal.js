@@ -121,15 +121,9 @@ export default function ResidentSearchModal({ isOpen, onClose, onSelect }) {
                                             </div>
 
                                             <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                <span className="flex items-center gap-1.5 text-gray-400 group-hover:text-emerald-700/60 transition-colors">
-                                                    <MapPin className="w-3.5 h-3.5" />
-                                                    {resident.residential_address}
+                                                <span className="flex items-center gap-1.5 text-emerald-600/70 group-hover:text-emerald-700 transition-colors italic">
+                                                    * PROTECTED UNDER DATA PRIVACY ACT *
                                                 </span>
-                                                {resident.age && (
-                                                    <span className="flex items-center gap-1.5 text-gray-400 group-hover:text-emerald-700/60 transition-colors border-l border-gray-200 pl-4">
-                                                        {resident.age} YRS • {resident.gender}
-                                                    </span>
-                                                )}
                                             </div>
                                         </div>
 
