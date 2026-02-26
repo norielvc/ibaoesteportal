@@ -374,14 +374,23 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
                     <div className="fixed inset-0 z-[60] overflow-y-auto">
                         <div className="flex min-h-screen items-center justify-center p-4">
                             <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" onClick={() => setShowConfirmationPopup(false)} />
-                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
+                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
                                 <div className="bg-blue-900 px-8 py-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
                                     <h2 className="text-xl font-extrabold text-white tracking-tight uppercase">Confirm Application Details</h2>
                                     <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white"><X className="w-6 h-6" /></button>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-4 bg-gray-200">
-                                    <div className="flex justify-center">
-                                        <MedicoLegalPreview formData={formData} currentDate={currentDate} officials={officials} referenceNumber={referenceNumber || 'PENDING'} />
+                                <div className="flex-1 overflow-y-auto px-6 py-8 bg-gray-50/80">
+                                    <div className="max-w-2xl mx-auto space-y-4">
+                                        {Object.entries(formData).map(([key, value]) => {
+                                            if (!value || key === 'residentId' || key === 'signature' || key === 'details') return null;
+                                            const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                                            return (
+                                                <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 bg-white shadow-sm border border-gray-100 rounded-[1.25rem] hover:bg-gray-50 transition-colors group">
+                                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{formattedKey}</span>
+                                                    <span className="text-sm font-bold text-gray-900 break-words md:text-right mt-1 md:mt-0 group-hover:text-blue-700 transition-colors uppercase">{typeof value === 'object' ? JSON.stringify(value) : value.toString()}</span>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                                 <div className="px-8 py-6 bg-gray-50 border-t flex flex-col sm:flex-row justify-between items-center gap-4 flex-shrink-0">
