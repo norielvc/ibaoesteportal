@@ -1050,70 +1050,92 @@ export default function BarangayPortal() {
         </div>
       </section>
 
-      {/* Barangay Programs Section - Themed and optimized */}
-      <section className="py-12 md:py-16 bg-white w-full border-t border-gray-100">
-        <h2 className="text-center text-3xl md:text-[2.5rem] font-extrabold text-[#112e1f] uppercase mb-10 tracking-[0.05em] font-serif">
-          Barangay Programs
-        </h2>
+      {/* Barangay Programs Section - 8 items grid matching reference design */}
+      <section className="py-16 md:py-24 bg-white w-full border-t border-gray-100">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
 
-        <div className="w-full relative overflow-hidden">
-          <div className="flex overflow-x-auto md:grid md:grid-cols-3 snap-x snap-mandatory scrollbar-hide">
-
-            {/* Card 1 */}
-            <div className="relative h-[280px] md:h-[320px] w-full min-w-[85vw] md:min-w-0 snap-center flex-shrink-0 group">
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
-                style={{ backgroundImage: 'url(/background.jpg)' }}
-              />
-              <div className="absolute inset-0 bg-[#112e1f]/85 flex flex-col items-start justify-center p-8 md:p-12 transition-colors duration-500 hover:bg-[#112e1f]/90">
-                <h3 className="text-white text-2xl md:text-3xl font-black uppercase leading-tight mb-6 tracking-wide drop-shadow-md group-hover:-translate-y-1 transition-transform">
-                  Brgy. Green<br className="hidden md:block" /> Building Code
-                </h3>
-                <button className="border-2 border-white text-white px-8 py-3 bg-transparent hover:bg-white hover:text-[#112e1f] transition-all rounded-sm font-semibold text-sm md:text-base shadow-sm">
-                  Read More
-                </button>
-              </div>
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
+                Barangay Programs
+              </h2>
             </div>
-
-            {/* Card 2 */}
-            <div className="relative h-[280px] md:h-[320px] w-full min-w-[85vw] md:min-w-0 snap-center flex-shrink-0 group">
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
-                style={{ backgroundImage: 'url(/background.jpg)' }}
-              />
-              <div className="absolute inset-0 bg-[#2d5a3d]/85 flex flex-col items-start justify-center p-8 md:p-12 transition-colors duration-500 hover:bg-[#2d5a3d]/90">
-                <h3 className="text-white text-2xl md:text-3xl font-black uppercase leading-tight mb-6 tracking-wide drop-shadow-md group-hover:-translate-y-1 transition-transform">
-                  Pangkabuhayang<br className="hidden md:block" /> Iba O' Este
-                </h3>
-                <button className="border-2 border-white text-white px-8 py-3 bg-transparent hover:bg-white hover:text-[#2d5a3d] transition-all rounded-sm font-semibold text-sm md:text-base shadow-sm">
-                  Read More
-                </button>
-              </div>
-            </div>
-
-            {/* Card 3 */}
-            <div className="relative h-[280px] md:h-[320px] w-full min-w-[85vw] md:min-w-0 snap-center flex-shrink-0 group">
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
-                style={{ backgroundImage: 'url(/background.jpg)' }}
-              />
-              <div className="absolute inset-0 bg-[#427a51]/85 flex flex-col items-start justify-center p-8 md:p-12 transition-colors duration-500 hover:bg-[#427a51]/90">
-                <h3 className="text-white text-2xl md:text-3xl font-black uppercase leading-tight mb-6 tracking-wide drop-shadow-md group-hover:-translate-y-1 transition-transform">
-                  Barangay<br className="hidden md:block" /> E-Services
-                </h3>
-                <button className="border-2 border-white text-white px-8 py-3 bg-transparent hover:bg-white hover:text-[#427a51] transition-all rounded-sm font-semibold text-sm md:text-base shadow-sm">
-                  Read More
-                </button>
-              </div>
-            </div>
-
           </div>
-        </div>
 
-        <div className="text-center mt-10 md:mt-12 mb-4">
-          <button className="border-2 border-[#112e1f] text-[#112e1f] px-10 py-3.5 hover:bg-[#112e1f] hover:text-white transition-all uppercase font-bold tracking-widest text-sm rounded-sm shadow-sm hover:shadow-md">
-            More Programs
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 gap-y-12">
+            {[
+              {
+                category: "HEALTH & WELLNESS",
+                title: "Free Medical Mission 2026",
+                description: "Comprehensive health check-ups, free medicines, and basic dental services for all registered residents of our barangay.",
+                image: "/background.jpg"
+              },
+              {
+                category: "LIVELIHOOD",
+                title: "Pangkabuhayang Iba O' Este",
+                description: "Empowering residents with practical skills in culinary arts, tailoring, and automotive mechanics.",
+                image: "/background.jpg"
+              },
+              {
+                category: "INFRASTRUCTURE",
+                title: "Brgy. Green Building Initiative",
+                description: "Launching sustainable practices and installing solar-powered streetlights across major puroks.",
+                image: "/background.jpg"
+              },
+              {
+                category: "EDUCATION",
+                title: "Scholarship Grants Awarding",
+                description: "Distributing financial assistance to deserving local youth to support their higher education journeys.",
+                image: "/background.jpg"
+              },
+              {
+                category: "YOUTH & SPORTS",
+                title: "Inter-Purok Basketball League",
+                description: "Fostering sportsmanship and camaraderie among our youth through the annual basketball championship.",
+                image: "/background.jpg"
+              },
+              {
+                category: "ENVIRONMENT",
+                title: "Monthly Coastal Clean-up",
+                description: "Preserving our shores and marine life with the help of community volunteers and local groups.",
+                image: "/background.jpg"
+              },
+              {
+                category: "SENIOR CITIZENS",
+                title: "Elders Wellness & Social Day",
+                description: "A special day dedicated to our elders featuring health seminars, games, and free wellness packages.",
+                image: "/background.jpg"
+              },
+              {
+                category: "DIGITAL TRANSFORMATION",
+                title: "Barangay E-Services Launch",
+                description: "Experience faster transaction times and online document requests through our brand new web portal.",
+                image: "/background.jpg"
+              }
+            ].map((program, idx) => (
+              <div key={idx} className="flex flex-col group cursor-pointer h-full">
+                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-5 bg-gray-100">
+                  <img
+                    src={program.image}
+                    alt={program.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="flex flex-col flex-1 px-1">
+                  <p className="text-[#6366f1] text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2.5">
+                    {program.category}
+                  </p>
+                  <h3 className="text-gray-900 text-lg md:text-xl font-bold mb-3 leading-snug group-hover:text-[#6366f1] transition-colors">
+                    {program.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-4 flex-1">
+                    {program.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
         </div>
       </section>
 
