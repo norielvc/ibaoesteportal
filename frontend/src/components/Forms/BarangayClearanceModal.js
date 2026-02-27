@@ -271,26 +271,26 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
               <div className="flex-1 overflow-y-auto">
                 <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-6">
                   <div className="bg-amber-50 border-l-[6px] border-amber-500 rounded-r-2xl p-5 shadow-sm relative overflow-hidden mb-6 flex-shrink-0">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                      <div className="flex items-start gap-4 relative z-10">
-                        <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-2.5 rounded-full shadow-md mt-1 shrink-0">
-                          <Info className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="space-y-2.5 flex-1">
-                          <div>
-                            <h4 className="font-extrabold text-amber-900 uppercase tracking-widest text-[11px] flex items-center gap-2 mb-1">
-                              Registration Notice / Paunawa
-                            </h4>
-                            <p className="text-amber-800 text-xs font-bold leading-relaxed mb-1">
-                              If no record is found in the resident directory, please visit the Barangay Hall and coordinate with the staff to register.
-                            </p>
-                            <p className="text-amber-800/80 text-[11px] font-bold leading-relaxed">
-                              Kung walang rekord sa direktoryo ng residente, mangyaring pumunta sa Barangay Hall upang magparehistro sa ating mga kawani.
-                            </p>
-                          </div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                    <div className="flex items-start gap-4 relative z-10">
+                      <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-2.5 rounded-full shadow-md mt-1 shrink-0">
+                        <Info className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="space-y-2.5 flex-1">
+                        <div>
+                          <h4 className="font-extrabold text-amber-900 uppercase tracking-widest text-[11px] flex items-center gap-2 mb-1">
+                            Registration Notice / Paunawa
+                          </h4>
+                          <p className="text-amber-800 text-xs font-bold leading-relaxed mb-1">
+                            If no record is found in the resident directory, please visit the Barangay Hall and coordinate with the staff to register.
+                          </p>
+                          <p className="text-amber-800/80 text-[11px] font-bold leading-relaxed">
+                            Kung walang rekord sa direktoryo ng residente, mangyaring pumunta sa Barangay Hall upang magparehistro sa ating mga kawani.
+                          </p>
                         </div>
                       </div>
                     </div>
+                  </div>
 
                   <div className="space-y-4 md:space-y-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
@@ -312,12 +312,12 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                       <input type="text" name="fullName" value={formData.fullName} readOnly onClick={() => setIsResidentModalOpen(true)} placeholder="TAP HERE TO ACCESS DATABASE..." className={`w-full px-6 py-5 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-2xl transition-all duration-300 font-extrabold text-lg cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`} />
                     </div>
 
-                    
+
                     {formData.fullName && (
-                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mt-4 flex items-center justify-center gap-2 text-emerald-700 shadow-inner">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                            <span className="text-xs font-black uppercase tracking-widest italic">Personal Data Protected Under Data Privacy Act</span>
-                        </div>
+                      <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mt-4 flex items-center justify-center gap-2 text-emerald-700 shadow-inner">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <span className="text-xs font-black uppercase tracking-widest italic">Personal Data Protected Under Data Privacy Act</span>
+                      </div>
                     )}
                     <div className="pt-6 border-t border-gray-100">
                       <div className="flex items-center gap-4 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-xl p-2 pr-6 shadow-sm mb-6">
@@ -394,9 +394,19 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                 </div>
                 <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group"><X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" /></button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 bg-gray-100">
-                <div className="flex justify-center">
-                  <ClearancePreview formData={formData} referenceNumber={referenceNumber || 'PENDING'} currentDate={currentDate} officials={officials} certificateRef={certificateRef} />
+              <div className="flex-1 overflow-y-auto px-6 py-8 bg-gray-50/80">
+                <div className="max-w-2xl mx-auto space-y-4">
+                  {Object.entries(formData).map(([key, value]) => {
+                    const excludedKeys = ['residentId', 'signature', 'details', 'age', 'sex', 'gender', 'civilStatus', 'address', 'dateOfBirth', 'placeOfBirth', 'businessAddress', 'ownerAddress', 'nationality', 'occupation'];
+                    if (!value || excludedKeys.includes(key)) return null;
+                    const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                    return (
+                      <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 bg-white shadow-sm border border-gray-100 rounded-[1.25rem] hover:bg-gray-50 transition-colors group">
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{formattedKey}</span>
+                        <span className="text-sm font-bold text-gray-900 break-words md:text-right mt-1 md:mt-0 group-hover:text-emerald-700 transition-colors uppercase">{typeof value === 'object' ? JSON.stringify(value) : value.toString()}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               <div className="border-t bg-gray-50/80 backdrop-blur-[2px] px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print">

@@ -240,14 +240,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 block">Age / Edad</label>
-                                            <input type="number" value={formData.age} readOnly className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-xl text-gray-600 font-bold" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 block">Date of Birth</label>
-                                            <input type="text" value={formData.dateOfBirth} readOnly className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-xl text-gray-600 font-bold" />
-                                        </div>
+
                                     </div>
                                 </div>
 
@@ -279,14 +272,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 block">Age / Edad</label>
-                                            <input type="number" value={formData.partnerAge} readOnly className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-xl text-gray-600 font-bold" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 block">Date of Birth</label>
-                                            <input type="text" value={formData.partnerDateOfBirth} readOnly className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-xl text-gray-600 font-bold" />
-                                        </div>
+
                                     </div>
                                 </div>
 
@@ -409,7 +395,8 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                             <div className="flex-1 overflow-y-auto px-6 py-8 bg-gray-50/80">
                                 <div className="max-w-2xl mx-auto space-y-4">
                                     {Object.entries(formData).map(([key, value]) => {
-                                        if (!value || key === 'residentId' || key === 'signature' || key === 'details' || key.includes('DbAddress') || key.includes('partnerResidentId')) return null;
+                                        const excludedKeys = ['residentId', 'signature', 'details', 'age', 'sex', 'gender', 'civilStatus', 'address', 'dateOfBirth', 'placeOfBirth', 'partnerAge', 'partnerGender', 'partnerDateOfBirth', 'person1DbAddress', 'partnerDbAddress', 'partnerResidentId'];
+                                        if (!value || excludedKeys.includes(key) || key.includes('DbAddress') || key.includes('partnerResidentId')) return null;
                                         const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                                         return (
                                             <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 bg-white shadow-sm border border-gray-100 rounded-[1.25rem] hover:bg-gray-50 transition-colors group">

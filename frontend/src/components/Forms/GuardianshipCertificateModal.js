@@ -259,19 +259,9 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
                                         </button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
-                                        <div className="md:col-span-2 space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
-                                            <input type="text" value={formData.fullName} readOnly onClick={() => { setSearchType('ward'); setIsResidentModalOpen(true); }} placeholder="TAP SEARCH BUTTON TO SELECT WARD..." className={`w-full px-5 py-4 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-xl font-bold cursor-pointer transition-all hover:border-emerald-300 shadow-sm`} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 text-center block">Age / Edad</label>
-                                            <input type="text" value={formData.age} readOnly disabled className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 font-bold text-center" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 text-center block">Sex / Kasarian</label>
-                                            <input type="text" value={formData.sex} readOnly disabled className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 font-bold text-center" />
-                                        </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
+                                        <input type="text" value={formData.fullName} readOnly onClick={() => { setSearchType('ward'); setIsResidentModalOpen(true); }} placeholder="TAP SEARCH BUTTON TO SELECT WARD..." className={`w-full px-5 py-4 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-xl font-bold cursor-pointer transition-all hover:border-emerald-300 shadow-sm`} />
                                     </div>
                                 </div>
 
@@ -362,10 +352,19 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
                                     <h2 className="text-2xl font-extrabold tracking-tight uppercase">Preview Certificate</h2>
                                 </div>
                                 <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white transition-all"><X className="w-6 h-6" /></button>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4 bg-gray-100">
-                                <div className="flex justify-center">
-                                    <GuardianshipPreview formData={formData} referenceNumber="PENDING" currentDate={currentDate} officials={officials} certificateRef={certificateRef} />
+                            </div>                            <div className="flex-1 overflow-y-auto px-6 py-8 bg-gray-50/80">
+                                <div className="max-w-2xl mx-auto space-y-4">
+                                    {Object.entries(formData).map(([key, value]) => {
+                                        const excludedKeys = ['residentId', 'guardianId', 'signature', 'details', 'age', 'sex', 'gender', 'civilStatus', 'address', 'dateOfBirth', 'placeOfBirth'];
+                                        if (!value || excludedKeys.includes(key)) return null;
+                                        const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                                        return (
+                                            <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 bg-white shadow-sm border border-gray-100 rounded-[1.25rem] hover:bg-gray-50 transition-colors group">
+                                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{formattedKey}</span>
+                                                <span className="text-sm font-bold text-gray-900 break-words md:text-right mt-1 md:mt-0 group-hover:text-emerald-700 transition-colors uppercase">{typeof value === 'object' ? JSON.stringify(value) : value.toString()}</span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             <div className="border-t bg-gray-50/80 backdrop-blur-[2px] px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print">

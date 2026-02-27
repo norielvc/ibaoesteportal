@@ -281,26 +281,26 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
                             <div className="flex-1 overflow-y-auto">
                                 <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-6">
                                     <div className="bg-amber-50 border-l-[6px] border-amber-500 rounded-r-2xl p-5 shadow-sm relative overflow-hidden mb-6 flex-shrink-0">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                      <div className="flex items-start gap-4 relative z-10">
-                        <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-2.5 rounded-full shadow-md mt-1 shrink-0">
-                          <Info className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="space-y-2.5 flex-1">
-                          <div>
-                            <h4 className="font-extrabold text-amber-900 uppercase tracking-widest text-[11px] flex items-center gap-2 mb-1">
-                              Registration Notice / Paunawa
-                            </h4>
-                            <p className="text-amber-800 text-xs font-bold leading-relaxed mb-1">
-                              If no record is found in the resident directory, please visit the Barangay Hall and coordinate with the staff to register.
-                            </p>
-                            <p className="text-amber-800/80 text-[11px] font-bold leading-relaxed">
-                              Kung walang rekord sa direktoryo ng residente, mangyaring pumunta sa Barangay Hall upang magparehistro sa ating mga kawani.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                                        <div className="flex items-start gap-4 relative z-10">
+                                            <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-2.5 rounded-full shadow-md mt-1 shrink-0">
+                                                <Info className="w-5 h-5 text-white" />
+                                            </div>
+                                            <div className="space-y-2.5 flex-1">
+                                                <div>
+                                                    <h4 className="font-extrabold text-amber-900 uppercase tracking-widest text-[11px] flex items-center gap-2 mb-1">
+                                                        Registration Notice / Paunawa
+                                                    </h4>
+                                                    <p className="text-amber-800 text-xs font-bold leading-relaxed mb-1">
+                                                        If no record is found in the resident directory, please visit the Barangay Hall and coordinate with the staff to register.
+                                                    </p>
+                                                    <p className="text-amber-800/80 text-[11px] font-bold leading-relaxed">
+                                                        Kung walang rekord sa direktoryo ng residente, mangyaring pumunta sa Barangay Hall upang magparehistro sa ating mga kawani.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <div className="space-y-4 md:space-y-6">
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
@@ -328,39 +328,16 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 text-center">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
-                                                <input type="number" name="age" value={formData.age} readOnly className="w-full px-5 py-3.5 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 font-bold focus:outline-none cursor-not-allowed" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex / Kasarian</label>
-                                                <select name="sex" value={formData.sex} disabled className="w-full px-5 py-3.5 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 font-bold uppercase focus:outline-none cursor-not-allowed appearance-none">
-                                                    <option value="">Select Sex</option>
-                                                    <option value="Male">Male</option>
-                                                    <option value="Female">Female</option>
-                                                </select>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Civil Status / Katayuang Sibil</label>
-                                                <select name="civilStatus" value={formData.civilStatus} disabled className="w-full px-5 py-3.5 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 font-bold uppercase focus:outline-none cursor-not-allowed appearance-none">
-                                                    <option value="">Select Status</option>
-                                                    <option value="Single">Single</option>
-                                                    <option value="Married">Married</option>
-                                                    <option value="Widowed">Widowed</option>
-                                                    <option value="Separated">Separated</option>
-                                                </select>
-                                            </div>
-                                        </div>
 
-                                        
-                    {formData.fullName && (
-                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mt-4 flex items-center justify-center gap-2 text-emerald-700 shadow-inner">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                            <span className="text-xs font-black uppercase tracking-widest italic">Personal Data Protected Under Data Privacy Act</span>
-                        </div>
-                    )}
-                    <div className="pt-6 border-t border-gray-100">
+
+
+                                        {formData.fullName && (
+                                            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mt-4 flex items-center justify-center gap-2 text-emerald-700 shadow-inner">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                                <span className="text-xs font-black uppercase tracking-widest italic">Personal Data Protected Under Data Privacy Act</span>
+                                            </div>
+                                        )}
+                                        <div className="pt-6 border-t border-gray-100">
 
                                         </div>
 
@@ -403,10 +380,19 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
                                     <h2 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md uppercase">Review Application</h2>
                                 </div>
                                 <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all group"><X className="w-6 h-6 group-hover:rotate-90 transition-transform" /></button>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4 bg-gray-100">
-                                <div className="flex justify-center">
-                                    <SamePersonPreview formData={formData} referenceNumber={referenceNumber || 'PENDING'} currentDate={currentDate} officials={officials} certificateRef={certificateRef} />
+                            </div>                            <div className="flex-1 overflow-y-auto px-6 py-8 bg-gray-50/80">
+                                <div className="max-w-2xl mx-auto space-y-4">
+                                    {Object.entries(formData).map(([key, value]) => {
+                                        const excludedKeys = ['residentId', 'signature', 'details', 'age', 'sex', 'gender', 'civilStatus', 'address', 'dateOfBirth', 'placeOfBirth'];
+                                        if (!value || excludedKeys.includes(key)) return null;
+                                        const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                                        return (
+                                            <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 bg-white shadow-sm border border-gray-100 rounded-[1.25rem] hover:bg-gray-50 transition-colors group">
+                                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{formattedKey}</span>
+                                                <span className="text-sm font-bold text-gray-900 break-words md:text-right mt-1 md:mt-0 group-hover:text-emerald-700 transition-colors uppercase">{typeof value === 'object' ? JSON.stringify(value) : value.toString()}</span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             <div className="border-t bg-gray-50/80 backdrop-blur-[2px] px-8 py-6 flex flex-col sm:flex-row gap-4 justify-between items-center no-print">

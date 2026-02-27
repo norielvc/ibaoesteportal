@@ -247,27 +247,7 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
                                                 className={`w-full px-4 py-3 bg-gray-50 border ${errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-200'} rounded-xl font-bold uppercase cursor-pointer text-gray-900`}
                                             />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Age / Edad</label>
-                                                <input type="text" value={formData.age} readOnly className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 font-bold" />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Sex / Kasarian</label>
-                                                <input type="text" value={formData.sex} readOnly className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 font-bold" />
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Residential Address / Tirahan</label>
-                                            <input type="text" value={formData.address} readOnly className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 font-bold uppercase" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Date of Birth</label>
-                                            <input type="text" value={formData.dateOfBirth} readOnly className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 font-bold" />
-                                        </div>
                                     </div>
                                 </div>
 
@@ -382,7 +362,8 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
                                 <div className="flex-1 overflow-y-auto px-6 py-8 bg-gray-50/80">
                                     <div className="max-w-2xl mx-auto space-y-4">
                                         {Object.entries(formData).map(([key, value]) => {
-                                            if (!value || key === 'residentId' || key === 'signature' || key === 'details') return null;
+                                            const excludedKeys = ['residentId', 'signature', 'details', 'age', 'sex', 'gender', 'civilStatus', 'address', 'dateOfBirth', 'placeOfBirth', 'businessAddress', 'ownerAddress', 'nationality', 'occupation'];
+                                            if (!value || excludedKeys.includes(key)) return null;
                                             const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                                             return (
                                                 <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 bg-white shadow-sm border border-gray-100 rounded-[1.25rem] hover:bg-gray-50 transition-colors group">

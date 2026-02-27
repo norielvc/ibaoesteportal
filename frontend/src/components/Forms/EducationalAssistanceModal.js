@@ -201,26 +201,26 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
           {/* Status/Notice Section */}
           <div className="p-4 md:p-8 space-y-6">
             <div className="bg-amber-50 border-l-[6px] border-amber-500 rounded-r-2xl p-5 shadow-sm relative overflow-hidden mb-6 flex-shrink-0">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                      <div className="flex items-start gap-4 relative z-10">
-                        <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-2.5 rounded-full shadow-md mt-1 shrink-0">
-                          <Info className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="space-y-2.5 flex-1">
-                          <div>
-                            <h4 className="font-extrabold text-amber-900 uppercase tracking-widest text-[11px] flex items-center gap-2 mb-1">
-                              Registration Notice / Paunawa
-                            </h4>
-                            <p className="text-amber-800 text-xs font-bold leading-relaxed mb-1">
-                              If no record is found in the resident directory, please visit the Barangay Hall and coordinate with the staff to register.
-                            </p>
-                            <p className="text-amber-800/80 text-[11px] font-bold leading-relaxed">
-                              Kung walang rekord sa direktoryo ng residente, mangyaring pumunta sa Barangay Hall upang magparehistro sa ating mga kawani.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-2.5 rounded-full shadow-md mt-1 shrink-0">
+                  <Info className="w-5 h-5 text-white" />
+                </div>
+                <div className="space-y-2.5 flex-1">
+                  <div>
+                    <h4 className="font-extrabold text-amber-900 uppercase tracking-widest text-[11px] flex items-center gap-2 mb-1">
+                      Registration Notice / Paunawa
+                    </h4>
+                    <p className="text-amber-800 text-xs font-bold leading-relaxed mb-1">
+                      If no record is found in the resident directory, please visit the Barangay Hall and coordinate with the staff to register.
+                    </p>
+                    <p className="text-amber-800/80 text-[11px] font-bold leading-relaxed">
+                      Kung walang rekord sa direktoryo ng residente, mangyaring pumunta sa Barangay Hall upang magparehistro sa ating mga kawani.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {submitStatus === 'error' && (
               <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 flex items-center gap-4 animate-shake">
@@ -282,27 +282,12 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                     </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 ">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
-                    <input type="number" value={formData.age} readOnly disabled className="w-full px-4 py-3 md:px-5 md:py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-600 font-black focus:outline-none shadow-inner" />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sex / Kasarian</label>
-                    <input type="text" value={formData.gender || 'N/A'} readOnly disabled className="w-full px-4 py-3 md:px-5 md:py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-600 font-black uppercase focus:outline-none shadow-inner" />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Civil Status / Katayuang Sibil</label>
-                    <input type="text" value={formData.civilStatus || 'N/A'} readOnly disabled className="w-full px-4 py-3 md:px-5 md:py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-600 font-black uppercase focus:outline-none shadow-inner" />
-                  </div>
-                </div>
               </div>
 
               {/* Step 2: Contact & Identification */}
               <div className="space-y-4 md:space-y-6 animate-fade-in-up [animation-delay:0.1s]">
                 <div className="flex items-center gap-4 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-xl p-2 pr-6 shadow-sm mb-6">
-<div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">2</div>
+                  <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">2</div>
                   <div>
                     <h3 className="text-lg md:text-xl font-black text-white tracking-tight">Notification & Residency</h3>
                     <p className="text-xs text-white/90 font-bold uppercase tracking-widest">Where to receive your updates</p>
@@ -381,7 +366,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
               {/* Step 3: Academic Information */}
               <div className="space-y-4 md:space-y-6 animate-fade-in-up [animation-delay:0.2s]">
                 <div className="flex items-center gap-4 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-xl p-2 pr-6 shadow-sm mb-6">
-<div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">3</div>
+                  <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">3</div>
                   <div>
                     <h3 className="text-lg md:text-xl font-black text-white tracking-tight">Academic Profile</h3>
                     <p className="text-xs text-white/90 font-bold uppercase tracking-widest">Educational Status & performance</p>
@@ -447,7 +432,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
               {/* Step 4: Digital Verification */}
               <div className="space-y-4 md:space-y-6 animate-fade-in-up [animation-delay:0.3s]">
                 <div className="flex items-center gap-4 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-xl p-2 pr-6 shadow-sm mb-6">
-<div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">4</div>
+                  <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">4</div>
                   <div>
                     <h3 className="text-lg md:text-xl font-black text-white tracking-tight">Identity Validation</h3>
                     <p className="text-xs text-white/90 font-bold uppercase tracking-widest">Digital Signature & Contact</p>
