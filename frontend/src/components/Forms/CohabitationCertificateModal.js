@@ -334,7 +334,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                                                     value={formData.address}
                                                     onChange={handleInputChange}
                                                     className={`w-full pl-14 pr-5 py-4 bg-white border-2 ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl font-bold text-gray-900 focus:border-rose-500 outline-none transition-all shadow-inner`}
-                                                    placeholder="Enter or sync shared residential address..."
+                                                    placeholder="Enter or sync shared residential address... / Ilagay o i-sync ang kasalukuyang tirahan..."
                                                 />
                                             </div>
                                             <div className="flex items-center gap-2 mt-2 ml-1">

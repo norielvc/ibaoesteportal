@@ -324,7 +324,7 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                         <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">2</div>
                         <div>
                           <h3 className="text-lg md:text-xl font-bold text-white">Notification & Contact / Notipikasyon at Contact</h3>
-                          <p className="text-xs text-white/90 font-medium tracking-wide">Where to receive your updates</p>
+                          <p className="text-xs text-white/90 font-medium tracking-wide">Where to receive your updates / Kung saan matatanggap ang mga update</p>
                         </div>
                       </div>
 
@@ -337,7 +337,7 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                             </div>
                             <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className={`w-full pl-16 pr-6 py-4 bg-white border-2 ${errors.email ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-2xl focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-normal text-gray-800 shadow-sm`} />
                           </div>
-                          <p className="text-[10px] text-gray-400 font-bold italic ml-2">Notifications will be sent here</p>
+                          <p className="text-[10px] text-gray-400 font-bold italic ml-2">Notifications will be sent here / Dito ipapadala ang mga abiso</p>
                         </div>
 
                         <div className="space-y-2 relative group">

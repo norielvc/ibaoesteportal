@@ -328,7 +328,7 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
                                     <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3 items-start shadow-sm mt-4 tracking-tight">
                                         <Info className="w-5 h-5 text-amber-600 shrink-0" />
                                         <p className="text-xs text-amber-800 font-medium leading-relaxed">
-                                            <span className="font-bold underline">Note:</span> The Barangay Administrator will contact you via this number regarding the official status or schedule of your request.
+                                            <span className="font-bold underline">Note / Paunawa:</span> The Barangay Administrator will contact you via this number regarding the official status or schedule of your request. / Makikipag-ugnayan ang Barangay Administrator sa numerong ito patungkol sa estado o iskedyul ng iyong request.
                                         </p>
                                     </div>
                                 </div>
@@ -512,8 +512,8 @@ function MedicoLegalPreview({ formData, currentDate, officials, referenceNumber 
                                 <span className="pt-0">{formatDate(formData.dateOfExamination).toUpperCase()}</span>
                             </div>
 
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start pt-1 font-bold"><span>USAPING BARANGAY NO.</span><span>:</span><span>{formData.usapingBarangay?.toUpperCase()}</span></div>
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start font-bold"><span>DATE OF HEARING</span><span>:</span><span>{formatDate(formData.dateOfHearing).toUpperCase()}</span></div>
+                            <div className="grid grid-cols-[200px_20px_1fr] items-start pt-1 font-bold"><span>USAPING BARANGAY NO. / NUMERO NG USAPING BARANGAY</span><span>:</span><span>{formData.usapingBarangay?.toUpperCase()}</span></div>
+                            <div className="grid grid-cols-[200px_20px_1fr] items-start font-bold"><span>DATE OF HEARING / PETSA NG PAGDINIG</span><span>:</span><span>{formatDate(formData.dateOfHearing).toUpperCase()}</span></div>
                         </div>
 
                         <p className="pt-8 leading-relaxed uppercase">

@@ -290,7 +290,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                   <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">2</div>
                   <div>
                     <h3 className="text-lg md:text-xl font-black text-white tracking-tight">Notification & Residency</h3>
-                    <p className="text-xs text-white/90 font-bold uppercase tracking-widest">Where to receive your updates</p>
+                    <p className="text-xs text-white/90 font-bold uppercase tracking-widest">Where to receive your updates / Kung saan matatanggap ang mga update</p>
                   </div>
                 </div>
 

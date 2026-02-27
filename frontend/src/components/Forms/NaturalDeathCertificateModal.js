@@ -340,14 +340,14 @@ export default function NaturalDeathCertificateModal({ isOpen, onClose }) {
 
                       <div className="space-y-2 relative">
                         <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Cause of Death / Sanhi ng Kamatayan <span className="text-red-500">*</span></label>
-                        <input type="text" name="causeOfDeath" value={formData.causeOfDeath} onChange={handleInputChange} placeholder="E.G. HEART ATTACK (MILD STROKE)" className={`w-full px-6 py-5 bg-white border-2 ${errors.causeOfDeath ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none uppercase font-extrabold text-gray-800 shadow-sm`} />
+                        <input type="text" name="causeOfDeath" value={formData.causeOfDeath} onChange={handleInputChange} placeholder="E.G. HEART ATTACK (MILD STROKE) / HAL. INATAKE SA PUSO" className={`w-full px-6 py-5 bg-white border-2 ${errors.causeOfDeath ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 transition-all outline-none uppercase font-extrabold text-gray-800 shadow-sm`} />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-100">
                       <div className="space-y-6 text-sm">
                         <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Requestor Name (Relative) <span className="text-red-500">*</span></label>
-                        <input type="text" name="requestorName" value={formData.requestorName} onChange={handleInputChange} placeholder="FULL NAME OF RELATIVE" className={`w-full px-4 py-3 bg-white border-2 ${errors.requestorName ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none font-black text-emerald-900 transition-all shadow-sm uppercase`} />
+                        <input type="text" name="requestorName" value={formData.requestorName} onChange={handleInputChange} placeholder="FULL NAME OF RELATIVE / BUONG PANGALAN NG KAMAG-ANAK" className={`w-full px-4 py-3 bg-white border-2 ${errors.requestorName ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none font-black text-emerald-900 transition-all shadow-sm uppercase`} />
                       </div>
                       <div className="space-y-6 text-sm">
                         <label className="text-xs font-bold text-[#2d5a3d] uppercase tracking-widest ml-1 block">Requestor Contact Number <span className="text-red-500">*</span></label>
