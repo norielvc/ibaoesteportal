@@ -126,6 +126,14 @@ export default function BarangayPortal() {
       color: 'green',
       features: ['Certified', 'Family Record', 'Cemetery'],
       onClick: () => setShowNaturalDeathModal(true)
+    },
+    {
+      title: 'Educational Assistance',
+      description: 'Apply for scholarship and financial support for studying residents.',
+      icon: GraduationCap,
+      color: 'blue',
+      features: ['Scholarship', 'Allowance', 'Education'],
+      onClick: () => setShowEducationalAssistanceModal(true)
     }
   ], [
     setShowClearanceModal,
@@ -137,7 +145,8 @@ export default function BarangayPortal() {
     setShowNaturalDeathModal,
     setShowCohabitationModal,
     setShowMedicoLegalModal,
-    setShowSamePersonModal
+    setShowSamePersonModal,
+    setShowEducationalAssistanceModal
   ]);
 
   // Responsive items per view for forms carousel
