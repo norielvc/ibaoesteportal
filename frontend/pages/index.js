@@ -1086,25 +1086,25 @@ export default function BarangayPortal() {
                 category: "EDUCATION",
                 title: "Scholarship Grants Awarding",
                 description: "Distributing financial assistance to deserving local youth to support their higher education journeys.",
-                image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800"
+                image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800"
               },
               {
                 category: "YOUTH & SPORTS",
                 title: "Inter-Purok Basketball League",
                 description: "Fostering sportsmanship and camaraderie among our youth through the annual basketball championship.",
-                image: "https://images.unsplash.com/photo-1518063319782-9694b281bf2d?auto=format&fit=crop&q=80&w=800"
+                image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&q=80&w=800"
               },
               {
                 category: "ENVIRONMENT",
                 title: "Monthly Coastal Clean-up",
                 description: "Preserving our shores and marine life with the help of community volunteers and local groups.",
-                image: "https://images.unsplash.com/photo-1618477461853-cf6ed80fbfc5?auto=format&fit=crop&q=80&w=800"
+                image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=800"
               },
               {
                 category: "SENIOR CITIZENS",
                 title: "Elders Wellness & Social Day",
                 description: "A special day dedicated to our elders featuring health seminars, games, and free wellness packages.",
-                image: "https://images.unsplash.com/photo-1457195740896-ac0d4370fde8?auto=format&fit=crop&q=80&w=800"
+                image: "https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&q=80&w=800"
               },
               {
                 category: "DIGITAL TRANSFORMATION",
