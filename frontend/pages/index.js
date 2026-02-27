@@ -1050,9 +1050,9 @@ export default function BarangayPortal() {
         </div>
       </section>
 
-      {/* Barangay Programs Section - Carousel layout mirroring exact screenshot design */}
-      <section className="py-12 md:py-16 bg-white w-full">
-        <h2 className="text-center text-3xl md:text-[2.5rem] font-extrabold text-[#113b4d] uppercase mb-10 tracking-[0.05em] font-serif">
+      {/* Barangay Programs Section - Themed and optimized */}
+      <section className="py-12 md:py-16 bg-white w-full border-t border-gray-100">
+        <h2 className="text-center text-3xl md:text-[2.5rem] font-extrabold text-[#112e1f] uppercase mb-10 tracking-[0.05em] font-serif">
           Barangay Programs
         </h2>
 
@@ -1060,48 +1060,48 @@ export default function BarangayPortal() {
           <div className="flex overflow-x-auto md:grid md:grid-cols-3 snap-x snap-mandatory scrollbar-hide">
 
             {/* Card 1 */}
-            <div className="relative h-[350px] md:h-[450px] w-full min-w-[85vw] md:min-w-0 snap-center flex-shrink-0 group">
+            <div className="relative h-[280px] md:h-[320px] w-full min-w-[85vw] md:min-w-0 snap-center flex-shrink-0 group">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
                 style={{ backgroundImage: 'url(/background.jpg)' }}
               />
-              <div className="absolute inset-0 bg-[#2a4d5c]/85 flex flex-col items-start justify-center p-10 md:p-14 transition-colors duration-500 hover:bg-[#2a4d5c]/90">
-                <h3 className="text-white text-3xl md:text-4xl font-black uppercase leading-tight mb-8 tracking-wide drop-shadow-md">
+              <div className="absolute inset-0 bg-[#112e1f]/85 flex flex-col items-start justify-center p-8 md:p-12 transition-colors duration-500 hover:bg-[#112e1f]/90">
+                <h3 className="text-white text-2xl md:text-3xl font-black uppercase leading-tight mb-6 tracking-wide drop-shadow-md group-hover:-translate-y-1 transition-transform">
                   Brgy. Green<br className="hidden md:block" /> Building Code
                 </h3>
-                <button className="border-2 border-white text-white px-8 py-3 bg-transparent hover:bg-white hover:text-[#2a4d5c] transition-colors rounded-sm font-semibold text-sm md:text-base">
+                <button className="border-2 border-white text-white px-8 py-3 bg-transparent hover:bg-white hover:text-[#112e1f] transition-all rounded-sm font-semibold text-sm md:text-base shadow-sm">
                   Read More
                 </button>
               </div>
             </div>
 
             {/* Card 2 */}
-            <div className="relative h-[350px] md:h-[450px] w-full min-w-[85vw] md:min-w-0 snap-center flex-shrink-0 group">
+            <div className="relative h-[280px] md:h-[320px] w-full min-w-[85vw] md:min-w-0 snap-center flex-shrink-0 group">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
                 style={{ backgroundImage: 'url(/background.jpg)' }}
               />
-              <div className="absolute inset-0 bg-[#c04646]/85 flex flex-col items-start justify-center p-10 md:p-14 transition-colors duration-500 hover:bg-[#c04646]/90">
-                <h3 className="text-white text-3xl md:text-4xl font-black uppercase leading-tight mb-8 tracking-wide drop-shadow-md">
+              <div className="absolute inset-0 bg-[#2d5a3d]/85 flex flex-col items-start justify-center p-8 md:p-12 transition-colors duration-500 hover:bg-[#2d5a3d]/90">
+                <h3 className="text-white text-2xl md:text-3xl font-black uppercase leading-tight mb-6 tracking-wide drop-shadow-md group-hover:-translate-y-1 transition-transform">
                   Pangkabuhayang<br className="hidden md:block" /> Iba O' Este
                 </h3>
-                <button className="border-2 border-white text-white px-8 py-3 bg-transparent hover:bg-white hover:text-[#c04646] transition-colors rounded-sm font-semibold text-sm md:text-base">
+                <button className="border-2 border-white text-white px-8 py-3 bg-transparent hover:bg-white hover:text-[#2d5a3d] transition-all rounded-sm font-semibold text-sm md:text-base shadow-sm">
                   Read More
                 </button>
               </div>
             </div>
 
             {/* Card 3 */}
-            <div className="relative h-[350px] md:h-[450px] w-full min-w-[85vw] md:min-w-0 snap-center flex-shrink-0 group">
+            <div className="relative h-[280px] md:h-[320px] w-full min-w-[85vw] md:min-w-0 snap-center flex-shrink-0 group">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
                 style={{ backgroundImage: 'url(/background.jpg)' }}
               />
-              <div className="absolute inset-0 bg-[#356db3]/85 flex flex-col items-start justify-center p-10 md:p-14 transition-colors duration-500 hover:bg-[#356db3]/90">
-                <h3 className="text-white text-3xl md:text-4xl font-black uppercase leading-tight mb-8 tracking-wide drop-shadow-md">
+              <div className="absolute inset-0 bg-[#427a51]/85 flex flex-col items-start justify-center p-8 md:p-12 transition-colors duration-500 hover:bg-[#427a51]/90">
+                <h3 className="text-white text-2xl md:text-3xl font-black uppercase leading-tight mb-6 tracking-wide drop-shadow-md group-hover:-translate-y-1 transition-transform">
                   Barangay<br className="hidden md:block" /> E-Services
                 </h3>
-                <button className="border-2 border-white text-white px-8 py-3 bg-transparent hover:bg-white hover:text-[#356db3] transition-colors rounded-sm font-semibold text-sm md:text-base">
+                <button className="border-2 border-white text-white px-8 py-3 bg-transparent hover:bg-white hover:text-[#427a51] transition-all rounded-sm font-semibold text-sm md:text-base shadow-sm">
                   Read More
                 </button>
               </div>
@@ -1110,8 +1110,8 @@ export default function BarangayPortal() {
           </div>
         </div>
 
-        <div className="text-center mt-12 mb-4">
-          <button className="border border-[#2a4d5c] text-[#2a4d5c] px-8 py-3 hover:bg-[#2a4d5c] hover:text-white transition-colors uppercase font-semibold tracking-wide text-sm rounded-sm">
+        <div className="text-center mt-10 md:mt-12 mb-4">
+          <button className="border-2 border-[#112e1f] text-[#112e1f] px-10 py-3.5 hover:bg-[#112e1f] hover:text-white transition-all uppercase font-bold tracking-widest text-sm rounded-sm shadow-sm hover:shadow-md">
             More Programs
           </button>
         </div>
