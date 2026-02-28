@@ -46,7 +46,7 @@ export default function BarangayPortal() {
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', message: ''
   });
-  const [itemsPerView, setItemsPerView] = useState(3);
+  const [itemsPerView, setItemsPerView] = useState(4);
   const [heroCarouselIndex, setHeroCarouselIndex] = useState(0);
   const [selectedFacility, setSelectedFacility] = useState(null);
   const [facilityImageIndex, setFacilityImageIndex] = useState(0);
