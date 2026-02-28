@@ -918,37 +918,37 @@ export default function BarangayPortal() {
                         };
 
                         return (
-                          <div key={formIndex} className="w-full flex-shrink-0 flex items-center justify-center p-4" style={{ width: `${100 / forms.length}%` }}>
+                          <div key={formIndex} className="w-full flex-shrink-0 flex items-center justify-center p-3 md:p-4" style={{ width: `${100 / forms.length}%` }}>
                             <div
-                              className="group relative backdrop-blur-sm rounded-3xl p-8 transition-all duration-500 overflow-hidden w-full border border-white/20 shadow-xl hover:shadow-2xl"
+                              className="group relative backdrop-blur-sm rounded-3xl p-5 md:p-6 transition-all duration-500 overflow-hidden w-full max-w-[320px] mx-auto border border-white/20 shadow-xl hover:shadow-2xl"
                               style={{ backgroundColor: theme.bg }}
                             >
                               {/* Integrated Gradient Glow */}
                               <div className={`absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl`}></div>
 
                               {/* Icon Container */}
-                              <div className="relative mb-8">
-                                <div className={`w-20 h-20 bg-gradient-to-br ${theme.iconBg} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 mx-auto`}>
-                                  <Icon className="w-10 h-10 text-white" />
+                              <div className="relative mb-5">
+                                <div className={`w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br ${theme.iconBg} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 mx-auto`}>
+                                  <Icon className="w-7 h-7 md:w-8 md:h-8 text-white" />
                                 </div>
-                                <div className={`absolute -top-1 -right-1 w-7 h-7 ${theme.countBg} rounded-full flex items-center justify-center shadow-md`}>
-                                  <span className="text-sm font-bold">{formIndex + 1}</span>
+                                <div className={`absolute -top-1 md:-top-2 right-1/4 translate-x-1/2 w-6 h-6 ${theme.countBg} rounded-full flex items-center justify-center shadow-md`}>
+                                  <span className="text-xs font-bold">{formIndex + 1}</span>
                                 </div>
                               </div>
 
                               {/* Content */}
                               <div className="text-center">
-                                <h3 className={`text-2xl font-bold ${theme.title} mb-4 transition-colors relative`}>
+                                <h3 className={`text-lg md:text-xl font-bold ${theme.title} mb-2 transition-colors relative`}>
                                   {form.title}
                                 </h3>
-                                <p className={`${theme.desc} mb-8 leading-relaxed relative text-base h-12 overflow-hidden`}>
+                                <p className={`${theme.desc} mb-5 leading-relaxed relative text-xs md:text-sm h-10 overflow-hidden px-1`}>
                                   {form.description}
                                 </p>
 
                                 {/* Feature Badges - Blended */}
-                                <div className="flex flex-wrap gap-3 mb-8 relative justify-center">
+                                <div className="flex flex-wrap gap-1.5 md:gap-2 mb-6 relative justify-center">
                                   {form.features.map((feature, idx) => (
-                                    <span key={idx} className={`px-4 py-1.5 ${theme.badge} text-xs font-semibold rounded-full border backdrop-blur-sm`}>
+                                    <span key={idx} className={`px-2.5 md:px-3 py-1 ${theme.badge} text-[10px] md:text-[11px] font-semibold rounded-full border backdrop-blur-sm tracking-wide`}>
                                       {feature}
                                     </span>
                                   ))}
@@ -957,11 +957,11 @@ export default function BarangayPortal() {
                                 {/* Blended Request Button */}
                                 <button
                                   onClick={form.onClick}
-                                  className={`relative z-10 w-full bg-gradient-to-r ${theme.button} text-white py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg ${theme.buttonShadow} text-lg group/btn`}
+                                  className={`relative z-10 w-full bg-gradient-to-r ${theme.button} text-white py-2.5 md:py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg ${theme.buttonShadow} text-sm md:text-base group/btn`}
                                 >
-                                  <Plus className="w-6 h-6 group-hover/btn:rotate-90 transition-transform" />
-                                  Request Now
-                                  <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                                  <Plus className="w-5 h-5 group-hover/btn:rotate-90 transition-transform" />
+                                  <span className="tracking-wide">Request Now</span>
+                                  <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                                 </button>
                               </div>
                             </div>
