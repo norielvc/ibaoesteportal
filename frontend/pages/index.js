@@ -2282,23 +2282,17 @@ export default function BarangayPortal() {
             onClick={() => setSelectedFacility(null)}
           ></div>
 
-          <div className="relative z-10 w-full max-w-5xl h-[80vh] flex flex-col bg-[#0a1f12] rounded-3xl overflow-hidden border border-[#8dc63f]/30 shadow-[0_0_50px_rgba(141,198,63,0.15)] animate-in zoom-in-95 duration-300">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#8dc63f]/20 bg-[#112e1f]/80 z-20">
-              <div>
-                <h3 className="text-xl md:text-2xl font-bold text-white group-hover:text-[#8dc63f] transition-colors">{selectedFacility.name}</h3>
-                <p className="text-[#8dc63f] text-sm md:text-base font-semibold">Photo Gallery</p>
-              </div>
-              <button
-                onClick={() => setSelectedFacility(null)}
-                className="w-10 h-10 bg-white/10 hover:bg-red-500/20 rounded-full flex items-center justify-center text-white/70 hover:text-red-400 transition-colors border border-white/10 hover:border-red-500/30"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+          <div className="relative z-10 w-full max-w-5xl h-[80vh] flex flex-col bg-transparent rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(141,198,63,0.15)] animate-in zoom-in-95 duration-300">
+            {/* Floating Close Button */}
+            <button
+              onClick={() => setSelectedFacility(null)}
+              className="absolute top-4 right-4 z-50 w-10 h-10 bg-black/50 hover:bg-red-500/80 rounded-full flex items-center justify-center text-white/90 transition-colors border border-white/20 backdrop-blur-md"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
             {/* Main Image Content */}
-            <div className="relative flex-1 bg-black overflow-hidden flex items-center justify-center group">
+            <div className="relative flex-1 bg-transparent overflow-hidden flex items-center justify-center group">
               {(() => {
                 const images = selectedFacility.images || ['/background.jpg'];
                 const currentImg = images[facilityImageIndex] || '/background.jpg';
@@ -2333,7 +2327,7 @@ export default function BarangayPortal() {
                         </button>
 
                         {/* Image Counter */}
-                        <div className="absolute top-4 right-4 bg-black/60 px-3 py-1 rounded-full text-white/90 text-sm border border-white/20 backdrop-blur-sm">
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-1.5 rounded-full text-white/90 text-sm font-semibold tracking-widest border border-white/20 backdrop-blur-sm">
                           {facilityImageIndex + 1} / {images.length}
                         </div>
                       </>
@@ -2341,13 +2335,6 @@ export default function BarangayPortal() {
                   </>
                 );
               })()}
-            </div>
-
-            {/* Description / Caption Area */}
-            <div className="p-4 md:p-6 bg-[#112e1f]/80 border-t border-[#8dc63f]/20 z-20">
-              <p className="text-gray-300 text-sm md:text-base leading-relaxed">
-                {selectedFacility.description}
-              </p>
             </div>
           </div>
         </div>
