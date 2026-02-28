@@ -1628,27 +1628,7 @@ export default function BarangayPortal() {
       {/* Barangay Officials Section - Optimized */}
       <section id="officials" className="bg-gradient-to-br from-[#112e1f] via-[#1a3d29] to-[#0d1f14] relative overflow-hidden">
         {/* Header with modern aesthetic */}
-        <div className="text-center pt-10 pb-6 md:pt-14 md:pb-8 relative z-10">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/10 border border-white/20 rounded-full mb-4">
-            <span className="text-green-300 font-bold text-[10px] tracking-[0.2em] uppercase">Executive Governance</span>
-          </div>
-
-          <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3 tracking-tighter uppercase">
-            {heroSettings?.title && heroSettings.title.includes('OFFICIALS') ? (
-              <>Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">Officials</span></>
-            ) : (
-              heroSettings?.title || 'BARANGAY OFFICIALS'
-            )}
-          </h3>
-
-          <div className="flex justify-center items-center gap-4 mb-4">
-            <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-green-500/50"></div>
-            <p className="text-white font-bold text-sm md:text-base tracking-[0.3em] uppercase">
-              {heroSettings?.subtitle || 'Meet our dedicated team serving Iba O\' Este'}
-            </p>
-            <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-green-500/50"></div>
-          </div>
-        </div>
+        {/* Header removed as per user request */}
 
         {/* Photo - Full visibility without overlay */}
         <div className="relative">
