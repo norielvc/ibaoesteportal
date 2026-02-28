@@ -5,7 +5,8 @@ import {
   Clock, Sun, Moon, Cloud, CloudRain, Users, FileText, Award, Building2, Heart, Baby,
   AlertTriangle, Shield, Home, Calendar, TrendingUp, CheckCircle, GraduationCap, User,
   Store, Briefcase, Stethoscope, Fingerprint, UserPlus, Flower2, Search, Star, Leaf, Laptop
-, Trophy } from 'lucide-react';
+  , Trophy
+} from 'lucide-react';
 import BarangayClearanceModal from '@/components/Forms/BarangayClearanceModal';
 import IndigencyCertificateModal from '@/components/Forms/IndigencyCertificateModal';
 import ResidencyCertificateModal from '@/components/Forms/ResidencyCertificateModal';
@@ -1134,16 +1135,16 @@ export default function BarangayPortal() {
         </div>
       </section>
 
-            {/* Facilities Section */}
+      {/* Facilities Section */}
       <section id="directory" className="py-16 md:py-24 bg-white relative">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-            
+
             {/* Left Column: Title and Description */}
             <div className="lg:w-1/4 flex flex-col pt-2">
               <div className="border-2 border-gray-100 p-8 shadow-sm bg-white mb-6">
                 <h2 className="text-3xl font-normal text-gray-800 leading-tight">
-                  Exceptional<br/>
+                  Exceptional<br />
                   <span className="text-[#8dc63f] font-extrabold mt-1 inline-block">Facilities We Offer</span>
                 </h2>
               </div>
@@ -1159,7 +1160,7 @@ export default function BarangayPortal() {
                   <div key={index} className="flex flex-col group bg-white transition-all duration-300">
                     <div className="w-full h-48 mb-4 overflow-hidden">
                       <img
-                        src={facility.images[0]}
+                        src={(facility.images && facility.images.length > 0) ? facility.images[0] : '/background.jpg'}
                         alt={facility.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />
