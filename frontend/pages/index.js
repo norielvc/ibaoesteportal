@@ -163,7 +163,7 @@ export default function BarangayPortal() {
       } else if (window.innerWidth < 1024) {
         newItemsPerView = 2;
       } else {
-        newItemsPerView = 3;
+        newItemsPerView = 4;
       }
       setItemsPerView(newItemsPerView);
       setCurrentFormSlide(prev => Math.min(prev, forms.length - (newItemsPerView - 1)));
