@@ -1771,7 +1771,7 @@ export default function BarangayPortal() {
                           {section.key === 'captain' ? (
                             <>
                               {/* Left Aligned Captain Card */}
-                              <div className="w-full lg:w-[450px] flex-shrink-0 animate-on-scroll">
+                              <div className="w-full lg:w-[450px] flex-shrink-0">
                                 {displayOfficials.map((official, index) => {
                                   // Reuse same logic for color and initials
                                   const colors = [
@@ -1819,7 +1819,7 @@ export default function BarangayPortal() {
                               </div>
 
                               {/* Right Aligned Goal & Vision */}
-                              <div className="flex-grow space-y-8 animate-all duration-700 delay-300">
+                              <div className="flex-grow space-y-8">
                                 <div className="bg-gradient-to-br from-[#112e1f] to-[#1a3d29] rounded-[40px] p-8 md:p-10 shadow-2xl relative overflow-hidden group border border-white/10 hover:shadow-green-900/40 transition-all transform hover:scale-[1.01]">
                                   <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
                                     <Target className="w-32 h-32 text-white" />
