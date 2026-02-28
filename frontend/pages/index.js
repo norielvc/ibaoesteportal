@@ -47,6 +47,7 @@ export default function BarangayPortal() {
     firstName: '', lastName: '', email: '', phone: '', message: ''
   });
   const [itemsPerView, setItemsPerView] = useState(3);
+  const [heroCarouselIndex, setHeroCarouselIndex] = useState(0);
 
   const forms = useMemo(() => [
     {
@@ -1139,12 +1140,31 @@ export default function BarangayPortal() {
       <section id="directory" className="bg-white relative">
         {/* Top Carousel Hero */}
         <div className="relative w-full h-[60vh] min-h-[500px] bg-gray-900 overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1541188495357-ad2ce61fa0ca?auto=format&fit=crop&q=80&w=2000"
-            alt="Facilities Hero"
-            className="w-full h-full object-cover"
-            style={{ filter: 'brightness(0.6)' }}
-          />
+          {facilities.flatMap(f => f.images || []).length > 0 ? (
+            facilities
+              .flatMap(f => f.images || [])
+              .filter((img, i, arr) => arr.indexOf(img) === i)
+              .map((img, index) => (
+                <div
+                  key={index}
+                  className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${heroCarouselIndex === index ? 'opacity-100' : 'opacity-0'}`}
+                >
+                  <img
+                    src={img}
+                    alt={`Facility slide ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    style={{ filter: 'brightness(0.6)' }}
+                  />
+                </div>
+              ))
+          ) : (
+            <img
+              src="https://images.unsplash.com/photo-1541188495357-ad2ce61fa0ca?auto=format&fit=crop&q=80&w=2000"
+              alt="Facilities Hero"
+              className="w-full h-full object-cover"
+              style={{ filter: 'brightness(0.6)' }}
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40 pointer-events-none"></div>
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
@@ -1166,10 +1186,22 @@ export default function BarangayPortal() {
           </div>
 
           {/* Carousel Arrows */}
-          <button className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-[#8dc63f] flex items-center justify-center text-white transition-colors cursor-pointer">
+          <button
+            onClick={() => {
+              const totalImages = facilities.flatMap(f => f.images || []).filter((img, i, arr) => arr.indexOf(img) === i).length || 1;
+              setHeroCarouselIndex(prev => (prev === 0 ? totalImages - 1 : prev - 1));
+            }}
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-[#8dc63f] flex items-center justify-center text-white transition-colors cursor-pointer z-10"
+          >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <button className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-[#8dc63f] flex items-center justify-center text-white transition-colors cursor-pointer">
+          <button
+            onClick={() => {
+              const totalImages = facilities.flatMap(f => f.images || []).filter((img, i, arr) => arr.indexOf(img) === i).length || 1;
+              setHeroCarouselIndex(prev => (prev === totalImages - 1 ? 0 : prev + 1));
+            }}
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-[#8dc63f] flex items-center justify-center text-white transition-colors cursor-pointer z-10"
+          >
             <ChevronRight className="w-5 h-5" />
           </button>
 
