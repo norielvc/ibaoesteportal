@@ -5,7 +5,7 @@ import {
   Clock, Sun, Moon, Cloud, CloudRain, Users, FileText, Award, Building2, Heart, Baby,
   AlertTriangle, Shield, Home, Calendar, TrendingUp, CheckCircle, GraduationCap, User,
   Store, Briefcase, Stethoscope, Fingerprint, UserPlus, Flower2, Search, Star, Leaf, Laptop
-} from 'lucide-react';
+, Trophy } from 'lucide-react';
 import BarangayClearanceModal from '@/components/Forms/BarangayClearanceModal';
 import IndigencyCertificateModal from '@/components/Forms/IndigencyCertificateModal';
 import ResidencyCertificateModal from '@/components/Forms/ResidencyCertificateModal';
@@ -1442,7 +1442,7 @@ export default function BarangayPortal() {
                 <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-yellow-600 to-yellow-400 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.3)] border-2 border-indigo-950 mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Star className="w-6 h-6 text-white" fill="currentColor" />
+                      <Trophy className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-yellow-400 text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">City-Level Recognition</p>
@@ -1487,7 +1487,7 @@ export default function BarangayPortal() {
                 <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-emerald-400 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(52,211,153,0.3)] border-2 border-indigo-950 mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Leaf className="w-6 h-6 text-white" />
+                      <Trophy className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-emerald-400 text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">Environmental Award</p>
@@ -1532,7 +1532,7 @@ export default function BarangayPortal() {
                 <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-400 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(96,165,250,0.3)] border-2 border-indigo-950 mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Laptop className="w-6 h-6 text-white" />
+                      <Trophy className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-blue-400 text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">Special Citation</p>
@@ -1577,7 +1577,7 @@ export default function BarangayPortal() {
                 <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-400 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(248,113,113,0.3)] border-2 border-indigo-950 mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Shield className="w-6 h-6 text-white" />
+                      <Trophy className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-red-400 text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">Community Safety</p>
@@ -1622,7 +1622,7 @@ export default function BarangayPortal() {
                 <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-pink-400 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(244,114,182,0.3)] border-2 border-indigo-950 mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Heart className="w-6 h-6 text-white" />
+                      <Trophy className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-pink-400 text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">Health Service</p>
@@ -1667,7 +1667,7 @@ export default function BarangayPortal() {
                 <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-400 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(192,132,252,0.3)] border-2 border-indigo-950 mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <GraduationCap className="w-6 h-6 text-white" />
+                      <Trophy className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-purple-400 text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">Youth Council</p>
