@@ -1007,58 +1007,6 @@ export default function BarangayPortal() {
             })()}
           </div>
 
-          {/* Enhanced Bottom Info */}
-          <div className="mt-8 md:mt-16">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 max-w-4xl mx-auto">
-              {/* Processing Time */}
-              <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl md:rounded-2xl p-3 md:p-6 border border-green-100 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center gap-2 md:gap-4">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30 group-hover:scale-110 transition-transform">
-                    <Clock className="w-5 h-5 md:w-7 md:h-7 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-lg md:text-2xl font-bold text-gray-900">1-3 Days</p>
-                    <p className="text-xs md:text-sm text-green-600 font-medium">Processing Time</p>
-                  </div>
-                </div>
-                <div className="absolute top-2 md:top-3 right-2 md:right-3">
-                  <span className="px-1.5 py-0.5 md:px-2 md:py-1 bg-green-100 text-green-700 text-[10px] md:text-xs font-semibold rounded-full">FAST</span>
-                </div>
-              </div>
-
-              {/* 100% Online */}
-              <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl md:rounded-2xl p-3 md:p-6 border border-green-100 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center gap-2 md:gap-4">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30 group-hover:scale-110 transition-transform">
-                    <CheckCircle className="w-5 h-5 md:w-7 md:h-7 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-lg md:text-2xl font-bold text-gray-900">100%</p>
-                    <p className="text-xs md:text-sm text-green-600 font-medium">Fully Online</p>
-                  </div>
-                </div>
-                <div className="absolute top-2 md:top-3 right-2 md:right-3">
-                  <span className="px-1.5 py-0.5 md:px-2 md:py-1 bg-green-100 text-green-700 text-[10px] md:text-xs font-semibold rounded-full">NO LINES</span>
-                </div>
-              </div>
-
-              {/* SMS Notification */}
-              <div className="group relative bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl md:rounded-2xl p-3 md:p-6 border border-orange-100 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center gap-2 md:gap-4">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform">
-                    <Phone className="w-5 h-5 md:w-7 md:h-7 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-lg md:text-2xl font-bold text-gray-900">SMS</p>
-                    <p className="text-xs md:text-sm text-orange-600 font-medium">Instant Updates</p>
-                  </div>
-                </div>
-                <div className="absolute top-2 md:top-3 right-2 md:right-3">
-                  <span className="px-1.5 py-0.5 md:px-2 md:py-1 bg-orange-100 text-orange-700 text-[10px] md:text-xs font-semibold rounded-full">REAL-TIME</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
