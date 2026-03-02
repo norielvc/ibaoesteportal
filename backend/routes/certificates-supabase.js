@@ -1222,42 +1222,52 @@ router.post('/business-permit', async (req, res) => {
     const {
       ownerFullName, ownerAddress, residentId, businessName, natureOfBusiness,
       businessAddress, contactPerson, contactNumber, referenceNumber, applicationDate,
-      age, sex, civilStatus
+      age, sex, civilStatus, dateOfBirth, placeOfBirth
     } = req.body;
 
     // We use the reference number provided by the frontend as it follows the user's specific format
     const refNumber = referenceNumber || `BP-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
 
-    console.log(`Creating business permit with reference: ${refNumber}`);
+    console.log(`[BUSINESS PERMIT] Attempting to create request: ${refNumber}`);
+    console.log(`[BUSINESS PERMIT] Applicant: ${ownerFullName}, Age: ${age}, ResidentID: ${residentId}`);
+
+    const insertData = {
+      reference_number: refNumber,
+      certificate_type: 'business_permit',
+      full_name: ownerFullName?.toUpperCase() || '',
+      address: ownerAddress?.toUpperCase() || '',
+      age: parseInt(age) || 0,
+      sex: sex?.toUpperCase() || '',
+      civil_status: civilStatus?.toUpperCase() || '',
+      date_of_birth: dateOfBirth || null,
+      place_of_birth: placeOfBirth?.toUpperCase() || '',
+      contact_number: contactNumber || '',
+      email: req.body.email || '',
+      resident_id: residentId,
+      purpose: 'BUSINESS PERMIT / CLEARANCE',
+      status: 'staff_review',
+      date_issued: new Date().toISOString(),
+      details: {
+        businessName: businessName?.toUpperCase(),
+        natureOfBusiness: natureOfBusiness?.toUpperCase(),
+        businessAddress: businessAddress?.toUpperCase(),
+        contactPerson: contactPerson?.toUpperCase(),
+        applicationDate: applicationDate
+      }
+    };
 
     const { data, error } = await supabase
       .from('certificate_requests')
-      .insert([{
-        reference_number: refNumber,
-        certificate_type: 'business_permit',
-        full_name: ownerFullName?.toUpperCase() || '',
-        address: ownerAddress?.toUpperCase() || '',
-        age: parseInt(age) || 0,
-        sex: sex?.toUpperCase() || '',
-        civil_status: civilStatus?.toUpperCase() || '',
-        contact_number: contactNumber || '',
-        email: req.body.email || '',
-        resident_id: residentId,
-        purpose: 'BUSINESS PERMIT / CLEARANCE',
-        status: 'staff_review',
-        date_issued: new Date().toISOString(),
-        details: {
-          businessName: businessName?.toUpperCase(),
-          natureOfBusiness: natureOfBusiness?.toUpperCase(),
-          businessAddress: businessAddress?.toUpperCase(),
-          contactPerson: contactPerson?.toUpperCase(),
-          applicationDate: applicationDate
-        }
-      }])
+      .insert([insertData])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[BUSINESS PERMIT] Database Error:', error);
+      throw error;
+    }
+
+    console.log(`[BUSINESS PERMIT] Successfully created: ${refNumber} (ID: ${data.id})`);
 
     // Create initial workflow assignments
     const { data: workflowConfig } = await supabase
