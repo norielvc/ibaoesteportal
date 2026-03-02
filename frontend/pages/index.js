@@ -799,7 +799,7 @@ export default function BarangayPortal() {
                   {item.date}
                 </span>
                 <h2 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">{item.title}</h2>
-                <p className="text-sm md:text-base text-gray-200 mb-4">{item.description}</p>
+                <p className="text-sm md:text-base text-gray-200 mb-4 line-clamp-2 overflow-hidden">{item.description}</p>
                 <button
                   onClick={() => setSelectedNewsItem(item)}
                   className="bg-[#efefef] text-[#112117] px-5 py-2 rounded-lg font-semibold hover:bg-white transition-all transform hover:scale-105 flex items-center gap-2 shadow-lg text-sm"
