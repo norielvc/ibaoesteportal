@@ -30,8 +30,44 @@ const defaultPrograms = [
         title: "Brgy. Green Building Initiative",
         description: "Launching sustainable practices and installing solar-powered streetlights across major puroks.",
         image: "https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+        id: 4,
+        category: "EDUCATION",
+        title: "Iskolar ng Barangay",
+        description: "Providing educational scholarships and school supply assistance to deserving students from low-income families in the barangay.",
+        image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+        id: 5,
+        category: "SENIOR CITIZENS",
+        title: "Lingap sa Matatanda",
+        description: "Monthly financial aid, free medicine, and social services program dedicated to the elderly members of our community.",
+        image: "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+        id: 6,
+        category: "YOUTH DEVELOPMENT",
+        title: "Kabataang Barangay Sports Fest",
+        description: "Annual inter-purok sports tournament fostering teamwork, discipline, and healthy competition among the youth of Iba O' Este.",
+        image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+        id: 7,
+        category: "ENVIRONMENT",
+        title: "Barangay Clean & Green",
+        description: "Regular clean-up drives, tree planting activities, and eco-friendly waste segregation campaigns across all puroks.",
+        image: "https://images.unsplash.com/photo-1542601906897-eef3296d7f19?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+        id: 8,
+        category: "PEACE & ORDER",
+        title: "Barangay Peace & Order Program",
+        description: "Strengthening community safety through active Barangay Tanod patrols, CCTV installations, and conflict resolution initiatives.",
+        image: "https://images.unsplash.com/photo-1541199249251-f713e6145474?auto=format&fit=crop&q=80&w=800"
     }
 ];
+
 
 export default function ProgramsPage() {
     const [programs, setPrograms] = useState([]);
