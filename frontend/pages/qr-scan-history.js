@@ -273,512 +273,511 @@ export default function QRScanHistoryPage() {
   };
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        {/* Header */}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
+            <History className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">QR Scan History</h1>
+            <p className="text-sm text-gray-500">View and manage scanned QR codes</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
-              <History className="w-6 h-6 text-blue-600" />
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">QR Scan History</h1>
-              <p className="text-sm text-gray-500">View and manage scanned QR codes</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-          <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
-                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-              </div>
-              <div className="mt-2 sm:mt-0 sm:ml-4">
-                <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Today's Scans</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.today}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-emerald-100">
-                <History className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
-              </div>
-              <div className="mt-2 sm:mt-0 sm:ml-4">
-                <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Scans</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-purple-100">
-                <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
-              </div>
-              <div className="mt-2 sm:mt-0 sm:ml-4">
-                <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Active Scanners</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{scans.length > 0 ? 1 : 0}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-red-100">
-                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
-              </div>
-              <div className="mt-2 sm:mt-0 sm:ml-4">
-                <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Duplicates</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{duplicates.length}</p>
-              </div>
+            <div className="mt-2 sm:mt-0 sm:ml-4">
+              <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Today's Scans</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.today}</p>
             </div>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
-                Search QR Data
-              </label>
-              <div className="relative group">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-blue-500 transition-colors" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Scan content..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent outline-none transition-all text-sm"
-                />
-              </div>
+        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-emerald-100">
+              <History className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
             </div>
+            <div className="mt-2 sm:mt-0 sm:ml-4">
+              <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Scans</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
+            </div>
+          </div>
+        </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
-                Filter by Date
-              </label>
+        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-purple-100">
+              <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+            </div>
+            <div className="mt-2 sm:mt-0 sm:ml-4">
+              <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Active Scanners</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{scans.length > 0 ? 1 : 0}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-red-100">
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+            </div>
+            <div className="mt-2 sm:mt-0 sm:ml-4">
+              <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Duplicates</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{duplicates.length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
+              Search QR Data
+            </label>
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-blue-500 transition-colors" />
               <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent outline-none transition-all text-sm"
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Scan content..."
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent outline-none transition-all text-sm"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedDate('');
-                setCurrentPage(1);
-              }}
-              className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 hover:text-gray-900 transition-all font-bold text-sm border border-gray-200"
-            >
-              <X className="w-4 h-4" />
-              <span>Clear Filters</span>
-            </button>
-            <button
-              onClick={() => setIsClearModalOpen(true)}
-              className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all border border-red-100 font-bold text-sm"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Clear History</span>
-            </button>
-            <button
-              onClick={exportToCSV}
-              className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 font-bold text-sm"
-            >
-              <Download className="w-4 h-4" />
-              <span>Export CSV</span>
-            </button>
-            <button
-              onClick={loadScans}
-              className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all border border-blue-100 font-bold text-sm"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span>Refresh List</span>
-            </button>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
+              Filter by Date
+            </label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent outline-none transition-all text-sm"
+            />
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="border-b border-gray-100 bg-gray-50/50">
-            <nav className="flex px-2 sm:px-6 overflow-x-auto no-scrollbar">
-              <button
-                onClick={() => setActiveTab('scans')}
-                className={`flex-1 sm:flex-none py-4 px-4 sm:px-6 border-b-2 font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'scans'
-                  ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
-                  }`}
-              >
-                All Scans
-                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === 'scans' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
-                  {stats.total}
-                </span>
-              </button>
-              <button
-                onClick={() => setActiveTab('duplicates')}
-                className={`flex-1 sm:flex-none py-4 px-4 sm:px-6 border-b-2 font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'duplicates'
-                  ? 'border-red-600 text-red-600 bg-red-50/50'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
-                  }`}
-              >
-                Duplicates
-                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === 'duplicates' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-600'}`}>
-                  {duplicates.length}
-                </span>
-              </button>
-            </nav>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedDate('');
+              setCurrentPage(1);
+            }}
+            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 hover:text-gray-900 transition-all font-bold text-sm border border-gray-200"
+          >
+            <X className="w-4 h-4" />
+            <span>Clear Filters</span>
+          </button>
+          <button
+            onClick={() => setIsClearModalOpen(true)}
+            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all border border-red-100 font-bold text-sm"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Clear History</span>
+          </button>
+          <button
+            onClick={exportToCSV}
+            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 font-bold text-sm"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export CSV</span>
+          </button>
+          <button
+            onClick={loadScans}
+            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all border border-blue-100 font-bold text-sm"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Refresh List</span>
+          </button>
+        </div>
+      </div>
 
-          {/* Tab Content */}
-          {activeTab === 'scans' ? (
-            // Existing scans table
-            <div>
-              {loading ? (
-                <div className="p-8 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-600">Loading scan history...</p>
-                </div>
-              ) : error ? (
-                <div className="p-8 text-center text-red-600">
-                  <p>{error}</p>
-                </div>
-              ) : scans.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>No QR scans found</p>
-                  <p className="text-sm">Try scanning some QR codes first!</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Scan Time
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Household-Family ID
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Address
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Remarks
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Raw Data
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Scanner Type
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Scanned By
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {scans.map((scan) => (
-                        <tr key={scan.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <Clock className="w-4 h-4 text-gray-400 mr-2" />
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {formatDate(scan.scan_timestamp)}
-                                </div>
+      {/* Tabs */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="border-b border-gray-100 bg-gray-50/50">
+          <nav className="flex px-2 sm:px-6 overflow-x-auto no-scrollbar">
+            <button
+              onClick={() => setActiveTab('scans')}
+              className={`flex-1 sm:flex-none py-4 px-4 sm:px-6 border-b-2 font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'scans'
+                ? 'border-blue-600 text-blue-600 bg-blue-50/50'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
+                }`}
+            >
+              All Scans
+              <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === 'scans' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
+                {stats.total}
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('duplicates')}
+              className={`flex-1 sm:flex-none py-4 px-4 sm:px-6 border-b-2 font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'duplicates'
+                ? 'border-red-600 text-red-600 bg-red-50/50'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
+                }`}
+            >
+              Duplicates
+              <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === 'duplicates' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-600'}`}>
+                {duplicates.length}
+              </span>
+            </button>
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'scans' ? (
+          // Existing scans table
+          <div>
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading scan history...</p>
+              </div>
+            ) : error ? (
+              <div className="p-8 text-center text-red-600">
+                <p>{error}</p>
+              </div>
+            ) : scans.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>No QR scans found</p>
+                <p className="text-sm">Try scanning some QR codes first!</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Scan Time
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Household-Family ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Address
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Remarks
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Raw Data
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Scanner Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Scanned By
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {scans.map((scan) => (
+                      <tr key={scan.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <Clock className="w-4 h-4 text-gray-400 mr-2" />
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {formatDate(scan.scan_timestamp)}
                               </div>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm font-mono font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">
-                              {parseQRData(scan.qr_data).id}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm font-mono font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">
+                            {parseQRData(scan.qr_data).id}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-bold text-gray-900">
+                            {parseQRData(scan.qr_data).name}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-xs text-gray-600 max-w-[200px] truncate" title={parseQRData(scan.qr_data).address}>
+                            {parseQRData(scan.qr_data).address}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 border-l border-gray-50">
+                          <div className="text-xs text-emerald-600 font-semibold italic">
+                            {parseQRData(scan.qr_data).remarks}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-[10px] text-gray-400 font-mono bg-gray-50 p-2 rounded truncate max-w-[150px]">
+                            {scan.qr_data}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${scan.scanner_type === 'mobile' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                              }`}>
+                              {scan.scanner_type}
                             </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm font-bold text-gray-900">
-                              {parseQRData(scan.qr_data).name}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-xs text-gray-600 max-w-[200px] truncate" title={parseQRData(scan.qr_data).address}>
-                              {parseQRData(scan.qr_data).address}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 border-l border-gray-50">
-                            <div className="text-xs text-emerald-600 font-semibold italic">
-                              {parseQRData(scan.qr_data).remarks}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-[10px] text-gray-400 font-mono bg-gray-50 p-2 rounded truncate max-w-[150px]">
-                              {scan.qr_data}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${scan.scanner_type === 'mobile' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                                }`}>
-                                {scan.scanner_type}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <User className="w-3.5 h-3.5 text-gray-400 mr-2" />
-                              <span className="text-sm text-gray-600">
-                                {scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button
-                              onClick={() => {
-                                setSelectedScan(scan);
-                                setIsViewModalOpen(true);
-                              }}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="View Details"
-                            >
-                              <Eye className="w-5 h-5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          ) : (
-            // Duplicates table
-            <div>
-              {duplicatesLoading ? (
-                <div className="p-8 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-600">Loading duplicate attempts...</p>
-                </div>
-              ) : duplicates.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-300" />
-                  <p>No duplicate scan attempts found</p>
-                  <p className="text-sm">All QR codes have been scanned only once!</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-red-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
-                          Household ID & Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
-                          Original Scan
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
-                          Duplicate Attempt
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
-                          Status
-                        </th>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <User className="w-3.5 h-3.5 text-gray-400 mr-2" />
+                            <span className="text-sm text-gray-600">
+                              {scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            onClick={() => {
+                              setSelectedScan(scan);
+                              setIsViewModalOpen(true);
+                            }}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="w-5 h-5" />
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {duplicates.map((duplicate, index) => (
-                        <tr key={index} className="hover:bg-red-50">
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-bold text-red-700">{parseQRData(duplicate.qr_data).id}</span>
-                              <span className="text-xs text-gray-900 font-medium">{parseQRData(duplicate.qr_data).name}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-xs text-gray-900">
-                              <div className="font-semibold">{duplicate.original_scan.scanned_by}</div>
-                              <div className="text-gray-500">{formatDate(duplicate.original_scan.scan_timestamp)}</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-xs text-gray-900 border-l-2 border-red-200 pl-3">
-                              <div className="font-semibold">{duplicate.duplicate_attempt.scanned_by}</div>
-                              <div className="text-gray-500">{formatDate(duplicate.duplicate_attempt.scan_timestamp)}</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex flex-col">
-                              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full uppercase text-center">Blocked</span>
-                              <span className="text-[10px] text-gray-500 mt-1">
-                                {Math.round(duplicate.time_difference / (1000 * 60))} mins later
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (
+          // Duplicates table
+          <div>
+            {duplicatesLoading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading duplicate attempts...</p>
+              </div>
+            ) : duplicates.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-300" />
+                <p>No duplicate scan attempts found</p>
+                <p className="text-sm">All QR codes have been scanned only once!</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-red-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
+                        Household ID & Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
+                        Original Scan
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
+                        Duplicate Attempt
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {duplicates.map((duplicate, index) => (
+                      <tr key={index} className="hover:bg-red-50">
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-red-700">{parseQRData(duplicate.qr_data).id}</span>
+                            <span className="text-xs text-gray-900 font-medium">{parseQRData(duplicate.qr_data).name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-xs text-gray-900">
+                            <div className="font-semibold">{duplicate.original_scan.scanned_by}</div>
+                            <div className="text-gray-500">{formatDate(duplicate.original_scan.scan_timestamp)}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-xs text-gray-900 border-l-2 border-red-200 pl-3">
+                            <div className="font-semibold">{duplicate.duplicate_attempt.scanned_by}</div>
+                            <div className="text-gray-500">{formatDate(duplicate.duplicate_attempt.scan_timestamp)}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full uppercase text-center">Blocked</span>
+                            <span className="text-[10px] text-gray-500 mt-1">
+                              {Math.round(duplicate.time_difference / (1000 * 60))} mins later
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Scan History Table */}
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ display: 'none' }}>
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Scans</h2>
         </div>
 
-        {/* Scan History Table */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ display: 'none' }}>
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Scans</h2>
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading scan history...</p>
           </div>
-
-          {loading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading scan history...</p>
-            </div>
-          ) : error ? (
-            <div className="p-8 text-center text-red-600">
-              <p>{error}</p>
-            </div>
-          ) : scans.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No QR scans found</p>
-              <p className="text-sm">Try scanning some QR codes first!</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Scan Time
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      QR Code Data
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Scanner Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Scanned By
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {scans.map((scan) => (
-                    <tr key={scan.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <Clock className="w-4 h-4 text-gray-400 mr-2" />
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {formatDate(scan.scan_timestamp)}
-                            </div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-600">
+            <p>{error}</p>
+          </div>
+        ) : scans.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <p>No QR scans found</p>
+            <p className="text-sm">Try scanning some QR codes first!</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Scan Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    QR Code Data
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Scanner Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Scanned By
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {scans.map((scan) => (
+                  <tr key={scan.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 text-gray-400 mr-2" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {formatDate(scan.scan_timestamp)}
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 font-mono bg-gray-50 p-2 rounded">
-                          {formatQRData(scan.qr_data)}
-                        </div>
-                        {scan.qr_data.length > 50 && (
-                          <button
-                            onClick={() => alert(scan.qr_data)}
-                            className="text-xs text-blue-600 hover:text-blue-800 mt-1"
-                          >
-                            View Full Data
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <Smartphone className="w-4 h-4 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-900 capitalize">
-                            {scan.scanner_type}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <User className="w-4 h-4 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-900">
-                            {scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 font-mono bg-gray-50 p-2 rounded">
+                        {formatQRData(scan.qr_data)}
+                      </div>
+                      {scan.qr_data.length > 50 && (
                         <button
-                          onClick={() => {
-                            const details = `
+                          onClick={() => alert(scan.qr_data)}
+                          className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                        >
+                          View Full Data
+                        </button>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Smartphone className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-900 capitalize">
+                          {scan.scanner_type}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <User className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-900">
+                          {scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => {
+                          const details = `
 QR Code Data: ${scan.qr_data}
 Scan Time: ${formatDate(scan.scan_timestamp)}
 Scanner Type: ${scan.scanner_type}
 Scanned By: ${scan.users ? `${scan.users.first_name} ${scan.users.last_name}` : 'Unknown'}
 Device Info: ${JSON.stringify(scan.device_info, null, 2)}
                             `.trim();
-                            alert(details);
-                          }}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                          alert(details);
+                        }}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Page {currentPage} of {totalPages}
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                >
-                  Next
-                </button>
-              </div>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Page {currentPage} of {totalPages}
             </div>
-          )}
-        </div>
-        {/* Clear History Confirmation Modal */}
-        {isClearModalOpen && (
-          <ClearHistoryModal
-            onClose={() => setIsClearModalOpen(false)}
-            onConfirm={handleClearHistory}
-            processing={clearing}
-          />
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         )}
       </div>
+      {/* Clear History Confirmation Modal */}
+      {isClearModalOpen && (
+        <ClearHistoryModal
+          onClose={() => setIsClearModalOpen(false)}
+          onConfirm={handleClearHistory}
+          processing={clearing}
+        />
+      )}
+
       {/* Scan Details Modal */}
       {isViewModalOpen && selectedScan && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -928,56 +927,65 @@ Device Info: ${JSON.stringify(scan.device_info, null, 2)}
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* Custom Delete Confirmation Modal */}
-      {isDeleteConfirmOpen && selectedScan && (
-        <div className="fixed inset-0 z-[60] overflow-y-auto bg-gray-900/40 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
-            <div className="p-10 text-center">
-              <div className="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-100 shadow-sm shadow-red-200/50">
-                <Trash2 className="w-10 h-10 text-red-600 animate-bounce" />
+      {
+        isDeleteConfirmOpen && selectedScan && (
+          <div className="fixed inset-0 z-[60] overflow-y-auto bg-gray-900/40 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
+              <div className="p-10 text-center">
+                <div className="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-100 shadow-sm shadow-red-200/50">
+                  <Trash2 className="w-10 h-10 text-red-600 animate-bounce" />
+                </div>
+
+                <h3 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">Delete Scan Record?</h3>
+                <p className="text-gray-500 text-sm leading-relaxed mb-8">
+                  This action is permanent. Information for <span className="text-gray-900 font-bold">{parseQRData(selectedScan.qr_data).name || 'this scan'}</span> will be removed from the history logs.
+                </p>
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => handleDeleteScan(selectedScan.id)}
+                    disabled={deletingId === selectedScan.id}
+                    className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-base hover:bg-red-700 transition-all active:scale-[0.98] shadow-xl shadow-red-600/20 flex items-center justify-center"
+                  >
+                    {deletingId === selectedScan.id ? (
+                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      "Yes, Confirm Delete"
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setIsDeleteConfirmOpen(false)}
+                    disabled={deletingId === selectedScan.id}
+                    className="w-full py-4 bg-gray-50 text-gray-600 rounded-2xl font-bold text-base hover:bg-gray-100 transition-all active:scale-[0.98]"
+                  >
+                    Keep Record
+                  </button>
+                </div>
               </div>
 
-              <h3 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">Delete Scan Record?</h3>
-              <p className="text-gray-500 text-sm leading-relaxed mb-8">
-                This action is permanent. Information for <span className="text-gray-900 font-bold">{parseQRData(selectedScan.qr_data).name || 'this scan'}</span> will be removed from the history logs.
-              </p>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => handleDeleteScan(selectedScan.id)}
-                  disabled={deletingId === selectedScan.id}
-                  className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-base hover:bg-red-700 transition-all active:scale-[0.98] shadow-xl shadow-red-600/20 flex items-center justify-center"
-                >
-                  {deletingId === selectedScan.id ? (
-                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    "Yes, Confirm Delete"
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setIsDeleteConfirmOpen(false)}
-                  disabled={deletingId === selectedScan.id}
-                  className="w-full py-4 bg-gray-50 text-gray-600 rounded-2xl font-bold text-base hover:bg-gray-100 transition-all active:scale-[0.98]"
-                >
-                  Keep Record
-                </button>
+              <div className="bg-gray-50 py-4 border-t border-gray-100">
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center">
+                  Authorized Admin Action Only
+                </p>
               </div>
-            </div>
-
-            <div className="bg-gray-50 py-4 border-t border-gray-100">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center">
-                Authorized Admin Action Only
-              </p>
             </div>
           </div>
-        </div>
-      )}
-    </Layout>
+        )
+      }
+    </div>
   );
 }
+
+QRScanHistoryPage.getLayout = (page) => (
+  <Layout>
+    {page}
+  </Layout>
+);
 
 // Clear History Confirmation Modal Component
 function ClearHistoryModal({ onClose, onConfirm, processing }) {

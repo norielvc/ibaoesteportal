@@ -211,257 +211,261 @@ export default function PickupManagementPage() {
   };
 
   return (
-    <Layout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Certificate Pickup Management</h1>
-            <p className="text-gray-500 mt-1">Manage certificate pickups and verification</p>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Certificate Pickup Management</h1>
+          <p className="text-gray-500 mt-1">Manage certificate pickups and verification</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200 border border-emerald-500/20 relative overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-emerald-100 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Ready for Pickup</p>
+            <p className="text-4xl font-black tracking-tighter">{stats.readyForPickup}</p>
+            <div className="mt-4 flex items-center gap-2">
+              <span className="bg-white/20 px-2 py-0.5 rounded text-[9px] font-black uppercase">Active Priority</span>
+            </div>
           </div>
+          <Package className="absolute -bottom-4 -right-4 w-24 h-24 text-white/10 -rotate-12" />
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-600 to-indigo-800 rounded-2xl p-6 text-white shadow-lg shadow-blue-200 border border-blue-500/20 relative overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-blue-100 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Total Released</p>
+            <p className="text-4xl font-black tracking-tighter">{stats.released}</p>
+            <div className="mt-4 flex items-center gap-2">
+              <span className="bg-white/20 px-2 py-0.5 rounded text-[9px] font-black uppercase">Completed Tasks</span>
+            </div>
+          </div>
+          <CheckCircle className="absolute -bottom-4 -right-4 w-24 h-24 text-white/10 -rotate-12" />
+        </div>
+
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 text-white shadow-lg shadow-gray-200 border border-gray-700/20 relative overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-gray-400 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Success Rate</p>
+            <p className="text-4xl font-black tracking-tighter">{stats.totalProcessed > 0 ? Math.round((stats.released / stats.totalProcessed) * 100) : 0}%</p>
+            <div className="mt-4 flex items-center gap-2">
+              <span className="bg-white/10 px-2 py-0.5 rounded text-[9px] font-black uppercase">Efficiency Index</span>
+            </div>
+          </div>
+          <Activity className="absolute -bottom-4 -right-4 w-24 h-24 text-white/5 -rotate-12" />
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
+              onClick={() => setStatusFilter('ready')}
+              className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${statusFilter === 'ready'
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200'
+                : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'
+                }`}
             >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
+              <Package className="w-4 h-4" />
+              Ready ({stats.readyForPickup})
+            </button>
+            <button
+              onClick={() => setStatusFilter('released')}
+              className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${statusFilter === 'released'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'
+                }`}
+            >
+              <CheckCircle className="w-4 h-4" />
+              Released ({stats.released})
             </button>
           </div>
-        </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200 border border-emerald-500/20 relative overflow-hidden">
-            <div className="relative z-10">
-              <p className="text-emerald-100 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Ready for Pickup</p>
-              <p className="text-4xl font-black tracking-tighter">{stats.readyForPickup}</p>
-              <div className="mt-4 flex items-center gap-2">
-                <span className="bg-white/20 px-2 py-0.5 rounded text-[9px] font-black uppercase">Active Priority</span>
-              </div>
+          <div className="flex flex-wrap gap-3">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-48 text-sm"
+              />
             </div>
-            <Package className="absolute -bottom-4 -right-4 w-24 h-24 text-white/10 -rotate-12" />
-          </div>
 
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-800 rounded-2xl p-6 text-white shadow-lg shadow-blue-200 border border-blue-500/20 relative overflow-hidden">
-            <div className="relative z-10">
-              <p className="text-blue-100 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Total Released</p>
-              <p className="text-4xl font-black tracking-tighter">{stats.released}</p>
-              <div className="mt-4 flex items-center gap-2">
-                <span className="bg-white/20 px-2 py-0.5 rounded text-[9px] font-black uppercase">Completed Tasks</span>
-              </div>
-            </div>
-            <CheckCircle className="absolute -bottom-4 -right-4 w-24 h-24 text-white/10 -rotate-12" />
-          </div>
-
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 text-white shadow-lg shadow-gray-200 border border-gray-700/20 relative overflow-hidden">
-            <div className="relative z-10">
-              <p className="text-gray-400 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Success Rate</p>
-              <p className="text-4xl font-black tracking-tighter">{stats.totalProcessed > 0 ? Math.round((stats.released / stats.totalProcessed) * 100) : 0}%</p>
-              <div className="mt-4 flex items-center gap-2">
-                <span className="bg-white/10 px-2 py-0.5 rounded text-[9px] font-black uppercase">Efficiency Index</span>
-              </div>
-            </div>
-            <Activity className="absolute -bottom-4 -right-4 w-24 h-24 text-white/5 -rotate-12" />
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setStatusFilter('ready')}
-                className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${statusFilter === 'ready'
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200'
-                  : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'
-                  }`}
+            {/* Type Filter */}
+            <div className="relative">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
               >
-                <Package className="w-4 h-4" />
-                Ready ({stats.readyForPickup})
-              </button>
-              <button
-                onClick={() => setStatusFilter('released')}
-                className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${statusFilter === 'released'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                  : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'
-                  }`}
-              >
-                <CheckCircle className="w-4 h-4" />
-                Released ({stats.released})
-              </button>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-48 text-sm"
-                />
-              </div>
-
-              {/* Type Filter */}
-              <div className="relative">
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-                >
-                  <option value="all">All Types</option>
-                  <option value="barangay_clearance">Clearance</option>
-                  <option value="certificate_of_indigency">Indigency</option>
-                  <option value="barangay_residency">Residency</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
+                <option value="all">All Types</option>
+                <option value="barangay_clearance">Clearance</option>
+                <option value="certificate_of_indigency">Indigency</option>
+                <option value="barangay_residency">Residency</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Certificates Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          {loading ? (
-            <div className="p-12 text-center">
-              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-gray-500">Loading certificates...</p>
-            </div>
-          ) : filteredCertificates.length === 0 ? (
-            <div className="p-12 text-center">
-              <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 font-medium">No certificates found</p>
-              <p className="text-gray-400 text-sm mt-1">
-                {statusFilter === 'ready'
-                  ? 'No certificates are currently ready for pickup'
-                  : 'Try adjusting your filters'}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Reference</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Applicant</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Type</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Verification</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Date Updated</th>
-                    <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredCertificates.map((certificate) => (
-                    <tr key={certificate.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="font-mono font-black text-blue-600 scale-110 inline-block tracking-tighter">{certificate.reference_number}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200 shadow-sm">
-                            <User className="w-4 h-4 text-gray-500" />
-                          </div>
-                          <div>
-                            <p className="font-extrabold text-gray-900 uppercase text-[13px] tracking-tight">{certificate.applicant_name || certificate.full_name}</p>
-                            <p className="text-[11px] font-mono font-bold text-gray-400 tracking-tighter">{certificate.contact_number || 'NO CONTACT RECORDED'}</p>
-                          </div>
+      {/* Certificates Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-500">Loading certificates...</p>
+          </div>
+        ) : filteredCertificates.length === 0 ? (
+          <div className="p-12 text-center">
+            <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 font-medium">No certificates found</p>
+            <p className="text-gray-400 text-sm mt-1">
+              {statusFilter === 'ready'
+                ? 'No certificates are currently ready for pickup'
+                : 'Try adjusting your filters'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Reference</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Applicant</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Type</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Verification</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Date Updated</th>
+                  <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredCertificates.map((certificate) => (
+                  <tr key={certificate.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="font-mono font-black text-blue-600 scale-110 inline-block tracking-tighter">{certificate.reference_number}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200 shadow-sm">
+                          <User className="w-4 h-4 text-gray-500" />
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${getTypeColor(certificate.certificate_type)} ring-4 ring-gray-50`}></div>
-                          <span className="text-[12px] font-extrabold text-gray-700 uppercase tracking-tight">{getTypeLabel(certificate.certificate_type)}</span>
+                        <div>
+                          <p className="font-extrabold text-gray-900 uppercase text-[13px] tracking-tight">{certificate.applicant_name || certificate.full_name}</p>
+                          <p className="text-[11px] font-mono font-bold text-gray-400 tracking-tighter">{certificate.contact_number || 'NO CONTACT RECORDED'}</p>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black tracking-widest border shadow-sm ${getStatusColor(certificate.status)}`}>
-                          {certificate.status?.replace(/_/g, ' ').toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-[12px] text-gray-600 font-black uppercase tracking-tight flex items-center gap-1.5">
-                          {certificate.status === 'released' ? (
-                            <><ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> CLOSED</>
-                          ) : (
-                            <><Clock className="w-3.5 h-3.5 text-blue-500" /> PENDING RELEASE</>
-                          )}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-[11px] font-bold text-gray-500 uppercase font-mono">
-                          {formatDate(certificate.updated_at)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${getTypeColor(certificate.certificate_type)} ring-4 ring-gray-50`}></div>
+                        <span className="text-[12px] font-extrabold text-gray-700 uppercase tracking-tight">{getTypeLabel(certificate.certificate_type)}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black tracking-widest border shadow-sm ${getStatusColor(certificate.status)}`}>
+                        {certificate.status?.replace(/_/g, ' ').toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-[12px] text-gray-600 font-black uppercase tracking-tight flex items-center gap-1.5">
+                        {certificate.status === 'released' ? (
+                          <><ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> CLOSED</>
+                        ) : (
+                          <><Clock className="w-3.5 h-3.5 text-blue-500" /> PENDING RELEASE</>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2 text-[11px] font-bold text-gray-500 uppercase font-mono">
+                        {formatDate(certificate.updated_at)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => setSelectedCertificate(certificate)}
+                          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </button>
+
+                        {['ready', 'ready_for_pickup'].includes(certificate.status) && (
                           <button
-                            onClick={() => setSelectedCertificate(certificate)}
-                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="View Details"
+                            onClick={() => openPickupVerification(certificate)}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 flex items-center gap-2 text-sm shadow-sm transition-all active:scale-95"
+                            title="Confirm Pickup"
                           >
-                            <Eye className="w-5 h-5" />
+                            <CheckCircle className="w-4 h-4" />
+                            Confirm Pickup
                           </button>
+                        )}
 
-                          {['ready', 'ready_for_pickup'].includes(certificate.status) && (
-                            <button
-                              onClick={() => openPickupVerification(certificate)}
-                              className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 flex items-center gap-2 text-sm shadow-sm transition-all active:scale-95"
-                              title="Confirm Pickup"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                              Confirm Pickup
-                            </button>
-                          )}
-
-                          {certificate.status === 'released' && (
-                            <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold border border-gray-200">
-                              PICKED UP
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Certificate Details Modal */}
-        {selectedCertificate && (
-          <CertificateDetailsModal
-            certificate={selectedCertificate}
-            onClose={() => setSelectedCertificate(null)}
-            getStatusColor={getStatusColor}
-            getTypeLabel={getTypeLabel}
-            formatDate={formatDate}
-            openPickupVerification={() => openPickupVerification(selectedCertificate)}
-            handleManualRelease={handleManualRelease}
-          />
-        )}
-
-        {/* Pickup Confirmation Modal */}
-        {isConfirmModalOpen && confirmingCertificate && (
-          <ConfirmPickupModal
-            certificate={confirmingCertificate}
-            onClose={() => setIsConfirmModalOpen(false)}
-            onConfirm={handleManualRelease}
-            pickupName={pickupName}
-            setPickupName={setPickupName}
-            confirming={confirmingPickup}
-            getTypeLabel={getTypeLabel}
-          />
+                        {certificate.status === 'released' && (
+                          <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold border border-gray-200">
+                            PICKED UP
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-    </Layout>
+
+      {/* Certificate Details Modal */}
+      {selectedCertificate && (
+        <CertificateDetailsModal
+          certificate={selectedCertificate}
+          onClose={() => setSelectedCertificate(null)}
+          getStatusColor={getStatusColor}
+          getTypeLabel={getTypeLabel}
+          formatDate={formatDate}
+          openPickupVerification={() => openPickupVerification(selectedCertificate)}
+          handleManualRelease={handleManualRelease}
+        />
+      )}
+
+      {/* Pickup Confirmation Modal */}
+      {isConfirmModalOpen && confirmingCertificate && (
+        <ConfirmPickupModal
+          certificate={confirmingCertificate}
+          onClose={() => setIsConfirmModalOpen(false)}
+          onConfirm={handleManualRelease}
+          pickupName={pickupName}
+          setPickupName={setPickupName}
+          confirming={confirmingPickup}
+          getTypeLabel={getTypeLabel}
+        />
+      )}
+    </div>
   );
 }
+
+PickupManagementPage.getLayout = (page) => (
+  <Layout>
+    {page}
+  </Layout>
+);
 
 // Certificate Details Modal Component
 function CertificateDetailsModal({ certificate, onClose, getStatusColor, getTypeLabel, formatDate, openPickupVerification, handleManualRelease }) {

@@ -199,181 +199,183 @@ export default function SignatureSettings() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Pen className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Signature Settings</h1>
-              <p className="text-gray-600">Manage your digital signatures for document signing</p>
-            </div>
+    <div className="max-w-4xl mx-auto p-6">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <Pen className="w-5 h-5 text-blue-600" />
           </div>
-        </div>
-
-        {/* Notification */}
-        {notification && (
-          <div className={`mb-6 p-4 rounded-lg border ${notification.type === 'success'
-            ? 'bg-green-50 border-green-200 text-green-800'
-            : notification.type === 'error'
-              ? 'bg-red-50 border-red-200 text-red-800'
-              : 'bg-blue-50 border-blue-200 text-blue-800'
-            }`}>
-            <div className="flex items-center gap-2">
-              {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
-              {notification.type === 'error' && <AlertCircle className="w-5 h-5" />}
-              {notification.type === 'info' && <Info className="w-5 h-5" />}
-              <div>
-                <h4 className="font-semibold">{notification.title}</h4>
-                <p className="text-sm">{notification.message}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Create New Signature */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Create New Signature</h2>
-
-          <SignatureInput
-            onSignatureChange={setNewSignature}
-            label="Your Digital Signature"
-            required={false}
-          />
-
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={saveSignature}
-              disabled={!newSignature || saving}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {saving ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {saving ? 'Saving...' : 'Save Signature'}
-            </button>
-          </div>
-        </div>
-
-        {/* Saved Signatures */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Saved Signatures ({signatures.length})
-          </h2>
-
-          {signatures.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Pen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>No signatures saved yet</p>
-              <p className="text-sm">Create your first signature above</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {signatures.map((signature) => (
-                <div
-                  key={signature.id}
-                  className={`border rounded-lg p-4 ${signature.id === defaultSignatureId
-                    ? 'border-blue-200 bg-blue-50'
-                    : 'border-gray-200'
-                    }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0">
-                        {showPreview[signature.id] ? (
-                          <img
-                            src={signature.signatureData}
-                            alt="Signature"
-                            className="w-24 h-12 object-contain border border-gray-200 rounded bg-white"
-                          />
-                        ) : (
-                          <div className="w-24 h-12 bg-gray-100 border border-gray-200 rounded flex items-center justify-center">
-                            <Pen className="w-4 h-4 text-gray-400" />
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          {signature.name}
-                          {signature.id === defaultSignatureId && (
-                            <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                              Default
-                            </span>
-                          )}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          Created {new Date(signature.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => togglePreview(signature.id)}
-                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                        title={showPreview[signature.id] ? 'Hide preview' : 'Show preview'}
-                      >
-                        {showPreview[signature.id] ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </button>
-
-                      {signature.id !== defaultSignatureId && (
-                        <button
-                          onClick={() => setDefaultSignature(signature.id)}
-                          className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        >
-                          Set Default
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => deleteSignature(signature.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                        title="Delete signature"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Info Box */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-800">
-              <h4 className="font-semibold mb-1">About Digital Signatures</h4>
-              <ul className="space-y-1 text-blue-700">
-                <li>• Your signatures are securely stored and encrypted</li>
-                <li>• Default signature will be used automatically in forms</li>
-                <li>• You can create multiple signatures for different purposes</li>
-                <li>• Signatures are legally binding for barangay documents</li>
-              </ul>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Signature Settings</h1>
+            <p className="text-gray-600">Manage your digital signatures for document signing</p>
           </div>
         </div>
       </div>
-    </Layout>
+
+      {/* Notification */}
+      {notification && (
+        <div className={`mb-6 p-4 rounded-lg border ${notification.type === 'success'
+          ? 'bg-green-50 border-green-200 text-green-800'
+          : notification.type === 'error'
+            ? 'bg-red-50 border-red-200 text-red-800'
+            : 'bg-blue-50 border-blue-200 text-blue-800'
+          }`}>
+          <div className="flex items-center gap-2">
+            {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
+            {notification.type === 'error' && <AlertCircle className="w-5 h-5" />}
+            {notification.type === 'info' && <Info className="w-5 h-5" />}
+            <div>
+              <h4 className="font-semibold">{notification.title}</h4>
+              <p className="text-sm">{notification.message}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create New Signature */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Create New Signature</h2>
+
+        <SignatureInput
+          onSignatureChange={setNewSignature}
+          label="Your Digital Signature"
+          required={false}
+        />
+
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={saveSignature}
+            disabled={!newSignature || saving}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {saving ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            {saving ? 'Saving...' : 'Save Signature'}
+          </button>
+        </div>
+      </div>
+
+      {/* Saved Signatures */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          Saved Signatures ({signatures.length})
+        </h2>
+
+        {signatures.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Pen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <p>No signatures saved yet</p>
+            <p className="text-sm">Create your first signature above</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {signatures.map((signature) => (
+              <div
+                key={signature.id}
+                className={`border rounded-lg p-4 ${signature.id === defaultSignatureId
+                  ? 'border-blue-200 bg-blue-50'
+                  : 'border-gray-200'
+                  }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {showPreview[signature.id] ? (
+                        <img
+                          src={signature.signatureData}
+                          alt="Signature"
+                          className="w-24 h-12 object-contain border border-gray-200 rounded bg-white"
+                        />
+                      ) : (
+                        <div className="w-24 h-12 bg-gray-100 border border-gray-200 rounded flex items-center justify-center">
+                          <Pen className="w-4 h-4 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">
+                        {signature.name}
+                        {signature.id === defaultSignatureId && (
+                          <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                            Default
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Created {new Date(signature.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => togglePreview(signature.id)}
+                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                      title={showPreview[signature.id] ? 'Hide preview' : 'Show preview'}
+                    >
+                      {showPreview[signature.id] ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    {signature.id !== defaultSignatureId && (
+                      <button
+                        onClick={() => setDefaultSignature(signature.id)}
+                        className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      >
+                        Set Default
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => deleteSignature(signature.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Delete signature"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Info Box */}
+      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-blue-800">
+            <h4 className="font-semibold mb-1">About Digital Signatures</h4>
+            <ul className="space-y-1 text-blue-700">
+              <li>• Your signatures are securely stored and encrypted</li>
+              <li>• Default signature will be used automatically in forms</li>
+              <li>• You can create multiple signatures for different purposes</li>
+              <li>• Signatures are legally binding for barangay documents</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
+
+SignatureSettings.getLayout = (page) => (
+  <Layout>
+    {page}
+  </Layout>
+);

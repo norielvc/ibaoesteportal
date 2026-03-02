@@ -21,6 +21,8 @@ const qrScansRoutes = require('./routes/qr-scans-supabase');
 const pickupRoutes = require('./routes/pickup-supabase');
 const signatureRoutes = require('./routes/signatures');
 const residentRoutes = require('./routes/residents-supabase');
+const achievementRoutes = require('./routes/achievements-supabase');
+const programRoutes = require('./routes/programs-supabase');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -127,6 +129,8 @@ app.use('/api/qr-scans', authenticateToken, qrScansRoutes); // General QR scan t
 app.use('/api/pickup', pickupRoutes); // Certificate pickup verification (public)
 app.use('/api/user/signatures', signatureRoutes); // User signature management (authenticated)
 app.use('/api/residents', residentRoutes); // Residents database (public search)
+app.use('/api/achievements', achievementRoutes); // Achievements/Awards management
+app.use('/api/programs', programRoutes); // Barangay Programs management
 
 // 404 handler
 app.use('*', (req, res) => {

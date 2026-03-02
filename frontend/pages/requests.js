@@ -616,341 +616,345 @@ export default function RequestsPage() {
   }, [requests, viewMode, currentUser]);
 
   return (
-    <Layout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Certificate Requests</h1>
-            <p className="text-gray-500 mt-1">Manage and process certificate applications</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {pendingActionCount > 0 && (
-              <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg font-medium flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" />
-                {pendingActionCount} Pending Your Action
-              </span>
-            )}
-          </div>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Certificate Requests</h1>
+          <p className="text-gray-500 mt-1">Manage and process certificate applications</p>
         </div>
-
-        {/* Tabs and Filters Navigation */}
-        <div className="space-y-4">
-          {/* Top Tabs */}
-          <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => setViewMode('assigned')}
-              className={`px-6 py-4 text-sm font-semibold transition-all border-b-2 flex items-center gap-2 ${viewMode === 'assigned'
-                ? 'border-blue-600 text-blue-600 bg-blue-50/30'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-            >
-              <FileCheck className="w-4 h-4" />
-              My Assignments
-              <span className={`px-2 py-0.5 rounded-full text-[10px] ${viewMode === 'assigned' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
-                {assignedCount}
-              </span>
-            </button>
-            <button
-              onClick={() => setViewMode('all')}
-              className={`px-6 py-4 text-sm font-semibold transition-all border-b-2 flex items-center gap-2 ${viewMode === 'all'
-                ? 'border-blue-600 text-blue-600 bg-blue-50/30'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-            >
-              <History className="w-4 h-4" />
-              Certificate Request History
-              <span className={`px-2 py-0.5 rounded-full text-[10px] ${viewMode === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
-                {totalCount}
-              </span>
-            </button>
-          </div>
-
-          {/* Filter Bar */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-              <div className="flex flex-wrap gap-3 items-center w-full">
-                {/* Search */}
-                <div className="relative flex-1 min-w-[300px] md:max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by Reference, Applicant Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                </div>
-
-                {/* Status Filter */}
-                <div className="relative">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="staff_review">Staff Review</option>
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="oic_review">Releasing Team</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="returned">Returned</option>
-                    <option value="released">Released</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
-                {/* Type Filter */}
-                <div className="relative">
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-                  >
-                    <option value="all">All Types</option>
-                    <option value="barangay_clearance">Clearance</option>
-                    <option value="certificate_of_indigency">Indigency</option>
-                    <option value="barangay_residency">Residency</option>
-                    <option value="natural_death">Natural Death</option>
-                    <option value="barangay_guardianship">Guardianship</option>
-                    <option value="barangay_cohabitation">Co-habitation</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
-
-                {/* History Group */}
-                <div className="relative">
-                  <select
-                    value={historyGroup}
-                    onChange={(e) => setHistoryGroup(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-blue-50/50 text-sm font-medium text-blue-700"
-                  >
-                    <option value="all">All Records</option>
-                    <option value="active">Active Requests</option>
-                    <option value="closed">Closed / Archive</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
-                </div>
-
-                {/* Time Range */}
-                <div className="relative">
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <select
-                        value={timeRange}
-                        onChange={(e) => setTimeRange(e.target.value)}
-                        className="appearance-none pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-                      >
-                        <option value="all">Any Time</option>
-                        <option value="daily">Today</option>
-                        <option value="weekly">This Week</option>
-                        <option value="monthly">This Month</option>
-                        <option value="yearly">This Year</option>
-                        <option value="custom">Custom Date</option>
-                      </select>
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    </div>
-
-                    {timeRange === 'custom' && (
-                      <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300 bg-gray-50 p-1 rounded-lg border border-gray-200">
-                        <input
-                          type="date"
-                          value={dateRange.start}
-                          onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                          className="px-2 py-1 border-none bg-transparent text-xs focus:ring-0"
-                        />
-                        <span className="text-gray-400 text-[10px] font-bold uppercase">to</span>
-                        <input
-                          type="date"
-                          value={dateRange.end}
-                          onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                          className="px-2 py-1 border-none bg-transparent text-xs focus:ring-0"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Clear Filter Button */}
-                <button
-                  onClick={clearFilters}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all ml-auto"
-                  title="Clear all filters"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Reset</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-
-        {/* Requests Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          {loading ? (
-            <div className="p-12 text-center">
-              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-gray-500">Loading requests...</p>
-            </div>
-          ) : filteredRequests.length === 0 ? (
-            <div className="p-12 text-center">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 font-medium">
-                {viewMode === 'assigned' ? 'No requests assigned to you' : 'No requests found'}
-              </p>
-              <p className="text-gray-400 text-sm mt-1">
-                {viewMode === 'assigned'
-                  ? 'Requests will appear here when you are assigned as an approver'
-                  : 'Try adjusting your filters'}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Reference</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Applicant</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Step</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Last Activity</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredRequests.map((request) => {
-                    const currentStep = getCurrentWorkflowStep(request);
-                    const canAct = canUserTakeAction(request);
-
-                    return (
-                      <tr
-                        key={request.id}
-                        onClick={() => setSelectedRequest(request)}
-                        className={`hover:bg-gray-50 transition-colors cursor-pointer ${canAct ? 'bg-blue-50/30' : ''}`}
-                      >
-                        <td className="px-6 py-4">
-                          <Link
-                            href={`/requests?id=${request.id}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
-                                e.preventDefault();
-                                setSelectedRequest(request);
-                                router.push(
-                                  { pathname: router.pathname, query: { ...router.query, id: request.id } },
-                                  undefined,
-                                  { shallow: true }
-                                );
-                              }
-                            }}
-                            className="font-mono font-semibold text-blue-600 hover:underline relative z-10"
-                          >
-                            {request.reference_number}
-                          </Link>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                              <User className="w-5 h-5 text-gray-500" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{request.applicant_name || request.full_name || 'N/A'}</p>
-                              <p className="text-sm text-gray-500">{request.contact_number || 'No contact'}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${getTypeColor(request.certificate_type)}`}></div>
-                            <span className="text-sm font-medium text-gray-700">{getTypeLabel(request.certificate_type)}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(request.status)}`}>
-                            {request.status?.replace(/_/g, ' ').toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {currentStep ? (
-                            <span className="text-sm text-gray-600">{currentStep.name}</span>
-                          ) : (
-                            <span className="text-sm text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <Calendar className="w-4 h-4" />
-                            {formatDate(request.updated_at || request.created_at)}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+        <div className="flex items-center gap-3">
+          {pendingActionCount > 0 && (
+            <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg font-medium flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              {pendingActionCount} Pending Your Action
+            </span>
           )}
         </div>
+      </div>
 
-        {/* Request Details Modal */}
-        {selectedRequest && !showActionModal && (
-          <RequestDetailsModal
-            request={selectedRequest}
-            onClose={() => {
-              setSelectedRequest(null);
-              const { id, ...rest } = router.query;
-              if (id) {
-                router.push({ pathname: router.pathname, query: rest }, undefined, { shallow: true });
-              }
-            }}
-            onAction={handleAction}
-            onUpdate={handleUpdateDetails}
-            setSelectedRequest={setSelectedRequest}
-            getStatusColor={getStatusColor}
-            getTypeLabel={getTypeLabel}
-            formatDate={formatDate}
-            canUserTakeAction={canUserTakeAction}
-            getCurrentWorkflowStep={getCurrentWorkflowStep}
-            history={requestHistory}
-          />
-        )}
+      {/* Tabs and Filters Navigation */}
+      <div className="space-y-4">
+        {/* Top Tabs */}
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setViewMode('assigned')}
+            className={`px-6 py-4 text-sm font-semibold transition-all border-b-2 flex items-center gap-2 ${viewMode === 'assigned'
+              ? 'border-blue-600 text-blue-600 bg-blue-50/30'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+          >
+            <FileCheck className="w-4 h-4" />
+            My Assignments
+            <span className={`px-2 py-0.5 rounded-full text-[10px] ${viewMode === 'assigned' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+              {assignedCount}
+            </span>
+          </button>
+          <button
+            onClick={() => setViewMode('all')}
+            className={`px-6 py-4 text-sm font-semibold transition-all border-b-2 flex items-center gap-2 ${viewMode === 'all'
+              ? 'border-blue-600 text-blue-600 bg-blue-50/30'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+          >
+            <History className="w-4 h-4" />
+            Certificate Request History
+            <span className={`px-2 py-0.5 rounded-full text-[10px] ${viewMode === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+              {totalCount}
+            </span>
+          </button>
+        </div>
 
-        {/* Status Confirmation Modal */}
-        {showActionModal && selectedRequest && (
-          <ActionModal
-            request={selectedRequest}
-            actionType={actionType}
-            comment={actionComment}
-            setComment={setActionComment}
-            onSubmit={submitAction}
-            onClose={() => setShowActionModal(false)}
-            processing={processing}
-            currentStep={workflows[selectedRequest.certificate_type]?.find(s => s.status === (selectedRequest.status === 'processing' ? 'processing' : selectedRequest.status))}
-            history={requestHistory}
-            userSignature={userSignature}
-          />
-        )}
+        {/* Filter Bar */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex flex-wrap gap-3 items-center w-full">
+              {/* Search */}
+              <div className="relative flex-1 min-w-[300px] md:max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by Reference, Applicant Name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+              </div>
 
-        {/* Pickup Verification Modal */}
-        {showPickupModal && selectedRequest && (
-          <ConfirmPickupModal
-            certificate={selectedRequest}
-            onClose={() => setShowPickupModal(false)}
-            onConfirm={handlePickupConfirm}
-            pickupName={pickupName}
-            setPickupName={setPickupName}
-            confirming={processing}
-            getTypeLabel={getTypeLabel}
-          />
+              {/* Status Filter */}
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                >
+                  <option value="all">All Status</option>
+                  <option value="staff_review">Staff Review</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="oic_review">Releasing Team</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="returned">Returned</option>
+                  <option value="released">Released</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+              {/* Type Filter */}
+              <div className="relative">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                >
+                  <option value="all">All Types</option>
+                  <option value="barangay_clearance">Clearance</option>
+                  <option value="certificate_of_indigency">Indigency</option>
+                  <option value="barangay_residency">Residency</option>
+                  <option value="natural_death">Natural Death</option>
+                  <option value="barangay_guardianship">Guardianship</option>
+                  <option value="barangay_cohabitation">Co-habitation</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* History Group */}
+              <div className="relative">
+                <select
+                  value={historyGroup}
+                  onChange={(e) => setHistoryGroup(e.target.value)}
+                  className="appearance-none pl-3 pr-8 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-blue-50/50 text-sm font-medium text-blue-700"
+                >
+                  <option value="all">All Records</option>
+                  <option value="active">Active Requests</option>
+                  <option value="closed">Closed / Archive</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
+              </div>
+
+              {/* Time Range */}
+              <div className="relative">
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <select
+                      value={timeRange}
+                      onChange={(e) => setTimeRange(e.target.value)}
+                      className="appearance-none pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                    >
+                      <option value="all">Any Time</option>
+                      <option value="daily">Today</option>
+                      <option value="weekly">This Week</option>
+                      <option value="monthly">This Month</option>
+                      <option value="yearly">This Year</option>
+                      <option value="custom">Custom Date</option>
+                    </select>
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  </div>
+
+                  {timeRange === 'custom' && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                      <input
+                        type="date"
+                        value={dateRange.start}
+                        onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                        className="px-2 py-1 border-none bg-transparent text-xs focus:ring-0"
+                      />
+                      <span className="text-gray-400 text-[10px] font-bold uppercase">to</span>
+                      <input
+                        type="date"
+                        value={dateRange.end}
+                        onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                        className="px-2 py-1 border-none bg-transparent text-xs focus:ring-0"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Clear Filter Button */}
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all ml-auto"
+                title="Clear all filters"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Reset</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      {/* Requests Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-500">Loading requests...</p>
+          </div>
+        ) : filteredRequests.length === 0 ? (
+          <div className="p-12 text-center">
+            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 font-medium">
+              {viewMode === 'assigned' ? 'No requests assigned to you' : 'No requests found'}
+            </p>
+            <p className="text-gray-400 text-sm mt-1">
+              {viewMode === 'assigned'
+                ? 'Requests will appear here when you are assigned as an approver'
+                : 'Try adjusting your filters'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Reference</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Applicant</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Step</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Last Activity</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredRequests.map((request) => {
+                  const currentStep = getCurrentWorkflowStep(request);
+                  const canAct = canUserTakeAction(request);
+
+                  return (
+                    <tr
+                      key={request.id}
+                      onClick={() => setSelectedRequest(request)}
+                      className={`hover:bg-gray-50 transition-colors cursor-pointer ${canAct ? 'bg-blue-50/30' : ''}`}
+                    >
+                      <td className="px-6 py-4">
+                        <Link
+                          href={`/requests?id=${request.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+                              e.preventDefault();
+                              setSelectedRequest(request);
+                              router.push(
+                                { pathname: router.pathname, query: { ...router.query, id: request.id } },
+                                undefined,
+                                { shallow: true }
+                              );
+                            }
+                          }}
+                          className="font-mono font-semibold text-blue-600 hover:underline relative z-10"
+                        >
+                          {request.reference_number}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-gray-500" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{request.applicant_name || request.full_name || 'N/A'}</p>
+                            <p className="text-sm text-gray-500">{request.contact_number || 'No contact'}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${getTypeColor(request.certificate_type)}`}></div>
+                          <span className="text-sm font-medium text-gray-700">{getTypeLabel(request.certificate_type)}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(request.status)}`}>
+                          {request.status?.replace(/_/g, ' ').toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {currentStep ? (
+                          <span className="text-sm text-gray-600">{currentStep.name}</span>
+                        ) : (
+                          <span className="text-sm text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(request.updated_at || request.created_at)}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-    </Layout>
+
+      {/* Request Details Modal */}
+      {selectedRequest && !showActionModal && (
+        <RequestDetailsModal
+          request={selectedRequest}
+          onClose={() => {
+            setSelectedRequest(null);
+            const { id, ...rest } = router.query;
+            if (id) {
+              router.push({ pathname: router.pathname, query: rest }, undefined, { shallow: true });
+            }
+          }}
+          onAction={handleAction}
+          onUpdate={handleUpdateDetails}
+          setSelectedRequest={setSelectedRequest}
+          getStatusColor={getStatusColor}
+          getTypeLabel={getTypeLabel}
+          formatDate={formatDate}
+          canUserTakeAction={canUserTakeAction}
+          getCurrentWorkflowStep={getCurrentWorkflowStep}
+          history={requestHistory}
+        />
+      )}
+
+      {/* Status Confirmation Modal */}
+      {showActionModal && selectedRequest && (
+        <ActionModal
+          request={selectedRequest}
+          actionType={actionType}
+          comment={actionComment}
+          setComment={setActionComment}
+          onSubmit={submitAction}
+          onClose={() => setShowActionModal(false)}
+          processing={processing}
+          currentStep={workflows[selectedRequest.certificate_type]?.find(s => s.status === (selectedRequest.status === 'processing' ? 'processing' : selectedRequest.status))}
+          history={requestHistory}
+          userSignature={userSignature}
+        />
+      )}
+
+      {/* Pickup Verification Modal */}
+      {showPickupModal && selectedRequest && (
+        <ConfirmPickupModal
+          certificate={selectedRequest}
+          onClose={() => setShowPickupModal(false)}
+          onConfirm={handlePickupConfirm}
+          pickupName={pickupName}
+          setPickupName={setPickupName}
+          confirming={processing}
+          getTypeLabel={getTypeLabel}
+        />
+      )}
+    </div>
   );
 }
+
+RequestsPage.getLayout = (page) => (
+  <Layout>
+    {page}
+  </Layout>
+);
 
 
 // Request Details Modal Component

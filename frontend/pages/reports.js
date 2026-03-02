@@ -24,52 +24,56 @@ export default function ReportsPage() {
   ];
 
   return (
-    <Layout title="Reports" subtitle="Analytics">
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Reports & Analytics</h1>
-          <button onClick={() => handleExport('pdf')} className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
-            <Download className="w-4 h-4" />Export
-          </button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Reports & Analytics</h1>
+        <button onClick={() => handleExport('pdf')} className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+          <Download className="w-4 h-4" />Export
+        </button>
+      </div>
 
-        <div className="bg-white rounded-xl border p-4">
-          <p className="font-semibold mb-3">Time Period</p>
-          <div className="flex gap-2">
-            {periods.map((p) => (
-              <button key={p.value} onClick={() => setSelectedPeriod(p.value)}
-                className={`px-4 py-2 rounded-lg ${selectedPeriod === p.value ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {metrics.map((m, i) => (
-            <div key={i} className="bg-white rounded-xl border p-4">
-              <p className="text-sm text-gray-600">{m.label}</p>
-              <p className="text-2xl font-bold mt-1">{m.value}</p>
-              <div className="flex items-center mt-1">
-                {m.up ? <ArrowUp className="w-4 h-4 text-green-500" /> : <ArrowDown className="w-4 h-4 text-red-500" />}
-                <span className={`text-sm ml-1 ${m.up ? 'text-green-600' : 'text-red-600'}`}>{m.change}</span>
-              </div>
-            </div>
+      <div className="bg-white rounded-xl border p-4">
+        <p className="font-semibold mb-3">Time Period</p>
+        <div className="flex gap-2">
+          {periods.map((p) => (
+            <button key={p.value} onClick={() => setSelectedPeriod(p.value)}
+              className={`px-4 py-2 rounded-lg ${selectedPeriod === p.value ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
+              {p.label}
+            </button>
           ))}
         </div>
+      </div>
 
-        <div className="bg-white rounded-xl border p-6">
-          <p className="font-semibold mb-4">Export Options</p>
-          <div className="grid grid-cols-3 gap-4">
-            {['PDF', 'CSV', 'Excel'].map((f) => (
-              <button key={f} onClick={() => handleExport(f)} className="p-4 border rounded-lg hover:bg-blue-50">
-                <Download className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                <p className="font-medium">{f}</p>
-              </button>
-            ))}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {metrics.map((m, i) => (
+          <div key={i} className="bg-white rounded-xl border p-4">
+            <p className="text-sm text-gray-600">{m.label}</p>
+            <p className="text-2xl font-bold mt-1">{m.value}</p>
+            <div className="flex items-center mt-1">
+              {m.up ? <ArrowUp className="w-4 h-4 text-green-500" /> : <ArrowDown className="w-4 h-4 text-red-500" />}
+              <span className={`text-sm ml-1 ${m.up ? 'text-green-600' : 'text-red-600'}`}>{m.change}</span>
+            </div>
           </div>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-xl border p-6">
+        <p className="font-semibold mb-4">Export Options</p>
+        <div className="grid grid-cols-3 gap-4">
+          {['PDF', 'CSV', 'Excel'].map((f) => (
+            <button key={f} onClick={() => handleExport(f)} className="p-4 border rounded-lg hover:bg-blue-50">
+              <Download className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+              <p className="font-medium">{f}</p>
+            </button>
+          ))}
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
+
+ReportsPage.getLayout = (page) => (
+  <Layout title="Reports" subtitle="Analytics">
+    {page}
+  </Layout>
+);

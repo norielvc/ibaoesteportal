@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
@@ -21,7 +21,8 @@ import {
   ChevronDown,
   ChevronRight,
   Package,
-  PenTool
+  PenTool,
+  Award
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout, getUserData } from '@/lib/auth';
@@ -116,6 +117,20 @@ const mainMenuItems = [
         icon: Calendar,
         adminOnly: true,
         description: 'Homepage events'
+      },
+      {
+        name: 'Achievements',
+        href: '/achievements',
+        icon: Award,
+        adminOnly: true,
+        description: 'Awards & Recognition'
+      },
+      {
+        name: 'Programs',
+        href: '/programs',
+        icon: Activity,
+        adminOnly: true,
+        description: 'Barangay Initiatives'
       }
     ]
   },
@@ -163,7 +178,20 @@ const mainMenuItems = [
 
 export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOpen }) {
   const router = useRouter();
-  const [expandedItems, setExpandedItems] = useState({});
+  // Persist expanded state across re-mounts (page navigations)
+  const [expandedItems, setExpandedItems] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('sidebarExpandedItems');
+        return saved ? JSON.parse(saved) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+    return {};
+  });
+
+  const navRef = useRef(null);
   const user = getUserData();
   const adminRoles = ['super_admin', 'admin', 'captain', 'secretary'];
 
@@ -172,10 +200,38 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
   };
 
   const toggleExpanded = (itemName) => {
-    setExpandedItems(prev => ({
-      ...prev,
-      [itemName]: !prev[itemName]
-    }));
+    setExpandedItems(prev => {
+      const newState = {
+        ...prev,
+        [itemName]: !prev[itemName]
+      };
+      // Save to sessionStorage
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('sidebarExpandedItems', JSON.stringify(newState));
+      }
+      return newState;
+    });
+  };
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedScrollPos = sessionStorage.getItem('sidebarScrollPos');
+      if (savedScrollPos && navRef.current) {
+        // Use a small timeout to ensure DOM is ready and rendered
+        setTimeout(() => {
+          if (navRef.current) {
+            navRef.current.scrollTop = parseInt(savedScrollPos, 10);
+          }
+        }, 50);
+      }
+    }
+  }, []);
+
+  const handleScroll = (e) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('sidebarScrollPos', e.currentTarget.scrollTop.toString());
+    }
   };
 
   // Check if any child item is active to auto-expand parent
@@ -184,10 +240,12 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
     return item.children.some(child => router.pathname === child.href);
   };
 
-  // Auto-expand parent if child is active
+  // Helper to check expansion state
   const getExpandedState = (item) => {
-    if (isParentActive(item)) return true;
-    return expandedItems[item.name] || false;
+    if (expandedItems[item.name] !== undefined) {
+      return expandedItems[item.name];
+    }
+    return isParentActive(item);
   };
 
   const filteredMenuItems = mainMenuItems.filter(item => {
@@ -197,7 +255,7 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
     return true;
   });
 
-  const SidebarContent = ({ showClose }) => (
+  const renderNav = (showClose) => (
     <div className="flex flex-col h-full bg-[#03254c]">
       {/* Logo */}
       <div className="flex items-center justify-between px-6 py-8 border-b border-white/10">
@@ -212,6 +270,7 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
         </div>
         {showClose && (
           <button
+            type="button"
             onClick={() => setIsMobileMenuOpen(false)}
             className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition-colors"
           >
@@ -221,7 +280,11 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+      <nav
+        ref={navRef}
+        onScroll={handleScroll}
+        className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10"
+      >
         <div className="mb-4">
           <p className="px-4 text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">
             Admin Navigator
@@ -238,6 +301,7 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
               {/* Main Menu Item */}
               {hasChildren ? (
                 <button
+                  type="button"
                   onClick={() => toggleExpanded(item.name)}
                   className={cn(
                     'group flex items-center w-full px-4 py-3 text-sm font-bold rounded-xl transition-all duration-300',
@@ -294,7 +358,7 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
 
               {/* Child Menu Items */}
               {hasChildren && isExpanded && (
-                <div className="ml-8 space-y-1 border-l border-white/10 pl-4 mt-1">
+                <div className="pl-4 mt-1 space-y-1 animate-in slide-in-from-top-1 duration-200">
                   {item.children
                     .filter(child => !child.adminOnly || adminRoles.includes(user?.role))
                     .map((child) => {
@@ -304,19 +368,19 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
                           key={child.name}
                           href={child.href}
                           className={cn(
-                            'group flex items-center px-4 py-2.5 text-xs rounded-xl transition-all duration-300',
+                            'group flex items-center px-4 py-2 text-[12px] font-bold rounded-lg transition-all',
                             isChildActive
-                              ? 'bg-blue-600/20 text-blue-300 font-black'
+                              ? 'bg-white/10 text-white'
                               : 'text-blue-100/40 hover:bg-white/5 hover:text-white'
                           )}
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           <child.icon className={cn(
-                            "w-3.5 h-3.5 mr-3 transition-colors",
+                            "w-4 h-4 mr-3 transition-all",
                             isChildActive ? "text-blue-400" : "text-white/10 group-hover:text-blue-300"
                           )} />
                           <div className="flex-1 min-w-0">
-                            <div className="truncate tracking-tight">
+                            <div className="truncate">
                               {child.name}
                             </div>
                           </div>
@@ -352,6 +416,7 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
         </div>
 
         <button
+          type="button"
           onClick={handleLogout}
           className="flex items-center w-full px-4 py-3 text-sm font-bold text-red-400/80 rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group"
         >
@@ -383,13 +448,13 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
           "absolute inset-y-0 left-0 w-[280px] bg-[#03254c] shadow-2xl transition-transform duration-500 ease-out flex flex-col",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <SidebarContent showClose={true} />
+          {renderNav(true)}
         </div>
       </div>
 
       {/* Desktop sidebar */}
       <div className={cn("hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-[#03254c] border-r border-white/5", className)}>
-        <SidebarContent showClose={false} />
+        {renderNav(false)}
       </div>
     </>
   );

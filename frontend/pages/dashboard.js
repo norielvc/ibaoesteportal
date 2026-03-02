@@ -290,122 +290,129 @@ export default function Dashboard() {
   }
 
   return (
-    <Layout
-      title="Unified Command Dashboard"
-      subtitle="BARANGAY MANAGEMENT & INTERNAL MONITORING"
-      onSearch={setSearchTerm}
-      searchTerm={searchTerm}
-    >
-      <div className="space-y-6">
-        {/* Enhanced Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <MetricCard
-            title="Total Employees"
-            value={stats?.overview?.totalUsers || 0}
-            icon={Users}
-            trend="up"
-            trendValue="12"
-            color="blue"
-            description="All registered employees"
-          />
+    <div className="space-y-6">
+      {/* Enhanced Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <MetricCard
+          title="Total Employees"
+          value={stats?.overview?.totalUsers || 0}
+          icon={Users}
+          trend="up"
+          trendValue="12"
+          color="blue"
+          description="All registered employees"
+        />
 
-          <MetricCard
-            title="Active Employees"
-            value={stats?.overview?.activeUsers || 0}
-            icon={UserCheck}
-            trend="up"
-            trendValue="8"
-            color="green"
-            description="Currently active staff"
-          />
+        <MetricCard
+          title="Active Employees"
+          value={stats?.overview?.activeUsers || 0}
+          icon={UserCheck}
+          trend="up"
+          trendValue="8"
+          color="green"
+          description="Currently active staff"
+        />
 
-          <MetricCard
-            title="Administrators"
-            value={stats?.overview?.adminUsers || 0}
-            icon={Shield}
-            color="purple"
-            description="System administrators"
-          />
+        <MetricCard
+          title="Administrators"
+          value={stats?.overview?.adminUsers || 0}
+          icon={Shield}
+          color="purple"
+          description="System administrators"
+        />
 
-          <MetricCard
-            title="New This Month"
-            value={stats?.overview?.currentMonthUsers || 0}
-            icon={TrendingUp}
-            trend="up"
-            trendValue="25"
-            color="orange"
-            description="Recently onboarded"
-          />
+        <MetricCard
+          title="New This Month"
+          value={stats?.overview?.currentMonthUsers || 0}
+          icon={TrendingUp}
+          trend="up"
+          trendValue="25"
+          color="orange"
+          description="Recently onboarded"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Employee Management Table */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-50 bg-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-none mb-1">Administrative Directory</h3>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Active Personnel and Authorization Levels</p>
+                </div>
+                <button
+                  onClick={() => router.push('/employees')}
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
+                >
+                  Register Personnel
+                </button>
+              </div>
+            </div>
+            <div className="p-0">
+              <EmployeeTable employees={filteredEmployees} />
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Employee Management Table */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-50 bg-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-none mb-1">Administrative Directory</h3>
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Active Personnel and Authorization Levels</p>
-                  </div>
-                  <button
-                    onClick={() => router.push('/employees')}
-                    className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
-                  >
-                    Register Personnel
-                  </button>
-                </div>
-              </div>
-              <div className="p-0">
-                <EmployeeTable employees={filteredEmployees} />
-              </div>
+        {/* System Alerts */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-5 border-b border-gray-50 bg-white">
+              <h3 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.2em] leading-none">System Intelligence</h3>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight mt-1">Real-time status monitoring</p>
+            </div>
+            <div className="p-5 bg-gray-50/30">
+              <SystemAlerts />
             </div>
           </div>
 
-          {/* System Alerts */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-5 border-b border-gray-50 bg-white">
-                <h3 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.2em] leading-none">System Intelligence</h3>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight mt-1">Real-time status monitoring</p>
-              </div>
-              <div className="p-5 bg-gray-50/30">
-                <SystemAlerts />
-              </div>
+          {/* Quick Actions */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-5 border-b border-gray-50 bg-white">
+              <h3 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.2em] leading-none">Command Center</h3>
             </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-5 border-b border-gray-50 bg-white">
-                <h3 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.2em] leading-none">Command Center</h3>
-              </div>
-              <div className="p-5 space-y-3">
-                <button
-                  onClick={() => router.push('/employees')}
-                  className="w-full px-5 py-3.5 bg-indigo-50 text-indigo-700 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center group transition-all hover:bg-indigo-100 hover:translate-x-1"
-                >
-                  <Users className="w-4 h-4 mr-3" />
-                  Personnel Control
-                </button>
-                <button
-                  onClick={() => router.push('/settings')}
-                  className="w-full px-5 py-3.5 bg-gray-50 text-gray-700 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center group transition-all hover:bg-gray-100 hover:translate-x-1"
-                >
-                  <Shield className="w-4 h-4 mr-3" />
-                  Vault Settings
-                </button>
-                <button
-                  onClick={() => router.push('/reports')}
-                  className="w-full px-5 py-3.5 bg-emerald-50 text-emerald-700 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center group transition-all hover:bg-emerald-100 hover:translate-x-1"
-                >
-                  <Activity className="w-4 h-4 mr-3" />
-                  Analytics Hub
-                </button>
-              </div>
+            <div className="p-5 space-y-3">
+              <button
+                onClick={() => router.push('/employees')}
+                className="w-full px-5 py-3.5 bg-indigo-50 text-indigo-700 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center group transition-all hover:bg-indigo-100 hover:translate-x-1"
+              >
+                <Users className="w-4 h-4 mr-3" />
+                Personnel Control
+              </button>
+              <button
+                onClick={() => router.push('/settings')}
+                className="w-full px-5 py-3.5 bg-gray-50 text-gray-700 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center group transition-all hover:bg-gray-100 hover:translate-x-1"
+              >
+                <Shield className="w-4 h-4 mr-3" />
+                Vault Settings
+              </button>
+              <button
+                onClick={() => router.push('/reports')}
+                className="w-full px-5 py-3.5 bg-emerald-50 text-emerald-700 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center group transition-all hover:bg-emerald-100 hover:translate-x-1"
+              >
+                <Activity className="w-4 h-4 mr-3" />
+                Analytics Hub
+              </button>
             </div>
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
+
+Dashboard.getLayout = (page) => {
+  // We need to access the page's search state here, or lift it up.
+  // For now, let's just use the basic Layout. 
+  // If search is per-page, the simplest is to keep it in the page.
+  return (
+    <Layout
+      title="Unified Command Dashboard"
+      subtitle="BARANGAY MANAGEMENT & INTERNAL MONITORING"
+    >
+      {page}
+    </Layout>
+  );
+};

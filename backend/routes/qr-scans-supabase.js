@@ -9,7 +9,7 @@ const createQRScansTable = async () => {
     // Try to query the table first to see if it exists
     const { data, error } = await supabase
       .from('qr_scans')
-      .select('count(*)')
+      .select('*', { count: 'exact', head: true })
       .limit(1);
 
     if (error && (error.code === 'PGRST116' || error.code === '42P01')) {

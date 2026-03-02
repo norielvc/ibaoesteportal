@@ -127,7 +127,9 @@ const defaultOfficials = {
     title: 'BARANGAY OFFICIALS',
     subtitle: 'Meet our dedicated team serving Iba O\' Este',
     image: '/images/barangay-officials.jpg'
-  }
+  },
+  vision: 'A premier, God-fearing, and empowered barangay with sustainable environment and progressive economy under a transparent and accountable governance.',
+  mission: 'To provide quality basic services, ensure public safety, and promote the general welfare of our constituents through participatory leadership.'
 };
 
 
@@ -249,6 +251,8 @@ export default function OfficialsPage() {
         setOfficials({ ...officials, headerInfo: { ...officials.headerInfo, [field.replace('header_', '')]: value } });
       } else if (field.startsWith('hero_')) {
         setOfficials({ ...officials, heroSection: { ...officials.heroSection, [field.replace('hero_', '')]: value } });
+      } else if (field === 'vision' || field === 'mission') {
+        setOfficials({ ...officials, [field]: value });
       } else {
         setOfficials({ ...officials, [field]: value.toUpperCase() });
       }
@@ -652,181 +656,231 @@ export default function OfficialsPage() {
   );
 
   return (
-    <Layout title="Barangay Officials" subtitle="Manage officials information">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Barangay Officials</h1>
-            <p className="text-gray-600 mt-1">Manage the list of current barangay officials</p>
-          </div>
-          <div className="flex gap-3">
-            <button onClick={resetToDefault} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Reset</button>
-            <button
-              onClick={saveAllChanges}
-              disabled={!hasChanges || isSaving}
-              className={`px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all ${!hasChanges
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : isSaving
-                  ? 'bg-blue-600/80 text-white cursor-wait'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200'
-                }`}
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  Save All
-                </>
-              )}
-            </button>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Barangay Officials</h1>
+          <p className="text-gray-600 mt-1">Manage the list of current barangay officials</p>
         </div>
+        <div className="flex gap-3">
+          <button onClick={resetToDefault} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Reset</button>
+          <button
+            onClick={saveAllChanges}
+            disabled={!hasChanges || isSaving}
+            className={`px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all ${!hasChanges
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : isSaving
+                ? 'bg-blue-600/80 text-white cursor-wait'
+                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200'
+              }`}
+          >
+            {isSaving ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                Save All
+              </>
+            )}
+          </button>
+        </div>
+      </div>
 
-        {notification && (
-          <div className={`flex items-center gap-3 p-4 rounded-xl border ${notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
-            {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-            <span className="font-medium">{notification.message}</span>
-          </div>
-        )}
+      {notification && (
+        <div className={`flex items-center gap-3 p-4 rounded-xl border ${notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+          {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          <span className="font-medium">{notification.message}</span>
+        </div>
+      )}
 
-        {hasChanges && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600" />
-            <span className="text-amber-800 font-medium">Unsaved changes. Click "Save All" to apply.</span>
-          </div>
-        )}
+      {hasChanges && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600" />
+          <span className="text-amber-800 font-medium">Unsaved changes. Click "Save All" to apply.</span>
+        </div>
+      )}
 
-        {/* Feature Section (Hero Header) */}
-        <div className="bg-emerald-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
-                <LayoutIcon className="w-6 h-6 text-emerald-300" />
-              </div>
-              <h3 className="text-xl font-black uppercase tracking-widest">Feature Section (Hero Header)</h3>
+      {/* Feature Section (Hero Header) */}
+      <div className="bg-emerald-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
+              <LayoutIcon className="w-6 h-6 text-emerald-300" />
             </div>
+            <h3 className="text-xl font-black uppercase tracking-widest">Feature Section (Hero Header)</h3>
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div>
-                  <label className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-2 block">Hero Title</label>
-                  {editingField === 'hero_title' ? (
-                    <div className="flex gap-2">
-                      <input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)}
-                        className="flex-1 bg-white/10 border border-emerald-400/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" autoFocus />
-                      <button onClick={() => saveField('hero_title')} className="p-3 bg-emerald-500 rounded-xl hover:bg-emerald-400 transition-colors"><Check className="w-5 h-5" /></button>
-                      <button onClick={cancelEditing} className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"><X className="w-5 h-5" /></button>
-                    </div>
-                  ) : (
-                    <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3 group">
-                      <span className="text-xl font-bold">{officials.heroSection?.title || 'BARANGAY OFFICIALS'}</span>
-                      <button onClick={() => startEditing('hero_title', officials.heroSection?.title)} className="p-2 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded-lg"><Edit2 className="w-4 h-4" /></button>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-2 block">Hero Subtitle</label>
-                  {editingField === 'hero_subtitle' ? (
-                    <div className="flex gap-2">
-                      <input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)}
-                        className="flex-1 bg-white/10 border border-emerald-400/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" autoFocus />
-                      <button onClick={() => saveField('hero_subtitle')} className="p-3 bg-emerald-500 rounded-xl hover:bg-emerald-400 transition-colors"><Check className="w-5 h-5" /></button>
-                      <button onClick={cancelEditing} className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"><X className="w-5 h-5" /></button>
-                    </div>
-                  ) : (
-                    <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3 group">
-                      <span className="text-emerald-50/70">{officials.heroSection?.subtitle || 'Meet our dedicated team serving Iba O\' Este'}</span>
-                      <button onClick={() => startEditing('hero_subtitle', officials.heroSection?.subtitle)} className="p-2 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded-lg"><Edit2 className="w-4 h-4" /></button>
-                    </div>
-                  )}
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div>
+                <label className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-2 block">Hero Title</label>
+                {editingField === 'hero_title' ? (
+                  <div className="flex gap-2">
+                    <input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)}
+                      className="flex-1 bg-white/10 border border-emerald-400/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" autoFocus />
+                    <button onClick={() => saveField('hero_title')} className="p-3 bg-emerald-500 rounded-xl hover:bg-emerald-400 transition-colors"><Check className="w-5 h-5" /></button>
+                    <button onClick={cancelEditing} className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"><X className="w-5 h-5" /></button>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3 group">
+                    <span className="text-xl font-bold">{officials.heroSection?.title || 'BARANGAY OFFICIALS'}</span>
+                    <button onClick={() => startEditing('hero_title', officials.heroSection?.title)} className="p-2 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded-lg"><Edit2 className="w-4 h-4" /></button>
+                  </div>
+                )}
               </div>
 
               <div>
-                <label className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-2 block">Hero Background Image</label>
-                <div className="relative group aspect-video bg-white/5 rounded-2xl overflow-hidden border border-white/10 shadow-inner">
-                  <img src={officials.heroSection?.image || '/images/barangay-officials.jpg'} alt="Hero Preview" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
-                    <label className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold cursor-pointer hover:bg-emerald-400 hover:scale-105 transition-all shadow-xl flex items-center gap-2">
-                      <Camera className="w-5 h-5" /> Change Hero Image
-                      <input type="file" className="hidden" accept="image/*" onChange={handleHeroImageUpload} />
-                    </label>
+                <label className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-2 block">Hero Subtitle</label>
+                {editingField === 'hero_subtitle' ? (
+                  <div className="flex gap-2">
+                    <input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)}
+                      className="flex-1 bg-white/10 border border-emerald-400/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" autoFocus />
+                    <button onClick={() => saveField('hero_subtitle')} className="p-3 bg-emerald-500 rounded-xl hover:bg-emerald-400 transition-colors"><Check className="w-5 h-5" /></button>
+                    <button onClick={cancelEditing} className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"><X className="w-5 h-5" /></button>
                   </div>
-                </div>
-                <p className="text-[10px] text-emerald-400/60 mt-2 text-center uppercase tracking-widest font-bold font-mono">Recommended: 1920x600 px or similar wide aspect</p>
+                ) : (
+                  <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3 group">
+                    <span className="text-emerald-50/70">{officials.heroSection?.subtitle || 'Meet our dedicated team serving Iba O\' Este'}</span>
+                    <button onClick={() => startEditing('hero_subtitle', officials.heroSection?.subtitle)} className="p-2 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded-lg"><Edit2 className="w-4 h-4" /></button>
+                  </div>
+                )}
               </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-2 block">Hero Background Image</label>
+              <div className="relative group aspect-video bg-white/5 rounded-2xl overflow-hidden border border-white/10 shadow-inner">
+                <img src={officials.heroSection?.image || '/images/barangay-officials.jpg'} alt="Hero Preview" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
+                  <label className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold cursor-pointer hover:bg-emerald-400 hover:scale-105 transition-all shadow-xl flex items-center gap-2">
+                    <Camera className="w-5 h-5" /> Change Hero Image
+                    <input type="file" className="hidden" accept="image/*" onChange={handleHeroImageUpload} />
+                  </label>
+                </div>
+              </div>
+              <p className="text-[10px] text-emerald-400/60 mt-2 text-center uppercase tracking-widest font-bold font-mono">Recommended: 1920x600 px or similar wide aspect</p>
             </div>
           </div>
         </div>
-
-        {/* Officials List */}
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <EditableField label="Punong Barangay" field="chairman" value={officials.chairman} icon={Shield} />
-          </div>
-
-          <div className="bg-gray-50 rounded-2xl p-6 border">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-blue-600" />Kagawad</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {officials.councilors.map((c, i) => <EditableField key={i} label="Brgy. Kagawad" field={`councilor_${i}`} value={c} icon={UserCog} showCommittee={true} />)}
-            </div>
-          </div>
-
-          <div className="bg-orange-50 rounded-2xl p-6 border border-orange-200">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Award className="w-5 h-5 text-orange-600" />SK Council</h3>
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <EditableField label="SK Chairman" field="skChairman" value={officials.skChairman} icon={Shield} />
-                <EditableField label="SK Secretary" field="skSecretary" value={officials.skSecretary} icon={UserCog} />
-                <EditableField label="SK Treasurer" field="skTreasurer" value={officials.skTreasurer} icon={Award} />
-              </div>
-
-              <div className="border-t border-orange-100 pt-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">SK Kagawad</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {officials.skKagawads.map((c, i) => (
-                    <EditableField key={i} label={`SK Kagawad ${i + 1}`} field={`skKagawad_${i}`} value={c} icon={Users} showCommittee={true} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Building className="w-5 h-5 text-blue-600" />Staff</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <EditableField label="Brgy. Secretary" field="secretary" value={officials.secretary} icon={UserCog} />
-              <EditableField label="Brgy. Treasurer" field="treasurer" value={officials.treasurer} icon={Award} />
-              <EditableField label="Brgy. Administrator" field="administrator" value={officials.administrator} icon={UserCog} />
-              <EditableField label="Asst. Brgy. Secretary" field="assistantSecretary" value={officials.assistantSecretary} icon={UserCog} />
-              <EditableField label="Asst. Brgy. Administrator" field="assistantAdministrator" value={officials.assistantAdministrator} icon={UserCog} />
-              <EditableField label="Brgy. Record Keeper" field="recordKeeper" value={officials.recordKeeper} icon={UserCog} />
-              <EditableField label="Brgy. Clerk" field="clerk" value={officials.clerk} icon={UserCog} />
-            </div>
-          </div>
-        </div>
-
-        {croppingImg && (
-          <ImageCropperModal
-            src={croppingImg}
-            onApply={handleApplyCrop}
-            onCancel={() => { setCroppingImg(null); setTargetField(null); }}
-            cropWidth={targetField === 'hero_image' ? 1920 : 600}
-            cropHeight={targetField === 'hero_image' ? 900 : 600}
-            modalTitle={targetField === 'hero_image' ? 'CROP HERO BANNER' : 'CROP PROFILE PHOTO'}
-            modalSubtitle={targetField === 'hero_image' ? '1920x900 Header Resolution' : '2x2 Official Resolution'}
-            outputFormat={targetField === 'hero_image' ? 'image/jpeg' : 'image/png'}
-            quality={targetField === 'hero_image' ? 0.85 : undefined}
-          />
-        )}
       </div>
-    </Layout>
+
+      {/* Officials List */}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <EditableField label="Punong Barangay" field="chairman" value={officials.chairman} icon={Shield} />
+
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl p-6 border border-blue-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="bg-blue-100 p-2 rounded-xl"><Award className="w-5 h-5 text-blue-600" /></div>
+                <h3 className="text-lg font-black text-gray-900 tracking-tight uppercase">Barangay Vision & Mission</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1 block">Our Vision</label>
+                  {editingField?.field === 'vision' ? (
+                    <div className="flex gap-2">
+                      <textarea value={tempValue} onChange={(e) => setTempValue(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-blue-300 rounded-xl text-sm" rows={3} autoFocus />
+                      <button onClick={() => saveField({ field: 'vision', type: 'name' })} className="p-2 bg-green-100 text-green-600 rounded-xl self-end"><Check className="w-4 h-4" /></button>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-start group/edit">
+                      <p className="text-sm text-gray-600 leading-relaxed italic pr-8">"{officials.vision}"</p>
+                      <button onClick={() => startEditing('vision', officials.vision)} className="p-1.5 text-gray-400 hover:text-blue-600 opacity-0 group-hover/edit:opacity-100 transition-opacity"><Edit2 className="w-3 h-3" /></button>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1 block">Our Mission</label>
+                  {editingField?.field === 'mission' ? (
+                    <div className="flex gap-2">
+                      <textarea value={tempValue} onChange={(e) => setTempValue(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-blue-300 rounded-xl text-sm" rows={3} autoFocus />
+                      <button onClick={() => saveField({ field: 'mission', type: 'name' })} className="p-2 bg-green-100 text-green-600 rounded-xl self-end"><Check className="w-4 h-4" /></button>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-start group/edit">
+                      <p className="text-sm text-gray-600 leading-relaxed pr-8">{officials.mission}</p>
+                      <button onClick={() => startEditing('mission', officials.mission)} className="p-1.5 text-gray-400 hover:text-blue-600 opacity-0 group-hover/edit:opacity-100 transition-opacity"><Edit2 className="w-3 h-3" /></button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-50 rounded-2xl p-6 border">
+          <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-blue-600" />Kagawad</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {officials.councilors.map((c, i) => <EditableField key={i} label="Brgy. Kagawad" field={`councilor_${i}`} value={c} icon={UserCog} showCommittee={true} />)}
+          </div>
+        </div>
+
+        <div className="bg-orange-50 rounded-2xl p-6 border border-orange-200">
+          <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Award className="w-5 h-5 text-orange-600" />SK Council</h3>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <EditableField label="SK Chairman" field="skChairman" value={officials.skChairman} icon={Shield} />
+              <EditableField label="SK Secretary" field="skSecretary" value={officials.skSecretary} icon={UserCog} />
+              <EditableField label="SK Treasurer" field="skTreasurer" value={officials.skTreasurer} icon={Award} />
+            </div>
+
+            <div className="border-t border-orange-100 pt-4">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">SK Kagawad</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {officials.skKagawads.map((c, i) => (
+                  <EditableField key={i} label={`SK Kagawad ${i + 1}`} field={`skKagawad_${i}`} value={c} icon={Users} showCommittee={true} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+          <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Building className="w-5 h-5 text-blue-600" />Staff</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <EditableField label="Brgy. Secretary" field="secretary" value={officials.secretary} icon={UserCog} />
+            <EditableField label="Brgy. Treasurer" field="treasurer" value={officials.treasurer} icon={Award} />
+            <EditableField label="Brgy. Administrator" field="administrator" value={officials.administrator} icon={UserCog} />
+            <EditableField label="Asst. Brgy. Secretary" field="assistantSecretary" value={officials.assistantSecretary} icon={UserCog} />
+            <EditableField label="Asst. Brgy. Administrator" field="assistantAdministrator" value={officials.assistantAdministrator} icon={UserCog} />
+            <EditableField label="Brgy. Record Keeper" field="recordKeeper" value={officials.recordKeeper} icon={UserCog} />
+            <EditableField label="Brgy. Clerk" field="clerk" value={officials.clerk} icon={UserCog} />
+          </div>
+        </div>
+      </div>
+
+      {croppingImg && (
+        <ImageCropperModal
+          src={croppingImg}
+          onApply={handleApplyCrop}
+          onCancel={() => { setCroppingImg(null); setTargetField(null); }}
+          cropWidth={targetField === 'hero_image' ? 1920 : 600}
+          cropHeight={targetField === 'hero_image' ? 900 : 600}
+          modalTitle={targetField === 'hero_image' ? 'CROP HERO BANNER' : 'CROP PROFILE PHOTO'}
+          modalSubtitle={targetField === 'hero_image' ? '1920x900 Header Resolution' : '2x2 Official Resolution'}
+          outputFormat={targetField === 'hero_image' ? 'image/jpeg' : 'image/png'}
+          quality={targetField === 'hero_image' ? 0.85 : undefined}
+        />
+      )}
+    </div>
   );
 }
+
+OfficialsPage.getLayout = (page) => (
+  <Layout
+    title="Barangay Officials"
+    subtitle="BARANGAY LEADERSHIP & ORGANIZATIONAL STRUCTURE"
+  >
+    {page}
+  </Layout>
+);

@@ -407,11 +407,9 @@ export default function WorkflowsPage() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
@@ -428,416 +426,420 @@ export default function WorkflowsPage() {
   });
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <GitBranch className="w-7 h-7 text-blue-600" />
-              Approval Workflows
-            </h1>
-            <p className="text-gray-600 mt-1">Configure approval flow for each certificate type. Click "Save & Sync Assignments" to update the database with current assignments.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={syncWorkflowAssignments}
-              disabled={syncing}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
-            >
-              {syncing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Syncing...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save & Sync Assignments
-                </>
-              )}
-            </button>
-            <button
-              onClick={handleResetToDefault}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Reset to Default
-            </button>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <GitBranch className="w-7 h-7 text-blue-600" />
+            Approval Workflows
+          </h1>
+          <p className="text-gray-600 mt-1">Configure approval flow for each certificate type. Click "Save & Sync Assignments" to update the database with current assignments.</p>
         </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={syncWorkflowAssignments}
+            disabled={syncing}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+          >
+            {syncing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Syncing...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                Save & Sync Assignments
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleResetToDefault}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Reset to Default
+          </button>
+        </div>
+      </div>
 
-        {/* Notification */}
-        {notification && (
-          <div className={`p-4 rounded-lg flex items-center gap-2 ${notification.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
-            notification.type === 'warning' ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
-              'bg-red-50 text-red-800 border border-red-200'
-            }`}>
-            {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> :
-              notification.type === 'warning' ? <AlertCircle className="w-5 h-5" /> :
-                <AlertCircle className="w-5 h-5" />}
-            {notification.message}
-          </div>
-        )}
+      {/* Notification */}
+      {notification && (
+        <div className={`p-4 rounded-lg flex items-center gap-2 ${notification.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
+          notification.type === 'warning' ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
+            'bg-red-50 text-red-800 border border-red-200'
+          }`}>
+          {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> :
+            notification.type === 'warning' ? <AlertCircle className="w-5 h-5" /> :
+              <AlertCircle className="w-5 h-5" />}
+          {notification.message}
+        </div>
+      )}
 
-        {/* Unified Workflow Header */}
-        <div className="bg-blue-600 rounded-xl shadow-md border border-blue-700 p-6 text-white text-center">
-          <h2 className="text-xl font-bold flex items-center justify-center gap-2">
-            <Settings className="w-6 h-6" />
-            Unified Certificate Workflow
+      {/* Unified Workflow Header */}
+      <div className="bg-blue-600 rounded-xl shadow-md border border-blue-700 p-6 text-white text-center">
+        <h2 className="text-xl font-bold flex items-center justify-center gap-2">
+          <Settings className="w-6 h-6" />
+          Unified Certificate Workflow
+        </h2>
+        <p className="text-blue-100 mt-2 text-sm">
+          Changes made here are automatically applied to <b>Barangay Clearance</b>, <b>Indigency</b>, and <b>Residency</b>.
+        </p>
+      </div>
+
+      {/* Workflow Title */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 border-b pb-4 mb-4">Master Workflow Steps</h2>
+        <p className="text-xs text-gray-400 italic mb-4">These steps define the standard process for all certificates in the system.</p>
+      </div>
+
+      {/* Review Request Team Table */}
+      <div className="z-10 mt-8 mb-4 bg-white rounded-xl shadow-2xl border-2 border-green-500 overflow-hidden transform transition-all">
+        <div className="p-4 bg-green-600 border-b border-green-700">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Eye className="w-5 h-5" />
+            Review Request Team (Global)
           </h2>
-          <p className="text-blue-100 mt-2 text-sm">
-            Changes made here are automatically applied to <b>Barangay Clearance</b>, <b>Indigency</b>, and <b>Residency</b>.
-          </p>
+          <p className="text-xs text-green-100 mt-0.5">Assigned users will handle the initial review for <b>ALL</b> certificate types.</p>
         </div>
+        <div className="p-6">
+          {(() => {
+            const allSteps = getCurrentSteps();
+            const reviewStep = allSteps.find(s => s.status === 'staff_review');
 
-        {/* Workflow Title */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 border-b pb-4 mb-4">Master Workflow Steps</h2>
-          <p className="text-xs text-gray-400 italic mb-4">These steps define the standard process for all certificates in the system.</p>
-        </div>
-
-        {/* Review Request Team Table */}
-        <div className="z-10 mt-8 mb-4 bg-white rounded-xl shadow-2xl border-2 border-green-500 overflow-hidden transform transition-all">
-          <div className="p-4 bg-green-600 border-b border-green-700">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Eye className="w-5 h-5" />
-              Review Request Team (Global)
-            </h2>
-            <p className="text-xs text-green-100 mt-0.5">Assigned users will handle the initial review for <b>ALL</b> certificate types.</p>
-          </div>
-          <div className="p-6">
-            {(() => {
-              const allSteps = getCurrentSteps();
-              const reviewStep = allSteps.find(s => s.status === 'staff_review');
-
-              return (
-                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
-                  <div>
-                    <h4 className="font-bold text-gray-900">Assigned Review Officers</h4>
-                    <p className="text-xs text-gray-500">These users are the first to receive and review submitted requests.</p>
-                  </div>
-
-                  <div className="flex-1 flex justify-center px-4">
-                    {reviewStep && reviewStep.assignedUsers && reviewStep.assignedUsers.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {reviewStep.assignedUsers.map(userId => {
-                          const user = users.find(u => (u._id === userId || u.id === userId));
-                          return user ? (
-                            <span key={userId} className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs border border-green-200 font-bold">
-                              <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center text-white text-[10px]">
-                                {user.firstName?.charAt(0)}
-                              </div>
-                              {user.firstName} {user.lastName}
-                            </span>
-                          ) : null;
-                        })}
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400 italic bg-gray-100 px-4 py-1 rounded-lg border border-dashed border-gray-300">No members assigned yet</span>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => setShowAssignModal({ certId: selectedCertificate, stepId: reviewStep?.id || 'new_review', type: 'review' })}
-                    className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold shadow-lg transition-all active:scale-95"
-                  >
-                    Assign Team Members
-                  </button>
+            return (
+              <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <div>
+                  <h4 className="font-bold text-gray-900">Assigned Review Officers</h4>
+                  <p className="text-xs text-gray-500">These users are the first to receive and review submitted requests.</p>
                 </div>
-              );
-            })()}
-          </div>
-        </div>
 
-        {/* Approval & Releasing Flow Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-6 border-b border-gray-200 bg-gray-50/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-blue-600" />
-                  Approval & Releasing Flow
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">1 initial review phase + {visibleSteps.length} approval steps + 1 releasing phase</p>
-              </div>
-              <button
-                onClick={() => setShowAddStep(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm"
-              >
-                <Plus className="w-4 h-4" /> Add Approval Step
-              </button>
-            </div>
-          </div>
-
-          {/* Steps List */}
-          <div className="p-6 space-y-4">
-            {visibleSteps.map((step, index) => {
-              const StepIcon = getIcon(step.icon);
-              const isEditing = editingStep === step.id;
-
-              return (
-                <div key={step.id} className="relative">
-                  {index < visibleSteps.length - 1 && (
-                    <div className="absolute left-6 top-20 w-0.5 h-6 bg-gray-300"></div>
-                  )}
-
-                  <div className={`flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${isEditing ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 bg-white'
-                    }`}>
-                    {/* Reorder Buttons - Left Side */}
-                    <div className="flex flex-col gap-1">
-                      <button
-                        onClick={() => handleMoveStep(step.id, 'up')}
-                        disabled={index === 0}
-                        className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Move Up"
-                      >
-                        <ArrowUp className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button
-                        onClick={() => handleMoveStep(step.id, 'down')}
-                        disabled={index === visibleSteps.length - 1}
-                        className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Move Down"
-                      >
-                        <ArrowDown className="w-4 h-4 text-gray-600" />
-                      </button>
-                    </div>
-
-                    {/* Step Number */}
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-md">
-                        {index + 1}
-                      </div>
-                      <StepIcon className="w-5 h-5 text-gray-400" />
-                    </div>
-
-                    {/* Step Content */}
-                    <div className="flex-1">
-                      {isEditing ? (
-                        <EditStepForm
-                          step={step}
-                          onSave={(updates) => handleUpdateStep(step.id, updates)}
-                          onCancel={() => setEditingStep(null)}
-                        />
-                      ) : (
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-gray-900">{step.name}</h3>
-                            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
-                              {step.status}
-                            </span>
-                            {step.requiresApproval && (
-                              <span className="px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">
-                                Requires Approval
-                              </span>
-                            )}
-                            {step.sendEmail && (
-                              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full flex items-center gap-1">
-                                <Mail className="w-3 h-3" /> Email Notify
-                              </span>
-                            )}
-                            {step.officialRole && (
-                              <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full border border-purple-200">
-                                {step.officialRole}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-500 mt-1">{step.description}</p>
-
-                          {/* Assigned Users Section */}
-                          {step.requiresApproval && (
-                            <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-semibold text-blue-800 uppercase flex items-center gap-1">
-                                  <Users className="w-3 h-3" /> Assigned Approvers
-                                </span>
-                                <button
-                                  onClick={() => setShowAssignModal(step.id)}
-                                  className="px-3 py-1 text-xs bg-blue-600 text-white rounded-full hover:bg-blue-700 font-medium flex items-center gap-1"
-                                >
-                                  <UserCheck className="w-3 h-3" />
-                                  Assign Users
-                                </button>
-                              </div>
-                              {step.assignedUsers && step.assignedUsers.length > 0 ? (
-                                <div className="flex flex-wrap gap-2">
-                                  {step.assignedUsers.map(userId => {
-                                    const user = users.find(u => u._id === userId || u.id === userId);
-                                    return user ? (
-                                      <span key={userId} className="inline-flex items-center gap-1 px-2 py-1 bg-white text-blue-800 rounded-full text-xs border border-blue-200">
-                                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px] font-medium">
-                                          {user.firstName?.charAt(0) || user.email?.charAt(0)}
-                                        </div>
-                                        {user.firstName} {user.lastName}
-                                      </span>
-                                    ) : null;
-                                  })}
-                                </div>
-                              ) : (
-                                <p className="text-xs text-blue-600 italic">Click "Assign Users" to add approvers</p>
-                              )}
+                <div className="flex-1 flex justify-center px-4">
+                  {reviewStep && reviewStep.assignedUsers && reviewStep.assignedUsers.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {reviewStep.assignedUsers.map(userId => {
+                        const user = users.find(u => (u._id === userId || u.id === userId));
+                        return user ? (
+                          <span key={userId} className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs border border-green-200 font-bold">
+                            <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center text-white text-[10px]">
+                              {user.firstName?.charAt(0)}
                             </div>
-                          )}
-                        </div>
-                      )}
+                            {user.firstName} {user.lastName}
+                          </span>
+                        ) : null;
+                      })}
                     </div>
-
-                    {/* Edit/Delete Actions */}
-                    {!isEditing && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setEditingStep(step.id)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteStep(step.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  ) : (
+                    <span className="text-sm text-gray-400 italic bg-gray-100 px-4 py-1 rounded-lg border border-dashed border-gray-300">No members assigned yet</span>
+                  )}
                 </div>
-              );
-            })}
 
-            {visibleSteps.length === 0 && (
-              <div className="text-center py-12 text-gray-500">
-                <GitBranch className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                <p>No extra workflow steps configured</p>
-                <button onClick={() => setShowAddStep(true)} className="mt-4 text-blue-600 hover:underline">
-                  Add an approval step
+                <button
+                  onClick={() => setShowAssignModal({ certId: selectedCertificate, stepId: reviewStep?.id || 'new_review', type: 'review' })}
+                  className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold shadow-lg transition-all active:scale-95"
+                >
+                  Assign Team Members
                 </button>
               </div>
-            )}
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* Approval & Releasing Flow Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-6 border-b border-gray-200 bg-gray-50/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-blue-600" />
+                Approval & Releasing Flow
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">1 initial review phase + {visibleSteps.length} approval steps + 1 releasing phase</p>
+            </div>
+            <button
+              onClick={() => setShowAddStep(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm"
+            >
+              <Plus className="w-4 h-4" /> Add Approval Step
+            </button>
           </div>
         </div>
 
-        {/* Unified Releasing Team Table */}
-        <div className="z-10 mt-8 mb-4 bg-white rounded-xl shadow-2xl border-2 border-blue-500 overflow-hidden transform transition-all">
-          <div className="p-4 bg-blue-600 border-b border-blue-700">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Releasing Team (Global)
-            </h2>
-            <p className="text-xs text-blue-100 mt-0.5">Assigned users will handle the final processing for <b>ALL</b> certificate types.</p>
-          </div>
-          <div className="p-6">
-            {(() => {
-              const masterSteps = getCurrentSteps();
-              const captainIndex = masterSteps.findIndex(s => s.status === 'captain_approval');
-              const releasingStep = masterSteps.find(s =>
-                s.status === 'oic_review' ||
-                s.name?.toLowerCase().includes('releasing')
-              ) || (captainIndex !== -1 && captainIndex < masterSteps.length - 1 ? masterSteps[captainIndex + 1] : null);
+        {/* Steps List */}
+        <div className="p-6 space-y-4">
+          {visibleSteps.map((step, index) => {
+            const StepIcon = getIcon(step.icon);
+            const isEditing = editingStep === step.id;
 
-              return (
-                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
-                  <div>
-                    <h4 className="font-bold text-gray-900">Assigned Releasing Officers</h4>
-                    <p className="text-xs text-gray-500">Only these users can print and release certificates.</p>
+            return (
+              <div key={step.id} className="relative">
+                {index < visibleSteps.length - 1 && (
+                  <div className="absolute left-6 top-20 w-0.5 h-6 bg-gray-300"></div>
+                )}
+
+                <div className={`flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${isEditing ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 bg-white'
+                  }`}>
+                  {/* Reorder Buttons - Left Side */}
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => handleMoveStep(step.id, 'up')}
+                      disabled={index === 0}
+                      className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Move Up"
+                    >
+                      <ArrowUp className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button
+                      onClick={() => handleMoveStep(step.id, 'down')}
+                      disabled={index === visibleSteps.length - 1}
+                      className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Move Down"
+                    >
+                      <ArrowDown className="w-4 h-4 text-gray-600" />
+                    </button>
                   </div>
 
-                  <div className="flex-1 flex justify-center px-4">
-                    {releasingStep && releasingStep.assignedUsers && releasingStep.assignedUsers.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {releasingStep.assignedUsers.map(userId => {
-                          const user = users.find(u => (u._id === userId || u.id === userId));
-                          return user ? (
-                            <span key={userId} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs border border-blue-200 font-bold">
-                              <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px]">
-                                {user.firstName?.charAt(0)}
-                              </div>
-                              {user.firstName} {user.lastName}
-                            </span>
-                          ) : null;
-                        })}
-                      </div>
+                  {/* Step Number */}
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-md">
+                      {index + 1}
+                    </div>
+                    <StepIcon className="w-5 h-5 text-gray-400" />
+                  </div>
+
+                  {/* Step Content */}
+                  <div className="flex-1">
+                    {isEditing ? (
+                      <EditStepForm
+                        step={step}
+                        onSave={(updates) => handleUpdateStep(step.id, updates)}
+                        onCancel={() => setEditingStep(null)}
+                      />
                     ) : (
-                      <span className="text-sm text-gray-400 italic bg-gray-100 px-4 py-1 rounded-lg border border-dashed border-gray-300">No members assigned yet</span>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-gray-900">{step.name}</h3>
+                          <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                            {step.status}
+                          </span>
+                          {step.requiresApproval && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">
+                              Requires Approval
+                            </span>
+                          )}
+                          {step.sendEmail && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full flex items-center gap-1">
+                              <Mail className="w-3 h-3" /> Email Notify
+                            </span>
+                          )}
+                          {step.officialRole && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full border border-purple-200">
+                              {step.officialRole}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">{step.description}</p>
+
+                        {/* Assigned Users Section */}
+                        {step.requiresApproval && (
+                          <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-semibold text-blue-800 uppercase flex items-center gap-1">
+                                <Users className="w-3 h-3" /> Assigned Approvers
+                              </span>
+                              <button
+                                onClick={() => setShowAssignModal(step.id)}
+                                className="px-3 py-1 text-xs bg-blue-600 text-white rounded-full hover:bg-blue-700 font-medium flex items-center gap-1"
+                              >
+                                <UserCheck className="w-3 h-3" />
+                                Assign Users
+                              </button>
+                            </div>
+                            {step.assignedUsers && step.assignedUsers.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {step.assignedUsers.map(userId => {
+                                  const user = users.find(u => u._id === userId || u.id === userId);
+                                  return user ? (
+                                    <span key={userId} className="inline-flex items-center gap-1 px-2 py-1 bg-white text-blue-800 rounded-full text-xs border border-blue-200">
+                                      <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px] font-medium">
+                                        {user.firstName?.charAt(0) || user.email?.charAt(0)}
+                                      </div>
+                                      {user.firstName} {user.lastName}
+                                    </span>
+                                  ) : null;
+                                })}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-blue-600 italic">Click "Assign Users" to add approvers</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
 
-                  <button
-                    onClick={() => setShowAssignModal({ certId: selectedCertificate, stepId: releasingStep?.id || 'new_releasing' })}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-lg transition-all active:scale-95"
-                  >
-                    Assign Team Members
-                  </button>
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Workflow Preview (Standard Approval Flow)</h3>
-          <div className="flex items-center gap-2 overflow-x-auto pb-4">
-            {previewSteps.map((step, index) => {
-              const StepIcon = getIcon(step.icon);
-              return (
-                <div key={step.id} className="flex items-center">
-                  <div className="flex flex-col items-center min-w-[100px]">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step.requiresApproval ? 'bg-orange-100' : 'bg-blue-100'}`}>
-                      <StepIcon className={`w-5 h-5 ${step.requiresApproval ? 'text-orange-600' : 'text-blue-600'}`} />
+                  {/* Edit/Delete Actions */}
+                  {!isEditing && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setEditingStep(step.id)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStep(step.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                    <p className="text-xs font-medium text-gray-700 mt-2 text-center">{step.name}</p>
-                    {step.requiresApproval && <span className="text-[10px] text-orange-600">Approval</span>}
-                  </div>
-                  {index < previewSteps.length - 1 && <ChevronRight className="w-5 h-5 text-gray-400 mx-1" />}
+                  )}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+
+          {visibleSteps.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              <GitBranch className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p>No extra workflow steps configured</p>
+              <button onClick={() => setShowAddStep(true)} className="mt-4 text-blue-600 hover:underline">
+                Add an approval step
+              </button>
+            </div>
+          )}
         </div>
-
-        {/* Spacer */}
-        <div className="h-4"></div>
-
-        {/* Add Step Modal */}
-        {showAddStep && (
-          <AddStepModal
-            newStep={newStep}
-            setNewStep={setNewStep}
-            onAdd={handleAddStep}
-            onClose={() => {
-              setShowAddStep(false);
-              setNewStep({ name: '', description: '', status: '', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false, officialRole: '' });
-            }}
-          />
-        )}
-
-        {/* Assign Users Modal */}
-        {showAssignModal && (
-          <AssignUsersModal
-            step={showAssignModal.certId
-              ? (workflows[MASTER_WORKFLOW_ID] || []).find(s => s.id === showAssignModal.stepId)
-              : getCurrentSteps().find(s => s.id === showAssignModal)
-            }
-            users={users}
-            onSave={(selectedUserIds) => {
-              if (showAssignModal.certId) {
-                if (showAssignModal.type === 'review') {
-                  handleAssignReviewTeam(showAssignModal.certId, showAssignModal.stepId, selectedUserIds);
-                } else {
-                  handleAssignReleasingTeam(showAssignModal.certId, showAssignModal.stepId, selectedUserIds);
-                }
-              } else {
-                handleAssignUsers(showAssignModal, selectedUserIds);
-              }
-            }}
-            onClose={() => setShowAssignModal(null)}
-          />
-        )}
       </div>
-    </Layout>
+
+      {/* Unified Releasing Team Table */}
+      <div className="z-10 mt-8 mb-4 bg-white rounded-xl shadow-2xl border-2 border-blue-500 overflow-hidden transform transition-all">
+        <div className="p-4 bg-blue-600 border-b border-blue-700">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            Releasing Team (Global)
+          </h2>
+          <p className="text-xs text-blue-100 mt-0.5">Assigned users will handle the final processing for <b>ALL</b> certificate types.</p>
+        </div>
+        <div className="p-6">
+          {(() => {
+            const masterSteps = getCurrentSteps();
+            const captainIndex = masterSteps.findIndex(s => s.status === 'captain_approval');
+            const releasingStep = masterSteps.find(s =>
+              s.status === 'oic_review' ||
+              s.name?.toLowerCase().includes('releasing')
+            ) || (captainIndex !== -1 && captainIndex < masterSteps.length - 1 ? masterSteps[captainIndex + 1] : null);
+
+            return (
+              <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <div>
+                  <h4 className="font-bold text-gray-900">Assigned Releasing Officers</h4>
+                  <p className="text-xs text-gray-500">Only these users can print and release certificates.</p>
+                </div>
+
+                <div className="flex-1 flex justify-center px-4">
+                  {releasingStep && releasingStep.assignedUsers && releasingStep.assignedUsers.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {releasingStep.assignedUsers.map(userId => {
+                        const user = users.find(u => (u._id === userId || u.id === userId));
+                        return user ? (
+                          <span key={userId} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs border border-blue-200 font-bold">
+                            <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px]">
+                              {user.firstName?.charAt(0)}
+                            </div>
+                            {user.firstName} {user.lastName}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-400 italic bg-gray-100 px-4 py-1 rounded-lg border border-dashed border-gray-300">No members assigned yet</span>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setShowAssignModal({ certId: selectedCertificate, stepId: releasingStep?.id || 'new_releasing' })}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-lg transition-all active:scale-95"
+                >
+                  Assign Team Members
+                </button>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-8">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Workflow Preview (Standard Approval Flow)</h3>
+        <div className="flex items-center gap-2 overflow-x-auto pb-4">
+          {previewSteps.map((step, index) => {
+            const StepIcon = getIcon(step.icon);
+            return (
+              <div key={step.id} className="flex items-center">
+                <div className="flex flex-col items-center min-w-[100px]">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step.requiresApproval ? 'bg-orange-100' : 'bg-blue-100'}`}>
+                    <StepIcon className={`w-5 h-5 ${step.requiresApproval ? 'text-orange-600' : 'text-blue-600'}`} />
+                  </div>
+                  <p className="text-xs font-medium text-gray-700 mt-2 text-center">{step.name}</p>
+                  {step.requiresApproval && <span className="text-[10px] text-orange-600">Approval</span>}
+                </div>
+                {index < previewSteps.length - 1 && <ChevronRight className="w-5 h-5 text-gray-400 mx-1" />}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Spacer */}
+      <div className="h-4"></div>
+
+      {/* Add Step Modal */}
+      {showAddStep && (
+        <AddStepModal
+          newStep={newStep}
+          setNewStep={setNewStep}
+          onAdd={handleAddStep}
+          onClose={() => {
+            setShowAddStep(false);
+            setNewStep({ name: '', description: '', status: '', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false, officialRole: '' });
+          }}
+        />
+      )}
+
+      {/* Assign Users Modal */}
+      {showAssignModal && (
+        <AssignUsersModal
+          step={showAssignModal.certId
+            ? (workflows[MASTER_WORKFLOW_ID] || []).find(s => s.id === showAssignModal.stepId)
+            : getCurrentSteps().find(s => s.id === showAssignModal)
+          }
+          users={users}
+          onSave={(selectedUserIds) => {
+            if (showAssignModal.certId) {
+              if (showAssignModal.type === 'review') {
+                handleAssignReviewTeam(showAssignModal.certId, showAssignModal.stepId, selectedUserIds);
+              } else {
+                handleAssignReleasingTeam(showAssignModal.certId, showAssignModal.stepId, selectedUserIds);
+              }
+            } else {
+              handleAssignUsers(showAssignModal, selectedUserIds);
+            }
+          }}
+          onClose={() => setShowAssignModal(null)}
+        />
+      )}
+    </div>
   );
 }
+
+WorkflowsPage.getLayout = (page) => (
+  <Layout>
+    {page}
+  </Layout>
+);
 
 
 // Edit Step Form Component

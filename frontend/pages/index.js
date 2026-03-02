@@ -243,6 +243,72 @@ export default function BarangayPortal() {
 
   const [facilities, setFacilities] = useState(defaultFacilities);
   const [officials, setOfficials] = useState([]);
+
+  // Default achievements (fallback)
+  const defaultAchievements = [
+    {
+      id: 1,
+      title: 'Best in Public Safety',
+      category: 'Community Safety',
+      description: 'Recognized for the lowest crime rate in the municipality and unparalleled rapid response of the Barangay Tanods and safety patrols.',
+      year: '2025',
+      image: 'https://images.unsplash.com/photo-1533481405265-e9ce0c044abb?auto=format&fit=crop&q=80&w=800',
+      colorClass: 'bg-red-500',
+      textColor: 'red-400'
+    },
+    {
+      id: 2,
+      title: 'Excellence in Healthcare',
+      category: 'Health Service',
+      description: 'Awarded for the continuous deployment of mobile clinics, free check-ups, and maternal care support for marginalized sectors.',
+      year: '2024',
+      image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800',
+      colorClass: 'bg-pink-500',
+      textColor: 'pink-400'
+    },
+    {
+      id: 3,
+      title: 'Champion in Youth Development',
+      category: 'Youth Council',
+      description: 'Honored for establishing local sports tournaments, skill-building workshops, and broad educational assistance distribution.',
+      year: '2025',
+      image: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=800',
+      colorClass: 'bg-purple-500',
+      textColor: 'purple-400'
+    }
+  ];
+
+  const [achievements, setAchievements] = useState(defaultAchievements);
+
+  // Default programs (fallback)
+  const defaultPrograms = [
+    {
+      category: "HEALTH & WELLNESS",
+      title: "Free Medical Mission 2026",
+      description: "Comprehensive health check-ups, free medicines, and basic dental services for all registered residents of our barangay.",
+      image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+      category: "LIVELIHOOD",
+      title: "Pangkabuhayang Iba O' Este",
+      description: "Empowering residents with practical skills in culinary arts, tailoring, and automotive mechanics.",
+      image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+      category: "INFRASTRUCTURE",
+      title: "Brgy. Green Building Initiative",
+      description: "Launching sustainable practices and installing solar-powered streetlights across major puroks.",
+      image: "https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+      category: "EDUCATION",
+      title: "Scholarship Grants Awarding",
+      description: "Distributing financial assistance to deserving local youth to support their higher education journeys.",
+      image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800"
+    }
+  ];
+
+  const [programs, setPrograms] = useState(defaultPrograms);
   const [heroSettings, setHeroSettings] = useState({
     title: 'BARANGAY OFFICIALS',
     subtitle: 'Meet our dedicated team serving Iba O\' Este',
@@ -393,56 +459,57 @@ export default function BarangayPortal() {
     return () => clearInterval(timer);
   }, [facilities]);
 
-  // Load officials from API
+
+  // Fetch local government details and achievements
   useEffect(() => {
-    const fetchOfficials = async () => {
-      try {
-        const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
-        console.log('🔍 Fetching officials from:', `${API_URL}/officials`);
-        const response = await fetch(`${API_URL}/officials`);
-        console.log('📊 Officials API response status:', response.status);
+    const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+    const fetchData = async () => {
+      try {
+        // Fetch Officials
+        const officialsRes = await fetch(`${API_URL}/officials`);
+        const officialsData = await officialsRes.json();
+        if (officialsData.success && officialsData.data) {
+          setOfficials(officialsData.data);
         }
 
-        const data = await response.json();
-        console.log('📋 Officials API data received:', data);
-        console.log('📋 Number of officials:', data.data?.length || 0);
+        // Fetch Hero Settings
+        const settingsRes = await fetch(`${API_URL}/officials/config`);
+        const settingsData = await settingsRes.json();
+        if (settingsData.success && settingsData.data?.heroSection) {
+          setHeroSettings(settingsData.data.heroSection);
+        }
 
-        if (data.success && data.data && data.data.length > 0) {
-          console.log('✅ Setting officials from API:', data.data);
-          setOfficials(data.data);
-          console.log('✅ Officials state updated, count:', data.data.length);
-        } else {
-          console.log('⚠️ No officials from API, using empty array');
-          console.log('⚠️ API response structure:', JSON.stringify(data, null, 2));
+        // Fetch Achievements
+        const achievementsRes = await fetch(`${API_URL}/achievements`);
+        if (achievementsRes.ok) {
+          const achievementsData = await achievementsRes.json();
+          if (achievementsData.success && achievementsData.data?.length > 0) {
+            const mappedAchievements = achievementsData.data.map(ach => ({
+              ...ach,
+              colorClass: ach.color_class || 'bg-blue-500',
+              textColor: ach.text_color || 'blue-400'
+            }));
+            setAchievements(mappedAchievements);
+          }
+        }
+
+        // Fetch Programs
+        const programsRes = await fetch(`${API_URL}/programs`);
+        if (programsRes.ok) {
+          const programsData = await programsRes.json();
+          if (programsData.success && programsData.data?.length > 0) {
+            setPrograms(programsData.data);
+          }
         }
       } catch (error) {
-        console.error('❌ Error fetching officials:', error);
-        console.log('❌ Using empty officials array due to error');
-        // Keep empty array on error
+        console.error('Error fetching dynamic content:', error);
       }
     };
 
-    fetchOfficials();
-
-    // Fetch Hero Settings
-    const fetchSettings = async () => {
-      try {
-        const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
-        const res = await fetch(`${API_URL}/officials/config`);
-        const data = await res.json();
-        if (data.success && data.data.heroSection) {
-          console.log('✅ Hero settings fetched:', data.data.heroSection);
-          setHeroSettings(data.data.heroSection);
-        }
-      } catch (error) {
-        console.error('❌ Error fetching hero settings:', error);
-      }
-    };
-    fetchSettings();
+    fetchData();
   }, []);
+
 
   // Update time and weather every second
   useEffect(() => {
@@ -1023,60 +1090,11 @@ export default function BarangayPortal() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 gap-y-12">
-            {[
-              {
-                category: "HEALTH & WELLNESS",
-                title: "Free Medical Mission 2026",
-                description: "Comprehensive health check-ups, free medicines, and basic dental services for all registered residents of our barangay.",
-                image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800"
-              },
-              {
-                category: "LIVELIHOOD",
-                title: "Pangkabuhayang Iba O' Este",
-                description: "Empowering residents with practical skills in culinary arts, tailoring, and automotive mechanics.",
-                image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800"
-              },
-              {
-                category: "INFRASTRUCTURE",
-                title: "Brgy. Green Building Initiative",
-                description: "Launching sustainable practices and installing solar-powered streetlights across major puroks.",
-                image: "https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&q=80&w=800"
-              },
-              {
-                category: "EDUCATION",
-                title: "Scholarship Grants Awarding",
-                description: "Distributing financial assistance to deserving local youth to support their higher education journeys.",
-                image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800"
-              },
-              {
-                category: "YOUTH & SPORTS",
-                title: "Inter-Purok Basketball League",
-                description: "Fostering sportsmanship and camaraderie among our youth through the annual basketball championship.",
-                image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&q=80&w=800"
-              },
-              {
-                category: "ENVIRONMENT",
-                title: "Monthly Coastal Clean-up",
-                description: "Preserving our shores and marine life with the help of community volunteers and local groups.",
-                image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=800"
-              },
-              {
-                category: "SENIOR CITIZENS",
-                title: "Elders Wellness & Social Day",
-                description: "A special day dedicated to our elders featuring health seminars, games, and free wellness packages.",
-                image: "https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&q=80&w=800"
-              },
-              {
-                category: "DIGITAL TRANSFORMATION",
-                title: "Barangay E-Services Launch",
-                description: "Experience faster transaction times and online document requests through our brand new web portal.",
-                image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800"
-              }
-            ].map((program, idx) => (
-              <div key={idx} className="flex flex-col group cursor-pointer h-full">
+            {programs.map((program, idx) => (
+              <div key={program.id || idx} className="flex flex-col group cursor-pointer h-full">
                 <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-5 bg-gray-100">
                   <img
-                    src={program.image}
+                    src={program.image || 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800'}
                     alt={program.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
@@ -1259,277 +1277,44 @@ export default function BarangayPortal() {
 
             {/* Achievements Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-16">
-
-              {/* Outstanding Barangay Award */}
-              <div
-                onClick={() => setSelectedAchievement({
-                  title: "Most Outstanding Barangay",
-                  category: "City-Level Recognition",
-                  description: "Awarded for exhibiting exemplary performance in local governance, community engagement, and rapid public service delivery across all metrics.",
-                  image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800",
-                  year: "2025",
-                  colorClass: "bg-yellow-500",
-                  textColor: "yellow-400"
-                })}
-                className="cursor-pointer bg-[#0a1f12]/60 backdrop-blur-md rounded-2xl border border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2">
-                {/* Image Cover */}
-                <div className="relative h-48 md:h-56 w-full overflow-hidden">
-                  <div className="absolute inset-0 bg-[#0f2e1b]/30 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
-                  <img
-                    src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800"
-                    alt="Most Outstanding Barangay"
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
-                  {/* Floating Badge */}
-                  <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
-                    <Award className="w-4 h-4" />
-                    2025
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#d4af37] to-[#ebd78c] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)] border-2 border-[#0a1f12] mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Trophy className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-[#d4af37] text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">City-Level Recognition</p>
-                      <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-[#d4af37] transition-colors line-clamp-2 leading-tight">Most Outstanding Barangay</h3>
+              {achievements.map((achievement, idx) => (
+                <div
+                  key={achievement.id || idx}
+                  onClick={() => setSelectedAchievement(achievement)}
+                  className="cursor-pointer bg-[#0a1f12]/60 backdrop-blur-md rounded-2xl border border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2"
+                >
+                  <div className="relative h-48 md:h-56 w-full overflow-hidden">
+                    <div className="absolute inset-0 bg-[#0f2e1b]/30 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
+                    <img
+                      src={achievement.image || 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800'}
+                      alt={achievement.title}
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
+                    {/* Floating Badge */}
+                    <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
+                      <Award className="w-4 h-4" />
+                      {achievement.year}
                     </div>
                   </div>
-                  <p className="text-[#ebd78c]/80 leading-relaxed text-sm flex-1 pt-3 border-t border-[#d4af37]/20 mt-1">
-                    Awarded for exhibiting exemplary performance in local governance, community engagement, and rapid public service delivery across all metrics.
-                  </p>
-                </div>
-              </div>
 
-              {/* Cleanest & Greenest */}
-              <div
-                onClick={() => setSelectedAchievement({
-                  title: "Cleanest & Greenest",
-                  category: "Environmental Award",
-                  description: "Recognized for initiating the Brgy. Green Building Code and maintaining a zero-waste policy within the immediate public vicinity.",
-                  image: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&q=80&w=800",
-                  year: "2024",
-                  colorClass: "bg-emerald-500",
-                  textColor: "emerald-400"
-                })}
-                className="cursor-pointer bg-[#0a1f12]/60 backdrop-blur-md rounded-2xl border border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2">
-                {/* Image Cover */}
-                <div className="relative h-48 md:h-56 w-full overflow-hidden">
-                  <div className="absolute inset-0 bg-[#0f2e1b]/30 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
-                  <img
-                    src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&q=80&w=800"
-                    alt="Cleanest & Greenest"
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
-                  {/* Floating Badge */}
-                  <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
-                    <Award className="w-4 h-4" />
-                    2024
+                  {/* Content */}
+                  <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-[#d4af37] to-[#ebd78c] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)] border-2 border-[#0a1f12] mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
+                        <Trophy className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-[#d4af37] text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">{achievement.category}</p>
+                        <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-[#d4af37] transition-colors line-clamp-2 leading-tight">{achievement.title}</h3>
+                      </div>
+                    </div>
+                    <p className="text-[#ebd78c]/80 leading-relaxed text-sm flex-1 pt-3 border-t border-[#d4af37]/20 mt-1">
+                      {achievement.description}
+                    </p>
                   </div>
                 </div>
-
-                {/* Content */}
-                <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#d4af37] to-[#ebd78c] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)] border-2 border-[#0a1f12] mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Trophy className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-[#d4af37] text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">Environmental Award</p>
-                      <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-[#d4af37] transition-colors line-clamp-2 leading-tight">Cleanest & Greenest</h3>
-                    </div>
-                  </div>
-                  <p className="text-[#ebd78c]/80 leading-relaxed text-sm flex-1 pt-3 border-t border-[#d4af37]/20 mt-1">
-                    Recognized for initiating the Brgy. Green Building Code and maintaining a zero-waste policy within the immediate public vicinity.
-                  </p>
-                </div>
-              </div>
-
-              {/* Digital Innovation Pioneer */}
-              <div
-                onClick={() => setSelectedAchievement({
-                  title: "Digital Innovation Pioneer",
-                  category: "Special Citation",
-                  description: "Acknowledged for launching the comprehensive E-Services portal, ensuring 100% online availability of forms and digital records.",
-                  image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=800",
-                  year: "2026",
-                  colorClass: "bg-blue-500",
-                  textColor: "blue-400"
-                })}
-                className="cursor-pointer bg-[#0a1f12]/60 backdrop-blur-md rounded-2xl border border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2">
-                {/* Image Cover */}
-                <div className="relative h-48 md:h-56 w-full overflow-hidden">
-                  <div className="absolute inset-0 bg-[#0f2e1b]/30 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
-                  <img
-                    src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=800"
-                    alt="Digital Innovation Pioneer"
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
-                  {/* Floating Badge */}
-                  <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
-                    <Award className="w-4 h-4" />
-                    2026
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#d4af37] to-[#ebd78c] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)] border-2 border-[#0a1f12] mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Trophy className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-[#d4af37] text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">Special Citation</p>
-                      <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-[#d4af37] transition-colors line-clamp-2 leading-tight">Digital Innovation Pioneer</h3>
-                    </div>
-                  </div>
-                  <p className="text-[#ebd78c]/80 leading-relaxed text-sm flex-1 pt-3 border-t border-[#d4af37]/20 mt-1">
-                    Acknowledged for launching the comprehensive E-Services portal, ensuring 100% online availability of forms and digital records.
-                  </p>
-                </div>
-              </div>
-
-              {/* Best in Public Safety */}
-              <div
-                onClick={() => setSelectedAchievement({
-                  title: "Best in Public Safety",
-                  category: "Community Safety",
-                  description: "Recognized for the lowest crime rate in the municipality and unparalleled rapid response of the Barangay Tanods and safety patrols.",
-                  image: "https://images.unsplash.com/photo-1533481405265-e9ce0c044abb?auto=format&fit=crop&q=80&w=800",
-                  year: "2025",
-                  colorClass: "bg-red-500",
-                  textColor: "red-400"
-                })}
-                className="cursor-pointer bg-[#0a1f12]/60 backdrop-blur-md rounded-2xl border border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2">
-                {/* Image Cover */}
-                <div className="relative h-48 md:h-56 w-full overflow-hidden">
-                  <div className="absolute inset-0 bg-[#0f2e1b]/30 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
-                  <img
-                    src="https://images.unsplash.com/photo-1533481405265-e9ce0c044abb?auto=format&fit=crop&q=80&w=800"
-                    alt="Best in Public Safety"
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
-                  {/* Floating Badge */}
-                  <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
-                    <Award className="w-4 h-4" />
-                    2025
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#d4af37] to-[#ebd78c] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)] border-2 border-[#0a1f12] mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Trophy className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-[#d4af37] text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">Community Safety</p>
-                      <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-[#d4af37] transition-colors line-clamp-2 leading-tight">Best in Public Safety</h3>
-                    </div>
-                  </div>
-                  <p className="text-[#ebd78c]/80 leading-relaxed text-sm flex-1 pt-3 border-t border-[#d4af37]/20 mt-1">
-                    Recognized for the lowest crime rate in the municipality and unparalleled rapid response of the Barangay Tanods and safety patrols.
-                  </p>
-                </div>
-              </div>
-
-              {/* Excellence in Healthcare */}
-              <div
-                onClick={() => setSelectedAchievement({
-                  title: "Excellence in Healthcare",
-                  category: "Health Service",
-                  description: "Awarded for the continuous deployment of mobile clinics, free check-ups, and maternal care support for marginalized sectors.",
-                  image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800",
-                  year: "2024",
-                  colorClass: "bg-pink-500",
-                  textColor: "pink-400"
-                })}
-                className="cursor-pointer bg-[#0a1f12]/60 backdrop-blur-md rounded-2xl border border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2">
-                {/* Image Cover */}
-                <div className="relative h-48 md:h-56 w-full overflow-hidden">
-                  <div className="absolute inset-0 bg-[#0f2e1b]/30 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
-                  <img
-                    src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800"
-                    alt="Excellence in Healthcare"
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
-                  {/* Floating Badge */}
-                  <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
-                    <Award className="w-4 h-4" />
-                    2024
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#d4af37] to-[#ebd78c] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)] border-2 border-[#0a1f12] mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Trophy className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-[#d4af37] text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">Health Service</p>
-                      <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-[#d4af37] transition-colors line-clamp-2 leading-tight">Excellence in Healthcare</h3>
-                    </div>
-                  </div>
-                  <p className="text-[#ebd78c]/80 leading-relaxed text-sm flex-1 pt-3 border-t border-[#d4af37]/20 mt-1">
-                    Awarded for the continuous deployment of mobile clinics, free check-ups, and maternal care support for marginalized sectors.
-                  </p>
-                </div>
-              </div>
-
-              {/* Champion in Youth Development */}
-              <div
-                onClick={() => setSelectedAchievement({
-                  title: "Champion in Youth Development",
-                  category: "Youth Council",
-                  description: "Honored for establishing local sports tournaments, skill-building workshops, and broad educational assistance distribution.",
-                  image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=800",
-                  year: "2025",
-                  colorClass: "bg-purple-500",
-                  textColor: "purple-400"
-                })}
-                className="cursor-pointer bg-[#0a1f12]/60 backdrop-blur-md rounded-2xl border border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2">
-                {/* Image Cover */}
-                <div className="relative h-48 md:h-56 w-full overflow-hidden">
-                  <div className="absolute inset-0 bg-[#0f2e1b]/30 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
-                  <img
-                    src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=800"
-                    alt="Champion in Youth Development"
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
-                  {/* Floating Badge */}
-                  <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
-                    <Award className="w-4 h-4" />
-                    2025
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#d4af37] to-[#ebd78c] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)] border-2 border-[#0a1f12] mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                      <Trophy className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-[#d4af37] text-[10px] md:text-xs font-bold tracking-widest uppercase mb-0.5">Youth Council</p>
-                      <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-[#d4af37] transition-colors line-clamp-2 leading-tight">Youth Development</h3>
-                    </div>
-                  </div>
-                  <p className="text-[#ebd78c]/80 leading-relaxed text-sm flex-1 pt-3 border-t border-[#d4af37]/20 mt-1">
-                    Honored for establishing local sports tournaments, skill-building workshops, and broad educational assistance distribution.
-                  </p>
-                </div>
-              </div>
-
+              ))}
             </div>
 
             {/* Statistics Row */}
@@ -1852,7 +1637,7 @@ export default function BarangayPortal() {
                                       <h3 className="text-3xl font-black text-white tracking-widest uppercase">SK Vision</h3>
                                     </div>
                                     <p className="text-orange-50/90 text-xl font-medium leading-relaxed italic border-l-4 border-orange-500 pl-6 py-2">
-                                      {`"An inspired youth community of Iba O' Este that is actively involved in community building, advocating for education, sports, and social responsibility بينما maintaining the highest level of integrity."`}
+                                      {`"An inspired youth community of Iba O' Este that is actively involved in community building, advocating for education, sports, and social responsibility while maintaining the highest level of integrity."`}
                                     </p>
                                   </div>
                                 </div>
@@ -1991,9 +1776,9 @@ export default function BarangayPortal() {
             <p className="text-xl text-green-400 italic">Wag mahiya at kami ay inyong tanungin</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 items-start">
             {/* Contact Form */}
-            <div className="bg-white rounded-2xl p-8 shadow-xl">
+            <div className="bg-white rounded-2xl p-8 shadow-xl h-full">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -2069,9 +1854,9 @@ export default function BarangayPortal() {
               </form>
             </div>
 
-            {/* Contact Info */}
-            <div className="space-y-8">
-              <div className="bg-green-950/50 backdrop-blur-sm rounded-2xl p-8 border border-green-800/50">
+            {/* Contact Info & Office Hours */}
+            <div className="space-y-8 h-full flex flex-col">
+              <div className="bg-green-950/50 backdrop-blur-sm rounded-2xl p-8 border border-green-800/50 flex-1">
                 <h3 className="text-xl font-bold text-white mb-6">Contact Information</h3>
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
@@ -2111,6 +1896,36 @@ export default function BarangayPortal() {
                   <p>Saturday: 8:00 AM - 12:00 PM</p>
                   <p>Sunday: Closed</p>
                 </div>
+              </div>
+            </div>
+
+            {/* Emergency Hotlines */}
+            <div className="bg-green-950/50 backdrop-blur-sm rounded-2xl p-8 border border-green-800/50 h-full">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <AlertTriangle className="w-6 h-6 text-red-500 animate-pulse" />
+                Emergency Hotlines
+              </h3>
+              <div className="space-y-6">
+                {hotlines.map((hotline, index) => (
+                  <div key={index} className="flex items-start gap-4 group">
+                    <div className="bg-red-900/40 p-3 rounded-lg group-hover:bg-red-800 transition-colors">
+                      <Phone className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">{hotline.name}</p>
+                      <a
+                        href={`tel:${hotline.number}`}
+                        className="text-green-200 hover:text-white transition-colors text-xl font-bold"
+                      >
+                        {hotline.number}
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 p-4 bg-green-900/30 rounded-xl text-center border border-green-800/20">
+                <p className="text-green-300 text-[10px] font-bold tracking-widest mb-1 uppercase">Available 24/7</p>
+                <p className="text-white font-bold">READY TO RESPOND</p>
               </div>
             </div>
           </div>
