@@ -98,6 +98,51 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 /**
+ * @route   PUT /api/programs/bulk/update
+ * @desc    Bulk update all programs (for reordering/saving)
+ * @access  Private (Admin only)
+ */
+router.put('/bulk/update', authenticateToken, async (req, res) => {
+    try {
+        const { programs } = req.body;
+
+        // Delete all existing programs and re-insert (full sync)
+        await supabase.from('programs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+        if (programs && programs.length > 0) {
+            const programsToInsert = programs.map((prog, index) => ({
+                title: prog.title,
+                category: prog.category,
+                description: prog.description,
+                image: prog.image || 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800',
+                order_index: index
+            }));
+
+            const { error } = await supabase.from('programs').insert(programsToInsert);
+
+            if (error) {
+                console.error('Error bulk updating programs:', error);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to update programs'
+                });
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Programs updated successfully'
+        });
+    } catch (error) {
+        console.error('Bulk update programs error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+});
+
+/**
  * @route   PUT /api/programs/:id
  * @desc    Update a program
  * @access  Private (Admin only)
@@ -137,51 +182,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Update program error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error'
-        });
-    }
-});
-
-/**
- * @route   PUT /api/programs/bulk/update
- * @desc    Bulk update all programs (for reordering)
- * @access  Private (Admin only)
- */
-router.put('/bulk/update', authenticateToken, async (req, res) => {
-    try {
-        const { programs } = req.body;
-
-        // Delete all existing programs
-        await supabase.from('programs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-        if (programs && programs.length > 0) {
-            const programsToInsert = programs.map((prog, index) => ({
-                title: prog.title,
-                category: prog.category,
-                description: prog.description,
-                image: prog.image || 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800',
-                order_index: index
-            }));
-
-            const { error } = await supabase.from('programs').insert(programsToInsert);
-
-            if (error) {
-                console.error('Error bulk updating programs:', error);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Failed to update programs'
-                });
-            }
-        }
-
-        res.status(200).json({
-            success: true,
-            message: 'Programs updated successfully'
-        });
-    } catch (error) {
-        console.error('Bulk update programs error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
