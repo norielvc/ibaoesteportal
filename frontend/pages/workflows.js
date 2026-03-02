@@ -4,7 +4,7 @@ import Layout from '@/components/Layout/Layout';
 import {
   GitBranch, Plus, Edit2, Trash2, Save, X, ChevronRight,
   CheckCircle, Clock, UserCheck, FileText, AlertCircle,
-  ArrowUp, ArrowDown, GripVertical, Settings, Eye, Users, Mail, Shield
+  ArrowUp, ArrowDown, GripVertical, Settings, Eye, Users, Mail, Shield, Briefcase
 } from 'lucide-react';
 import { isAuthenticated, getUserData, getAuthToken } from '@/lib/auth';
 // API Configuration
@@ -13,9 +13,10 @@ const MASTER_WORKFLOW_ID = 'master_certificate_flow';
 
 // Certificate types
 const certificateTypes = [
-  { id: 'barangay_clearance', name: 'Barangay Clearance', color: 'blue' },
-  { id: 'certificate_of_indigency', name: 'Certificate of Indigency', color: 'green' },
-  { id: 'barangay_residency', name: 'Barangay Residency', color: 'orange' }
+  { id: 'barangay_clearance', name: 'Barangay Clearance', color: 'blue', isUnified: true },
+  { id: 'certificate_of_indigency', name: 'Certificate of Indigency', color: 'green', isUnified: true },
+  { id: 'barangay_residency', name: 'Barangay Residency', color: 'orange', isUnified: true },
+  { id: 'business_permit', name: 'Business Permit', color: 'purple', isUnified: false }
 ];
 
 // Default workflow steps
@@ -110,12 +111,15 @@ export default function WorkflowsPage() {
         if (data_workflows[MASTER_WORKFLOW_ID]) {
           setWorkflows(data_workflows);
         } else {
-          // Migrate old per-cert data to master
-          const firstCertId = certificateTypes[0].id;
-          const masterWorkflow = data_workflows[firstCertId] || defaultSteps;
-          const migrated = { [MASTER_WORKFLOW_ID]: masterWorkflow };
-          setWorkflows(migrated);
-          // Sync back to DB in next save if needed
+          // Migration/Initialization
+          const initial = { ...data_workflows };
+          if (!initial[MASTER_WORKFLOW_ID]) {
+            initial[MASTER_WORKFLOW_ID] = data_workflows['barangay_clearance'] || defaultSteps;
+          }
+          if (!initial['business_permit']) {
+            initial['business_permit'] = data_workflows['business_permit'] || defaultSteps;
+          }
+          setWorkflows(initial);
         }
         console.log('Workflows loaded from database');
         return;
@@ -166,24 +170,36 @@ export default function WorkflowsPage() {
     if (oicReview) orderedSteps.push({ ...oicReview, name: 'Releasing Team', requiresApproval: true });
 
     masterSteps = orderedSteps;
-    const unifiedWorkflows = {};
-    certificateTypes.forEach(cert => {
-      unifiedWorkflows[cert.id] = JSON.parse(JSON.stringify(masterSteps));
+    const unifiedWorkflows = { ...workflows, ...updated };
+
+    // Sync master steps ALWAYS to unified certificates
+    certificateTypes.filter(c => c.isUnified).forEach(cert => {
+      unifiedWorkflows[cert.id] = JSON.parse(JSON.stringify(updated[MASTER_WORKFLOW_ID] || workflows[MASTER_WORKFLOW_ID]));
     });
 
-    setWorkflows({ [MASTER_WORKFLOW_ID]: masterSteps }); // Update local state with just the master
-    localStorage.setItem('certificateWorkflows', JSON.stringify({ [MASTER_WORKFLOW_ID]: masterSteps })); // Save master to local storage
+    // Ensure currently selected cert is updated in state
+    setWorkflows(prev => ({ ...prev, ...updated, [selectedCertificate]: masterSteps }));
+    localStorage.setItem('certificateWorkflows', JSON.stringify({ ...workflows, ...updated, [selectedCertificate]: masterSteps }));
 
     // Also save to API (database) so other users can access
     try {
       const token = getAuthToken();
+      // Filter only real certificate types - do NOT save 'master_certificate_flow' to DB
+      const validCertTypes = certificateTypes.map(c => c.id);
+      const filteredWorkflows = {};
+      Object.keys(unifiedWorkflows).forEach(key => {
+        if (validCertTypes.includes(key)) {
+          filteredWorkflows[key] = unifiedWorkflows[key];
+        }
+      });
+
       const response = await fetch(`${API_URL}/workflows`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ workflows: unifiedWorkflows })
+        body: JSON.stringify({ workflows: filteredWorkflows })
       });
       const data = await response.json();
       if (data.success) {
@@ -203,9 +219,11 @@ export default function WorkflowsPage() {
       const token = getAuthToken();
 
       // FIRST: Save the current workflows to database (including assignedUsers)
+      const unifiedWorkflows = JSON.parse(JSON.stringify(workflows));
+
+      // Force master steps to unified certs before sync
       const masterSteps = workflows[MASTER_WORKFLOW_ID] || [];
-      const unifiedWorkflows = {};
-      certificateTypes.forEach(cert => {
+      certificateTypes.filter(c => c.isUnified).forEach(cert => {
         unifiedWorkflows[cert.id] = JSON.parse(JSON.stringify(masterSteps));
       });
 
@@ -257,7 +275,7 @@ export default function WorkflowsPage() {
     setTimeout(() => setNotification(null), type === 'success' ? 5000 : 3000);
   };
 
-  const getCurrentSteps = () => workflows[MASTER_WORKFLOW_ID] || [];
+  const getCurrentSteps = () => workflows[selectedCertificate] || defaultSteps;
 
   // Filter out the automatic Releasing Team and Review Team steps from the main management list
   const getVisibleSteps = () => getCurrentSteps().filter(s => s.status !== 'oic_review' && s.status !== 'staff_review');
@@ -270,10 +288,10 @@ export default function WorkflowsPage() {
     const steps = getCurrentSteps();
     const updated = {
       ...workflows,
-      [MASTER_WORKFLOW_ID]: [...steps, { ...newStep, id: Date.now(), assignedUsers: [] }]
+      [selectedCertificate]: [...steps, { ...newStep, id: Date.now(), assignedUsers: [] }]
     };
     saveWorkflows(updated);
-    setNewStep({ name: '', description: '', status: '', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false });
+    setNewStep({ name: '', description: '', status: '', icon: 'FileText', autoApprove: false, assignedUsers: [], requiresApproval: false, sendEmail: false, officialRole: '' });
     setShowAddStep(false);
   };
 
@@ -281,7 +299,7 @@ export default function WorkflowsPage() {
     const steps = getCurrentSteps();
     const updated = {
       ...workflows,
-      [MASTER_WORKFLOW_ID]: steps.map(s => s.id === stepId ? { ...s, assignedUsers: selectedUserIds } : s)
+      [selectedCertificate]: steps.map(s => s.id === stepId ? { ...s, assignedUsers: selectedUserIds } : s)
     };
     saveWorkflows(updated);
     setShowAssignModal(null);
@@ -395,7 +413,7 @@ export default function WorkflowsPage() {
     updatedSteps.push(...visibleSteps);
     if (oicReview) updatedSteps.push(oicReview);
 
-    const updated = { ...workflows, [MASTER_WORKFLOW_ID]: updatedSteps };
+    const updated = { ...workflows, [selectedCertificate]: updatedSteps };
     saveWorkflows(updated);
   };
 
@@ -476,31 +494,73 @@ export default function WorkflowsPage() {
         </div>
       )}
 
-      {/* Unified Workflow Header */}
-      <div className="bg-blue-600 rounded-xl shadow-md border border-blue-700 p-6 text-white text-center">
-        <h2 className="text-xl font-bold flex items-center justify-center gap-2">
-          <Settings className="w-6 h-6" />
-          Unified Certificate Workflow
-        </h2>
-        <p className="text-blue-100 mt-2 text-sm">
-          Changes made here are automatically applied to <b>Barangay Clearance</b>, <b>Indigency</b>, and <b>Residency</b>.
-        </p>
+      {/* Workflow Tabs */}
+      <div className="flex p-1 bg-gray-100 rounded-xl w-full sm:w-fit">
+        <button
+          onClick={() => setSelectedCertificate(MASTER_WORKFLOW_ID)}
+          className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${selectedCertificate === MASTER_WORKFLOW_ID
+            ? 'bg-blue-600 text-white shadow-md'
+            : 'text-gray-500 hover:text-gray-700'
+            }`}
+        >
+          Unified (Clearance/Indigency/Residency)
+        </button>
+        <button
+          onClick={() => setSelectedCertificate('business_permit')}
+          className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${selectedCertificate === 'business_permit'
+            ? 'bg-purple-600 text-white shadow-md'
+            : 'text-gray-500 hover:text-gray-700'
+            }`}
+        >
+          Business Permit
+        </button>
       </div>
+
+      {/* Unified Workflow Header */}
+      {selectedCertificate === MASTER_WORKFLOW_ID ? (
+        <div className="bg-blue-600 rounded-xl shadow-md border border-blue-700 p-6 text-white text-center">
+          <h2 className="text-xl font-bold flex items-center justify-center gap-2">
+            <Settings className="w-6 h-6" />
+            Unified Certificate Workflow
+          </h2>
+          <p className="text-blue-100 mt-2 text-sm">
+            Changes made here are automatically applied to <b>Barangay Clearance</b>, <b>Indigency</b>, and <b>Residency</b>.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-purple-600 rounded-xl shadow-md border border-purple-700 p-6 text-white text-center">
+          <h2 className="text-xl font-bold flex items-center justify-center gap-2">
+            <Briefcase className="w-6 h-6" />
+            Business Permit Workflow
+          </h2>
+          <p className="text-purple-100 mt-2 text-sm">
+            This configuration is exclusive to <b>Business Permits</b> and will not affect other certificate types.
+          </p>
+        </div>
+      )}
 
       {/* Workflow Title */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 border-b pb-4 mb-4">Master Workflow Steps</h2>
-        <p className="text-xs text-gray-400 italic mb-4">These steps define the standard process for all certificates in the system.</p>
+        <h2 className="text-lg font-semibold text-gray-900 border-b pb-4 mb-4">
+          {selectedCertificate === MASTER_WORKFLOW_ID ? 'Master Workflow Steps' : 'Business Permit Workflow Steps'}
+        </h2>
+        <p className="text-xs text-gray-400 italic mb-4">
+          {selectedCertificate === MASTER_WORKFLOW_ID
+            ? 'These steps define the standard process for all certificates in the system.'
+            : 'Custom approval chain for business registrations.'}
+        </p>
       </div>
 
       {/* Review Request Team Table */}
-      <div className="z-10 mt-8 mb-4 bg-white rounded-xl shadow-2xl border-2 border-green-500 overflow-hidden transform transition-all">
-        <div className="p-4 bg-green-600 border-b border-green-700">
+      <div className={`z-10 mt-8 mb-4 bg-white rounded-xl shadow-2xl border-2 overflow-hidden transform transition-all ${selectedCertificate === MASTER_WORKFLOW_ID ? 'border-green-500' : 'border-purple-500'
+        }`}>
+        <div className={`p-4 border-b ${selectedCertificate === MASTER_WORKFLOW_ID ? 'bg-green-600 border-green-700' : 'bg-purple-600 border-purple-700'
+          }`}>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <Eye className="w-5 h-5" />
-            Review Request Team (Global)
+            Review Request Team ({selectedCertificate === MASTER_WORKFLOW_ID ? 'Global' : 'Exclusive'})
           </h2>
-          <p className="text-xs text-green-100 mt-0.5">Assigned users will handle the initial review for <b>ALL</b> certificate types.</p>
+          <p className="text-xs text-white/80 mt-0.5">Assigned users will handle the initial review for <b>{selectedCertificate === MASTER_WORKFLOW_ID ? 'ALL UNIFIED' : 'BUSINESS PERMIT'}</b> requests.</p>
         </div>
         <div className="p-6">
           {(() => {
@@ -536,7 +596,8 @@ export default function WorkflowsPage() {
 
                 <button
                   onClick={() => setShowAssignModal({ certId: selectedCertificate, stepId: reviewStep?.id || 'new_review', type: 'review' })}
-                  className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold shadow-lg transition-all active:scale-95"
+                  className={`px-6 py-2 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95 ${selectedCertificate === MASTER_WORKFLOW_ID ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700'
+                    }`}
                 >
                   Assign Team Members
                 </button>
@@ -716,13 +777,15 @@ export default function WorkflowsPage() {
       </div>
 
       {/* Unified Releasing Team Table */}
-      <div className="z-10 mt-8 mb-4 bg-white rounded-xl shadow-2xl border-2 border-blue-500 overflow-hidden transform transition-all">
-        <div className="p-4 bg-blue-600 border-b border-blue-700">
+      <div className={`z-10 mt-8 mb-4 bg-white rounded-xl shadow-2xl border-2 overflow-hidden transform transition-all ${selectedCertificate === MASTER_WORKFLOW_ID ? 'border-blue-500' : 'border-purple-500'
+        }`}>
+        <div className={`p-4 border-b ${selectedCertificate === MASTER_WORKFLOW_ID ? 'bg-blue-600 border-blue-700' : 'bg-purple-600 border-purple-700'
+          }`}>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <Shield className="w-5 h-5" />
-            Releasing Team (Global)
+            Releasing Team ({selectedCertificate === MASTER_WORKFLOW_ID ? 'Global' : 'Exclusive'})
           </h2>
-          <p className="text-xs text-blue-100 mt-0.5">Assigned users will handle the final processing for <b>ALL</b> certificate types.</p>
+          <p className="text-xs text-blue-100 mt-0.5">Assigned users will handle the final processing for <b>{selectedCertificate === MASTER_WORKFLOW_ID ? 'ALL UNIFIED' : 'BUSINESS PERMIT'}</b> requests.</p>
         </div>
         <div className="p-6">
           {(() => {
@@ -762,7 +825,8 @@ export default function WorkflowsPage() {
 
                 <button
                   onClick={() => setShowAssignModal({ certId: selectedCertificate, stepId: releasingStep?.id || 'new_releasing' })}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-lg transition-all active:scale-95"
+                  className={`px-6 py-2 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95 ${selectedCertificate === MASTER_WORKFLOW_ID ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'
+                    }`}
                 >
                   Assign Team Members
                 </button>
@@ -813,7 +877,7 @@ export default function WorkflowsPage() {
       {showAssignModal && (
         <AssignUsersModal
           step={showAssignModal.certId
-            ? (workflows[MASTER_WORKFLOW_ID] || []).find(s => s.id === showAssignModal.stepId)
+            ? (workflows[showAssignModal.certId] || []).find(s => s.id === showAssignModal.stepId)
             : getCurrentSteps().find(s => s.id === showAssignModal)
           }
           users={users}

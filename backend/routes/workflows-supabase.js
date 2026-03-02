@@ -86,8 +86,22 @@ router.put('/', authenticateToken, requireAdmin, async (req, res) => {
       });
     }
 
-    // Save each workflow type to database
-    const promises = Object.keys(workflows).map(async (certType) => {
+    // Whitelist of valid certificate types to prevent database constraint errors
+    const validCertificateTypes = [
+      'barangay_clearance',
+      'certificate_of_indigency',
+      'barangay_residency',
+      'natural_death',
+      'barangay_guardianship',
+      'barangay_cohabitation',
+      'medico_legal',
+      'business_permit'
+    ];
+
+    // ONLY process known certificate types
+    const filteredCertTypes = Object.keys(workflows).filter(type => validCertificateTypes.includes(type));
+
+    const promises = filteredCertTypes.map(async (certType) => {
       const steps = workflows[certType];
 
       const { error } = await supabase
@@ -161,7 +175,8 @@ router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, re
       'natural_death',
       'barangay_guardianship',
       'barangay_cohabitation',
-      'medico_legal'
+      'medico_legal',
+      'business_permit'
     ];
     let syncResults = {
       totalAssignments: 0,
