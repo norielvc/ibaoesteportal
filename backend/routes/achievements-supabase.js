@@ -102,6 +102,54 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 /**
+ * @route   PUT /api/achievements/bulk/update
+ * @desc    Bulk update all achievements (for reordering)
+ * @access  Private (Admin only)
+ */
+router.put('/bulk/update', authenticateToken, async (req, res) => {
+    try {
+        const { achievements } = req.body;
+
+        // Delete all existing achievements and re-insert (full sync)
+        await supabase.from('achievements').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+        if (achievements && achievements.length > 0) {
+            const achievementsToInsert = achievements.map((ach, index) => ({
+                title: ach.title,
+                category: ach.category,
+                description: ach.description,
+                year: ach.year,
+                image: ach.image || 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800',
+                color_class: ach.color_class || 'bg-blue-500',
+                text_color: ach.text_color || 'blue-400',
+                order_index: index
+            }));
+
+            const { error } = await supabase.from('achievements').insert(achievementsToInsert);
+
+            if (error) {
+                console.error('Error bulk updating achievements:', error);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to update achievements'
+                });
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Achievements updated successfully'
+        });
+    } catch (error) {
+        console.error('Bulk update achievements error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+});
+
+/**
  * @route   PUT /api/achievements/:id
  * @desc    Update an achievement
  * @access  Private (Admin only)
@@ -144,55 +192,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Update achievement error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error'
-        });
-    }
-});
-
-/**
- * @route   PUT /api/achievements/bulk/update
- * @desc    Bulk update all achievements (for reordering)
- * @access  Private (Admin only)
- */
-router.put('/bulk/update', authenticateToken, async (req, res) => {
-    try {
-        const { achievements } = req.body;
-
-        // Delete all existing achievements (except those we want to keep? No, full sync)
-        // Using a more surgical approach would be better, but for simplicity:
-        await supabase.from('achievements').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-        if (achievements && achievements.length > 0) {
-            const achievementsToInsert = achievements.map((ach, index) => ({
-                title: ach.title,
-                category: ach.category,
-                description: ach.description,
-                year: ach.year,
-                image: ach.image || 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800',
-                color_class: ach.color_class || 'bg-blue-500',
-                text_color: ach.text_color || 'blue-400',
-                order_index: index
-            }));
-
-            const { error } = await supabase.from('achievements').insert(achievementsToInsert);
-
-            if (error) {
-                console.error('Error bulk updating achievements:', error);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Failed to update achievements'
-                });
-            }
-        }
-
-        res.status(200).json({
-            success: true,
-            message: 'Achievements updated successfully'
-        });
-    } catch (error) {
-        console.error('Bulk update achievements error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
