@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Building, AlertCircle, CheckCircle, Loader2, Info, Send, Clock, Eye, Briefcase, User, MapPin, Store, Search } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 
@@ -18,10 +18,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     natureOfBusiness: '',
     businessAddress: '',
     contactPerson: '',
-    contactNumber: '',
-
-    // Purpose
-    purpose: ''
+    contactNumber: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,6 +41,25 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     setErrors(prev => ({ ...prev, ownerFullName: false }));
   };
 
+  // Auto-fill date and generate application number on open
+  useEffect(() => {
+    if (!isOpen) return;
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+
+    const seq = String(Math.floor(Math.random() * 99999) + 1).padStart(5, '0');
+    const appNo = seq;
+
+    setFormData(prev => ({
+      ...prev,
+      applicationDate: dateStr,
+      applicationNo: appNo
+    }));
+  }, [isOpen]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -57,11 +73,9 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
 
   const validateForm = () => {
     const required = [
-      'applicationDate',
       'ownerFullName', 'ownerAddress',
       'businessName', 'natureOfBusiness', 'businessAddress',
-      'contactPerson', 'contactNumber',
-      'purpose'
+      'contactPerson', 'contactNumber'
     ];
     const newErrors = {};
     required.forEach(field => {
@@ -220,34 +234,31 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
 
               <form onSubmit={handleSubmit} className="space-y-8">
 
-                {/* Date & Application No. */}
+                {/* Date & Application No. — Read Only, Auto-filled */}
                 <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">
-                        Date of Application <span className="text-red-500">*</span>
+                        Date of Application
                       </label>
                       <input
-                        type="date"
-                        name="applicationDate"
-                        value={formData.applicationDate}
-                        onChange={handleInputChange}
-                        className={`w-full px-5 py-3 bg-white border-2 ${errors.applicationDate ? 'border-red-500 bg-red-50' : 'border-gray-200'} rounded-xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 outline-none font-bold text-gray-800 transition-all`}
+                        type="text"
+                        value={formData.applicationDate ? new Date(formData.applicationDate + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+                        readOnly
+                        className="w-full px-5 py-3 bg-white border-2 border-emerald-200 rounded-xl outline-none font-bold text-gray-700 cursor-default"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">
-                        Application No. (2026 - ___)
+                        Application No.
                       </label>
                       <div className="flex items-center gap-2">
                         <span className="font-black text-gray-500 text-sm whitespace-nowrap">2026 —</span>
                         <input
                           type="text"
-                          name="applicationNo"
                           value={formData.applicationNo}
-                          onChange={handleInputChange}
-                          placeholder="Leave blank (auto-assigned)"
-                          className="w-full px-5 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-[#2d5a3d] outline-none font-bold text-gray-500 text-sm italic"
+                          readOnly
+                          className="w-full px-5 py-3 bg-white border-2 border-emerald-200 rounded-xl outline-none font-black text-emerald-800 cursor-default"
                         />
                       </div>
                     </div>
@@ -410,38 +421,6 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                   </div>
                 </div>
 
-                {/* Purpose / Application Type */}
-                <div className="space-y-5">
-                  <div className="flex items-center gap-4 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-xl p-2 pr-6 shadow-sm">
-                    <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">2</div>
-                    <div>
-                      <h3 className="text-lg md:text-xl font-black text-white tracking-tight">Application Type</h3>
-                      <p className="text-xs text-white/90 font-bold uppercase tracking-widest">Uri ng Aplikasyon</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">
-                      Application Intent / Layunin ng Aplikasyon <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="purpose"
-                      value={formData.purpose}
-                      onChange={handleInputChange}
-                      className={`w-full px-6 py-4 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 cursor-pointer appearance-none shadow-sm transition-all`}
-                    >
-                      <option value="">SELECT FILING TYPE... / PUMILI NG LAYUNIN...</option>
-                      {[
-                        'New Business / Bagong Negosyo',
-                        'Renewal / Renobasyon',
-                        'Transfer of Location / Paglipat ng Lokasyon',
-                        'Change of Business Name / Pagbabago ng Pangalan ng Negosyo'
-                      ].map(p => (
-                        <option key={p} value={p}>{p.toUpperCase()}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
 
               </form>
             </div>
