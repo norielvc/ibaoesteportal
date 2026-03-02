@@ -28,7 +28,7 @@ const programRoutes = require('./routes/programs-supabase');
 const errorHandler = require('./middleware/errorHandler');
 const { authenticateToken } = require('./middleware/auth-supabase');
 
-// Deployment Sync: 2026-03-02 13:02 - fix bulk/update route ordering
+// Deployment Sync: 2026-03-02 13:32 - fix programs + achievements bulk/update routes
 
 const app = express();
 const PORT = process.env.PORT || 5000;
