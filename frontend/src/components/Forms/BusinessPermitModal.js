@@ -12,6 +12,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     ownerFullName: '',
     ownerAddress: '',
     residentId: null,
+    age: 0,
 
     // Business Details
     businessName: '',
@@ -19,7 +20,9 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     businessAddress: '',
     contactPerson: '',
     contactNumber: '',
-    email: ''
+    email: '',
+    sex: '',
+    civilStatus: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,7 +40,10 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
       contactPerson: resident.full_name || '',
       contactNumber: resident.contact_number || '',
       email: resident.email || resident.email_address || '',
-      residentId: resident.id
+      residentId: resident.id,
+      age: resident.age || 0,
+      sex: resident.gender || '',
+      civilStatus: resident.civil_status || ''
     }));
     setIsResidentModalOpen(false);
     setErrors(prev => ({ ...prev, ownerFullName: false }));

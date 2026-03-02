@@ -1221,7 +1221,8 @@ router.post('/business-permit', async (req, res) => {
   try {
     const {
       ownerFullName, ownerAddress, residentId, businessName, natureOfBusiness,
-      businessAddress, contactPerson, contactNumber, referenceNumber, applicationDate
+      businessAddress, contactPerson, contactNumber, referenceNumber, applicationDate,
+      age, sex, civilStatus
     } = req.body;
 
     // We use the reference number provided by the frontend as it follows the user's specific format
@@ -1236,6 +1237,9 @@ router.post('/business-permit', async (req, res) => {
         certificate_type: 'business_permit',
         full_name: ownerFullName?.toUpperCase() || '',
         address: ownerAddress?.toUpperCase() || '',
+        age: parseInt(age) || 0,
+        sex: sex?.toUpperCase() || '',
+        civil_status: civilStatus?.toUpperCase() || '',
         contact_number: contactNumber || '',
         email: req.body.email || '',
         resident_id: residentId,
