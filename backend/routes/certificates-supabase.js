@@ -87,7 +87,9 @@ router.get('/next-reference/:type', async (req, res) => {
       'barangay_residency': 'BR',
       'natural_death': 'ND',
       'barangay_guardianship': 'GD',
-      'medico_legal': 'ML'
+      'medico_legal': 'ML',
+      'business_permit': 'BP',
+      'BP': 'BP'
     };
 
     const prefix = prefixMap[type] || 'REF';
@@ -143,7 +145,9 @@ router.get('/next-reference/:type', async (req, res) => {
       'barangay_residency': 'BR',
       'natural_death': 'ND',
       'barangay_guardianship': 'GD',
-      'barangay_cohabitation': 'CH'
+      'barangay_cohabitation': 'CH',
+      'business_permit': 'BP',
+      'BP': 'BP'
     };
     const prefix = prefixMap[type] || 'REF';
     const year = new Date().getFullYear();
@@ -1208,6 +1212,109 @@ router.post('/cohabitation', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating cohabitation request:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Create new certificate request (Business Permit / Clearance)
+router.post('/business-permit', async (req, res) => {
+  try {
+    const {
+      ownerFullName, ownerAddress, residentId, businessName, natureOfBusiness,
+      businessAddress, contactPerson, contactNumber, referenceNumber, applicationDate
+    } = req.body;
+
+    // We use the reference number provided by the frontend as it follows the user's specific format
+    const refNumber = referenceNumber || `BP-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
+
+    console.log(`Creating business permit with reference: ${refNumber}`);
+
+    const { data, error } = await supabase
+      .from('certificate_requests')
+      .insert([{
+        reference_number: refNumber,
+        certificate_type: 'business_permit',
+        full_name: ownerFullName?.toUpperCase() || '',
+        address: ownerAddress?.toUpperCase() || '',
+        contact_number: contactNumber || '',
+        email: req.body.email || '',
+        resident_id: residentId,
+        purpose: 'BUSINESS PERMIT / CLEARANCE',
+        status: 'staff_review',
+        date_issued: new Date().toISOString(),
+        details: {
+          businessName: businessName?.toUpperCase(),
+          natureOfBusiness: natureOfBusiness?.toUpperCase(),
+          businessAddress: businessAddress?.toUpperCase(),
+          contactPerson: contactPerson?.toUpperCase(),
+          applicationDate: applicationDate
+        }
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Create initial workflow assignments
+    const { data: workflowConfig } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', 'business_permit')
+      .single();
+
+    let staffUserIds = [];
+    let initialStepId = 111;
+    let initialStepName = 'Review Request';
+
+    if (workflowConfig && workflowConfig.workflow_config && workflowConfig.workflow_config.steps) {
+      const steps = workflowService.getWorkflowSteps('business_permit', workflowConfig.workflow_config.steps);
+      const firstActionableStep = steps.find(s => s.requiresApproval === true);
+      if (firstActionableStep) {
+        staffUserIds = firstActionableStep.assignedUsers || [];
+        initialStepId = firstActionableStep.id;
+        initialStepName = firstActionableStep.name;
+      }
+    }
+
+    if (staffUserIds.length === 0) {
+      staffUserIds = ['9550a8b2-9e32-4f52-a260-52766afb49b1']; // Fallback (Noriel Cruz)
+    }
+
+    for (const staffUserId of staffUserIds) {
+      await supabase
+        .from('workflow_assignments')
+        .insert([{
+          request_id: data.id,
+          request_type: 'business_permit',
+          step_id: initialStepId,
+          step_name: initialStepName,
+          assigned_user_id: staffUserId,
+          status: 'pending'
+        }]);
+    }
+
+    // Workflow history
+    await supabase.from('workflow_history').insert([{
+      request_id: data.id,
+      request_type: 'business_permit',
+      action: 'submitted',
+      step_id: 0,
+      step_name: 'Request Submission',
+      comments: 'Business Permit request submitted via online portal.',
+      new_status: 'staff_review',
+      performed_by: residentId || null
+    }]);
+
+    notifyNextStepApprovers('business_permit', refNumber, ownerFullName, data.id, req.body.email).catch(err => console.error('Background email error:', err));
+
+    res.status(201).json({
+      success: true,
+      message: 'Business Permit request submitted successfully',
+      referenceNumber: refNumber,
+      data
+    });
+  } catch (error) {
+    console.error('Error creating business permit:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

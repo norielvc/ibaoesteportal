@@ -18,7 +18,8 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     natureOfBusiness: '',
     businessAddress: '',
     contactPerson: '',
-    contactNumber: ''
+    contactNumber: '',
+    email: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +36,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
       ownerAddress: resident.residential_address || '',
       contactPerson: resident.full_name || '',
       contactNumber: resident.contact_number || '',
+      email: resident.email || resident.email_address || '',
       residentId: resident.id
     }));
     setIsResidentModalOpen(false);
@@ -75,7 +77,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     const required = [
       'ownerFullName', 'ownerAddress',
       'businessName', 'natureOfBusiness', 'businessAddress',
-      'contactPerson', 'contactNumber'
+      'contactPerson', 'contactNumber', 'email'
     ];
     const newErrors = {};
     required.forEach(field => {
@@ -387,8 +389,8 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                     </div>
                   </div>
 
-                  {/* Contact Person / Number */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Contact Person / Number / Email */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">
                         Contact Person / Taong Makakausap <span className="text-red-500">*</span>
@@ -398,7 +400,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                         name="contactPerson"
                         value={formData.contactPerson}
                         onChange={handleInputChange}
-                        placeholder="FULL NAME OF CONTACT PERSON..."
+                        placeholder="FULL NAME..."
                         className={`w-full px-6 py-4 bg-white border-2 ${errors.contactPerson ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 outline-none font-black text-emerald-900 uppercase shadow-sm transition-all`}
                       />
                     </div>
@@ -413,6 +415,19 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                         onChange={handleInputChange}
                         placeholder="09XX XXX XXXX..."
                         className={`w-full px-6 py-4 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 outline-none font-black text-emerald-900 shadow-sm transition-all`}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">
+                        Email Address / Email <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="your@email.com"
+                        className={`w-full px-6 py-4 bg-white border-2 ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] focus:ring-4 focus:ring-[#2d5a3d]/5 outline-none font-black text-emerald-900 shadow-sm transition-all`}
                       />
                     </div>
                   </div>
