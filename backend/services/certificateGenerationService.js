@@ -122,7 +122,8 @@ class CertificateGenerationService {
                     certificateContent = this.generateResidencyContent(request, config);
                     break;
                 case 'business_permit':
-                    certificateContent = await this.generateBusinessPermitContent(request, config);
+                    // Use the new Business Clearance template
+                    certificateContent = await this.generateBusinessClearanceContent(request, config);
                     break;
                 default:
                     throw new Error(`Unknown certificate type: ${request.certificate_type}`);
@@ -892,6 +893,319 @@ class CertificateGenerationService {
                 'PEACE & ORDER': { name: '', date: '' }
             }
         };
+    }
+
+    async generateBusinessClearanceContent(request, config) {
+        // Get physical inspection data
+        const inspectionData = await this.getPhysicalInspectionData(request.id);
+        
+        // Get OR details if available
+        const { data: orData } = await supabase
+            .from('official_receipts')
+            .select('or_number, amount_paid, control_number')
+            .eq('request_id', request.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+        
+        const businessDetails = request.business_details || {};
+        const isRenewal = businessDetails.clearanceType === 'renewal';
+        
+        return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Barangay Business Clearance - ${request.reference_number}</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                
+                body { 
+                    font-family: 'Arial', sans-serif; 
+                    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+                    padding: 20px;
+                    line-height: 1.6;
+                }
+                
+                .certificate-container { 
+                    max-width: 850px; 
+                    margin: 0 auto; 
+                    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #e0f2fe 100%);
+                    border: 3px solid #0369a1;
+                    border-radius: 15px;
+                    padding: 40px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                    position: relative;
+                }
+                
+                .watermark {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    font-size: 120px;
+                    color: rgba(3, 105, 161, 0.05);
+                    font-weight: bold;
+                    z-index: 0;
+                    pointer-events: none;
+                }
+                
+                .content-wrapper {
+                    position: relative;
+                    z-index: 1;
+                    background: rgba(255, 255, 255, 0.95);
+                    padding: 30px;
+                    border-radius: 10px;
+                }
+                
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 30px; 
+                    padding-bottom: 20px;
+                    border-bottom: 3px solid #0369a1;
+                }
+                
+                .title { 
+                    font-size: 32px; 
+                    font-weight: bold; 
+                    color: #0369a1;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin: 20px 0;
+                    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+                }
+                
+                .to-whom { 
+                    font-size: 16px; 
+                    margin: 20px 0;
+                    font-weight: 600;
+                    color: #333;
+                }
+                
+                .intro-text {
+                    font-size: 14px;
+                    margin: 20px 0;
+                    text-align: justify;
+                    color: #444;
+                }
+                
+                .checkbox-section {
+                    display: flex;
+                    gap: 40px;
+                    justify-content: center;
+                    margin: 25px 0;
+                }
+                
+                .checkbox-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 14px;
+                    font-weight: 600;
+                }
+                
+                .checkbox {
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid #0369a1;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #0369a1;
+                }
+                
+                .info-grid {
+                    margin: 25px 0;
+                }
+                
+                .info-row {
+                    display: flex;
+                    margin: 12px 0;
+                    font-size: 14px;
+                }
+                
+                .info-label {
+                    font-weight: bold;
+                    min-width: 200px;
+                    color: #333;
+                }
+                
+                .info-value {
+                    flex: 1;
+                    color: #0369a1;
+                    font-weight: 600;
+                    border-bottom: 1px solid #0369a1;
+                    padding-bottom: 2px;
+                }
+                
+                .compliance-text {
+                    font-size: 13px;
+                    text-align: justify;
+                    margin: 25px 0;
+                    padding: 15px;
+                    background: rgba(3, 105, 161, 0.05);
+                    border-left: 4px solid #0369a1;
+                    line-height: 1.8;
+                    color: #444;
+                }
+                
+                .issuance-text {
+                    font-size: 13px;
+                    margin: 20px 0;
+                    color: #444;
+                }
+                
+                .signature-section {
+                    margin-top: 40px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                }
+                
+                .payment-details {
+                    text-align: left;
+                    flex: 1;
+                }
+                
+                .payment-title {
+                    font-weight: bold;
+                    font-size: 14px;
+                    text-decoration: underline;
+                    margin-bottom: 10px;
+                    color: #0369a1;
+                }
+                
+                .payment-row {
+                    font-size: 13px;
+                    margin: 5px 0;
+                    color: #444;
+                }
+                
+                .signature-block {
+                    text-align: center;
+                    flex: 1;
+                }
+                
+                .truly-yours {
+                    font-size: 14px;
+                    font-weight: 600;
+                    margin-bottom: 50px;
+                    color: #333;
+                }
+                
+                .signature-name {
+                    font-size: 16px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    border-top: 2px solid #000;
+                    padding-top: 5px;
+                    color: #0369a1;
+                }
+                
+                .signature-title {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #666;
+                }
+                
+                @media print {
+                    body { 
+                        background: white; 
+                        padding: 0; 
+                    }
+                    .certificate-container { 
+                        border: 2px solid #0369a1; 
+                        box-shadow: none;
+                        page-break-inside: avoid;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="certificate-container">
+                <div class="watermark">BARANGAY</div>
+                
+                <div class="content-wrapper">
+                    <div class="header">
+                        ${this.generateHeader(config)}
+                    </div>
+                    
+                    <div class="title">BARANGAY BUSINESS CLEARANCE</div>
+                    
+                    <div class="to-whom">To Whom It May Concern:</div>
+                    
+                    <div class="intro-text">
+                        This is to certify that below business / trade name as described herein applying for:
+                    </div>
+                    
+                    <div class="checkbox-section">
+                        <div class="checkbox-item">
+                            <span class="checkbox">${!isRenewal ? '✓' : ''}</span>
+                            <span>New Business Clearance</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <span class="checkbox">${isRenewal ? '✓' : ''}</span>
+                            <span>Renewal of Existing Business Clearance</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span class="info-label">Name of Owner</span>
+                            <span class="info-value">${request.full_name || request.applicant_name || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Owner's Address</span>
+                            <span class="info-value">${request.address || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Business / Trade Name</span>
+                            <span class="info-value">${businessDetails.businessName || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Business Address</span>
+                            <span class="info-value">${businessDetails.businessAddress || request.address || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Nature of Business</span>
+                            <span class="info-value">${businessDetails.natureOfBusiness || 'N/A'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="compliance-text">
+                        The subject business establishment upon occular visit / inspection conducted by this office jointly with Sangguniang Barangay Committees on Health, Environment and Finance and Barangay Treasurer found to be compliant and in confirmity with the existing barangay ordinances, rules and regulations as applicable for this nature of business being applied for clearance.
+                    </div>
+                    
+                    <div class="compliance-text">
+                        In view of the above, this office poses no objection for the issuance of further permits as necessary for the conduct of above business activity including Mayor's Permit, etc.
+                    </div>
+                    
+                    <div class="issuance-text">
+                        Issued this at Barangay Iba O' Este, Calumpit, Bulacan.
+                    </div>
+                    
+                    <div class="signature-section">
+                        <div class="payment-details">
+                            <div class="payment-title">Details of Payment</div>
+                            <div class="payment-row">OR NO. : <strong>${orData?.or_number || '_____________'}</strong></div>
+                            <div class="payment-row">Amount Paid : <strong>${orData?.amount_paid ? '₱' + parseFloat(orData.amount_paid).toFixed(2) : '_____________'}</strong></div>
+                            <div class="payment-row">BC Control No.: <strong>${orData?.control_number || request.reference_number || '_____________'}</strong></div>
+                        </div>
+                        
+                        <div class="signature-block">
+                            <div class="truly-yours">TRULY YOURS,</div>
+                            <div class="signature-name">${config.officials.chairman}</div>
+                            <div class="signature-title">BARANGAY CHAIRMAN</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
     }
 
     generateQRCodeSVG(text) {
