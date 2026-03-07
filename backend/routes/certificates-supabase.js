@@ -3,6 +3,7 @@ const router = express.Router();
 const { supabase } = require('../services/supabaseClient');
 const { sendWorkflowNotifications, sendProcessNotification } = require('../services/emailService');
 const workflowService = require('../services/workflowService');
+const certificateGenerationService = require('../services/certificateGenerationService');
 
 // Helper function to send workflow notifications
 const notifyNextStepApprovers = async (certificateType, referenceNumber, applicantName, requestId, applicantEmail = null) => {
@@ -1863,6 +1864,33 @@ router.post('/create', async (req, res) => {
   } catch (error) {
     console.error('Error creating certificate request:', error);
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Generate and serve certificate preview
+router.get('/:id/preview', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Generate the certificate
+    const result = await certificateGenerationService.generateCertificate(id);
+    
+    if (!result.success) {
+      return res.status(500).json({ 
+        success: false, 
+        message: result.error || 'Failed to generate certificate' 
+      });
+    }
+    
+    // Serve the generated HTML file
+    res.sendFile(result.filePath);
+    
+  } catch (error) {
+    console.error('Error generating certificate preview:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 });
 

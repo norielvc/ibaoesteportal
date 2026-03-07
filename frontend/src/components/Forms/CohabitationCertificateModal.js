@@ -106,13 +106,8 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
             const now = new Date();
             setCurrentDate(now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
 
-            // Fetch next reference number
-            fetch(`${API_URL}/certificates/next-reference/barangay_cohabitation`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) setReferenceNumber(data.referenceNumber);
-                })
-                .catch(err => console.error('Error fetching reference:', err));
+            // Clear reference number - will be generated on submission
+            setReferenceNumber('');
         }
     }, [isOpen]);
 

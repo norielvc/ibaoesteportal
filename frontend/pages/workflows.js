@@ -1047,123 +1047,135 @@ function AddStepModal({ newStep, setNewStep, onAdd, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/50" onClick={onClose}></div>
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Workflow Step</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Step Name *</label>
-            <input
-              type="text"
-              value={newStep.name}
-              onChange={(e) => setNewStep({ ...newStep, name: e.target.value })}
-              placeholder="e.g., Document Verification"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status Key *</label>
-            <input
-              type="text"
-              value={newStep.status}
-              onChange={(e) => setNewStep({ ...newStep, status: e.target.value })}
-              placeholder="e.g., verifying"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <input
-              type="text"
-              value={newStep.description}
-              onChange={(e) => setNewStep({ ...newStep, description: e.target.value })}
-              placeholder="Brief description of this step"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
-            <select
-              value={newStep.icon}
-              onChange={(e) => setNewStep({ ...newStep, icon: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              {iconOptions.map(opt => (
-                <option key={opt.name} value={opt.name}>{opt.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Add Workflow Step</h3>
+        </div>
+        
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Step Name *</label>
               <input
-                type="checkbox"
-                checked={newStep.requiresApproval}
-                onChange={(e) => setNewStep({ ...newStep, requiresApproval: e.target.checked })}
-                className="w-4 h-4 text-orange-600 rounded"
+                type="text"
+                value={newStep.name}
+                onChange={(e) => setNewStep({ ...newStep, name: e.target.value })}
+                placeholder="e.g., Document Verification"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-orange-800 font-medium">Requires user approval</span>
-            </label>
-            <p className="text-xs text-orange-600 mt-1 ml-6">Enable this to assign approvers to this step</p>
-          </div>
-          <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status Key *</label>
               <input
-                type="checkbox"
-                checked={newStep.sendEmail}
-                onChange={(e) => setNewStep({ ...newStep, sendEmail: e.target.checked })}
-                className="w-4 h-4 text-green-600 rounded"
+                type="text"
+                value={newStep.status}
+                onChange={(e) => setNewStep({ ...newStep, status: e.target.value })}
+                placeholder="e.g., verifying"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-green-800 font-medium flex items-center gap-1">
-                <Mail className="w-4 h-4" /> Send email notification
-              </span>
-            </label>
-            <p className="text-xs text-green-600 mt-1 ml-6">Notify assigned users when request reaches this step</p>
-          </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <input
+                type="text"
+                value={newStep.description}
+                onChange={(e) => setNewStep({ ...newStep, description: e.target.value })}
+                placeholder="Brief description of this step"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+              <select
+                value={newStep.icon}
+                onChange={(e) => setNewStep({ ...newStep, icon: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                {iconOptions.map(opt => (
+                  <option key={opt.name} value={opt.name}>{opt.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newStep.requiresApproval}
+                  onChange={(e) => setNewStep({ ...newStep, requiresApproval: e.target.checked })}
+                  className="w-4 h-4 text-orange-600 rounded"
+                />
+                <span className="text-orange-800 font-medium">Requires user approval</span>
+              </label>
+              <p className="text-xs text-orange-600 mt-1 ml-6">Enable this to assign approvers to this step</p>
+            </div>
+            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newStep.sendEmail}
+                  onChange={(e) => setNewStep({ ...newStep, sendEmail: e.target.checked })}
+                  className="w-4 h-4 text-green-600 rounded"
+                />
+                <span className="text-green-800 font-medium flex items-center gap-1">
+                  <Mail className="w-4 h-4" /> Send email notification
+                </span>
+              </label>
+              <p className="text-xs text-green-600 mt-1 ml-6">Notify assigned users when request reaches this step</p>
+            </div>
 
-          <div className="pt-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Designated Official Role (Optional)</label>
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1">
-              {[
-                'Brgy. Captain', 'Brgy. Secretary', 'Brgy. Kagawad', 'Brgy. Treasurer',
-                'SK Chairman', 'SK Kagawad', 'Brgy. Admin', 'Brgy. Clerk'
-              ].map((role) => (
-                <label key={role} className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
+            <div className="pt-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Designated Official Role (Optional)</label>
+              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-1 border border-gray-200 rounded-lg">
+                {[
+                  'Brgy. Captain', 'Brgy. Secretary', 'Brgy. Kagawad', 'Brgy. Treasurer',
+                  'SK Chairman', 'SK Kagawad', 'Brgy. Admin', 'Brgy. Clerk'
+                ].map((role) => (
+                  <label key={role} className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
+                    <input
+                      type="radio"
+                      name="newStepOfficialRole"
+                      checked={newStep.officialRole === role}
+                      onChange={() => setNewStep({ ...newStep, officialRole: role })}
+                      className="w-4 h-4 text-blue-600 rounded-full focus:ring-blue-500"
+                    />
+                    <span className="text-gray-700">{role}</span>
+                  </label>
+                ))}
+                <label className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
                   <input
                     type="radio"
                     name="newStepOfficialRole"
-                    checked={newStep.officialRole === role}
-                    onChange={() => setNewStep({ ...newStep, officialRole: role })}
-                    className="w-4 h-4 text-blue-600 rounded-full focus:ring-blue-500"
+                    checked={!newStep.officialRole}
+                    onChange={() => setNewStep({ ...newStep, officialRole: '' })}
+                    className="w-4 h-4 text-gray-500 rounded-full focus:ring-gray-400"
                   />
-                  <span className="text-gray-700">{role}</span>
+                  <span className="text-gray-500 italic">None</span>
                 </label>
-              ))}
-              <label className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
-                <input
-                  type="radio"
-                  name="newStepOfficialRole"
-                  checked={!newStep.officialRole}
-                  onChange={() => setNewStep({ ...newStep, officialRole: '' })}
-                  className="w-4 h-4 text-gray-500 rounded-full focus:ring-gray-400"
-                />
-                <span className="text-gray-500 italic">None</span>
-              </label>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Select if this step requires action from a specific official.</p>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Select if this step requires action from a specific official.</p>
           </div>
         </div>
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={onAdd}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-          >
-            Add Step
-          </button>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
-          >
-            Cancel
-          </button>
+        
+        {/* Fixed Footer with Buttons */}
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+          <div className="flex gap-3">
+            <button
+              onClick={onAdd}
+              disabled={!newStep.name || !newStep.status}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Add Step
+            </button>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     </div>

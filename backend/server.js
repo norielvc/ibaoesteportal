@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 // Import routes
@@ -20,6 +21,8 @@ const employeesQRRoutes = require('./routes/employees-qr-supabase');
 const qrScansRoutes = require('./routes/qr-scans-supabase');
 const pickupRoutes = require('./routes/pickup-supabase');
 const signatureRoutes = require('./routes/signatures');
+const physicalInspectionRoutes = require('./routes/physical-inspection-supabase');
+const officialReceiptRoutes = require('./routes/official-receipts-supabase');
 const residentRoutes = require('./routes/residents-supabase');
 const achievementRoutes = require('./routes/achievements-supabase');
 const programRoutes = require('./routes/programs-supabase');
@@ -36,8 +39,26 @@ const PORT = process.env.PORT || 5000;
 // Trust proxy for Railway/Vercel (required for rate limiting behind proxies)
 app.set('trust proxy', 1);
 
-// Security middleware
-app.use(helmet());
+// Security middleware with development-friendly CSP
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:", "data:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "http:", "ws:", "wss:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: ["'self'", "ws:", "wss:", "https:", "http:", "localhost:*", "127.0.0.1:*"],
+      fontSrc: ["'self'", "https:", "data:"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'", "data:", "blob:"],
+      frameSrc: ["'self'"],
+      childSrc: ["'self'", "blob:"],
+      workerSrc: ["'self'", "blob:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Disable for development
+  crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow cross-origin requests
+}));
 
 // Rate limiting - disabled temporarily for Railway compatibility
 // const limiter = rateLimit({
@@ -117,6 +138,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/certificates', certificateRoutes); // Public for form submissions
+
+// Serve generated certificate files
+app.use('/api/certificates/files', express.static(path.join(__dirname, 'generated-certificates')));
 app.use('/api/workflows', workflowRoutes); // Workflow management
 app.use('/api/workflow-assignments', workflowAssignmentRoutes); // Workflow assignments
 app.use('/api/events', eventRoutes); // Events/Carousel management (public GET, private POST/PUT/DELETE)
@@ -128,6 +152,12 @@ app.use('/api/employees', authenticateToken, employeesQRRoutes); // Employee QR 
 app.use('/api/qr-scans', authenticateToken, qrScansRoutes); // General QR scan tracking
 app.use('/api/pickup', pickupRoutes); // Certificate pickup verification (public)
 app.use('/api/user/signatures', signatureRoutes); // User signature management (authenticated)
+app.use('/api/physical-inspection', authenticateToken, physicalInspectionRoutes); // Physical inspection reports
+
+// Serve generated OR files (public access)
+app.use('/api/official-receipts/files', express.static(path.join(__dirname, 'generated-receipts')));
+
+app.use('/api/official-receipts', authenticateToken, officialReceiptRoutes); // Official receipts API (authenticated)
 app.use('/api/residents', residentRoutes); // Residents database (public search)
 app.use('/api/achievements', achievementRoutes); // Achievements/Awards management
 app.use('/api/programs', programRoutes); // Barangay Programs management

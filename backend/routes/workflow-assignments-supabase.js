@@ -7,6 +7,133 @@ const qrCodeService = require('../services/qrCodeService');
 const workflowService = require('../services/workflowService');
 const { sendWorkflowNotifications, sendProcessNotification } = require('../services/emailService');
 
+// Get active assignment for a request (helps if not attached to request object)
+router.get('/active-assignment/:requestId', authenticateToken, async (req, res) => {
+  console.log(`[BACKEND] Active assignment lookup for Request: ${req.params.requestId}`);
+  try {
+    const { requestId } = req.params;
+    const userId = req.user._id;
+
+    if (!requestId || requestId === '.') {
+      return res.status(400).json({ success: false, message: 'Invalid Request ID' });
+    }
+
+    // 1. First, check for existing pending assignments
+    let { data: assignments, error } = await supabase
+      .from('workflow_assignments')
+      .select('*')
+      .eq('request_id', requestId)
+      .eq('status', 'pending');
+
+    if (error) throw error;
+
+    // 2. If NO pending assignment found, check for recently completed assignments (for physical_inspection action)
+    if ((!assignments || assignments.length === 0)) {
+      console.log(`[FALLBACK] No pending assignments found. Checking for recently completed assignments...`);
+      
+      const { data: completedAssignments, error: completedError } = await supabase
+        .from('workflow_assignments')
+        .select('*')
+        .eq('request_id', requestId)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(1);
+
+      if (!completedError && completedAssignments && completedAssignments.length > 0) {
+        const recentCompleted = completedAssignments[0];
+        console.log(`[FALLBACK] Found recently completed assignment: ${recentCompleted.id}`);
+        // Use the recently completed assignment for physical_inspection action
+        assignments = [recentCompleted];
+      }
+    }
+
+    // 3. If still NO assignment found, and user is an Admin, try to "Self-Heal" (Create one)
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'Admin' || req.user.role === 'ADMIN';
+    if ((!assignments || assignments.length === 0) && isAdmin) {
+      console.log(`[SELF-HEAL] No assignment found for request ${requestId}. Admin ${userId} auto-provisioning...`);
+
+      // Fetch request details to know the type
+      const { data: request } = await supabase
+        .from('certificate_requests')
+        .select('*')
+        .eq('id', requestId)
+        .single();
+
+      if (request) {
+        // Create a default assignment for the admin so they can proceed
+        const { data: newAssignment, error: insertError } = await supabase
+          .from('workflow_assignments')
+          .insert([{
+            request_id: requestId,
+            request_type: request.certificate_type || 'business_permit',
+            step_id: '111', // Default Review Request step ID
+            step_name: 'Review Request Team',
+            assigned_user_id: userId,
+            status: 'pending'
+          }])
+          .select()
+          .single();
+
+        if (!insertError && newAssignment) {
+          return res.json({ success: true, assignment: newAssignment, selfHealed: true });
+        }
+      }
+    }
+
+    if (!assignments || assignments.length === 0) {
+      return res.status(404).json({ success: false, message: 'No active assignment found' });
+    }
+
+    // Try to find one for current user
+    let best = assignments.find(a => String(a.assigned_user_id) === String(userId));
+
+    // Fallback to any if admin (admins can act on any assignment)
+    console.log(`[DEBUG] User role: ${req.user.role}, isAdmin: ${isAdmin}`);
+    
+    if (!best && isAdmin) {
+      best = assignments[0];
+      console.log(`[ADMIN-OVERRIDE] Admin ${userId} using assignment from user ${best.assigned_user_id}`);
+    }
+
+    if (!best) {
+      // If still no assignment and user is admin, create one as last resort
+      if (isAdmin) {
+        console.log(`[ADMIN-CREATE] Creating assignment for admin ${userId} on request ${requestId}`);
+        const { data: request } = await supabase
+          .from('certificate_requests')
+          .select('*')
+          .eq('id', requestId)
+          .single();
+
+        if (request) {
+          const { data: newAssignment, error: insertError } = await supabase
+            .from('workflow_assignments')
+            .insert([{
+              request_id: requestId,
+              request_type: request.certificate_type || 'business_permit',
+              step_id: '111',
+              step_name: 'Review Request Team',
+              assigned_user_id: userId,
+              status: 'pending'
+            }])
+            .select()
+            .single();
+
+          if (!insertError && newAssignment) {
+            return res.json({ success: true, assignment: newAssignment, created: true });
+          }
+        }
+      }
+      return res.status(403).json({ success: false, message: 'Not assigned to this request' });
+    }
+
+    res.json({ success: true, assignment: best });
+  } catch (error) {
+    console.error('Error in active-assignment route:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Helper to handle Supabase errors gracefully
 const handleSupabaseError = (res, error, context) => {
   console.error(`❌ DB Error [${context}]:`, error);
@@ -225,6 +352,21 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       newStatus = 'completed';
       newRequestStatus = 'returned';
       nextStep = steps.find(s => s.id === 1 || s.status === 'staff_review' || s.id === 111);
+    } else if (action === 'physical_inspection') {
+      // For business permits, physical_inspection should forward to next approver
+      if (assignment.request_type === 'business_permit') {
+        newStatus = 'completed'; // Complete current assignment
+        if (currentStepIndex !== -1 && currentStepIndex < steps.length - 1) {
+          nextStep = steps[currentStepIndex + 1];
+          newRequestStatus = nextStep.status;
+        } else {
+          newRequestStatus = 'physical_inspection';
+        }
+      } else {
+        // For other certificate types, stay at current step
+        newStatus = 'pending';
+        newRequestStatus = 'physical_inspection';
+      }
     }
 
     const { error: updateError } = await supabase
@@ -234,6 +376,25 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
 
     if (updateError) throw updateError;
 
+    // Mark all other pending assignments for this request as completed
+    // This ensures users from previous steps don't see the request anymore
+    if (newStatus === 'completed') {
+      const { error: otherAssignmentsError } = await supabase
+        .from('workflow_assignments')
+        .update({ 
+          status: 'completed', 
+          completed_at: new Date().toISOString()
+        })
+        .eq('request_id', assignment.request_id)
+        .eq('status', 'pending')
+        .neq('id', assignmentId); // Don't update the current assignment again
+
+      if (otherAssignmentsError) {
+        console.error('Error updating other assignments:', otherAssignmentsError);
+        // Don't throw error here as the main action succeeded
+      }
+    }
+
     const { error: requestUpdateError } = await supabase
       .from('certificate_requests')
       .update({ status: newRequestStatus, updated_at: new Date().toISOString() })
@@ -241,7 +402,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
 
     if (requestUpdateError) throw requestUpdateError;
 
-    if ((action === 'approve' || action === 'return') && nextStep) {
+    if ((action === 'approve' || action === 'return' || (action === 'physical_inspection' && assignment.request_type === 'business_permit')) && nextStep) {
       const nextStepAssignments = nextStep.assignedUsers || [];
       for (const nextUserId of nextStepAssignments) {
         const { data: existing } = await supabase
@@ -262,7 +423,9 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
     }
 
     const historyRequestType = ['barangay_guardianship', 'certification_same_person'].includes(assignment.request_type) ? 'note' : assignment.request_type;
-    await supabase.from('workflow_history').insert([{
+    console.log(`[HISTORY] Saving history entry for request ${assignment.request_id}, action: ${action}, comment: "${comment}"`);
+    
+    const { error: historyError } = await supabase.from('workflow_history').insert([{
       request_id: assignment.request_id,
       request_type: historyRequestType,
       step_id: assignment.step_id,
@@ -275,6 +438,12 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       signature_data: signatureData,
       official_role: currentStep?.officialRole
     }]);
+    
+    if (historyError) {
+      console.error(`[HISTORY-ERROR] Failed to save history:`, historyError);
+    } else {
+      console.log(`[HISTORY] ✅ History saved successfully`);
+    }
 
     res.json({ success: true, message: `Request ${action}d successfully`, newStatus: newRequestStatus });
 

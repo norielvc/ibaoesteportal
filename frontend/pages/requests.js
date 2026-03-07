@@ -7,7 +7,7 @@ import {
   FileText, Search, Eye, CheckCircle, XCircle, RotateCcw,
   Clock, User, Calendar, ChevronDown, X, AlertTriangle,
   FileCheck, History, Filter, Shield, Printer, Download, PenTool, ShieldAlert, Info, Edit, Save, RefreshCw, Database,
-  Skull, Activity, Heart, Phone, MessageCircle, MapPin, Home, ShieldCheck, Users
+  Skull, Activity, Heart, Phone, MessageCircle, MapPin, Home, ShieldCheck, Users, ClipboardCheck, ClipboardList, Receipt
 } from 'lucide-react';
 import { getAuthToken, getUserData } from '@/lib/auth';
 import Modal from '@/components/UI/Modal';
@@ -173,7 +173,7 @@ export default function RequestsPage() {
 
       // Find items in 'allCertificates' that user is assigned to but aren't in 'myAssigned' already
       allCertificates.forEach(cert => {
-        const alreadyIn = combined.some(c => c.id === cert.id || c.reference_number === cert.reference_number);
+        const alreadyIn = combined.some(c => c.id === cert.id);
         if (!alreadyIn && isUserAssignedToRequest(cert, activeWorkflows, activeUser)) {
           combined.push(cert);
         }
@@ -228,6 +228,12 @@ export default function RequestsPage() {
     if (!activeUser) return false;
     if (activeUser.role === 'admin') return true;
 
+    // If request is in a completed/final status, no one should have action buttons
+    const completedStatuses = ['ready', 'ready_for_pickup', 'released', 'cancelled', 'rejected'];
+    if (completedStatuses.includes(request.status)) {
+      return false;
+    }
+
     // Use the workflow_assignment data attached by the backend if available
     if (request.workflow_assignment) {
       const assignedId = request.workflow_assignment.assigned_user_id || request.workflow_assignment.userId;
@@ -251,8 +257,12 @@ export default function RequestsPage() {
 
     if (['staff_review', 'staff review', 'pending', 'returned', 'submitted'].some(status => s.includes(status))) {
       currentStep = workflowSteps.find(step => step.status === 'staff_review');
-    } else if (['oic_review', 'oic review', 'ready', 'ready_for_pickup', 'ready for pickup'].some(status => s.includes(status))) {
+    } else if (['oic_review', 'oic review'].some(status => s.includes(status))) {
       currentStep = workflowSteps.find(step => step.status === 'oic_review');
+    } else if (s.includes('physical_inspection')) {
+      currentStep = workflowSteps.find(step => step.status === 'physical_inspection');
+    } else if (s.includes('treasury') || s === 'treasury') {
+      currentStep = workflowSteps.find(step => step.status === 'Treasury');
     } else if (s.includes('captain')) {
       currentStep = workflowSteps.find(step => step.status === 'captain_approval');
     } else if (s.includes('secretary')) {
@@ -326,6 +336,9 @@ export default function RequestsPage() {
       'submitted': 'bg-blue-100 text-blue-800 border-blue-200',
       'under_review': 'bg-purple-100 text-purple-800 border-purple-200',
       'processing': 'bg-purple-100 text-purple-800 border-purple-200',
+      'captain_approval': 'bg-purple-100 text-purple-800 border-purple-200',
+      'physical_inspection': 'bg-amber-100 text-amber-800 border-amber-200',
+      'Treasury': 'bg-yellow-100 text-yellow-800 border-yellow-200',
       'oic_review': 'bg-indigo-100 text-indigo-800 border-indigo-200', // Color for Releasing Team step
       'approved': 'bg-green-100 text-green-800 border-green-200',
       'rejected': 'bg-red-100 text-red-800 border-red-200',
@@ -446,11 +459,37 @@ export default function RequestsPage() {
       const token = getAuthToken();
       const newStatus = getNextStatus(req.status, act, req);
 
+      // Generate default comment based on action and status if no comment provided
+      let defaultComment = '';
+      if (overrideComment === undefined || overrideComment === null) {
+        if (overrideAction) {
+          // For direct action calls, generate meaningful comments
+          if (act === 'approve') {
+            if (req.status === 'staff_review') defaultComment = 'Request approved and forwarded to Physical Inspection Team';
+            else if (req.status === 'physical_inspection') defaultComment = 'Inspection completed and forwarded to Captain';
+            else if (req.status === 'captain_approval') defaultComment = 'Request approved and forwarded to Treasury';
+            else if (req.status === 'Treasury') defaultComment = 'Payment processed and forwarded to Releasing Team';
+            else if (req.status === 'oic_review') defaultComment = 'Certificate marked as ready for pickup';
+            else defaultComment = 'Request approved and forwarded';
+          } else if (act === 'reject') {
+            defaultComment = 'Request rejected';
+          } else if (act === 'return') {
+            defaultComment = 'Request sent back for revision';
+          } else if (act === 'physical_inspection') {
+            defaultComment = 'Initiated Physical Inspection - Forms Printed';
+          } else {
+            defaultComment = '';
+          }
+        } else {
+          defaultComment = actionComment;
+        }
+      }
+
       let url = `${API_URL}/certificates/${req.id}/status`;
       let method = 'PUT';
       let body = {
         status: newStatus,
-        comment: (overrideComment !== undefined && overrideComment !== null) ? overrideComment : (overrideAction ? '' : actionComment),
+        comment: (overrideComment !== undefined && overrideComment !== null) ? overrideComment : defaultComment,
         action: act,
         approvedBy: currentUser?.email,
         signatureData: signatureData
@@ -461,9 +500,10 @@ export default function RequestsPage() {
         url = `${API_URL}/workflow-assignments/${req.workflow_assignment.id}/status`;
         body = {
           action: act,
-          comment: (overrideComment !== undefined && overrideComment !== null) ? overrideComment : (overrideAction ? '' : actionComment),
+          comment: (overrideComment !== undefined && overrideComment !== null) ? overrideComment : defaultComment,
           signatureData: signatureData
         };
+        console.log(`[FRONTEND] Sending ${act} action with comment: "${body.comment}"`);
       }
 
       const response = await fetch(url, {
@@ -476,24 +516,76 @@ export default function RequestsPage() {
       });
 
       const data = await response.json();
+      console.log('[SUBMIT-ACTION] Response received:', { success: data.success, status: req.status, action: act });
+      
       if (data.success) {
         // Use actual status from backend if available (workflow returns newStatus, regular returns data.status)
         const confirmedStatus = data.newStatus || data.data?.status || newStatus;
 
-        setRequests(prev => prev.map(r =>
-          r.id === req.id ? { ...r, status: confirmedStatus } : r
-        ));
+        console.log(`[SUBMIT-ACTION] Request status: ${req.status}, Action: ${act}, Confirmed status: ${confirmedStatus}`);
 
-        // Update selected request in-place if it matches, so the details modal stays current
-        setSelectedRequest(prev => prev && prev.id === req.id ? { ...prev, status: confirmedStatus } : prev);
+        // Show success message first
+        let successMessage = 'Request processed successfully';
+        if (act === 'approve') {
+          if (req.status === 'staff_review') {
+            successMessage = 'Request approved and forwarded to Physical Inspection Team';
+          } else if (req.status === 'physical_inspection') {
+            successMessage = 'Inspection completed and forwarded to Captain';
+          } else if (req.status === 'captain_approval') {
+            successMessage = 'Request approved and forwarded to Treasury';
+          } else if (req.status === 'Treasury') {
+            successMessage = 'Payment processed and forwarded to Releasing Team';
+          } else {
+            successMessage = 'Request approved and forwarded successfully';
+          }
+        } else if (act === 'reject') {
+          successMessage = 'Request rejected successfully';
+        } else if (act === 'return') {
+          successMessage = 'Request returned for revision';
+        } else if (act === 'physical_inspection') {
+          successMessage = 'Physical inspection initiated successfully';
+        }
+        
+        toast.success(successMessage);
 
+        // Close all modals
         setShowActionModal(false);
         setShowPickupModal(false);
+        setSelectedRequest(null);
 
-        // Wipe selected request only if it wasn't a direct action in the details modal
-        if (!overrideAction) {
-          setSelectedRequest(null);
+        // CRITICAL: Always reload page for staff_review stage (any action)
+        // Also reload for returned status or physical_inspection action
+        const isStaffReviewStage = req.status === 'staff_review';
+        const isReturnedStatus = req.status === 'returned';
+        const isPhysicalInspectionAction = act === 'physical_inspection';
+        
+        const needsPageReload = isStaffReviewStage || isReturnedStatus || isPhysicalInspectionAction;
+        
+        console.log(`[SUBMIT-ACTION] Reload check:`, {
+          reqStatus: req.status,
+          action: act,
+          isStaffReviewStage,
+          isReturnedStatus,
+          isPhysicalInspectionAction,
+          needsPageReload
+        });
+        
+        if (needsPageReload) {
+          console.log('[SUBMIT-ACTION] ⚠️ TRIGGERING PAGE RELOAD in 800ms...');
+          // Reload page after a short delay to show the toast
+          setTimeout(() => {
+            console.log('[SUBMIT-ACTION] 🔄 EXECUTING RELOAD NOW!');
+            // Force a hard reload by adding timestamp to prevent caching
+            window.location.href = window.location.pathname + '?t=' + Date.now();
+          }, 800);
+        } else {
+          console.log('[SUBMIT-ACTION] Refreshing data only (no page reload)...');
+          // For other steps, just refresh data
+          setTimeout(async () => {
+            await fetchRequests(workflows, currentUser);
+          }, 500);
         }
+
       } else {
         alert(data.message || 'Action failed');
       }
@@ -632,6 +724,9 @@ export default function RequestsPage() {
           req.status === statusFilter);
     const matchesType = typeFilter === 'all' || req.certificate_type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
+  }).filter((req, index, arr) => {
+    // Remove duplicates based on ID
+    return arr.findIndex(r => r.id === req.id) === index;
   });
 
   // Count requests assigned to current user
@@ -642,7 +737,7 @@ export default function RequestsPage() {
     const visibleAssigned = requests.filter(r => isUserAssignedToRequest(r));
 
     const pending = visibleAssigned.filter(r =>
-      ['staff_review', 'processing', 'oic_review', 'pending', 'captain_approval', 'secretary_approval', 'ready', 'ready_for_pickup'].includes(r.status)
+      ['staff_review', 'processing', 'oic_review', 'pending', 'captain_approval', 'secretary_approval', 'physical_inspection', 'Treasury', 'ready', 'ready_for_pickup'].includes(r.status)
     ).length;
 
     setPendingActionCount(pending);
@@ -855,13 +950,13 @@ export default function RequestsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredRequests.map((request) => {
+                {filteredRequests.map((request, index) => {
                   const currentStep = getCurrentWorkflowStep(request);
                   const canAct = canUserTakeAction(request);
 
                   return (
                     <tr
-                      key={request.id}
+                      key={`${request.id}-${index}`} // Use index to ensure uniqueness
                       onClick={() => setSelectedRequest(request)}
                       className={`hover:bg-gray-50 transition-colors cursor-pointer ${canAct ? 'bg-blue-50/30' : ''}`}
                     >
@@ -1103,6 +1198,64 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showSyncConfirm, setShowSyncConfirm] = useState(false);
+  const isBusinessPermit = request.certificate_type === 'business_permit';
+  const isClearanceWithInspection = request.certificate_type === 'barangay_clearance' && 
+    (request.status === 'physical_inspection' || request.status === 'secretary_approval');
+  const requiresPhysicalInspection = isBusinessPermit || isClearanceWithInspection;
+
+  const [inspectionData, setInspectionData] = useState({
+    areas: {
+      'HEALTH AND SAFETY': { findings: '', date: '', remarks: '' },
+      'SANITATION': { findings: '', date: '', remarks: '' },
+      'HEALTH HAZARD': { findings: '', date: '', remarks: '' },
+      'BUILDING PERMIT': { findings: '', date: '', remarks: '' },
+      'FIRE EXIT / HAZARD': { findings: '', date: '', remarks: '' },
+      'ENVIRONMENT': { findings: '', date: '', remarks: '' },
+      'WASTE MANAGEMENT': { findings: '', date: '', remarks: '' },
+      'HAZARDOUS WASTE': { findings: '', date: '', remarks: '' },
+      'OTHERS': { findings: '', date: '', remarks: '' },
+      'COMPLAINTS, ETC.': { findings: '', date: '', remarks: '' }
+    },
+    visitDateTime: '',
+    ownerRepresentative: '',
+    recommendations: {
+      'HEALTH': { name: '', date: '' },
+      'ENVIRONMENT': { name: '', date: '' },
+      'INFRASTRUCTURE': { name: '', date: '' },
+      'PEACE & ORDER': { name: '', date: '' }
+    }
+  });
+  const [showInspectionStartModal, setShowInspectionStartModal] = useState(false);
+  const [inspectionStartComment, setInspectionStartComment] = useState('');
+  const [showORModal, setShowORModal] = useState(false);
+  const [isUpdatingInspection, setIsUpdatingInspection] = useState(false);
+
+  // Load inspection data from API when component mounts
+  useEffect(() => {
+    const loadInspectionData = async () => {
+      if (requiresPhysicalInspection) {
+        try {
+          const token = getAuthToken();
+          const response = await fetch(`${API_URL}/physical-inspection/request/${request.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data) {
+              setInspectionData(data.data);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading inspection data:', error);
+        }
+      }
+    };
+
+    loadInspectionData();
+  }, [request.id, request.status, requiresPhysicalInspection]);
 
   // Mismatch Detection Logic
   const resident = request.residents;
@@ -1175,6 +1328,144 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
       toast.error('Error syncing data: ' + error.message);
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleStartInspection = async (inspectionRequest) => {
+    setIsUpdatingInspection(true);
+    try {
+      const token = getAuthToken();
+      // Use robust ID detection from props
+      const requestId = inspectionRequest.id || inspectionRequest._id;
+      let assignmentId = inspectionRequest.workflow_assignment?.id || inspectionRequest.assignment_id;
+
+      if (!requestId) {
+        throw new Error('Unable to identify request ID. Please refresh and try again.');
+      }
+
+      // If assignmentId is missing, try to fetch it from the new recovery endpoint
+      if (!assignmentId) {
+        console.log(`[BP-INSPECTION] Fetching active assignment for ${requestId}`);
+        const activeRes = await fetch(`${API_URL}/workflow-assignments/active-assignment/${requestId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!activeRes.ok) {
+          const errData = await activeRes.json().catch(() => ({}));
+          throw new Error(errData.message || 'No active assignment found for your account.');
+        }
+
+        const activeData = await activeRes.json();
+        if (activeData.success && activeData.assignment) {
+          assignmentId = activeData.assignment.id;
+        } else {
+          throw new Error(activeData.message || 'No active assignment found.');
+        }
+      }
+
+      const url = `${API_URL}/workflow-assignments/${assignmentId}/status`;
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          action: 'physical_inspection',
+          comment: inspectionStartComment || 'Initiated Physical Inspection - Forms Printed.'
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Inspection phase started!');
+        setShowInspectionStartModal(false);
+        setInspectionStartComment('');
+        
+        console.log('[START-INSPECTION] Success! Triggering page reload...');
+        
+        // Close the main modal
+        if (onClose) onClose();
+        
+        // Reload page to refresh the assignments list
+        setTimeout(() => {
+          console.log('[START-INSPECTION] 🔄 RELOADING PAGE NOW!');
+          window.location.href = window.location.pathname + '?t=' + Date.now();
+        }, 800);
+      } else {
+        toast.error(data.message || 'Failed to start inspection');
+      }
+    } catch (error) {
+      console.error('[BP-INSPECTION] Error:', error);
+      toast.error(error.message);
+    } finally {
+      setIsUpdatingInspection(false);
+    }
+  };
+
+  const handleInspectionChange = (area, field, value) => {
+    setInspectionData(prev => ({
+      ...prev,
+      areas: {
+        ...prev.areas,
+        [area]: {
+          ...prev.areas[area],
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  const handleInspectionMetaChange = (field, value) => {
+    setInspectionData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleRecommendationChange = (committee, field, value) => {
+    setInspectionData(prev => ({
+      ...prev,
+      recommendations: {
+        ...prev.recommendations,
+        [committee]: {
+          ...prev.recommendations[committee],
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  const handleSaveInspectionResults = async (andForward = false) => {
+    setIsUpdatingInspection(true);
+    try {
+      const token = getAuthToken();
+      
+      // Save to the new physical inspection API
+      const response = await fetch(`${API_URL}/physical-inspection/request/${request.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ inspectionData })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        if (!andForward) toast.success('Inspection results saved!');
+        
+        if (andForward) {
+          // If forwarding, we trigger the approve action
+          onAction(request, 'approve');
+        }
+      } else {
+        toast.error(data.message || 'Failed to save results');
+      }
+    } catch (error) {
+      toast.error('Error saving: ' + error.message);
+    } finally {
+      setIsUpdatingInspection(false);
     }
   };
 
@@ -1394,6 +1685,11 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* OR Preview Section for Releasing Team */}
+                {request.status === 'oic_review' && request.certificate_type === 'business_permit' && (
+                  <ORPreviewSection request={request} />
                 )}
                 {/* Status and Step */}
                 {/* Status, Type, and Step Layout */}
@@ -1787,6 +2083,142 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                 {/* Purpose & Timeline */}
                 {!['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) && (
                   <div className={`grid gap-6 ${isMedicoLegal ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+                    {(isBusinessPermit || isClearanceWithInspection) && (request.status === 'physical_inspection' || request.status === 'secretary_approval') && (
+                      <div className="col-span-full">
+                        <div className="bg-amber-600 px-6 py-4 rounded-t-2xl flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <ClipboardCheck className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="text-white font-black uppercase tracking-widest text-sm">Physical Inspection Report</h3>
+                              <p className="text-white/70 text-[10px] font-bold uppercase">Record findings from internal committee visit</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleSaveInspectionResults(false)}
+                            disabled={isUpdatingInspection}
+                            className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/20"
+                          >
+                            {isUpdatingInspection ? 'Saving...' : 'Save Draft Findings'}
+                          </button>
+                        </div>
+                        <div className="bg-white rounded-b-2xl border-x border-b border-gray-100 shadow-xl p-6">
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="border-b border-gray-100">
+                                  <th className="py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 w-[180px]">Areas</th>
+                                  <th className="py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Findings & Recommendations</th>
+                                  <th className="py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 w-[150px]">Date</th>
+                                  <th className="py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Remarks</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-50">
+                                {Object.keys(inspectionData.areas).map((area) => (
+                                  <tr key={area} className="group hover:bg-gray-50/50 transition-colors">
+                                    <td className="py-4 px-2">
+                                      <p className="text-[11px] font-black text-gray-700 uppercase leading-none">{area}</p>
+                                    </td>
+                                    <td className="py-3 px-2">
+                                      <input
+                                        type="text"
+                                        className="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 text-xs font-semibold focus:ring-2 focus:ring-amber-500 transition-all font-bold"
+                                        value={inspectionData.areas[area].findings}
+                                        onChange={(e) => handleInspectionChange(area, 'findings', e.target.value)}
+                                        placeholder="Enter findings..."
+                                      />
+                                    </td>
+                                    <td className="py-3 px-2">
+                                      <input
+                                        type="date"
+                                        className="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 text-xs font-semibold focus:ring-2 focus:ring-amber-500 font-bold"
+                                        value={inspectionData.areas[area].date}
+                                        onChange={(e) => handleInspectionChange(area, 'date', e.target.value)}
+                                      />
+                                    </td>
+                                    <td className="py-3 px-2">
+                                      <input
+                                        type="text"
+                                        className="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 text-xs font-semibold focus:ring-2 focus:ring-amber-500 font-bold"
+                                        value={inspectionData.areas[area].remarks}
+                                        onChange={(e) => handleInspectionChange(area, 'remarks', e.target.value)}
+                                        placeholder="Add remarks..."
+                                      />
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 py-6 border-y border-gray-100">
+                            <div>
+                              <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-2">Date and Time of Visit</p>
+                              <input
+                                type="datetime-local"
+                                className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 text-sm font-black text-gray-900 focus:ring-2 focus:ring-amber-500 shadow-sm"
+                                value={inspectionData.visitDateTime}
+                                onChange={(e) => handleInspectionMetaChange('visitDateTime', e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-2">Name of Owner / Representative</p>
+                              <input
+                                type="text"
+                                className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 text-sm font-black text-gray-900 uppercase focus:ring-2 focus:ring-amber-500 shadow-sm"
+                                value={inspectionData.ownerRepresentative}
+                                onChange={(e) => handleInspectionMetaChange('ownerRepresentative', e.target.value)}
+                                placeholder="Name of person met during visit"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="mt-6 pt-4">
+                            <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                              Recommending Approval
+                            </h4>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left border-collapse">
+                                <thead>
+                                  <tr className="border-b border-gray-100">
+                                    <th className="py-3 text-[9px] font-black text-gray-400 uppercase tracking-widest px-2">Committee</th>
+                                    <th className="py-3 text-[9px] font-black text-gray-400 uppercase tracking-widest px-2">Name of Signatory</th>
+                                    <th className="py-3 text-[9px] font-black text-gray-400 uppercase tracking-widest px-2 w-[150px]">Date</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50 text-[11px]">
+                                  {Object.keys(inspectionData.recommendations).map((comm) => (
+                                    <tr key={comm} className="hover:bg-gray-50/50">
+                                      <td className="py-3 px-2 font-bold text-gray-700">{comm}</td>
+                                      <td className="py-2 px-2">
+                                        <input
+                                          type="text"
+                                          className="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 focus:ring-2 focus:ring-emerald-500 font-bold uppercase transition-all"
+                                          value={inspectionData.recommendations[comm].name}
+                                          onChange={(e) => handleRecommendationChange(comm, 'name', e.target.value)}
+                                          placeholder="Enter name..."
+                                        />
+                                      </td>
+                                      <td className="py-2 px-2">
+                                        <input
+                                          type="date"
+                                          className="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 focus:ring-2 focus:ring-emerald-500 font-bold"
+                                          value={inspectionData.recommendations[comm].date}
+                                          onChange={(e) => handleRecommendationChange(comm, 'date', e.target.value)}
+                                        />
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {isGuardianship && (
                       <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex flex-col">
                         <div className="border-l-4 border-blue-500 pl-3 mb-5">
@@ -2468,7 +2900,8 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
 
           {/* Footer Actions */}
           {
-            canAct && ['pending', 'processing', 'staff_review', 'secretary_approval', 'captain_approval', 'oic_review', 'ready', 'ready_for_pickup', 'returned'].includes(request.status) && (
+            (canAct && (['pending', 'processing', 'staff_review', 'physical_inspection', 'secretary_approval', 'captain_approval', 'Treasury', 'oic_review', 'returned'].includes(request.status) || 
+             (request.status === 'ready_for_pickup' && isUserAssignedToRequest(request)))) && (
               <div className="border-t bg-gray-50 px-6 py-4 pb-6 shrink-0 mt-auto">
                 {request.residents?.pending_case && (
                   <div className="bg-red-600 p-4 rounded-xl shadow-lg border-2 border-red-400 text-white mb-6">
@@ -2490,21 +2923,109 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
 
                 {currentStep?.status === 'staff_review' ? (
                   <div className="flex gap-4 justify-end">
+                    {request.status === 'physical_inspection' ? (
+                      <button
+                        onClick={() => handleSaveInspectionResults(true)}
+                        disabled={isUpdatingInspection}
+                        className={`px-10 py-3.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-blue-200 ${isUpdatingInspection ? 'opacity-30 cursor-not-allowed' : 'hover:bg-blue-700 hover:shadow-blue-300 transform hover:-translate-y-0.5 active:scale-95'}`}
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Submit Inspection Result & Forward
+                      </button>
+                    ) : !isBusinessPermit ? (
+                      <>
+                        <button
+                          onClick={() => onAction(request, 'reject')}
+                          disabled={isEditing}
+                          className={`px-8 py-3.5 bg-white border-2 border-red-200 text-red-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-red-50 hover:border-red-300 transform active:scale-95'}`}
+                        >
+                          <XCircle className="w-4 h-4" />
+                          Mark as Ineligible
+                        </button>
+                        <button
+                          onClick={() => onAction(request, 'approve')}
+                          disabled={isEditing}
+                          className={`px-10 py-3.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-blue-200 ${isEditing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-blue-700 hover:shadow-blue-300 transform hover:-translate-y-0.5 active:scale-95'}`}
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Verify & Forward
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => onAction(request, 'reject')}
+                          disabled={isEditing}
+                          className={`px-8 py-3.5 bg-white border-2 border-red-200 text-red-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-red-50 hover:border-red-300 transform active:scale-95'}`}
+                        >
+                          <XCircle className="w-4 h-4" />
+                          Reject Application
+                        </button>
+                        {isBusinessPermit && request.status !== 'physical_inspection' && (
+                          <button
+                            onClick={() => setShowInspectionStartModal(true)}
+                            disabled={isEditing}
+                            className={`px-8 py-3.5 bg-amber-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-amber-200 ${isEditing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-amber-700 transform hover:-translate-y-0.5 active:scale-95'}`}
+                          >
+                            <ClipboardCheck className="w-4 h-4" />
+                            Proceed to Physical Inspection
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : currentStep?.status === 'physical_inspection' || request.status === 'physical_inspection' ? (
+                  <div className="flex gap-4 justify-end">
+                    <button
+                      onClick={() => handleSaveInspectionResults(false)}
+                      disabled={isUpdatingInspection}
+                      className={`px-6 py-3.5 bg-white border-2 border-amber-200 text-amber-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isUpdatingInspection ? 'opacity-30 cursor-not-allowed' : 'hover:bg-amber-50 hover:border-amber-300 active:scale-95'}`}
+                    >
+                      <Database className="w-4 h-4" />
+                      Save Draft
+                    </button>
                     <button
                       onClick={() => onAction(request, 'reject')}
                       disabled={isEditing}
-                      className={`px-8 py-3.5 bg-white border-2 border-red-200 text-red-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-red-50 hover:border-red-300 transform active:scale-95'}`}
+                      className={`px-6 py-3.5 bg-white border-2 border-red-200 text-red-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-red-50 hover:border-red-300 active:scale-95'}`}
                     >
                       <XCircle className="w-4 h-4" />
-                      Mark as Ineligible
+                      Reject Application
                     </button>
                     <button
-                      onClick={() => onAction(request, 'approve')}
+                      onClick={() => onAction(request, 'return')}
                       disabled={isEditing}
-                      className={`px-10 py-3.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-blue-200 ${isEditing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-blue-700 hover:shadow-blue-300 transform hover:-translate-y-0.5 active:scale-95'}`}
+                      className={`px-6 py-3.5 bg-white border-2 border-orange-200 text-orange-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-orange-50 hover:border-orange-300 active:scale-95'}`}
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Send Back
+                    </button>
+                    <button
+                      onClick={() => handleSaveInspectionResults(true)}
+                      disabled={isUpdatingInspection}
+                      className={`px-10 py-3.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-blue-200 ${isUpdatingInspection ? 'opacity-30 cursor-not-allowed' : 'hover:bg-blue-700 hover:shadow-blue-300 transform hover:-translate-y-0.5 active:scale-95'}`}
                     >
                       <CheckCircle className="w-4 h-4" />
-                      Verify & Forward
+                      Submit & Forward to Captain
+                    </button>
+                  </div>
+                ) : currentStep?.status === 'Treasury' || request.status === 'Treasury' ? (
+                  <div className="flex gap-4 justify-end">
+                    <button
+                      onClick={() => onAction(request, 'return')}
+                      disabled={isEditing}
+                      className={`px-6 py-3.5 bg-white border-2 border-amber-200 text-amber-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-amber-50 hover:border-amber-300 active:scale-95'}`}
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Send Back
+                    </button>
+                    <button
+                      onClick={() => setShowORModal(true)}
+                      disabled={isEditing}
+                      className={`px-10 py-3.5 bg-green-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-green-200 ${isEditing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-green-700 hover:shadow-green-300 transform hover:-translate-y-0.5 active:scale-95'}`}
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Mark as Paid & Generate OR
                     </button>
                   </div>
                 ) : (
@@ -2520,7 +3041,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                       </button>
                     ) : (
                       <>
-                        {!['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) && (
+                        {!['ready', 'ready_for_pickup'].includes(request.status) && (
                           <>
                             <button
                               onClick={() => onAction(request, 'return')}
@@ -2546,7 +3067,9 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                           className={`px-10 py-3.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-blue-200 ${isEditing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-blue-700 hover:shadow-blue-300 transform hover:-translate-y-0.5 active:scale-95'}`}
                         >
                           <CheckCircle className="w-4 h-4" />
-                          {request.status === 'captain_approval' ? 'Official Approval' : (request.status === 'oic_review' ? 'Set as Ready' : 'Forward to Next')}
+                          {request.status === 'Treasury' ? 'Mark as Paid & Generate OR' : 
+                           request.status === 'captain_approval' ? 'Official Approval' : 
+                           (request.status === 'oic_review' ? 'Set as Ready' : 'Forward to Next')}
                         </button>
                       </>
                     )}
@@ -2555,8 +3078,116 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
               </div>
             )
           }
-        </div >
-      </div >
+
+          {/* OR Generation Modal */}
+          {showORModal && (
+            <ORGenerationModal
+              request={request}
+              onClose={() => {
+                setShowORModal(false);
+              }}
+              onSuccess={() => {
+                setShowORModal(false);
+                onUpdate();
+              }}
+            />
+          )}
+
+          {/* Physical Inspection Start Modal */}
+          {showInspectionStartModal && (
+            <Modal
+              isOpen={showInspectionStartModal}
+              onClose={() => setShowInspectionStartModal(false)}
+              title="Initiate Physical Inspection"
+              maxWidth="max-w-2xl"
+            >
+              <div className="p-6">
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-6">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-amber-100 p-3 rounded-xl text-amber-600">
+                      <Printer className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-amber-900 font-black uppercase tracking-widest text-sm mb-2">Print Required Documents</h4>
+                      <p className="text-amber-800 text-xs font-bold leading-relaxed">
+                        To proceed, you must first print the <span className="underline">Business Permit Application and Inspection Form</span>.
+                        Give these to the inspection committee to record their findings on-site.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  <button
+                    onClick={() => setShowPdfPreview(true)}
+                    className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-100 hover:border-blue-500 rounded-2xl transition-all group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600 transition-colors">
+                        <Printer className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs font-black text-gray-900 uppercase tracking-widest leading-none mb-1">Preview & Print PDF</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase leading-none">View the official form before printing</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="w-5 h-5 text-gray-300 -rotate-90" />
+                  </button>
+
+                  <div className="h-px bg-gray-100 my-2"></div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2">Add Comment (Optional)</label>
+                    <textarea
+                      value={inspectionStartComment}
+                      onChange={(e) => setInspectionStartComment(e.target.value)}
+                      placeholder="Add any notes or instructions for the inspection team..."
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm font-medium resize-none"
+                      rows="3"
+                    />
+                  </div>
+
+                  <p className="text-[10px] font-black text-gray-400 uppercase text-center tracking-[0.2em] mb-2">After printing, proceed to status change</p>
+
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => {
+                        setShowInspectionStartModal(false);
+                        setInspectionStartComment('');
+                      }}
+                      className="flex-1 px-6 py-4 border-2 border-gray-100 text-gray-500 rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-gray-50 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleStartInspection(request)}
+                      disabled={isUpdatingInspection}
+                      className="flex-[2] px-6 py-4 bg-amber-600 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-amber-700 shadow-xl shadow-amber-200 transition-all flex items-center justify-center gap-2"
+                    >
+                      {isUpdatingInspection ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <ClipboardCheck className="w-4 h-4" />
+                      )}
+                      {isUpdatingInspection ? 'UPDATING STATUS...' : 'I HAVE PRINTED, START INSPECTION'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Modal>
+          )}
+
+          {/* Existing Modals */}
+          {showPdfPreview && (
+            <CertificatePreviewModal
+              request={request}
+              onClose={() => setShowPdfPreview(false)}
+              onBack={() => setShowPdfPreview(false)}
+              getTypeLabel={getTypeLabel}
+            />
+          )}
+        </div>
+      </div>
     </div >
   );
 }
@@ -2570,7 +3201,15 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
   const isReviewStep = currentStep?.status === 'staff_review';
 
   const config = {
-    approve: isReviewStep ? {
+    approve: isReviewStep ? (request.status === 'physical_inspection' ? {
+      title: 'Submit Inspection & Forward',
+      description: 'The physical inspection is complete. Forward this for approval.',
+      icon: ClipboardCheck,
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-600',
+      buttonBg: 'bg-amber-600 hover:bg-amber-700',
+      buttonText: 'Submit & Forward'
+    } : {
       title: 'Verify & Forward Request',
       description: 'I confirm that the resident is legitimate and the request is valid.',
       icon: CheckCircle,
@@ -2578,7 +3217,7 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
       iconColor: 'text-blue-600',
       buttonBg: 'bg-blue-600 hover:bg-blue-700',
       buttonText: 'Verify & Forward'
-    } : (request.status === 'oic_review') ? {
+    }) : (request.status === 'oic_review') ? {
       title: 'Ready for Pickup',
       description: 'Mark this certificate as ready for the resident to collect.',
       icon: CheckCircle,
@@ -2601,7 +3240,8 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
       iconBg: 'bg-green-100',
       iconColor: 'text-green-600',
       buttonBg: 'bg-green-600 hover:bg-green-700',
-      buttonText: (currentStep?.status === 'captain_approval' || request.status === 'captain_approval') ? 'Approve Request' : 'Forward Request'
+      buttonText: (currentStep?.status === 'Treasury' || request.status === 'Treasury') ? 'Mark as Paid & Generate OR' :
+                  (currentStep?.status === 'captain_approval' || request.status === 'captain_approval') ? 'Approve Request' : 'Forward Request'
     },
     reject: isReviewStep ? {
       title: 'Mark as Not Legitimate',
@@ -2635,7 +3275,7 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
   const Icon = cfg.icon;
 
   const isEsignRole = currentStep && currentStep.officialRole && currentStep.officialRole !== 'None';
-  const canUseEsign = actionType === 'approve' && !['oic_review', 'ready', 'ready_for_pickup'].includes(request.status); // Disable sign pad for OIC/Ready steps
+  const canUseEsign = actionType === 'approve' && !['oic_review', 'ready', 'ready_for_pickup', 'Treasury'].includes(request.status); // Disable sign pad for OIC/Ready/Treasury steps
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
@@ -2774,12 +3414,13 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
                   className="px-8 py-3 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300 transform active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {processing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <PenTool className="w-4 h-4" />}
-                  Sign & {currentStep?.status === 'captain_approval' ? 'Approve' : 'Forward'}
+                  Sign & {currentStep?.status === 'Treasury' ? 'Generate OR' : 
+                          currentStep?.status === 'captain_approval' ? 'Approve' : 'Forward'}
                 </button>
               </>
             ) : (
               <button
-                onClick={() => onSubmit(null)}
+                onClick={() => onSubmit(null, null, null, comment)}
                 disabled={processing || (['reject', 'return'].includes(actionType) && !comment.trim())}
                 className={`px-8 py-3 ${cfg.buttonBg} text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
@@ -2847,6 +3488,9 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [history, setHistory] = useState([]);
   const [currentDate, setCurrentDate] = useState('');
+  const [inspectionData, setInspectionData] = useState(null);
+  const [certificateUrl, setCertificateUrl] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const fetchHistory = async () => {
     try {
@@ -2863,6 +3507,53 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
       }
     } catch (error) {
       console.error('Error fetching history:', error);
+    }
+  };
+
+  const fetchInspectionData = async () => {
+    // Only fetch inspection data for business permits
+    if (request.certificate_type !== 'business_permit') return;
+    
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/physical-inspection/request/${request.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setInspectionData(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching inspection data:', error);
+    }
+  };
+
+  const generateCertificate = async () => {
+    setIsGenerating(true);
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/certificates/${request.id}/preview`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        // Create a blob URL for the HTML content
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setCertificateUrl(url);
+      } else {
+        console.error('Failed to generate certificate');
+      }
+    } catch (error) {
+      console.error('Error generating certificate:', error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -2909,6 +3600,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
 
     fetchOfficials();
     fetchHistory();
+    fetchInspectionData();
 
     // Set current date
     const now = new Date();
@@ -2921,34 +3613,34 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
 
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${getTypeLabel(request.certificate_type)} - ${request.reference_number}</title>
-          <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-            <style>
-              @page {size: A4 portrait; margin: 0; }
-              @media print {
-                html, body {width: 210mm; height: 297mm; margin: 0; padding: 0; }
-              * {-webkit - print - color - adjust: exact !important; print-color-adjust: exact !important; }
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${getTypeLabel(request.certificate_type)} - ${request.reference_number}</title>
+              <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+                <style>
+                  @page {size: A4 portrait; margin: 0; }
+                  @media print {
+                    html, body {width: 210mm; height: 297mm; margin: 0; padding: 0; }
+                  * {-webkit - print - color - adjust: exact !important; print-color-adjust: exact !important; }
           }
-              body {margin: 0; padding: 0; display: flex; justify-content: center; }
-              .certificate {width: 210mm; min-height: 297mm; padding: 8mm; box-sizing: border-box; background: white; }
-            </style>
-        </head>
-        <body>
-          <div class="certificate">${printContent.innerHTML}</div>
-          <script>
-            window.onload = function() {
-              setTimeout(function () {
-                window.print();
-                window.close();
-              }, 500); 
+                  body {margin: 0; padding: 0; display: flex; justify-content: center; }
+                  .certificate {width: 210mm; min-height: 297mm; padding: 8mm; box-sizing: border-box; background: white; }
+                </style>
+            </head>
+            <body>
+              <div class="certificate">${printContent.innerHTML}</div>
+              <script>
+                window.onload = function() {
+                  setTimeout(function () {
+                    window.print();
+                    window.close();
+                  }, 500); 
           };
-          </script>
-        </body>
-      </html>
-      `);
+              </script>
+            </body>
+          </html>
+          `);
     printWindow.document.close();
   };
 
@@ -3048,6 +3740,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
               officials={officials}
               certificateRef={certificateRef}
               history={history}
+              inspectionData={inspectionData}
             />
           </div>
         </div>
@@ -3057,7 +3750,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
 }
 
 // Certificate Preview Component - Exact copy from BarangayClearanceModal
-function ClearancePreviewForRequests({ request, currentDate, officials, certificateRef, history = [] }) {
+function ClearancePreviewForRequests({ request, currentDate, officials, certificateRef, history = [], inspectionData = null }) {
   const logos = officials.logos || {};
   const headerStyle = officials.headerStyle || {};
   const countryStyle = officials.countryStyle || {};
@@ -3308,9 +4001,15 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                       ].map((area, idx) => (
                         <tr key={idx} className="h-6">
                           <td className="border border-black p-1 pl-2 text-[10px]">{area}</td>
-                          <td className="border border-black p-1"></td>
-                          <td className="border border-black p-1"></td>
-                          <td className="border border-black p-1"></td>
+                          <td className="border border-black p-1 text-[10px] font-normal uppercase">
+                            {inspectionData?.areas?.[area]?.findings || ''}
+                          </td>
+                          <td className="border border-black p-1 text-[10px] font-normal">
+                            {inspectionData?.areas?.[area]?.date || ''}
+                          </td>
+                          <td className="border border-black p-1 text-[10px] font-normal uppercase">
+                            {inspectionData?.areas?.[area]?.remarks || ''}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -3319,11 +4018,15 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                   <div className="flex flex-col gap-4 mb-6 font-bold">
                     <div className="flex items-center gap-2">
                       <span>DATE AND TIME OF VISIT:</span>
-                      <div className="flex-1 border-b border-black h-4"></div>
+                      <div className="flex-1 border-b border-black h-4 px-2">
+                        {inspectionData?.visitDateTime ? new Date(inspectionData.visitDateTime).toLocaleString() : ''}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span>NAME OF OWNER / REPRESENTATIVE AND SIGNATURE:</span>
-                      <div className="flex-1 border-b border-black h-4"></div>
+                      <div className="flex-1 border-b border-black h-4 px-2 uppercase">
+                        {inspectionData?.ownerRepresentative || ''}
+                      </div>
                     </div>
                   </div>
 
@@ -3340,9 +4043,13 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                     <tbody className="font-bold">
                       {['HEALTH', 'ENVIRONMENT', 'INFRASTRUCTURE', 'PEACE & ORDER'].map((committee, idx) => (
                         <tr key={idx} className="h-8">
-                          <td className="border border-black p-1 text-left pl-2">{idx + 1}.</td>
+                          <td className="border border-black p-1 text-left pl-2 text-[10px] font-normal">
+                            {inspectionData?.recommendations?.[committee]?.name || ''}
+                          </td>
                           <td className="border border-black p-1 text-[10px]">{committee}</td>
-                          <td className="border border-black p-1"></td>
+                          <td className="border border-black p-1 text-[10px] font-normal">
+                            {inspectionData?.recommendations?.[committee]?.date || ''}
+                          </td>
                           <td className="border border-black p-1"></td>
                         </tr>
                       ))}
@@ -3710,5 +4417,493 @@ function ConfirmPickupModal({ certificate, onClose, onConfirm, pickupName, setPi
         </div>
       </div>
     </div>
+  );
+}
+
+// OR Generation Modal Component
+function ORGenerationModal({ request, onClose, onSuccess }) {
+  const [amount, setAmount] = useState(100);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showORPreview, setShowORPreview] = useState(false);
+  const [orContent, setORContent] = useState('');
+  const [orNumber, setORNumber] = useState('');
+
+  const handleGenerateOR = async () => {
+    setIsGenerating(true);
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/official-receipts/generate/${request.id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ amount })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success(`Official Receipt ${data.orNumber} generated successfully!`);
+        setORNumber(data.orNumber);
+        
+        // Fetch the OR content to display in modal
+        if (data.filePath) {
+          console.log('Fetching OR content from:', `${API_URL}/official-receipts/files/${data.filePath}`);
+          const orResponse = await fetch(`${API_URL}/official-receipts/files/${data.filePath}`);
+          console.log('OR fetch response status:', orResponse.status);
+          
+          if (orResponse.ok) {
+            const content = await orResponse.text();
+            console.log('OR content length:', content.length);
+            setORContent(content);
+            setShowORPreview(true);
+            console.log('OR preview modal should now be visible');
+          } else {
+            console.error('Failed to fetch OR content, status:', orResponse.status);
+            toast.error('OR generated but failed to display preview');
+            onSuccess(); // Call onSuccess if preview fails
+          }
+        } else {
+          console.error('No filePath in OR response:', data);
+          toast.error('OR generated but no file path provided');
+          onSuccess(); // Call onSuccess if no filePath
+        }
+        // Don't call onSuccess() here - it will be called when OR preview is closed
+      } else {
+        toast.error(data.message || 'Failed to generate Official Receipt');
+      }
+    } catch (error) {
+      console.error('Error generating OR:', error);
+      toast.error('Failed to generate Official Receipt');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handlePrintOR = () => {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(orContent);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const handleDownloadOR = () => {
+    const blob = new Blob([orContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `OR_${orNumber}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCloseORPreview = async () => {
+    try {
+      // Forward the request to releasing team
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/official-receipts/forward/${request.id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Request forwarded to Releasing Team successfully');
+        setShowORPreview(false);
+        onSuccess(); // Call onSuccess to refresh data and close modal
+        onClose();
+      } else {
+        toast.error(data.message || 'Failed to forward request');
+      }
+    } catch (error) {
+      console.error('Error forwarding request:', error);
+      toast.error('Failed to forward request');
+    }
+  };
+
+  if (showORPreview) {
+    return (
+      <Modal
+        isOpen={true}
+        onClose={handleCloseORPreview}
+        title={`Official Receipt ${orNumber}`}
+        maxWidth="max-w-4xl"
+      >
+        <div className="p-6">
+          <div className="mb-4 flex justify-between items-center">
+            <h3 className="text-lg font-bold text-green-800">Official Receipt Generated Successfully</h3>
+            <div className="flex gap-3">
+              <button
+                onClick={handlePrintOR}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <Printer className="w-4 h-4" />
+                Print OR
+              </button>
+              <button
+                onClick={handleDownloadOR}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </button>
+              <button
+                onClick={handleCloseORPreview}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Close & Forward
+              </button>
+            </div>
+          </div>
+          
+          <div 
+            className="border border-gray-300 rounded-lg overflow-auto max-h-[70vh] bg-white"
+            dangerouslySetInnerHTML={{ __html: orContent }}
+          />
+        </div>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Generate Official Receipt"
+      maxWidth="max-w-2xl"
+    >
+      <div className="p-6">
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="bg-green-100 p-3 rounded-xl text-green-600">
+              <CheckCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-green-800 mb-2">Payment Confirmation</h3>
+              <p className="text-green-700 mb-4">
+                Generate an Official Receipt for the business permit processing fee. You can review the OR before forwarding the request to the Releasing Team.
+              </p>
+              
+              <div className="bg-white rounded-lg p-4 border border-green-200">
+                <h4 className="font-bold text-gray-800 mb-2">Request Details:</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Reference:</span>
+                    <span className="font-medium ml-2">{request.reference_number}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Applicant:</span>
+                    <span className="font-medium ml-2">{request.full_name || request.applicant_name}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-600">Business:</span>
+                    <span className="font-medium ml-2">
+                      {(() => {
+                        try {
+                          const details = typeof request.details === 'string' ? JSON.parse(request.details) : request.details;
+                          return details?.businessName || 'N/A';
+                        } catch (e) {
+                          return 'N/A';
+                        }
+                      })()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Processing Fee Amount
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₱</span>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+              className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              min="0"
+              step="0.01"
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Standard business permit processing fee is ₱100.00
+          </p>
+        </div>
+
+        <div className="flex gap-4 justify-end">
+          <button
+            onClick={onClose}
+            disabled={isGenerating}
+            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleGenerateOR}
+            disabled={isGenerating || amount <= 0}
+            className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
+            {isGenerating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Generating OR...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4" />
+                Generate OR
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// OR Preview Section Component for Releasing Team
+function ORPreviewSection({ request }) {
+  const [orData, setORData] = useState(null);
+  const [orContent, setORContent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showFullOR, setShowFullOR] = useState(false);
+
+  useEffect(() => {
+    const fetchORData = async () => {
+      try {
+        setLoading(true);
+        const token = getAuthToken();
+        
+        // Fetch OR record
+        const response = await fetch(`${API_URL}/official-receipts/request/${request.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+        if (data.success && data.data) {
+          setORData(data.data);
+          
+          // Fetch OR content for preview using the file_path from the record
+          if (data.data.file_path) {
+            const orResponse = await fetch(`${API_URL}/official-receipts/files/${data.data.file_path}`);
+            
+            if (orResponse.ok) {
+              const content = await orResponse.text();
+              setORContent(content);
+            } else {
+              // If file not found, just show the summary without the full OR
+              console.warn('OR file not found:', data.data.file_path);
+              setORContent(''); // Set empty content but don't error - show the summary instead
+            }
+          } else {
+            // No file_path stored, try the simple filename
+            if (data.data.or_number) {
+              const orFileName = `OR_${data.data.or_number}.html`;
+              const orResponse = await fetch(`${API_URL}/official-receipts/files/${orFileName}`);
+              
+              if (orResponse.ok) {
+                const content = await orResponse.text();
+                setORContent(content);
+              } else {
+                console.warn('OR file not found with standard naming');
+                setORContent('');
+              }
+            }
+          }
+        } else {
+          setError('No Official Receipt found for this request');
+        }
+      } catch (err) {
+        console.error('Error fetching OR data:', err);
+        setError('Failed to load Official Receipt');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchORData();
+  }, [request.id]);
+
+  const handlePrintOR = () => {
+    if (orContent) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(orContent);
+      printWindow.document.close();
+      printWindow.print();
+    } else {
+      toast.error('OR file not available for printing');
+    }
+  };
+
+  const handleDownloadOR = () => {
+    if (orContent && orData) {
+      const blob = new Blob([orContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `OR_${orData.or_number}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else {
+      toast.error('OR file not available for download');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-blue-800 font-medium">Loading Official Receipt...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
+        <div className="flex items-center gap-3">
+          <AlertTriangle className="w-6 h-6 text-red-600" />
+          <span className="text-red-800 font-medium">{error}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!orData) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <Receipt className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold text-blue-900">Official Receipt</h4>
+              <p className="text-blue-700 text-sm">Payment processed during Treasury step</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowFullOR(true)}
+              disabled={!orContent}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!orContent ? 'OR file not available' : 'View full OR'}
+            >
+              <Eye className="w-4 h-4" />
+              View Full OR
+            </button>
+            <button
+              onClick={handlePrintOR}
+              disabled={!orContent}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!orContent ? 'OR file not available' : 'Print OR'}
+            >
+              <Printer className="w-4 h-4" />
+              Print OR
+            </button>
+            <button
+              onClick={handleDownloadOR}
+              disabled={!orContent}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!orContent ? 'OR file not available' : 'Download OR'}
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white rounded-lg p-4 border border-blue-100">
+          <div>
+            <p className="text-xs text-gray-500 uppercase font-bold mb-1">OR Number</p>
+            <p className="font-bold text-gray-900">{orData.or_number}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase font-bold mb-1">Amount</p>
+            <p className="font-bold text-gray-900">₱{orData.amount}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase font-bold mb-1">Payment Method</p>
+            <p className="font-bold text-gray-900">{orData.payment_method}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase font-bold mb-1">Date Issued</p>
+            <p className="font-bold text-gray-900">{new Date(orData.created_at).toLocaleDateString()}</p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-xs text-gray-500 uppercase font-bold mb-1">Payor Name</p>
+            <p className="font-bold text-gray-900">{orData.payor_name}</p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-xs text-gray-500 uppercase font-bold mb-1">Business Name</p>
+            <p className="font-bold text-gray-900">{orData.business_name || 'N/A'}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Full OR Modal */}
+      {showFullOR && orContent && (
+        <Modal
+          isOpen={true}
+          onClose={() => setShowFullOR(false)}
+          title={`Official Receipt ${orData.or_number}`}
+          maxWidth="max-w-4xl"
+        >
+          <div className="p-6">
+            <div className="mb-4 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-blue-800">Official Receipt Preview</h3>
+              <div className="flex gap-3">
+                <button
+                  onClick={handlePrintOR}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                >
+                  <Printer className="w-4 h-4" />
+                  Print OR
+                </button>
+                <button
+                  onClick={handleDownloadOR}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </button>
+                <button
+                  onClick={() => setShowFullOR(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            
+            <div 
+              className="border border-gray-300 rounded-lg overflow-auto max-h-[70vh] bg-white"
+              dangerouslySetInnerHTML={{ __html: orContent }}
+            />
+          </div>
+        </Modal>
+      )}
+    </>
   );
 }

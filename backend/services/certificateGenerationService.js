@@ -113,13 +113,16 @@ class CertificateGenerationService {
             let certificateContent;
             switch (request.certificate_type) {
                 case 'barangay_clearance':
-                    certificateContent = this.generateBarangayClearanceContent(request, config);
+                    certificateContent = await this.generateBarangayClearanceContent(request, config);
                     break;
                 case 'certificate_of_indigency':
                     certificateContent = this.generateIndigencyContent(request, config);
                     break;
                 case 'barangay_residency':
                     certificateContent = this.generateResidencyContent(request, config);
+                    break;
+                case 'business_permit':
+                    certificateContent = await this.generateBusinessPermitContent(request, config);
                     break;
                 default:
                     throw new Error(`Unknown certificate type: ${request.certificate_type}`);
@@ -259,12 +262,18 @@ class CertificateGenerationService {
       `;
     }
 
-    generateBarangayClearanceContent(request, config) {
+    async generateBarangayClearanceContent(request, config) {
         const { officials, styles } = config;
         const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         const bodyStyle = styles.bodyStyle || {};
 
-        const bodyHtml = `
+        // Check if this clearance has physical inspection data
+        const inspectionData = await this.getPhysicalInspectionData(request.id);
+        const hasInspectionData = inspectionData && Object.keys(inspectionData.areas).some(area => 
+            inspectionData.areas[area].findings || inspectionData.areas[area].date || inspectionData.areas[area].remarks
+        );
+
+        let bodyHtml = `
             <div style="font-size: ${bodyStyle.textSize || 14}px; line-height: 1.6;">
                 <p><strong>TO WHOM IT MAY CONCERN:</strong></p>
                 
@@ -285,8 +294,52 @@ class CertificateGenerationService {
                 <div style="margin: 30px 0;">
                     <p>This certification is being issued upon the request of above mentioned person for below purpose(s):</p>
                     <p style="padding-left: 20px; font-weight: bold; font-size: 1.1em; margin-top: 10px;">• ${request.purpose ? request.purpose.toUpperCase() : 'GENERAL PURPOSES'}</p>
-                </div>
+                </div>`;
 
+        // Add physical inspection section if data exists
+        if (hasInspectionData) {
+            bodyHtml += `
+                <div style="margin: 30px 0; border: 1px solid #ccc; padding: 15px;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">Physical Inspection Report</h3>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10px;">
+                        <thead>
+                            <tr style="background: #f0f0f0;">
+                                <th style="border: 1px solid #000; padding: 4px; text-align: left; width: 20%;">Areas</th>
+                                <th style="border: 1px solid #000; padding: 4px; text-align: left; width: 40%;">Findings and Recommendations</th>
+                                <th style="border: 1px solid #000; padding: 4px; text-align: left; width: 20%;">Date of Inspection</th>
+                                <th style="border: 1px solid #000; padding: 4px; text-align: left; width: 20%;">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${this.generateInspectionRows(inspectionData.areas)}
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 15px; font-size: 11px;">
+                        <strong>Date and Time of Visit:</strong> ${inspectionData.visitDateTime ? new Date(inspectionData.visitDateTime).toLocaleString() : 'N/A'}<br>
+                        <strong>Name of Owner / Representative:</strong> ${inspectionData.ownerRepresentative || 'N/A'}
+                    </div>
+
+                    <div style="margin-top: 15px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold;">Recommending Approval</h4>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                            <thead>
+                                <tr style="background: #f0f0f0;">
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: left; width: 30%;">Committee</th>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: left; width: 50%;">Name of Signatory</th>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: left; width: 20%;">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.generateCommitteeRows(inspectionData.recommendations)}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        bodyHtml += `
                 <p style="margin-bottom: 40px;">
                     Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName}, ${config.headerInfo.municipality}, ${config.headerInfo.province}.
                 </p>
@@ -413,6 +466,432 @@ class CertificateGenerationService {
         `;
 
         return this.generateDocument('BARANGAY RESIDENCY CERTIFICATE', bodyHtml, request, config);
+    }
+
+    generateDocument(title, bodyHtml, request, config) {
+        return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${title} - ${request.reference_number}</title>
+            <style>
+                body { 
+                    font-family: 'Times New Roman', serif; 
+                    margin: 0; 
+                    padding: 20px; 
+                    background: white;
+                    font-size: 14px;
+                    line-height: 1.6;
+                }
+                .certificate-container { 
+                    max-width: 800px; 
+                    margin: 0 auto; 
+                    background: white; 
+                    border: 2px solid #000;
+                    padding: 20px;
+                }
+                .title { 
+                    font-size: 24px; 
+                    font-weight: bold; 
+                    margin: 20px 0; 
+                    text-align: center;
+                    text-transform: uppercase;
+                }
+                .details-grid {
+                    display: grid;
+                    grid-template-columns: auto auto 1fr;
+                    gap: 8px 15px;
+                    margin: 20px 0;
+                    align-items: baseline;
+                }
+                .detail-label {
+                    font-weight: bold;
+                    text-transform: uppercase;
+                }
+                .detail-value {
+                    font-weight: bold;
+                    text-decoration: underline;
+                }
+                .signature-section {
+                    margin-top: 60px;
+                }
+                .sig-block {
+                    margin: 20px 0;
+                }
+                .sig-line {
+                    border-bottom: 1px solid #000;
+                    width: 300px;
+                    height: 40px;
+                    margin: 20px 0 5px 0;
+                }
+                @media print {
+                    body { margin: 0; padding: 10px; }
+                    .certificate-container { border: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="certificate-container">
+                ${this.generateHeader(config)}
+                
+                <div class="title">${title}</div>
+                
+                ${bodyHtml}
+                
+                ${this.generateFooter(request, config)}
+            </div>
+        </body>
+        </html>
+        `;
+    }
+
+    async generateBusinessPermitContent(request, config) {
+        // Get physical inspection data from the new tables
+        const inspectionData = await this.getPhysicalInspectionData(request.id);
+        
+        const qrCodeSVG = this.generateQRCodeSVG(`${config.baseUrl}/verify/${request.reference_number}`);
+        
+        return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Business Permit - ${request.reference_number}</title>
+            <style>
+                body { 
+                    font-family: 'Times New Roman', serif; 
+                    margin: 0; 
+                    padding: 20px; 
+                    background: white;
+                    font-size: 12px;
+                    line-height: 1.4;
+                }
+                .certificate-container { 
+                    max-width: 800px; 
+                    margin: 0 auto; 
+                    background: white; 
+                    border: 2px solid #000;
+                    padding: 20px;
+                }
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 30px; 
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 20px;
+                }
+                .logo { 
+                    width: 80px; 
+                    height: 80px; 
+                    margin: 0 auto 10px; 
+                }
+                .title { 
+                    font-size: 24px; 
+                    font-weight: bold; 
+                    margin: 10px 0; 
+                    text-transform: uppercase;
+                }
+                .subtitle { 
+                    font-size: 16px; 
+                    margin: 5px 0; 
+                }
+                .content { 
+                    margin: 20px 0; 
+                }
+                .section { 
+                    margin: 20px 0; 
+                    border: 1px solid #000;
+                    padding: 15px;
+                }
+                .section-title { 
+                    font-size: 14px; 
+                    font-weight: bold; 
+                    margin-bottom: 10px; 
+                    text-transform: uppercase;
+                    background: #f0f0f0;
+                    padding: 5px;
+                    margin: -15px -15px 10px -15px;
+                }
+                .info-table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin: 10px 0;
+                }
+                .info-table td { 
+                    padding: 5px; 
+                    border: 1px solid #000; 
+                    vertical-align: top;
+                }
+                .info-table .label { 
+                    font-weight: bold; 
+                    background: #f9f9f9; 
+                    width: 30%;
+                }
+                .inspection-table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin: 10px 0;
+                    font-size: 10px;
+                }
+                .inspection-table th, .inspection-table td { 
+                    padding: 4px; 
+                    border: 1px solid #000; 
+                    text-align: left;
+                }
+                .inspection-table th { 
+                    background: #f0f0f0; 
+                    font-weight: bold;
+                    text-transform: uppercase;
+                }
+                .signatures { 
+                    display: flex; 
+                    justify-content: space-between; 
+                    margin-top: 40px; 
+                }
+                .signature-block { 
+                    text-align: center; 
+                    width: 45%; 
+                }
+                .signature-line { 
+                    border-bottom: 1px solid #000; 
+                    margin: 30px 0 5px 0; 
+                    height: 1px; 
+                }
+                .qr-code { 
+                    position: absolute; 
+                    top: 20px; 
+                    right: 20px; 
+                    width: 80px; 
+                    height: 80px; 
+                }
+                @media print {
+                    body { margin: 0; padding: 10px; }
+                    .certificate-container { border: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="certificate-container">
+                <div class="qr-code">${qrCodeSVG}</div>
+                
+                ${this.generateHeader(config)}
+                
+                <div class="title">Business Permit</div>
+                <div class="subtitle">Reference No: ${request.reference_number}</div>
+                
+                <div class="content">
+                    <div class="section">
+                        <div class="section-title">Business Information</div>
+                        <table class="info-table">
+                            <tr>
+                                <td class="label">Full Name</td>
+                                <td>${request.full_name || request.applicant_name || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Complete Address</td>
+                                <td>${request.address || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Business Name</td>
+                                <td>${this.getBusinessDetail(request, 'businessName') || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Nature of Business</td>
+                                <td>${this.getBusinessDetail(request, 'natureOfBusiness') || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Business Complete Address</td>
+                                <td>${this.getBusinessDetail(request, 'businessAddress') || request.address || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Contact Person / Number</td>
+                                <td>${this.getBusinessDetail(request, 'contactPerson') || request.contact_number || 'N/A'}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">A. Actions Taken by Inspection Committee</div>
+                        <table class="inspection-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%">Areas</th>
+                                    <th style="width: 40%">Findings and Recommendations</th>
+                                    <th style="width: 20%">Date of Inspection</th>
+                                    <th style="width: 20%">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.generateInspectionRows(inspectionData.areas)}
+                            </tbody>
+                        </table>
+                        
+                        <div style="margin-top: 15px;">
+                            <strong>Date and Time of Visit:</strong> ${inspectionData.visitDateTime ? new Date(inspectionData.visitDateTime).toLocaleString() : 'N/A'}<br>
+                            <strong>Name of Owner / Representative:</strong> ${inspectionData.ownerRepresentative || 'N/A'}
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">B. Recommending Approval</div>
+                        <table class="inspection-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 30%">Committee</th>
+                                    <th style="width: 50%">Name of Signatory</th>
+                                    <th style="width: 20%">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.generateCommitteeRows(inspectionData.recommendations)}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                ${this.generateFooter(request, config)}
+            </div>
+        </body>
+        </html>
+        `;
+    }
+
+    getBusinessDetail(request, field) {
+        try {
+            const details = typeof request.details === 'string' ? JSON.parse(request.details || '{}') : (request.details || {});
+            return details[field] || '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    generateInspectionRows(areas) {
+        if (!areas || typeof areas !== 'object') {
+            return '<tr><td colspan="4" style="text-align: center; font-style: italic;">No inspection data available</td></tr>';
+        }
+
+        return Object.entries(areas).map(([areaName, areaData]) => `
+            <tr>
+                <td style="font-weight: bold;">${areaName}</td>
+                <td>${areaData.findings || ''}</td>
+                <td>${areaData.date || ''}</td>
+                <td>${areaData.remarks || ''}</td>
+            </tr>
+        `).join('');
+    }
+
+    generateCommitteeRows(recommendations) {
+        if (!recommendations || typeof recommendations !== 'object') {
+            return '<tr><td colspan="3" style="text-align: center; font-style: italic;">No committee recommendations available</td></tr>';
+        }
+
+        return Object.entries(recommendations).map(([committeeName, committeeData]) => `
+            <tr>
+                <td style="font-weight: bold;">${committeeName}</td>
+                <td>${committeeData.name || ''}</td>
+                <td>${committeeData.date || ''}</td>
+            </tr>
+        `).join('');
+    }
+
+    async getPhysicalInspectionData(requestId) {
+        try {
+            // Get the main inspection report
+            const { data: report, error: reportError } = await supabase
+                .from('physical_inspection_reports')
+                .select('*')
+                .eq('request_id', requestId)
+                .single();
+
+            if (reportError && reportError.code !== 'PGRST116') {
+                console.error('Error fetching inspection report:', reportError);
+                return this.getDefaultInspectionData();
+            }
+
+            if (!report) {
+                return this.getDefaultInspectionData();
+            }
+
+            // Get area findings
+            const { data: areaFindings, error: areaError } = await supabase
+                .from('inspection_area_findings')
+                .select('*')
+                .eq('inspection_report_id', report.id);
+
+            if (areaError) {
+                console.error('Error fetching area findings:', areaError);
+                return this.getDefaultInspectionData();
+            }
+
+            // Get committee recommendations
+            const { data: committeeRecs, error: committeeError } = await supabase
+                .from('committee_recommendations')
+                .select('*')
+                .eq('inspection_report_id', report.id);
+
+            if (committeeError) {
+                console.error('Error fetching committee recommendations:', committeeError);
+                return this.getDefaultInspectionData();
+            }
+
+            // Format the data
+            const inspectionData = {
+                areas: {},
+                visitDateTime: report.visit_datetime,
+                ownerRepresentative: report.owner_representative,
+                recommendations: {}
+            };
+
+            // Format area findings
+            areaFindings.forEach(area => {
+                inspectionData.areas[area.area_name] = {
+                    findings: area.findings || '',
+                    date: area.inspection_date || '',
+                    remarks: area.remarks || ''
+                };
+            });
+
+            // Format committee recommendations
+            committeeRecs.forEach(committee => {
+                inspectionData.recommendations[committee.committee_name] = {
+                    name: committee.signatory_name || '',
+                    date: committee.recommendation_date || ''
+                };
+            });
+
+            return inspectionData;
+
+        } catch (error) {
+            console.error('Error getting physical inspection data:', error);
+            return this.getDefaultInspectionData();
+        }
+    }
+
+    getDefaultInspectionData() {
+        return {
+            areas: {
+                'HEALTH AND SAFETY': { findings: '', date: '', remarks: '' },
+                'SANITATION': { findings: '', date: '', remarks: '' },
+                'HEALTH HAZARD': { findings: '', date: '', remarks: '' },
+                'BUILDING PERMIT': { findings: '', date: '', remarks: '' },
+                'FIRE EXIT / HAZARD': { findings: '', date: '', remarks: '' },
+                'ENVIRONMENT': { findings: '', date: '', remarks: '' },
+                'WASTE MANAGEMENT': { findings: '', date: '', remarks: '' },
+                'HAZARDOUS WASTE': { findings: '', date: '', remarks: '' },
+                'OTHERS': { findings: '', date: '', remarks: '' },
+                'COMPLAINTS, ETC.': { findings: '', date: '', remarks: '' }
+            },
+            visitDateTime: '',
+            ownerRepresentative: '',
+            recommendations: {
+                'HEALTH': { name: '', date: '' },
+                'ENVIRONMENT': { name: '', date: '' },
+                'INFRASTRUCTURE': { name: '', date: '' },
+                'PEACE & ORDER': { name: '', date: '' }
+            }
+        };
     }
 
     generateQRCodeSVG(text) {

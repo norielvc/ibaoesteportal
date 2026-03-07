@@ -53,40 +53,21 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     setErrors(prev => ({ ...prev, ownerFullName: false }));
   };
 
-  // Auto-fill date and generate application number on open
+  // Auto-fill date on open (but NOT reference number)
   useEffect(() => {
     if (!isOpen) return;
 
-    const fetchMetadata = async () => {
-      try {
-        const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
 
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        const dateStr = `${yyyy}-${mm}-${dd}`;
-
-        // Fetch official sequence from backend
-        const res = await fetch(`${API_URL}/certificates/next-reference/BP`);
-        let appNo = `${yyyy}-${mm}${dd}001`; // Fallback
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success) appNo = data.referenceNumber;
-        }
-
-        setFormData(prev => ({
-          ...prev,
-          applicationDate: dateStr,
-          applicationNo: appNo
-        }));
-      } catch (err) {
-        console.error("Failed to fetch next app no:", err);
-      }
-    };
-
-    fetchMetadata();
+    setFormData(prev => ({
+      ...prev,
+      applicationDate: dateStr,
+      applicationNo: '' // Clear application number - will be generated on submission
+    }));
   }, [isOpen]);
 
   const handleInputChange = (e) => {
@@ -141,9 +122,9 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
     try {
       const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
 
-      // Re-fetch to ensure no race condition (someone else submitted while user filled form)
-      const referenceResponse = await fetch(`${API_URL}/certificates/next-reference/BP`);
-      let refNum = formData.applicationNo; // Use already fetched one as backup
+      // Generate reference number only at submission time
+      const referenceResponse = await fetch(`${API_URL}/certificates/next-reference/business_permit`);
+      let refNum = `BP-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`; // Fallback
 
       if (referenceResponse.ok) {
         const refData = await referenceResponse.json();
@@ -294,7 +275,7 @@ export default function BusinessPermitModal({ isOpen, onClose }) {
                       </label>
                       <input
                         type="text"
-                        value={formData.applicationNo}
+                        value={formData.applicationNo || 'NEW APPLICATION'}
                         readOnly
                         className="w-full px-5 py-3 bg-white border-2 border-emerald-200 rounded-xl outline-none font-black text-emerald-800 cursor-default tracking-widest"
                       />

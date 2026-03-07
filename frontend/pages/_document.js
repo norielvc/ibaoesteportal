@@ -4,11 +4,8 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        {/* Allow data URLs for signature images */}
-        <meta
-          httpEquiv="Content-Security-Policy"
-          content="img-src 'self' data: blob: https:; object-src 'self' data: 'none';"
-        />
+        {/* CSP is handled by the backend server */}
+        <link rel="icon" href="/favicon.ico" />
       </Head>
       <body>
         <Main />
