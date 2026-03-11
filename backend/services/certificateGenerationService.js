@@ -92,9 +92,9 @@ class CertificateGenerationService {
         };
     }
 
-    async generateCertificate(requestId) {
+    async generateCertificate(requestId, previewOnly = false, templateType = null) {
         try {
-            console.log(`Generating certificate for request ID: ${requestId}`);
+            console.log(`Generating certificate for request ID: ${requestId} (Preview only: ${previewOnly}, Template: ${templateType})`);
 
             // Get certificate request details
             const { data: request, error: requestError } = await supabase
@@ -107,7 +107,9 @@ class CertificateGenerationService {
             if (!request) throw new Error('Certificate request not found');
 
             // Get dynamic configuration
+            console.log(`[CERT-GEN] Fetching brgy config for ID: ${requestId}`);
             const config = await this.getBarangayConfig();
+            console.log(`[CERT-GEN] Config fetched for ID: ${requestId}`);
 
             // Generate certificate content based on type
             let certificateContent;
@@ -121,9 +123,18 @@ class CertificateGenerationService {
                 case 'barangay_residency':
                     certificateContent = this.generateResidencyContent(request, config);
                     break;
+                case 'certification_same_person':
+                    certificateContent = this.generateSamePersonContent(request, config);
+                    break;
                 case 'business_permit':
-                    // Use the new Business Clearance template
-                    certificateContent = await this.generateBusinessClearanceContent(request, config);
+                    // Choose template for business permit
+                    if (templateType === 'new') {
+                        // Explicitly requested new template
+                        certificateContent = await this.generateBusinessClearanceContent(request, config);
+                    } else {
+                        // Default to the old Business Permit template (satisfies 'revert' request)
+                        certificateContent = await this.generateBusinessPermitContent(request, config);
+                    }
                     break;
                 default:
                     throw new Error(`Unknown certificate type: ${request.certificate_type}`);
@@ -137,19 +148,27 @@ class CertificateGenerationService {
             // Save certificate to file
             fs.writeFileSync(filePath, certificateContent);
 
-            // Update database with certificate info
-            const { error: updateError } = await supabase
-                .from('certificate_requests')
-                .update({
-                    certificate_file_path: filePath,
-                    certificate_generated_at: new Date().toISOString(),
-                    status: 'ready'
-                })
-                .eq('id', requestId);
+            // Only update database status if NOT preview mode
+            // We strictly check for true to be safe, but also handle other truthy values if intended as preview
+            const isPreview = previewOnly === true || previewOnly === 'true';
+            console.log(`[CERT-GEN] requestId: ${requestId}, previewOnly: ${previewOnly}, isPreview: ${isPreview}`);
 
-            if (updateError) throw updateError;
+            if (!isPreview) {
+                const { error: updateError } = await supabase
+                    .from('certificate_requests')
+                    .update({
+                        certificate_file_path: filePath,
+                        certificate_generated_at: new Date().toISOString(),
+                        status: 'ready'
+                    })
+                    .eq('id', requestId);
 
-            console.log(`Certificate generated successfully: ${filename}`);
+                if (updateError) throw updateError;
+                console.log(`Certificate generated and status updated to 'ready': ${filename}`);
+            } else {
+                console.log(`Certificate preview generated (status not changed): ${filename}`);
+            }
+
             return {
                 success: true,
                 filePath,
@@ -176,16 +195,16 @@ class CertificateGenerationService {
         };
 
         return `
-        <div class="header" style="display: flex; align-items: center; justify-content: center; padding: 20px 40px; border-bottom: 2px solid ${styles.headerStyle.borderColor || '#1e40af'}; background-color: ${styles.headerStyle.bgColor || '#ffffff'}; ${getFontClass(styles.headerStyle.fontFamily)}">
+        <div class="header" style="display: flex; align-items: center; justify-content: space-between; padding: 15px 40px; border-bottom: 3px solid #0369a1; background-color: #ffffff; ${getFontClass(styles.headerStyle.fontFamily)}">
             <div style="width: ${size}px; height: ${size}px; flex-shrink: 0;">
                 ${leftLogoSrc ? `<img src="${leftLogoSrc}" style="width: 100%; height: 100%; object-fit: contain;">` : ''}
             </div>
             <div style="text-align: center; flex: 1; padding: 0 20px;">
-                <p style="margin: 0; color: ${styles.countryStyle.color || '#4b5563'}; font-size: ${styles.countryStyle.size || 13}px; font-weight: ${styles.countryStyle.fontWeight || 'normal'}; line-height: 1.2; ${getFontClass(styles.countryStyle.fontFamily)}">${headerInfo.country || 'Republic of the Philippines'}</p>
-                <p style="margin: 0; color: ${styles.provinceStyle.color || '#4b5563'}; font-size: ${styles.provinceStyle.size || 13}px; font-weight: ${styles.provinceStyle.fontWeight || 'normal'}; line-height: 1.2; ${getFontClass(styles.provinceStyle.fontFamily)}">${headerInfo.province || 'Province of Bulacan'}</p>
-                <p style="margin: 0; color: ${styles.municipalityStyle.color || '#4b5563'}; font-size: ${styles.municipalityStyle.size || 13}px; font-weight: ${styles.municipalityStyle.fontWeight || 'normal'}; line-height: 1.2; ${getFontClass(styles.municipalityStyle.fontFamily)}">${headerInfo.municipality || 'Municipality of Calumpit'}</p>
-                <p style="margin: 4px 0 0; color: ${styles.barangayNameStyle.color || '#1e40af'}; font-size: ${styles.barangayNameStyle.size || 22}px; font-weight: ${styles.barangayNameStyle.fontWeight || 'bold'}; line-height: 1.2; ${getFontClass(styles.barangayNameStyle.fontFamily)}">${headerInfo.barangayName || "BARANGAY IBA O' ESTE"}</p>
-                <p style="margin: 0; color: ${styles.officeNameStyle.color || '#6b7280'}; font-size: ${styles.officeNameStyle.size || 12}px; font-weight: ${styles.officeNameStyle.fontWeight || 'normal'}; line-height: 1.2; ${getFontClass(styles.officeNameStyle.fontFamily)}">${headerInfo.officeName || 'Office of the Punong Barangay'}</p>
+                <p style="margin: 0; color: #4b5563; font-size: 11px; font-weight: normal; line-height: 1.2; ${getFontClass(styles.countryStyle.fontFamily)}">${headerInfo.country || 'Republic of the Philippines'}</p>
+                <p style="margin: 0; color: #4b5563; font-size: 11px; font-weight: normal; line-height: 1.2; ${getFontClass(styles.provinceStyle.fontFamily)}">${headerInfo.province || 'Province of Bulacan'}</p>
+                <p style="margin: 0; color: #4b5563; font-size: 11px; font-weight: normal; line-height: 1.2; ${getFontClass(styles.municipalityStyle.fontFamily)}">${headerInfo.municipality || 'Municipality of Calumpit'}</p>
+                <p style="margin: 4px 0 0; color: #1e40af; font-size: 18px; font-weight: bold; line-height: 1.2; ${getFontClass(styles.barangayNameStyle.fontFamily)}">${headerInfo.barangayName || "BARANGAY IBA O' ESTE"}</p>
+                <p style="margin: 0; color: #dc2626; font-size: 11px; font-weight: bold; line-height: 1.2; ${getFontClass(styles.officeNameStyle.fontFamily)}">${headerInfo.officeName || 'OFFICE OF THE BARANGAY CHAIRMAN'}</p>
             </div>
             <div style="width: ${size}px; height: ${size}px; flex-shrink: 0;">
                 ${rightLogoSrc ? `<img src="${rightLogoSrc}" style="width: 100%; height: 100%; object-fit: contain;">` : ''}
@@ -270,7 +289,7 @@ class CertificateGenerationService {
 
         // Check if this clearance has physical inspection data
         const inspectionData = await this.getPhysicalInspectionData(request.id);
-        const hasInspectionData = inspectionData && Object.keys(inspectionData.areas).some(area => 
+        const hasInspectionData = inspectionData && Object.keys(inspectionData.areas).some(area =>
             inspectionData.areas[area].findings || inspectionData.areas[area].date || inspectionData.areas[area].remarks
         );
 
@@ -469,6 +488,186 @@ class CertificateGenerationService {
         return this.generateDocument('BARANGAY RESIDENCY CERTIFICATE', bodyHtml, request, config);
     }
 
+    generateSamePersonContent(request, config) {
+        const { officials, styles } = config;
+        const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const bodyStyle = styles.bodyStyle || {};
+        
+        // Parse details if it's a JSON string
+        let details = {};
+        if (request.details) {
+            try {
+                details = typeof request.details === 'string' ? JSON.parse(request.details) : request.details;
+            } catch (e) {
+                console.error('Error parsing details:', e);
+            }
+        }
+
+        const bodyHtml = `
+            <div style="font-size: ${bodyStyle.textSize || 14}px; line-height: 1.6;">
+                <p><strong>TO WHOM IT MAY CONCERN:</strong></p>
+                
+                <p style="margin: 20px 0;">
+                    This is to certify that below names belongs to one and the same person, bona fide resident of this barangay as described herein:
+                </p>
+
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Name (1)</span>
+                        <span class="info-colon">:</span>
+                        <span class="info-value">${details.name1 || request.full_name || '-'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Name (2)</span>
+                        <span class="info-colon">:</span>
+                        <span class="info-value">${details.name2 || details.aliasName || '-'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Residential Address</span>
+                        <span class="info-colon">:</span>
+                        <span class="info-value">${request.address || '-'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Age</span>
+                        <span class="info-colon">:</span>
+                        <span class="info-value">${request.age || '-'}</span>
+                    </div>
+                </div>
+
+                <div style="margin: 15px 0;">
+                    <p>This certification is being issued upon the request of above mentioned person for below purpose(s):</p>
+                    <p style="padding-left: 20px; font-weight: bold; font-size: 1.1em; margin-top: 10px;">• ${request.purpose ? request.purpose.toUpperCase() : 'GENERAL PURPOSES'}</p>
+                </div>
+
+                <p style="margin-bottom: 10px;">
+                    Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName}, ${config.headerInfo.municipality}, ${config.headerInfo.province}.
+                </p>
+
+                <div class="signature-section">
+                    <div class="sig-block">
+                        <div class="sig-line">
+                            <p style="font-size: 12px; margin: 0;">Resident's Signature / Thumb Mark</p>
+                        </div>
+                    </div>
+
+                    <div class="sig-block" style="margin-top: 10px;">
+                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
+                        <div style="height: 40px;"></div>
+                        <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
+                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Create title without individual word underlines
+        const titleHtml = `
+            <div style="text-align: center; margin: 20px 0;">
+                <div style="display: inline-block; white-space: nowrap;">
+                    <span style="display: inline-block; padding: 0 4px; font-size: 24px; font-weight: bold; color: #0369a1; letter-spacing: 1px;">BARANGAY</span>
+                    <span style="display: inline-block; padding: 0 4px; font-size: 24px; font-weight: bold; color: #0369a1; letter-spacing: 1px;">CERTIFICATION</span>
+                    <span style="display: inline-block; padding: 0 4px; font-size: 24px; font-weight: bold; color: #0369a1; letter-spacing: 1px;">BEING</span>
+                </div>
+                <div style="display: inline-block; white-space: nowrap; margin-top: 5px;">
+                    <span style="display: inline-block; padding: 0 4px; font-size: 24px; font-weight: bold; color: #0369a1; letter-spacing: 1px;">THE</span>
+                    <span style="display: inline-block; padding: 0 4px; font-size: 24px; font-weight: bold; color: #0369a1; letter-spacing: 1px;">SAME</span>
+                    <span style="display: inline-block; padding: 0 4px; font-size: 24px; font-weight: bold; color: #0369a1; letter-spacing: 1px;">PERSON</span>
+                </div>
+            </div>
+        `;
+
+        return this.generateDocumentWithCustomTitle(titleHtml, bodyHtml, request, config);
+    }
+
+    generateDocumentWithCustomTitle(titleHtml, bodyHtml, request, config) {
+        return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Same Person Certificate - ${request.reference_number}</title>
+            <style>
+                body { 
+                    font-family: 'Times New Roman', serif; 
+                    margin: 0; 
+                    padding: 20px; 
+                    background: white;
+                    font-size: 14px;
+                    line-height: 1.6;
+                }
+                .certificate-container { 
+                    max-width: 800px; 
+                    margin: 0 auto; 
+                    background: white; 
+                    border: 2px solid #000;
+                    padding: 20px;
+                }
+                .details-grid {
+                    display: grid;
+                    grid-template-columns: 200px 20px 1fr;
+                    gap: 10px 0;
+                    margin: 20px 0;
+                }
+                .detail-label {
+                    font-weight: bold;
+                }
+                .detail-value {
+                    font-weight: bold;
+                }
+                .info-grid {
+                    margin: 25px 0;
+                }
+                .info-row {
+                    display: flex;
+                    margin: 12px 0;
+                    font-size: 14px;
+                }
+                .info-label {
+                    font-weight: bold;
+                    min-width: 200px;
+                }
+                .info-colon {
+                    margin: 0 10px;
+                }
+                .info-value {
+                    font-weight: bold;
+                    flex: 1;
+                    text-decoration: underline;
+                }
+                .signature-section {
+                    margin-top: 20px;
+                }
+                .sig-block {
+                    text-align: center;
+                }
+                .sig-line {
+                    border-bottom: 1px solid #000;
+                    width: 300px;
+                    height: 40px;
+                    margin: 20px auto 5px auto;
+                }
+                @media print {
+                    body { margin: 0; padding: 10px; }
+                    .certificate-container { border: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="certificate-container">
+                ${this.generateHeader(config)}
+                
+                ${titleHtml}
+                
+                ${bodyHtml}
+                
+                ${this.generateFooter(request, config)}
+            </div>
+        </body>
+        </html>
+        `;
+    }
+
     generateDocument(title, bodyHtml, request, config) {
         return `
         <!DOCTYPE html>
@@ -549,12 +748,15 @@ class CertificateGenerationService {
     }
 
     async generateBusinessPermitContent(request, config) {
-        // Get physical inspection data from the new tables
-        const inspectionData = await this.getPhysicalInspectionData(request.id);
-        
-        const qrCodeSVG = this.generateQRCodeSVG(`${config.baseUrl}/verify/${request.reference_number}`);
-        
-        return `
+        try {
+            console.log(`[CERT-GEN] Generating Business Permit Content for: ${request.reference_number}`);
+            // Get physical inspection data from the new tables
+            const inspectionData = await this.getPhysicalInspectionData(request.id);
+            const leftLogoSrc = config.logos?.leftLogo || '';
+            const qrCodeSVG = this.generateQRCodeSVG(`${config.baseUrl}/verify/${request.reference_number}`);
+            console.log(`[CERT-GEN] Inspection data and QR generated`);
+
+            return `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -589,14 +791,23 @@ class CertificateGenerationService {
                     margin: 0 auto 10px; 
                 }
                 .title { 
-                    font-size: 24px; 
-                    font-weight: bold; 
-                    margin: 10px 0; 
-                    text-transform: uppercase;
-                }
-                .subtitle { 
                     font-size: 16px; 
-                    margin: 5px 0; 
+                    font-weight: 900; 
+                    margin: 20px 0 10px; 
+                    text-transform: uppercase;
+                    color: #991b1b;
+                    text-align: center;
+                }
+                .watermark {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 500px;
+                    height: 500px;
+                    opacity: 0.1;
+                    z-index: -1;
+                    pointer-events: none;
                 }
                 .content { 
                     margin: 20px 0; 
@@ -677,86 +888,131 @@ class CertificateGenerationService {
             <div class="certificate-container">
                 <div class="qr-code">${qrCodeSVG}</div>
                 
+                <div class="watermark">
+                  ${leftLogoSrc ? `<img src="${leftLogoSrc}" style="width: 100%; height: 100%; object-fit: contain;">` : ''}
+                </div>
+
                 ${this.generateHeader(config)}
                 
-                <div class="title">Business Permit</div>
-                <div class="subtitle">Reference No: ${request.reference_number}</div>
+                <div class="title" style="margin-top: 15px; font-size: 14px;">BARANGAY BUSINESS CLEARANCE APPLICATION FORM</div>
                 
-                <div class="content">
-                    <div class="section">
-                        <div class="section-title">Business Information</div>
-                        <table class="info-table">
-                            <tr>
-                                <td class="label">Full Name</td>
-                                <td>${request.full_name || request.applicant_name || 'N/A'}</td>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 2px; font-size: 10px;">
+                  <tr>
+                    <td style="border: 1.5px solid #000; padding: 5px; font-weight: 800; text-transform: uppercase; width: 33%;">DATE OF APPLICATION AND NO.</td>
+                    <td style="border: 1.5px solid #000; padding: 5px; width: 33%; font-weight: 800;">${new Date(request.created_at || Date.now()).toLocaleDateString()}</td>
+                    <td style="border: 1.5px solid #000; padding: 5px; width: 33%; color: #dc2626; font-weight: 900; text-align: center; font-size: 11px;">${request.reference_number}</td>
+                  </tr>
+                </table>
+
+                <div class="content" style="margin: 0;">
+                    <div class="section" style="border: 1.5px solid #000; padding: 0; margin-bottom: 10px;">
+                        <div class="section-title" style="background: #ffffff; border-bottom: 1.5px solid #000; margin: 0; padding: 4px; font-weight: 800;">OWNER'S DETAILS</div>
+                        <table class="info-table" style="margin: 0; border: none; font-size: 10px;">
+                            <tr style="height: 25px;">
+                                <td class="label" style="border-right: 1.5px solid #000; border-top: none; border-left: none; width: 33%; padding: 4px;">FULL NAME</td>
+                                <td style="border-top: none; border-right: none; font-weight: 800; text-transform: uppercase; padding: 4px;">${request.full_name || request.applicant_name || 'N/A'}</td>
                             </tr>
-                            <tr>
-                                <td class="label">Complete Address</td>
-                                <td>${request.address || 'N/A'}</td>
+                            <tr style="height: 25px;">
+                                <td class="label" style="border-top: 1.5px solid #000; border-right: 1.5px solid #000; border-left: none; padding: 4px;">COMPLETE ADDRESS</td>
+                                <td style="border-top: 1.5px solid #000; border-right: none; padding: 4px;">${request.address || 'N/A'}</td>
                             </tr>
-                            <tr>
-                                <td class="label">Business Name</td>
-                                <td>${this.getBusinessDetail(request, 'businessName') || 'N/A'}</td>
+                            <tr style="height: 25px;">
+                                <td class="label" style="border-top: 1.5px solid #000; border-right: 1.5px solid #000; border-left: none; padding: 4px;">BUSINESS NAME</td>
+                                <td style="border-top: 1.5px solid #000; border-right: none; font-weight: 800; text-transform: uppercase; padding: 4px;">${this.getBusinessDetail(request, 'businessName') || 'N/A'}</td>
                             </tr>
-                            <tr>
-                                <td class="label">Nature of Business</td>
-                                <td>${this.getBusinessDetail(request, 'natureOfBusiness') || 'N/A'}</td>
+                            <tr style="height: 25px;">
+                                <td class="label" style="border-top: 1.5px solid #000; border-right: 1.5px solid #000; border-left: none; padding: 4px;">NATURE OF BUSINESS</td>
+                                <td style="border-top: 1.5px solid #000; border-right: none; padding: 4px;">${this.getBusinessDetail(request, 'natureOfBusiness') || 'N/A'}</td>
                             </tr>
-                            <tr>
-                                <td class="label">Business Complete Address</td>
-                                <td>${this.getBusinessDetail(request, 'businessAddress') || request.address || 'N/A'}</td>
+                            <tr style="height: 25px;">
+                                <td class="label" style="border-top: 1.5px solid #000; border-right: 1.5px solid #000; border-left: none; padding: 4px;">BUSINESS COMPLETE ADDRESS</td>
+                                <td style="border-top: 1.5px solid #000; border-right: none; padding: 4px;">${this.getBusinessDetail(request, 'businessAddress') || request.address || 'N/A'}</td>
                             </tr>
-                            <tr>
-                                <td class="label">Contact Person / Number</td>
-                                <td>${this.getBusinessDetail(request, 'contactPerson') || request.contact_number || 'N/A'}</td>
+                            <tr style="height: 25px;">
+                                <td class="label" style="border-top: 1.5px solid #000; border-right: 1.5px solid #000; border-left: none; border-bottom: none; padding: 4px;">CONTACT PERSON / NUMBER</td>
+                                <td style="border-top: 1.5px solid #000; border-right: none; border-bottom: none; padding: 4px;">${this.getBusinessDetail(request, 'contactPerson') || request.contact_number || 'N/A'}</td>
                             </tr>
                         </table>
                     </div>
 
-                    <div class="section">
-                        <div class="section-title">A. Actions Taken by Inspection Committee</div>
-                        <table class="inspection-table">
+                    <div class="section" style="border: 1.5px solid #000; padding: 0; margin-top: 5px;">
+                        <div class="section-title" style="background: #ffffff; border-bottom: 1.5px solid #000; margin: 0; padding: 4px; font-weight: 800;">A. ACTIONS TAKEN BY INSPECTION COMMITTEE:</div>
+                        <table class="inspection-table" style="margin: 0; border: none; font-size: 8px; text-align: center;">
                             <thead>
-                                <tr>
-                                    <th style="width: 20%">Areas</th>
-                                    <th style="width: 40%">Findings and Recommendations</th>
-                                    <th style="width: 20%">Date of Inspection</th>
-                                    <th style="width: 20%">Remarks</th>
+                                <tr style="height: 20px;">
+                                    <th style="width: 25%; border-left: none; border-top: none; background: #fff; text-align: center; border-bottom: 1.2px solid #000; padding: 2px;">AREAS</th>
+                                    <th style="width: 35%; border-top: none; background: #fff; text-align: center; border-bottom: 1.2px solid #000; padding: 2px;">FINDINGS AND RECOMMENDATIONS</th>
+                                    <th style="width: 20%; border-top: none; background: #fff; text-align: center; border-bottom: 1.2px solid #000; padding: 2px;">DATE OF INSPECTION</th>
+                                    <th style="width: 20%; border-right: none; border-top: none; background: #fff; text-align: center; border-bottom: 1.2px solid #000; padding: 2px;">REMARKS</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${this.generateInspectionRows(inspectionData.areas)}
+                                ${['HEALTH AND SAFETY', 'SANITATION', 'HEALTH HAZARD', 'BUILDING PERMIT', 'FIRE EXIT / HAZARD', 'ENVIRONMENT', 'WASTE MANAGEMENT', 'HAZARDOUS WASTE', 'OTHERS', 'COMPLAINTS, ETC.'].map(area => `
+                                  <tr style="height: 18px;">
+                                    <td style="border-left: none; text-align: left; padding-left: 5px; font-weight: 800;">${area}</td>
+                                    <td>${inspectionData.areas?.[area]?.findings || ''}</td>
+                                    <td>${inspectionData.areas?.[area]?.date || ''}</td>
+                                    <td style="border-right: none;">${inspectionData.areas?.[area]?.remarks || ''}</td>
+                                  </tr>
+                                `).join('')}
                             </tbody>
                         </table>
                         
-                        <div style="margin-top: 15px;">
-                            <strong>Date and Time of Visit:</strong> ${inspectionData.visitDateTime ? new Date(inspectionData.visitDateTime).toLocaleString() : 'N/A'}<br>
-                            <strong>Name of Owner / Representative:</strong> ${inspectionData.ownerRepresentative || 'N/A'}
+                        <div style="margin-top: 10px; padding: 5px; font-size: 9px;">
+                            <strong>DATE AND TIME OF VISIT:</strong> ${inspectionData.visitDateTime ? new Date(inspectionData.visitDateTime).toLocaleString() : '____________________'}<br>
+                            <strong style="margin-top: 4px; display: block;">NAME OF OWNER / REPRESENTATIVE AND SIGNATURE:</strong> ${inspectionData.ownerRepresentative || '____________________'}
                         </div>
                     </div>
 
-                    <div class="section">
-                        <div class="section-title">B. Recommending Approval</div>
-                        <table class="inspection-table">
+                    <div class="section" style="border: 1.5px solid #000; padding: 0; margin-top: 5px;">
+                        <div class="section-title" style="background: #ffffff; border-bottom: 1.5px solid #000; margin: 0; padding: 4px; font-weight: 800;">B. RECOMMENDING APPROVAL</div>
+                        <table class="inspection-table" style="margin: 0; border: none; font-size: 8px; text-align: center;">
                             <thead>
-                                <tr>
-                                    <th style="width: 30%">Committee</th>
-                                    <th style="width: 50%">Name of Signatory</th>
-                                    <th style="width: 20%">Date</th>
+                                <tr style="height: 20px;">
+                                    <th style="width: 30%; border-left: none; border-top: none; background: #fff; text-align: center; border-bottom: 1.2px solid #000; padding: 2px;">NAME</th>
+                                    <th style="width: 30%; border-top: none; background: #fff; text-align: center; border-bottom: 1.2px solid #000; padding: 2px;">COMMITTEE</th>
+                                    <th style="width: 15%; border-top: none; background: #fff; text-align: center; border-bottom: 1.2px solid #000; padding: 2px;">DATE</th>
+                                    <th style="width: 25%; border-right: none; border-top: none; background: #fff; text-align: center; border-bottom: 1.2px solid #000; padding: 2px;">SIGNATURE</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${this.generateCommitteeRows(inspectionData.recommendations)}
+                                ${['HEALTH', 'ENVIRONMENT', 'INFRASTRUCTURE', 'PEACE & ORDER'].map(comm => `
+                                  <tr style="height: 22px;">
+                                    <td style="border-left: none; text-align: left; padding-left: 5px;">${inspectionData.recommendations?.[comm]?.name || ''}</td>
+                                    <td style="font-weight: 800;">${comm}</td>
+                                    <td>${inspectionData.recommendations?.[comm]?.date || ''}</td>
+                                    <td style="border-right: none;"></td>
+                                  </tr>
+                                `).join('')}
                             </tbody>
                         </table>
                     </div>
+
+                    <div style="margin-top: 15px; padding-left: 5px;">
+                      <p style="font-weight: 800; font-size: 10px; margin-bottom: 20px;">C. APPROVAL</p>
+                      <div style="margin-left: 40px;">
+                        <p style="font-weight: 900; font-size: 13px; margin: 0; text-transform: uppercase;">ALEXANDER C. MANIO</p>
+                        <p style="font-weight: 800; font-size: 11px; margin: 0;">BARANGAY CHAIRMAN</p>
+                      </div>
+                    </div>
                 </div>
 
-                ${this.generateFooter(request, config)}
+                <div style="text-align: right; font-size: 9px; margin-top: 10px; font-weight: 800;">
+                  Reference No: ${request.reference_number}
+                </div>
+
+                <div style="border-top: 1px solid #777; margin-top: 15px; padding-top: 5px; font-size: 8px; color: #444; line-height: 1.2;">
+                  <p style="margin: 0;"><strong>Address:</strong> Purok 2 (Iba Este), Barangay Iba O' Este, Calumpit, Bulacan</p>
+                  <p style="margin: 0;"><strong>Contact:</strong> Brgy. Chairperson Alexander C. Manio | <strong>Mobile No.:</strong> 0917 831 91 58 | <strong>Email:</strong> ibaesteofficial@gmail.com</p>
+                </div>
             </div>
         </body>
         </html>
         `;
+        } catch (error) {
+            console.error('[CERT-GEN] Error in generateBusinessPermitContent:', error);
+            throw error;
+        }
     }
 
     getBusinessDetail(request, field) {
@@ -898,7 +1154,7 @@ class CertificateGenerationService {
     async generateBusinessClearanceContent(request, config) {
         // Get physical inspection data
         const inspectionData = await this.getPhysicalInspectionData(request.id);
-        
+
         // Get OR details if available
         const { data: orData } = await supabase
             .from('official_receipts')
@@ -907,10 +1163,10 @@ class CertificateGenerationService {
             .order('created_at', { ascending: false })
             .limit(1)
             .single();
-        
+
         const businessDetails = request.business_details || {};
         const isRenewal = businessDetails.clearanceType === 'renewal';
-        
+
         return `
         <!DOCTYPE html>
         <html lang="en">
@@ -923,19 +1179,18 @@ class CertificateGenerationService {
                 
                 body { 
                     font-family: 'Arial', sans-serif; 
-                    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-                    padding: 20px;
+                    background: #f3f4f6;
+                    padding: 2.5cm;
                     line-height: 1.6;
                 }
                 
                 .certificate-container { 
-                    max-width: 850px; 
+                    max-width: 210mm; 
                     margin: 0 auto; 
-                    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #e0f2fe 100%);
-                    border: 3px solid #0369a1;
-                    border-radius: 15px;
-                    padding: 40px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                    background: #ffffff;
+                    border: 4px double #0369a1;
+                    padding: 1.5cm;
+                    box-shadow: 0 0 20px rgba(0,0,0,0.1);
                     position: relative;
                 }
                 

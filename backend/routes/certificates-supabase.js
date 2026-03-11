@@ -1276,7 +1276,8 @@ router.post('/business-permit', async (req, res) => {
         natureOfBusiness: natureOfBusiness?.toUpperCase(),
         businessAddress: businessAddress?.toUpperCase(),
         contactPerson: contactPerson?.toUpperCase(),
-        applicationDate: applicationDate
+        applicationDate: applicationDate,
+        clearanceType: req.body.clearanceType || 'new'
       }
     };
 
@@ -1867,29 +1868,30 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// Generate and serve certificate preview
+// Generate and serve certificate preview (does not change status)
 router.get('/:id/preview', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Generate the certificate
-    const result = await certificateGenerationService.generateCertificate(id);
-    
+    const { template } = req.query;
+
+    // Generate the certificate in preview mode (doesn't update status, can specify template)
+    const result = await certificateGenerationService.generateCertificate(id, true, template);
+
     if (!result.success) {
-      return res.status(500).json({ 
-        success: false, 
-        message: result.error || 'Failed to generate certificate' 
+      return res.status(500).json({
+        success: false,
+        message: result.error || 'Failed to generate certificate'
       });
     }
-    
+
     // Serve the generated HTML file
     res.sendFile(result.filePath);
-    
+
   } catch (error) {
     console.error('Error generating certificate preview:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 });

@@ -11,7 +11,8 @@ export default function AddEmployeeModal({ onClose, onSubmit, isLoading: externa
     confirmPassword: '',
     position: '',
     role: 'user',
-    status: 'active'
+    status: 'active',
+    employeeCode: ''
   });
   const [errors, setErrors] = useState({});
   const [internalIsLoading, setInternalIsLoading] = useState(false);
@@ -31,13 +32,18 @@ export default function AddEmployeeModal({ onClose, onSubmit, isLoading: externa
     if (!/(?=.*[A-Z])/.test(formData.password)) newErrors.password = 'Requires uppercase';
     if (!/(?=.*\d)/.test(formData.password)) newErrors.password = 'Requires number';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-
+    if (!formData.employeeCode) newErrors.employeeCode = 'Employee code is required';
+    if (!/^[A-Z0-9]{3}$/.test(formData.employeeCode)) newErrors.employeeCode = 'Code must be exactly 3 alphanumeric capital letters';
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    if (name === 'employeeCode') {
+      value = value.toUpperCase().slice(0, 3);
+    }
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -165,18 +171,35 @@ export default function AddEmployeeModal({ onClose, onSubmit, isLoading: externa
                     />
                     {errors.email && <p className="text-rose-500 text-[9px] font-black uppercase px-1 italic">{errors.email}</p>}
                   </div>
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 flex items-center gap-2">
-                      <Briefcase className="w-3 h-3" /> Official Position
-                    </label>
-                    <input
-                      type="text"
-                      name="position"
-                      value={formData.position}
-                      onChange={handleChange}
-                      className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-bold text-gray-900 uppercase text-xs tracking-tight"
-                      placeholder="e.g. BARANGAY SECRETARY"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 flex items-center gap-2">
+                        <Briefcase className="w-3 h-3" /> Official Position
+                      </label>
+                      <input
+                        type="text"
+                        name="position"
+                        value={formData.position}
+                        onChange={handleChange}
+                        className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-bold text-gray-900 uppercase text-xs tracking-tight"
+                        placeholder="e.g. BARANGAY SECRETARY"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 flex items-center gap-2">
+                        <UserCircle className="w-3 h-3" /> Employee Code
+                      </label>
+                      <input
+                        type="text"
+                        name="employeeCode"
+                        value={formData.employeeCode}
+                        onChange={handleChange}
+                        className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl outline-none transition-all font-black text-gray-900 uppercase text-xs tracking-tight focus:bg-white ${errors.employeeCode ? 'border-rose-500 ring-4 ring-rose-500/10' : 'border-transparent focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10'}`}
+                        placeholder="ABC"
+                        maxLength={3}
+                      />
+                      {errors.employeeCode && <p className="text-rose-500 text-[9px] font-black uppercase px-1 italic">{errors.employeeCode}</p>}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">

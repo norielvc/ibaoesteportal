@@ -9,6 +9,11 @@ export default function Layout({ children, title, subtitle, requireAuth = true, 
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (requireAuth && !isAuthenticated()) {
@@ -18,9 +23,9 @@ export default function Layout({ children, title, subtitle, requireAuth = true, 
     }
   }, [requireAuth, router]);
 
-  if (requireAuth && isLoading) {
+  if (requireAuth && (isLoading || !isMounted)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
@@ -31,7 +36,7 @@ export default function Layout({ children, title, subtitle, requireAuth = true, 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+    <div className={`min-h-screen bg-gray-50 overflow-x-hidden transition-opacity duration-150 ${isMounted ? 'opacity-100' : 'opacity-0'}`}>
       <Toaster
         position="bottom-right"
         toastOptions={{

@@ -64,6 +64,12 @@ const validateUserCreation = [
     .optional()
     .isIn(['active', 'inactive', 'suspended'])
     .withMessage('Status must be active, inactive, or suspended'),
+  body('employeeCode')
+    .trim()
+    .isLength({ min: 3, max: 3 })
+    .withMessage('Employee code must be exactly 3 characters')
+    .matches(/^[A-Z0-9]{3}$/)
+    .withMessage('Employee code must be 3 alphanumeric capital letters'),
   handleValidationErrors
 ];
 
@@ -100,6 +106,13 @@ const validateUserUpdate = [
     .optional()
     .isIn(['active', 'inactive', 'suspended'])
     .withMessage('Status must be active, inactive, or suspended'),
+  body('employeeCode')
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 3 })
+    .withMessage('Employee code must be exactly 3 characters')
+    .matches(/^[A-Z0-9]{3}$/)
+    .withMessage('Employee code must be 3 alphanumeric capital letters'),
   handleValidationErrors
 ];
 

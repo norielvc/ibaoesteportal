@@ -7,7 +7,7 @@ import {
   FileText, Search, Eye, CheckCircle, XCircle, RotateCcw,
   Clock, User, Calendar, ChevronDown, X, AlertTriangle,
   FileCheck, History, Filter, Shield, Printer, Download, PenTool, ShieldAlert, Info, Edit, Save, RefreshCw, Database,
-  Skull, Activity, Heart, Phone, MessageCircle, MapPin, Home, ShieldCheck, Users, ClipboardCheck, ClipboardList, Receipt
+  Skull, Activity, Heart, Phone, MessageCircle, MapPin, Home, ShieldCheck, Users, ClipboardCheck, ClipboardList, Receipt, Store
 } from 'lucide-react';
 import { getAuthToken, getUserData } from '@/lib/auth';
 import Modal from '@/components/UI/Modal';
@@ -421,43 +421,47 @@ export default function RequestsPage() {
 
   const getNextStatus = (currentStatus, action, request) => {
     if (action === 'reject') return 'rejected';
-    if (action === 'return') return 'returned'; // Return to Review Team as 'Returned'
+    if (action === 'return') return 'returned';
+    if (action === 'physical_inspection') return 'physical_inspection';
 
     // For approve action, move to next workflow step
     if (action === 'approve') {
-      const workflowSteps = workflows[request.certificate_type];
-
-      // Status progression:
+      // Status progression mapping:
       const statusFlow = {
         'pending': 'processing',
         'staff_review': 'processing',
-        'returned': 'processing', // Returned requests go to processing (or next step) when approved
+        'returned': 'processing',
         'submitted': 'processing',
-        'processing': 'oic_review', // After Captain, go to OIC
-        'oic_review': 'ready',      // After OIC, go to Ready
+        'processing': 'oic_review',
+        'oic_review': 'ready',
+        'secretary_approval': 'captain_approval',
+        'captain_approval': 'oic_review',
+        'Treasury': 'secretary_approval',
         'approved': 'released',
         'ready': 'released',
         'ready_for_pickup': 'released'
       };
 
-      return statusFlow[currentStatus] || 'ready';
+      return statusFlow[currentStatus] || currentStatus;
     }
 
-    if (action === 'reject') return 'cancelled';
-    if (action === 'return') return 'returned';
-
-    return 'ready';
+    return currentStatus;
   };
 
   const submitAction = async (signatureData = null, overrideRequest = null, overrideAction = null, overrideComment = null) => {
     const req = overrideRequest || selectedRequest;
     const act = overrideAction || actionType;
-    if (!req || !act) return;
+    console.log('[SUBMIT-ACTION] Triggered:', { reqId: req?.id, currentStatus: req?.status, action: act });
+    if (!req || !act) {
+      console.warn('[SUBMIT-ACTION] Missing request or action, aborting.');
+      return;
+    }
 
     setProcessing(true);
     try {
       const token = getAuthToken();
       const newStatus = getNextStatus(req.status, act, req);
+      console.log('[SUBMIT-ACTION] Calculated newStatus:', newStatus);
 
       // Generate default comment based on action and status if no comment provided
       let defaultComment = '';
@@ -517,7 +521,7 @@ export default function RequestsPage() {
 
       const data = await response.json();
       console.log('[SUBMIT-ACTION] Response received:', { success: data.success, status: req.status, action: act });
-      
+
       if (data.success) {
         // Use actual status from backend if available (workflow returns newStatus, regular returns data.status)
         const confirmedStatus = data.newStatus || data.data?.status || newStatus;
@@ -545,7 +549,7 @@ export default function RequestsPage() {
         } else if (act === 'physical_inspection') {
           successMessage = 'Physical inspection initiated successfully';
         }
-        
+
         toast.success(successMessage);
 
         // Close all modals
@@ -558,9 +562,9 @@ export default function RequestsPage() {
         const isStaffReviewStage = req.status === 'staff_review';
         const isReturnedStatus = req.status === 'returned';
         const isPhysicalInspectionAction = act === 'physical_inspection';
-        
+
         const needsPageReload = isStaffReviewStage || isReturnedStatus || isPhysicalInspectionAction;
-        
+
         console.log(`[SUBMIT-ACTION] Reload check:`, {
           reqStatus: req.status,
           action: act,
@@ -569,7 +573,7 @@ export default function RequestsPage() {
           isPhysicalInspectionAction,
           needsPageReload
         });
-        
+
         if (needsPageReload) {
           console.log('[SUBMIT-ACTION] ⚠️ TRIGGERING PAGE RELOAD in 800ms...');
           // Reload page after a short delay to show the toast
@@ -1095,6 +1099,18 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
   const isMedicoLegal = String(request.certificate_type || '').toLowerCase().includes('medico') || String(request.reference_number || '').toUpperCase().startsWith('ML');
   const isDeath = String(request.certificate_type || '').toLowerCase().includes('death') || String(request.purpose || '').toLowerCase().includes('death');
 
+  // Parse details if string
+  let additionalDetails = {};
+  try {
+    if (typeof request.details === 'string') {
+      additionalDetails = JSON.parse(request.details);
+    } else if (typeof request.details === 'object') {
+      additionalDetails = request.details || {};
+    }
+  } catch (e) {
+    console.error('Error parsing details', e);
+  }
+
   // Helper to calculate age from date string
   const calculateAge = (dob) => {
     if (!dob) return null;
@@ -1199,7 +1215,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
   const [isSyncing, setIsSyncing] = useState(false);
   const [showSyncConfirm, setShowSyncConfirm] = useState(false);
   const isBusinessPermit = request.certificate_type === 'business_permit';
-  const isClearanceWithInspection = request.certificate_type === 'barangay_clearance' && 
+  const isClearanceWithInspection = request.certificate_type === 'barangay_clearance' &&
     (request.status === 'physical_inspection' || request.status === 'secretary_approval');
   const requiresPhysicalInspection = isBusinessPermit || isClearanceWithInspection;
 
@@ -1241,7 +1257,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
               'Authorization': `Bearer ${token}`
             }
           });
-          
+
           if (response.ok) {
             const data = await response.json();
             if (data.success && data.data) {
@@ -1384,12 +1400,12 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
         toast.success('Inspection phase started!');
         setShowInspectionStartModal(false);
         setInspectionStartComment('');
-        
+
         console.log('[START-INSPECTION] Success! Triggering page reload...');
-        
+
         // Close the main modal
         if (onClose) onClose();
-        
+
         // Reload page to refresh the assignments list
         setTimeout(() => {
           console.log('[START-INSPECTION] 🔄 RELOADING PAGE NOW!');
@@ -1440,7 +1456,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
     setIsUpdatingInspection(true);
     try {
       const token = getAuthToken();
-      
+
       // Save to the new physical inspection API
       const response = await fetch(`${API_URL}/physical-inspection/request/${request.id}`, {
         method: 'POST',
@@ -1454,7 +1470,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
       const data = await response.json();
       if (data.success) {
         if (!andForward) toast.success('Inspection results saved!');
-        
+
         if (andForward) {
           // If forwarding, we trigger the approve action
           onAction(request, 'approve');
@@ -2073,6 +2089,45 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                           <div className="col-span-2">
                             <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Partnership Length</p>
                             <p className="font-black text-gray-900 text-[13px] uppercase">{request.living_together_years || '0'} YRS, {request.living_together_months || '0'} MOS</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {isBusinessPermit && (
+                  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm mt-4">
+                    <div className="flex justify-between items-center mb-5 border-l-4 border-emerald-500 pl-3">
+                      <h3 className="font-black text-gray-900 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em]">
+                        <Store className="w-4 h-4 text-emerald-500" />
+                        Business Details
+                      </h3>
+                    </div>
+                    <div className={`grid gap-6 ${['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
+                      {!isEditing && (
+                        <>
+                          <div className={['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) ? "col-span-1" : "col-span-2"}>
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Business Name</p>
+                            <p className="font-extrabold text-gray-900 uppercase text-[15px] tracking-tight truncate">{additionalDetails?.businessName || 'N/A'}</p>
+                          </div>
+                          <div className="col-span-1 md:col-span-2">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Nature of Business</p>
+                            <p className="font-black text-gray-900 text-[13px] uppercase">{additionalDetails?.natureOfBusiness || 'N/A'}</p>
+                          </div>
+                          <div className="col-span-2 md:col-span-4">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Business Address</p>
+                            <p className="font-extrabold text-gray-900 text-[13px] uppercase leading-relaxed">{additionalDetails?.businessAddress || 'N/A'}</p>
+                          </div>
+                          <div className="col-span-1 md:col-span-2">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Contact Person</p>
+                            <p className="font-black text-gray-900 text-[13px] uppercase">{additionalDetails?.contactPerson || 'N/A'}</p>
+                          </div>
+                          <div className="col-span-1 md:col-span-2">
+                            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Clearance Type</p>
+                            <span className="font-black text-emerald-700 bg-emerald-50 inline-block px-2 py-0.5 rounded border border-emerald-200 text-[11px] uppercase tracking-widest mt-1">
+                              {additionalDetails?.clearanceType === 'renewal' ? 'RENEWAL OF CLEARANCE' : 'NEW CLEARANCE'}
+                            </span>
                           </div>
                         </>
                       )}
@@ -2900,8 +2955,8 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
 
           {/* Footer Actions */}
           {
-            (canAct && (['pending', 'processing', 'staff_review', 'physical_inspection', 'secretary_approval', 'captain_approval', 'Treasury', 'oic_review', 'returned'].includes(request.status) || 
-             (request.status === 'ready_for_pickup' && isUserAssignedToRequest(request)))) && (
+            (canAct && (['pending', 'processing', 'staff_review', 'physical_inspection', 'secretary_approval', 'captain_approval', 'Treasury', 'oic_review', 'returned'].includes(request.status) ||
+              (request.status === 'ready_for_pickup' && isUserAssignedToRequest(request)))) && (
               <div className="border-t bg-gray-50 px-6 py-4 pb-6 shrink-0 mt-auto">
                 {request.residents?.pending_case && (
                   <div className="bg-red-600 p-4 rounded-xl shadow-lg border-2 border-red-400 text-white mb-6">
@@ -3067,9 +3122,9 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                           className={`px-10 py-3.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-lg shadow-blue-200 ${isEditing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-blue-700 hover:shadow-blue-300 transform hover:-translate-y-0.5 active:scale-95'}`}
                         >
                           <CheckCircle className="w-4 h-4" />
-                          {request.status === 'Treasury' ? 'Mark as Paid & Generate OR' : 
-                           request.status === 'captain_approval' ? 'Official Approval' : 
-                           (request.status === 'oic_review' ? 'Set as Ready' : 'Forward to Next')}
+                          {request.status === 'Treasury' ? 'Mark as Paid & Generate OR' :
+                            request.status === 'captain_approval' ? 'Official Approval' :
+                              (request.status === 'oic_review' ? 'Set as Ready' : 'Forward to Next')}
                         </button>
                       </>
                     )}
@@ -3088,7 +3143,7 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
               }}
               onSuccess={() => {
                 setShowORModal(false);
-                onUpdate();
+                onClose(); // Close the request details modal
               }}
             />
           )}
@@ -3241,7 +3296,7 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
       iconColor: 'text-green-600',
       buttonBg: 'bg-green-600 hover:bg-green-700',
       buttonText: (currentStep?.status === 'Treasury' || request.status === 'Treasury') ? 'Mark as Paid & Generate OR' :
-                  (currentStep?.status === 'captain_approval' || request.status === 'captain_approval') ? 'Approve Request' : 'Forward Request'
+        (currentStep?.status === 'captain_approval' || request.status === 'captain_approval') ? 'Approve Request' : 'Forward Request'
     },
     reject: isReviewStep ? {
       title: 'Mark as Not Legitimate',
@@ -3414,8 +3469,8 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
                   className="px-8 py-3 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300 transform active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {processing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <PenTool className="w-4 h-4" />}
-                  Sign & {currentStep?.status === 'Treasury' ? 'Generate OR' : 
-                          currentStep?.status === 'captain_approval' ? 'Approve' : 'Forward'}
+                  Sign & {currentStep?.status === 'Treasury' ? 'Generate OR' :
+                    currentStep?.status === 'captain_approval' ? 'Approve' : 'Forward'}
                 </button>
               </>
             ) : (
@@ -3489,8 +3544,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
   const [history, setHistory] = useState([]);
   const [currentDate, setCurrentDate] = useState('');
   const [inspectionData, setInspectionData] = useState(null);
-  const [certificateUrl, setCertificateUrl] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState('old'); // 'new' or 'old'
 
   const fetchHistory = async () => {
     try {
@@ -3513,7 +3567,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
   const fetchInspectionData = async () => {
     // Only fetch inspection data for business permits
     if (request.certificate_type !== 'business_permit') return;
-    
+
     try {
       const token = getAuthToken();
       const response = await fetch(`${API_URL}/physical-inspection/request/${request.id}`, {
@@ -3531,31 +3585,27 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
     }
   };
 
-  const generateCertificate = async () => {
-    setIsGenerating(true);
+  const [orData, setOrData] = useState(null);
+  const fetchORData = async () => {
+    if (request.certificate_type !== 'business_permit') return;
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_URL}/certificates/${request.id}/preview`, {
+      const response = await fetch(`${API_URL}/official-receipts/request/${request.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      
-      if (response.ok) {
-        // Create a blob URL for the HTML content
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setCertificateUrl(url);
-      } else {
-        console.error('Failed to generate certificate');
+      const data = await response.json();
+      if (data.success) {
+        setOrData(data.data);
       }
     } catch (error) {
-      console.error('Error generating certificate:', error);
-    } finally {
-      setIsGenerating(false);
+      console.error('Error fetching OR data:', error);
     }
   };
+
+
 
   useEffect(() => {
     // Fetch officials from API for real-time sync
@@ -3601,6 +3651,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
     fetchOfficials();
     fetchHistory();
     fetchInspectionData();
+    fetchORData();
 
     // Set current date
     const now = new Date();
@@ -3645,6 +3696,8 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
   };
 
   const handleDownloadPDF = async () => {
+
+    // For other certificates OR the Business Permit Application Form (old template), use html2canvas
     if (!certificateRef.current) return;
 
     setIsDownloading(true);
@@ -3732,7 +3785,28 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
             </div>
           </div>
 
-          {/* Certificate Preview - Using exact same template as BarangayClearanceModal */}
+          {/* Template Selection Tabs (Only for Business Permits) */}
+          {request.certificate_type === 'business_permit' && (
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-2 flex items-center gap-4">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Form Template:</span>
+              <div className="flex bg-gray-200 p-1 rounded-xl">
+                <button
+                  onClick={() => setSelectedTemplate('old')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedTemplate === 'old' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Application Form
+                </button>
+                <button
+                  onClick={() => setSelectedTemplate('new')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedTemplate === 'new' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Business Clearance
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Certificate Preview */}
           <div className="p-6 bg-gray-100 overflow-y-auto max-h-[calc(100vh-150px)]">
             <ClearancePreviewForRequests
               request={request}
@@ -3741,6 +3815,8 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
               certificateRef={certificateRef}
               history={history}
               inspectionData={inspectionData}
+              selectedTemplate={selectedTemplate}
+              orData={orData}
             />
           </div>
         </div>
@@ -3750,7 +3826,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
 }
 
 // Certificate Preview Component - Exact copy from BarangayClearanceModal
-function ClearancePreviewForRequests({ request, currentDate, officials, certificateRef, history = [], inspectionData = null }) {
+function ClearancePreviewForRequests({ request, currentDate, officials, certificateRef, history = [], inspectionData = null, selectedTemplate = 'old', orData = null }) {
   const logos = officials.logos || {};
   const headerStyle = officials.headerStyle || {};
   const countryStyle = officials.countryStyle || {};
@@ -3917,10 +3993,10 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
             <div className="relative z-10 flex flex-col items-center flex-1">
               {!isBusinessPermit && (
-                <h2 className="text-center font-bold mb-10 border-b-4 border-black inline-block pb-1 px-4 uppercase leading-normal" style={{
+                <h2 className={`text-center font-bold mb-10 w-full pb-1 px-4 uppercase leading-normal ${!isSamePerson ? 'border-b-4 border-black inline-block' : 'block whitespace-nowrap'}`} style={{
                   color: isMedicoLegal ? '#000000' : '#004d40',
-                  fontSize: '24px',
-                  borderBottom: isMedicoLegal ? '2px solid black' : '4px solid black'
+                  fontSize: isSamePerson ? '20px' : '24px',
+                  borderBottom: (isMedicoLegal && !isSamePerson) ? '2px solid black' : (!isSamePerson ? '4px solid black' : 'none')
                 }}>
                   {isNaturalDeath ? 'NATURAL DEATH CERTIFICATION' :
                     isGuardianship ? 'BARANGAY CERTIFICATION FOR GUARDIANSHIP' :
@@ -3934,135 +4010,241 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
               )}
 
               {isBusinessPermit ? (
-                <div className="w-full text-[11px] print:text-[11px]">
-                  <h2 className="text-center font-bold uppercase mb-4 tracking-wide" style={{ color: '#880000', fontSize: '16px', letterSpacing: '0.05em' }}>
-                    BARANGAY BUSINESS CLEARANCE APPLICATION FORM
-                  </h2>
+                selectedTemplate === 'new' ? (
+                  <div className="w-full text-[14px] text-justify px-4">
+                    <h2 className="text-center font-bold uppercase mb-10 tracking-tight" style={{ color: '#000000', fontSize: '28px' }}>
+                      <span className="border-b-2 border-black">BARANGAY BUSINESS CLEARANCE</span>
+                    </h2>
 
-                  {/* Application Info Table */}
-                  <table className="w-full border-collapse border border-black mb-4 font-bold">
-                    <tbody>
-                      <tr>
-                        <td className="border border-black p-1.5 w-[35%]">DATE OF APPLICATION AND NO.</td>
-                        <td className="border border-black p-1.5 w-[35%] font-normal">
-                          {request.applicationDate ? new Date(request.applicationDate).toLocaleDateString('en-US') : (request.created_at ? new Date(request.created_at).toLocaleDateString('en-US') : '')}
-                        </td>
-                        <td className="border border-black p-1.5 w-[30%] text-center text-red-700 font-bold">
-                          {request.applicationNo || request.reference_number || '2026 -'}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border border-black p-1.5" colSpan="3">OWNER'S DETAILS</td>
-                      </tr>
-                      <tr>
-                        <td className="border border-black p-1.5 font-normal">FULL NAME</td>
-                        <td className="border border-black p-1.5 font-bold" colSpan="2">{request.ownerFullName || additionalDetails.ownerFullName || formData.fullName}</td>
-                      </tr>
-                      <tr>
-                        <td className="border border-black p-1.5 font-normal">COMPLETE ADDRESS</td>
-                        <td className="border border-black p-1.5 font-bold" colSpan="2">{request.ownerAddress || additionalDetails.ownerAddress || formData.address}</td>
-                      </tr>
-                      <tr>
-                        <td className="border border-black p-1.5 font-normal">BUSINESS NAME</td>
-                        <td className="border border-black p-1.5 font-bold" colSpan="2">{request.businessName || additionalDetails.businessName || ''}</td>
-                      </tr>
-                      <tr>
-                        <td className="border border-black p-1.5 font-normal">NATURE OF BUSINESS</td>
-                        <td className="border border-black p-1.5 font-bold" colSpan="2">{request.natureOfBusiness || additionalDetails.natureOfBusiness || ''}</td>
-                      </tr>
-                      <tr>
-                        <td className="border border-black p-1.5 font-normal">BUSINESS COMPLETE ADDRESS</td>
-                        <td className="border border-black p-1.5 font-bold" colSpan="2">{request.businessAddress || additionalDetails.businessAddress || ''}</td>
-                      </tr>
-                      <tr>
-                        <td className="border border-black p-1.5 font-normal">CONTACT PERSON / NUMBER</td>
-                        <td className="border border-black p-1.5 font-bold" colSpan="2">
-                          {request.contactPerson || additionalDetails.contactPerson || request.ownerFullName || additionalDetails.ownerFullName || formData.fullName} / {request.contactNumber || additionalDetails.contactNumber || request.contact_number || ''}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                    <div className="mb-6 font-bold text-gray-900">To Whom It May Concern:</div>
 
-                  <p className="font-bold mb-1">A. ACTIONS TAKEN BY INSPECTION COMMITTEE:</p>
-                  <table className="w-full border-collapse border border-black text-center mb-4">
-                    <thead>
-                      <tr className="font-bold">
-                        <td className="border border-black p-1.5 w-[25%]">AREAS</td>
-                        <td className="border border-black p-1.5 w-[35%]">FINDINGS AND RECOMMENDATIONS</td>
-                        <td className="border border-black p-1.5 w-[20%]">DATE OF INSPECTION</td>
-                        <td className="border border-black p-1.5 w-[20%]">REMARKS</td>
-                      </tr>
-                    </thead>
-                    <tbody className="font-bold text-left">
+                    <div className="mb-8 leading-relaxed text-gray-800">
+                      This is to certify that below business / trade name as described herein applying for:
+                    </div>
+
+                    <div className="flex gap-16 justify-start mb-8 font-bold ml-4">
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 h-6 border-2 border-black flex items-center justify-center text-black text-xl font-black">
+                          {(additionalDetails.clearanceType !== 'renewal') ? '✓' : ''}
+                        </span>
+                        <span className="text-[15px]">New Business Clearance</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 h-6 border-2 border-black flex items-center justify-center text-black text-xl font-black">
+                          {(additionalDetails.clearanceType === 'renewal') ? '✓' : ''}
+                        </span>
+                        <span className="text-[15px]">Renewal of Existing Business Clearance</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 mb-10 ml-4">
                       {[
-                        'HEALTH AND SAFETY', 'SANITATION', 'HEALTH HAZARD', 'BUILDING PERMIT',
-                        'FIRE EXIT / HAZARD', 'ENVIRONMENT', 'WASTE MANAGEMENT', 'HAZARDOUS WASTE',
-                        'OTHERS', 'COMPLAINTS, ETC.'
-                      ].map((area, idx) => (
-                        <tr key={idx} className="h-6">
-                          <td className="border border-black p-1 pl-2 text-[10px]">{area}</td>
-                          <td className="border border-black p-1 text-[10px] font-normal uppercase">
-                            {inspectionData?.areas?.[area]?.findings || ''}
-                          </td>
-                          <td className="border border-black p-1 text-[10px] font-normal">
-                            {inspectionData?.areas?.[area]?.date || ''}
-                          </td>
-                          <td className="border border-black p-1 text-[10px] font-normal uppercase">
-                            {inspectionData?.areas?.[area]?.remarks || ''}
-                          </td>
-                        </tr>
+                        ['Name of Owner', request.ownerFullName || additionalDetails.ownerFullName || formData.fullName],
+                        ["Owner's Address", request.ownerAddress || additionalDetails.ownerAddress || formData.address],
+                        ['Business / Trade Name', request.businessName || additionalDetails.businessName || 'N/A'],
+                        ['Business Address', request.businessAddress || additionalDetails.businessAddress || 'N/A'],
+                        ['Nature of Business', request.natureOfBusiness || additionalDetails.natureOfBusiness || 'N/A']
+                      ].map(([label, value], idx) => (
+                        <div key={idx} className="flex items-start">
+                          <div className="w-48 font-bold text-gray-900 flex flex-col">
+                            {label === 'Business / Trade Name' ? (
+                              <>
+                                <span>Business / Trade</span>
+                                <span>Name</span>
+                              </>
+                            ) : label}
+                          </div>
+                          <span className="font-bold mr-4">:</span>
+                          <span className="flex-1 font-bold uppercase text-black">{String(value || '').toUpperCase()}</span>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
-
-                  <div className="flex flex-col gap-4 mb-6 font-bold">
-                    <div className="flex items-center gap-2">
-                      <span>DATE AND TIME OF VISIT:</span>
-                      <div className="flex-1 border-b border-black h-4 px-2">
-                        {inspectionData?.visitDateTime ? new Date(inspectionData.visitDateTime).toLocaleString() : ''}
-                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span>NAME OF OWNER / REPRESENTATIVE AND SIGNATURE:</span>
-                      <div className="flex-1 border-b border-black h-4 px-2 uppercase">
-                        {inspectionData?.ownerRepresentative || ''}
+
+                    <div className="mb-8 leading-relaxed text-black font-normal text-[15px]">
+                      The subject business establishment upon occular visit / inspection conducted by this office jointly with Sangguniang Barangay Committees on Health, Environment and Finance and Barangay Treasurer found to be compliant and in confirmity with the existing barangay ordinances, rules and regulations as applicable for this nature of business being applied for clearance.
+                    </div>
+
+                    <div className="mb-8 leading-relaxed text-black font-normal text-[15px]">
+                      In view of the above, this office poses no objection for the issuance of further permits as necessary for the conduct of above business activity including Mayor's Permit, etc.
+                    </div>
+
+                    <div className="mb-12 leading-relaxed text-black font-normal text-[15px]">
+                      Issued this {issuedDate} at Barangay Iba O' Este, Calumpit, Bulacan.
+                    </div>
+
+                    <div className="grid grid-cols-2 mt-4 items-start">
+                      <div className="text-left">
+                        <p className="font-bold mb-16 text-gray-900">TRULY YOURS,</p>
+                        <div className="relative inline-block">
+                          {captainApproval?.signature_data && (
+                            <div className="absolute left-0 top-0 -translate-y-2/3 w-64 h-32 pointer-events-none z-0" style={{ mixBlendMode: 'multiply' }}>
+                              <img src={captainApproval.signature_data} className="w-full h-full object-contain" alt="Sig" />
+                            </div>
+                          )}
+                          <p className="font-bold text-[22px] uppercase relative z-10 text-black">
+                            {officials.chairman}
+                          </p>
+                          <p className="text-[16px] font-bold text-gray-900 uppercase tracking-tight relative z-10">BARANGAY CHAIRMAN</p>
+                        </div>
+                      </div>
+
+                      <div className="text-right flex flex-col items-end">
+                        <p className="font-bold mb-4 text-black uppercase tracking-tight text-[15px]">
+                          <span className="border-b-2 border-black pb-0.5">Details of Payment</span>
+                        </p>
+                        <div className="grid grid-cols-[140px_10px_120px] gap-x-1 gap-y-2 text-right text-black font-normal">
+                          <span>OR NO.</span>
+                          <span>:</span>
+                          <span className="text-left pl-2 font-bold">{orData?.or_number || ''}</span>
+
+                          <span>Amount Paid</span>
+                          <span>:</span>
+                          <span className="text-left pl-2 font-bold">{orData?.amount_paid ? '₱' + parseFloat(orData.amount_paid).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}</span>
+
+                          <span>BC Control No.</span>
+                          <span>:</span>
+                          <span className="text-left pl-2 font-bold">{orData?.control_number || request.reference_number || ''}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
+                ) : (
+                  <div className="w-full text-[11px] print:text-[11px]">
+                    <h2 className="text-center font-bold uppercase mb-4 tracking-wide" style={{ color: '#880000', fontSize: '16px', letterSpacing: '0.05em' }}>
+                      BARANGAY BUSINESS CLEARANCE APPLICATION FORM
+                    </h2>
 
-                  <p className="font-bold mb-1">B. RECOMMENDING APPROVAL</p>
-                  <table className="w-full border-collapse border border-black text-center mb-8">
-                    <thead>
-                      <tr className="font-bold">
-                        <td className="border border-black p-1.5 w-[30%]">NAME</td>
-                        <td className="border border-black p-1.5 w-[30%]">COMMITTEE</td>
-                        <td className="border border-black p-1.5 w-[15%]">DATE</td>
-                        <td className="border border-black p-1.5 w-[25%]">SIGNATURE</td>
-                      </tr>
-                    </thead>
-                    <tbody className="font-bold">
-                      {['HEALTH', 'ENVIRONMENT', 'INFRASTRUCTURE', 'PEACE & ORDER'].map((committee, idx) => (
-                        <tr key={idx} className="h-8">
-                          <td className="border border-black p-1 text-left pl-2 text-[10px] font-normal">
-                            {inspectionData?.recommendations?.[committee]?.name || ''}
+                    {/* Application Info Table */}
+                    <table className="w-full border-collapse border border-black mb-4 font-bold">
+                      <tbody>
+                        <tr>
+                          <td className="border border-black p-1.5 w-[35%]">TYPE OF CLEARANCE</td>
+                          <td className="border border-black p-1.5 text-center font-bold text-red-700 uppercase" colSpan="2">
+                            {additionalDetails?.clearanceType === 'renewal' ? 'RENEWAL' : 'NEW CLEARANCE'}
                           </td>
-                          <td className="border border-black p-1 text-[10px]">{committee}</td>
-                          <td className="border border-black p-1 text-[10px] font-normal">
-                            {inspectionData?.recommendations?.[committee]?.date || ''}
-                          </td>
-                          <td className="border border-black p-1"></td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                        <tr>
+                          <td className="border border-black p-1.5 w-[35%]">DATE OF APPLICATION AND NO.</td>
+                          <td className="border border-black p-1.5 w-[35%] font-normal">
+                            {request.applicationDate ? new Date(request.applicationDate).toLocaleDateString('en-US') : (request.created_at ? new Date(request.created_at).toLocaleDateString('en-US') : '')}
+                          </td>
+                          <td className="border border-black p-1.5 w-[30%] text-center text-red-700 font-bold">
+                            {request.applicationNo || request.reference_number || '2026 -'}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-black p-1.5" colSpan="3">OWNER'S DETAILS</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-black p-1.5 font-normal">FULL NAME</td>
+                          <td className="border border-black p-1.5 font-bold" colSpan="2">{request.ownerFullName || additionalDetails.ownerFullName || formData.fullName}</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-black p-1.5 font-normal">COMPLETE ADDRESS</td>
+                          <td className="border border-black p-1.5 font-bold" colSpan="2">{request.ownerAddress || additionalDetails.ownerAddress || formData.address}</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-black p-1.5 font-normal">BUSINESS NAME</td>
+                          <td className="border border-black p-1.5 font-bold" colSpan="2">{request.businessName || additionalDetails.businessName || ''}</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-black p-1.5 font-normal">NATURE OF BUSINESS</td>
+                          <td className="border border-black p-1.5 font-bold" colSpan="2">{request.natureOfBusiness || additionalDetails.natureOfBusiness || ''}</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-black p-1.5 font-normal">BUSINESS COMPLETE ADDRESS</td>
+                          <td className="border border-black p-1.5 font-bold" colSpan="2">{request.businessAddress || additionalDetails.businessAddress || ''}</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-black p-1.5 font-normal">CONTACT PERSON / NUMBER</td>
+                          <td className="border border-black p-1.5 font-bold" colSpan="2">
+                            {request.contactPerson || additionalDetails.contactPerson || request.ownerFullName || additionalDetails.ownerFullName || formData.fullName} / {request.contactNumber || additionalDetails.contactNumber || request.contact_number || ''}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
 
-                  <p className="font-bold mb-6">C. APPROVAL</p>
-                  <div className="flex flex-col mb-4 relative ml-4">
-                    {/* Optional e-signature rendering if available and wanted on business permits */}
-                    <p className="font-bold text-[14px]">ALEXANDER C. MANIO</p>
-                    <p className="font-bold text-[13px]">BARANGAY CHAIRMAN</p>
+                    <p className="font-bold mb-1">A. ACTIONS TAKEN BY INSPECTION COMMITTEE:</p>
+                    <table className="w-full border-collapse border border-black text-center mb-4">
+                      <thead>
+                        <tr className="font-bold">
+                          <td className="border border-black p-1.5 w-[25%]">AREAS</td>
+                          <td className="border border-black p-1.5 w-[35%]">FINDINGS AND RECOMMENDATIONS</td>
+                          <td className="border border-black p-1.5 w-[20%]">DATE OF INSPECTION</td>
+                          <td className="border border-black p-1.5 w-[20%]">REMARKS</td>
+                        </tr>
+                      </thead>
+                      <tbody className="font-bold text-left">
+                        {[
+                          'HEALTH AND SAFETY', 'SANITATION', 'HEALTH HAZARD', 'BUILDING PERMIT',
+                          'FIRE EXIT / HAZARD', 'ENVIRONMENT', 'WASTE MANAGEMENT', 'HAZARDOUS WASTE',
+                          'OTHERS', 'COMPLAINTS, ETC.'
+                        ].map((area, idx) => (
+                          <tr key={idx} className="h-6">
+                            <td className="border border-black p-1 pl-2 text-[10px]">{area}</td>
+                            <td className="border border-black p-1 text-[10px] font-normal uppercase">
+                              {inspectionData?.areas?.[area]?.findings || ''}
+                            </td>
+                            <td className="border border-black p-1 text-[10px] font-normal">
+                              {inspectionData?.areas?.[area]?.date || ''}
+                            </td>
+                            <td className="border border-black p-1 text-[10px] font-normal uppercase">
+                              {inspectionData?.areas?.[area]?.remarks || ''}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    <div className="flex flex-col gap-4 mb-6 font-bold">
+                      <div className="flex items-center gap-2">
+                        <span>DATE AND TIME OF VISIT:</span>
+                        <div className="flex-1 border-b border-black h-4 px-2">
+                          {inspectionData?.visitDateTime ? new Date(inspectionData.visitDateTime).toLocaleString() : ''}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span>NAME OF OWNER / REPRESENTATIVE AND SIGNATURE:</span>
+                        <div className="flex-1 border-b border-black h-4 px-2 uppercase">
+                          {inspectionData?.ownerRepresentative || ''}
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="font-bold mb-1">B. RECOMMENDING APPROVAL</p>
+                    <table className="w-full border-collapse border border-black text-center mb-8">
+                      <thead>
+                        <tr className="font-bold">
+                          <td className="border border-black p-1.5 w-[30%]">NAME</td>
+                          <td className="border border-black p-1.5 w-[30%]">COMMITTEE</td>
+                          <td className="border border-black p-1.5 w-[15%]">DATE</td>
+                          <td className="border border-black p-1.5 w-[25%]">SIGNATURE</td>
+                        </tr>
+                      </thead>
+                      <tbody className="font-bold">
+                        {['HEALTH', 'ENVIRONMENT', 'INFRASTRUCTURE', 'PEACE & ORDER'].map((committee, idx) => (
+                          <tr key={idx} className="h-8">
+                            <td className="border border-black p-1 text-left pl-2 text-[10px] font-normal">
+                              {inspectionData?.recommendations?.[committee]?.name || ''}
+                            </td>
+                            <td className="border border-black p-1 text-[10px]">{committee}</td>
+                            <td className="border border-black p-1 text-[10px] font-normal">
+                              {inspectionData?.recommendations?.[committee]?.date || ''}
+                            </td>
+                            <td className="border border-black p-1"></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    <p className="font-bold mb-6">C. APPROVAL</p>
+                    <div className="flex flex-col mb-4 relative ml-4">
+                      {/* Optional e-signature rendering if available and wanted on business permits */}
+                      <p className="font-bold text-[14px]">ALEXANDER C. MANIO</p>
+                      <p className="font-bold text-[13px]">BARANGAY CHAIRMAN</p>
+                    </div>
                   </div>
-                </div>
+                )
               ) : (
                 <div className="w-full space-y-6 text-justify" style={{ fontSize: '15px' }}>
                   <div className="flex justify-between items-center mb-6">
@@ -4195,7 +4377,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                                 ) : label}
                               </span>
                               <span className="font-normal">:</span>
-                              <span className={label === 'NAME' || label === 'Name' || isBoldRow || isSamePerson ? 'font-bold' : 'font-normal'}>
+                              <span className={(label === 'NAME' || label === 'Name' || isBoldRow || isSamePerson) ? 'font-bold' : 'font-normal'}>
                                 {String(value || '_________________').toUpperCase()}
                               </span>
                             </div>
@@ -4205,7 +4387,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                     </div>
 
                     {isNaturalDeath || isGuardianship || isCohabitation || isSamePerson ? (
-                      <p className={`mb-10 text-left leading-relaxed ${(isGuardianship || isCohabitation) ? 'uppercase' : ''}`}>
+                      <p className={`${isSamePerson ? 'mb-6' : 'mb-10'} text-left leading-relaxed ${(isGuardianship || isCohabitation) ? 'uppercase' : ''}`}>
                         Issued this {isSamePerson ? issuedDate : issuedDate.toUpperCase()} at Barangay Iba O' Este, Calumpit, Bulacan upon the request of <span className={(isGuardianship || isCohabitation || isSamePerson) ? "" : "font-bold"}>{(isGuardianship || isCohabitation || isSamePerson) ? (isSamePerson ? "above mentioned persons" : "ABOVE MENTIONED PERSONS") : (formData.requestorName ? formData.requestorName.toUpperCase() : "THE ABOVE PERSON'S RELATIVES")}</span> for any legal purposes it may serve.
                       </p>
                     ) : isMedicoLegal ? (
@@ -4244,7 +4426,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                     <div
                       className="relative text-left"
                       style={{
-                        marginTop: (isGuardianship || isCohabitation || isMedicoLegal || isSamePerson) ? '120px' : (request.certificate_type === 'certificate_of_indigency' ? '32px' : '64px')
+                        marginTop: isSamePerson ? '100px' : ((isGuardianship || isCohabitation || isMedicoLegal) ? '120px' : (request.certificate_type === 'certificate_of_indigency' ? '32px' : '64px'))
                       }}
                     >
                       {isNaturalDeath && <div className="h-10"></div>}
@@ -4258,7 +4440,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                       )}
 
                       <div className="text-left mb-4 self-start">
-                        <p className="font-bold text-[15px] mb-12">TRULY YOURS,</p>
+                        <p className={`font-bold text-[15px] ${isSamePerson ? 'mb-32' : 'mb-12'}`}>TRULY YOURS,</p>
 
                         <div className="relative inline-block">
                           {/* Big Backdrop Signature centered horizontally but positioned above name */}
@@ -4442,17 +4624,17 @@ function ORGenerationModal({ request, onClose, onSuccess }) {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         toast.success(`Official Receipt ${data.orNumber} generated successfully!`);
         setORNumber(data.orNumber);
-        
+
         // Fetch the OR content to display in modal
         if (data.filePath) {
           console.log('Fetching OR content from:', `${API_URL}/official-receipts/files/${data.filePath}`);
           const orResponse = await fetch(`${API_URL}/official-receipts/files/${data.filePath}`);
           console.log('OR fetch response status:', orResponse.status);
-          
+
           if (orResponse.ok) {
             const content = await orResponse.text();
             console.log('OR content length:', content.length);
@@ -4532,40 +4714,51 @@ function ORGenerationModal({ request, onClose, onSuccess }) {
       <Modal
         isOpen={true}
         onClose={handleCloseORPreview}
-        title={`Official Receipt ${orNumber}`}
-        maxWidth="max-w-4xl"
+        title=""
+        maxWidth="max-w-[700px]"
       >
-        <div className="p-6">
-          <div className="mb-4 flex justify-between items-center">
-            <h3 className="text-lg font-bold text-green-800">Official Receipt Generated Successfully</h3>
-            <div className="flex gap-3">
+        <div className="p-4 md:p-5">
+          <div className="mb-4 flex flex-col sm:flex-row justify-between items-center bg-green-50 p-3 md:p-4 rounded-xl border border-green-200 gap-3">
+            <div className="flex-1">
+              <h3 className="text-base sm:text-lg font-black text-green-800 uppercase tracking-tight flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                OR Generated
+              </h3>
+              <p className="text-green-700 text-xs font-medium mt-0.5 ml-7 hidden sm:block">Please verify before forwarding to the Releasing Team.</p>
+            </div>
+            <div className="flex items-center gap-2">
               <button
                 onClick={handlePrintOR}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5 text-xs font-bold"
+                title="Print OR"
               >
                 <Printer className="w-4 h-4" />
-                Print OR
+                <span className="hidden sm:inline">Print</span>
               </button>
               <button
                 onClick={handleDownloadOR}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                className="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-1.5 text-xs font-bold"
+                title="Download OR"
               >
                 <Download className="w-4 h-4" />
-                Download
+                <span className="hidden sm:inline">Save</span>
               </button>
               <button
                 onClick={handleCloseORPreview}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5 text-xs font-black tracking-wide ml-1 shrink-0"
               >
-                Close & Forward
+                Forward <span className="hidden sm:inline">Request</span> &rarr;
               </button>
             </div>
           </div>
-          
-          <div 
-            className="border border-gray-300 rounded-lg overflow-auto max-h-[70vh] bg-white"
-            dangerouslySetInnerHTML={{ __html: orContent }}
-          />
+
+          <div className="border border-gray-300 rounded-xl overflow-hidden h-[45vh] min-h-[350px] bg-gray-100 relative">
+            <iframe
+              title="Official Receipt Preview"
+              srcDoc={orContent}
+              className="w-full h-full border-0 bg-white"
+            />
+          </div>
         </div>
       </Modal>
     );
@@ -4589,7 +4782,7 @@ function ORGenerationModal({ request, onClose, onSuccess }) {
               <p className="text-green-700 mb-4">
                 Generate an Official Receipt for the business permit processing fee. You can review the OR before forwarding the request to the Releasing Team.
               </p>
-              
+
               <div className="bg-white rounded-lg p-4 border border-green-200">
                 <h4 className="font-bold text-gray-800 mb-2">Request Details:</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -4629,7 +4822,7 @@ function ORGenerationModal({ request, onClose, onSuccess }) {
             <input
               type="number"
               value={amount}
-              onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+              onChange={(e) => setAmount(e.target.value)}
               className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
               min="0"
               step="0.01"
@@ -4684,7 +4877,7 @@ function ORPreviewSection({ request }) {
       try {
         setLoading(true);
         const token = getAuthToken();
-        
+
         // Fetch OR record
         const response = await fetch(`${API_URL}/official-receipts/request/${request.id}`, {
           headers: {
@@ -4695,11 +4888,11 @@ function ORPreviewSection({ request }) {
         const data = await response.json();
         if (data.success && data.data) {
           setORData(data.data);
-          
+
           // Fetch OR content for preview using the file_path from the record
           if (data.data.file_path) {
             const orResponse = await fetch(`${API_URL}/official-receipts/files/${data.data.file_path}`);
-            
+
             if (orResponse.ok) {
               const content = await orResponse.text();
               setORContent(content);
@@ -4713,7 +4906,7 @@ function ORPreviewSection({ request }) {
             if (data.data.or_number) {
               const orFileName = `OR_${data.data.or_number}.html`;
               const orResponse = await fetch(`${API_URL}/official-receipts/files/${orFileName}`);
-              
+
               if (orResponse.ok) {
                 const content = await orResponse.text();
                 setORContent(content);
@@ -4896,8 +5089,8 @@ function ORPreviewSection({ request }) {
                 </button>
               </div>
             </div>
-            
-            <div 
+
+            <div
               className="border border-gray-300 rounded-lg overflow-auto max-h-[70vh] bg-white"
               dangerouslySetInnerHTML={{ __html: orContent }}
             />

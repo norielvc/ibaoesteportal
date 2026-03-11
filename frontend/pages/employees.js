@@ -205,7 +205,8 @@ export default function Employees() {
   const filteredEmployees = employees.filter(emp =>
     emp.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    emp.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.employeeCode?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -306,9 +307,16 @@ export default function Employees() {
                           <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${emp.status === 'active' ? 'bg-emerald-500' : 'bg-gray-300'}`}></div>
                         </div>
                         <div>
-                          <p className="text-[14px] font-black text-gray-900 uppercase tracking-tight group-hover:text-blue-600 transition-colors">
-                            {emp.firstName} {emp.lastName}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[14px] font-black text-gray-900 uppercase tracking-tight group-hover:text-blue-600 transition-colors">
+                              {emp.firstName} {emp.lastName}
+                            </p>
+                            {emp.employeeCode && (
+                              <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded text-[9px] font-black tracking-tighter">
+                                {emp.employeeCode}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[11px] font-mono font-bold text-gray-400 tracking-tighter truncate max-w-[200px]">
                             {emp.email}
                           </p>

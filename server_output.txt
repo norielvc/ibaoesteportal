@@ -1,0 +1,70 @@
+
+> admin-dashboard-system@1.0.0 dev
+> concurrently "npm run dev:backend" "npm run dev:frontend"
+
+(node:34324) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[0] 
+[0] > admin-dashboard-system@1.0.0 dev:backend
+[0] > cd backend && npm run dev
+[0] 
+[1] 
+[1] > admin-dashboard-system@1.0.0 dev:frontend
+[1] > cd frontend && npm run dev
+[1] 
+[0] 
+[0] > admin-dashboard-backend@1.0.0 dev
+[0] > nodemon server.js
+[0] 
+[1] 
+[1] > admin-dashboard-frontend@1.0.0 dev
+[1] > next dev -p 3001
+[1] 
+[0] [33m[nodemon] 3.1.11[39m
+[0] [33m[nodemon] to restart at any time, enter `rs`[39m
+[0] [33m[nodemon] watching path(s): *.*[39m
+[0] [33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[0] [32m[nodemon] starting `node server.js`[39m
+[0] Γ£à Supabase Client initialized
+[1]  Γ¿» Failed to start server
+[1] Error: listen EADDRINUSE: address already in use :::3001
+[1]     at Server.setupListenHandle [as _listen2] (node:net:1948:16)
+[1]     at listenInCluster (node:net:2005:12)
+[1]     at Server.listen (node:net:2110:7)
+[1]     at C:\Users\SCREENS\OneDrive\Desktop\Admin dashboard\frontend\node_modules\next\dist\server\lib\start-server.js:280:16
+[1]     at new Promise (<anonymous>)
+[1]     at startServer (C:\Users\SCREENS\OneDrive\Desktop\Admin dashboard\frontend\node_modules\next\dist\server\lib\start-server.js:191:11)
+[1]     at C:\Users\SCREENS\OneDrive\Desktop\Admin dashboard\frontend\node_modules\next\dist\server\lib\start-server.js:310:52
+[1]     at Span.traceAsyncFn (C:\Users\SCREENS\OneDrive\Desktop\Admin dashboard\frontend\node_modules\next\dist\trace\trace.js:154:26)
+[1]     at process.<anonymous> (C:\Users\SCREENS\OneDrive\Desktop\Admin dashboard\frontend\node_modules\next\dist\server\lib\start-server.js:310:35)
+[1]     at process.emit (node:events:508:28) {
+[1]   code: 'EADDRINUSE',
+[1]   errno: -4091,
+[1]   syscall: 'listen',
+[1]   address: '::',
+[1]   port: 3001
+[1] }
+[1] [?25h
+[1] npm run dev:frontend exited with code 0
+[0] Γ£à Connected to Supabase
+[0] node:events:486
+[0]       throw er; // Unhandled 'error' event
+[0]       ^
+[0] 
+[0] Error: listen EADDRINUSE: address already in use 0.0.0.0:5005
+[0]     at Server.setupListenHandle [as _listen2] (node:net:1948:16)
+[0]     at listenInCluster (node:net:2005:12)
+[0]     at node:net:2214:7
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+[0] Emitted 'error' event on Server instance at:
+[0]     at emitErrorNT (node:net:1984:8)
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+[0]   code: 'EADDRINUSE',
+[0]   errno: -4091,
+[0]   syscall: 'listen',
+[0]   address: '0.0.0.0',
+[0]   port: 5005
+[0] }
+[0] 
+[0] Node.js v24.14.0
+[0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m

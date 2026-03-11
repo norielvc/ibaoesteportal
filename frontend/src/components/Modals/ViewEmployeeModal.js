@@ -141,6 +141,16 @@ export default function ViewEmployeeModal({ employee, onClose }) {
                     <p className="text-xs font-extrabold text-gray-900">{employee.loginCount || 0} TOTAL SESSIONS</p>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-5 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+                  <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                    <Fingerprint className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Employee Code</p>
+                    <p className="text-xs font-black text-blue-900 uppercase">{employee.employeeCode || 'N/A'}</p>
+                  </div>
+                </div>
               </div>
             </div>
 

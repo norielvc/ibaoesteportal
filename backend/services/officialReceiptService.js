@@ -4,8 +4,8 @@ require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 class OfficialReceiptService {
@@ -186,169 +186,239 @@ class OfficialReceiptService {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Official Receipt - ${orNumber}</title>
             <style>
-                body { 
-                    font-family: 'Times New Roman', serif; 
-                    margin: 0; 
-                    padding: 20px; 
+                body {
+                    font-family: 'Arial', sans-serif;
+                    margin: 0;
+                    padding: 40px;
+                    background: #f8fafc;
+                    color: #0f172a;
+                    line-height: 1.5;
+                }
+                .receipt-container {
+                    max-width: 650px;
+                    margin: 0 auto;
                     background: white;
-                    font-size: 12px;
-                    line-height: 1.4;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+                    padding: 40px;
+                    position: relative;
                 }
-                .receipt-container { 
-                    max-width: 600px; 
-                    margin: 0 auto; 
-                    background: white; 
-                    border: 2px solid #000;
-                    padding: 20px;
+                .header {
+                    text-align: center;
+                    border-bottom: 2px dashed #cbd5e1;
+                    padding-bottom: 25px;
+                    margin-bottom: 30px;
                 }
-                .header { 
-                    text-align: center; 
-                    margin-bottom: 20px; 
-                    border-bottom: 2px solid #000;
-                    padding-bottom: 15px;
+                .header p { margin: 0 0 5px 0; font-size: 13px; font-weight: normal; color: #475569; }
+                .header h1 { margin: 5px 0; font-size: 20px; font-weight: 900; color: #1e3a8a; letter-spacing: 0.5px; }
+                .header h2 { margin: 0; font-size: 13px; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px;}
+                .title-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 30px;
                 }
-                .title { 
-                    font-size: 20px; 
-                    font-weight: bold; 
-                    margin: 10px 0; 
+                .title-row h2 {
+                    margin: 0;
+                    font-size: 24px;
+                    font-weight: 900;
+                    color: #0f172a;
                     text-transform: uppercase;
+                    letter-spacing: -0.5px;
                 }
-                .or-number {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #d32f2f;
-                    margin: 10px 0;
+                .or-badge {
+                    background: #fef2f2;
+                    color: #dc2626;
+                    border: 1px solid #fecaca;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 18px;
+                    font-weight: 900;
+                    letter-spacing: 0.5px;
                 }
-                .content { 
-                    margin: 20px 0; 
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 15px;
+                    margin-bottom: 30px;
                 }
-                .info-table { 
-                    width: 100%; 
-                    border-collapse: collapse; 
-                    margin: 15px 0;
-                }
-                .info-table td { 
-                    padding: 8px; 
-                    border: 1px solid #000; 
-                    vertical-align: top;
-                }
-                .info-table .label { 
-                    font-weight: bold; 
-                    background: #f9f9f9; 
-                    width: 30%;
-                }
-                .amount-section {
-                    background: #f0f0f0;
-                    border: 2px solid #000;
+                .info-item {
+                    background: #f8fafc;
                     padding: 15px;
-                    margin: 20px 0;
+                    border-radius: 8px;
+                    border: 1px solid #e2e8f0;
+                }
+                .info-item.full {
+                    grid-column: 1 / -1;
+                }
+                .label {
+                    display: block;
+                    font-size: 10px;
+                    text-transform: uppercase;
+                    font-weight: 800;
+                    color: #64748b;
+                    margin-bottom: 4px;
+                    letter-spacing: 0.5px;
+                }
+                .value {
+                    display: block;
+                    font-size: 14px;
+                    font-weight: 800;
+                    color: #0f172a;
+                    word-break: break-word;
+                }
+                .amount-box {
+                    background: linear-gradient(to right, #f8fafc, #f1f5f9);
+                    border: 1px solid #cbd5e1;
+                    border-left: 5px solid #10b981;
+                    padding: 25px;
+                    border-radius: 8px;
+                    margin-bottom: 30px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .amount-title {
+                    font-size: 12px;
+                    font-weight: 800;
+                    color: #475569;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    margin-bottom: 5px;
+                }
+                .amount-value {
+                    font-size: 32px;
+                    font-weight: 900;
+                    color: #0f172a;
+                    letter-spacing: -1px;
+                }
+                .amount-words {
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    max-width: 60%;
+                    text-align: right;
+                }
+                .signature-section {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 50px;
+                }
+                .sig-box {
+                    width: 45%;
                     text-align: center;
                 }
-                .amount-text {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #d32f2f;
+                .sig-line {
+                    height: 1px;
+                    background: #cbd5e1;
+                    margin: 30px 0 10px 0;
                 }
-                .signatures { 
-                    display: flex; 
-                    justify-content: space-between; 
-                    margin-top: 40px; 
+                .sig-name {
+                    font-weight: 900;
+                    font-size: 14px;
+                    color: #0f172a;
+                    margin: 0 0 2px 0;
+                    text-transform: uppercase;
                 }
-                .signature-block { 
-                    text-align: center; 
-                    width: 45%; 
+                .sig-title {
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: #64748b;
+                    margin: 0;
+                    text-transform: uppercase;
                 }
-                .signature-line { 
-                    border-bottom: 1px solid #000; 
-                    margin: 30px 0 5px 0; 
-                    height: 1px; 
+                .footer {
+                    margin-top: 40px;
+                    text-align: center;
+                    font-size: 10px;
+                    color: #94a3b8;
+                    font-weight: 600;
                 }
                 @media print {
-                    body { margin: 0; padding: 10px; }
-                    .receipt-container { border: none; }
+                    body { background: white; padding: 0; }
+                    .receipt-container { padding: 25px; box-shadow: none; border: 2px solid #000; border-radius: 0; }
+                    .amount-box { border: 1px solid #000 !important; border-left: 5px solid #000 !important; }
+                    .info-item { border: 1px solid #000; }
                 }
             </style>
         </head>
         <body>
             <div class="receipt-container">
                 <div class="header">
-                    <p style="font-size: 14px; margin: 2px 0;">${config.headerInfo.country}</p>
-                    <p style="font-size: 14px; margin: 2px 0;">${config.headerInfo.province}</p>
-                    <p style="font-size: 14px; margin: 2px 0;">${config.headerInfo.municipality}</p>
-                    <p style="font-size: 16px; font-weight: bold; margin: 5px 0; color: #1e40af;">${config.headerInfo.barangayName}</p>
-                    <p style="font-size: 12px; color: #d32f2f; font-weight: bold; margin: 5px 0;">OFFICE OF THE BARANGAY TREASURER</p>
-                </div>
-                
-                <div class="title">Official Receipt</div>
-                <div class="or-number">OR No: ${orNumber}</div>
-                
-                <div class="content">
-                    <table class="info-table">
-                        <tr>
-                            <td class="label">Date</td>
-                            <td>${currentDate}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Time</td>
-                            <td>${currentTime}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Received From</td>
-                            <td>${(request.full_name || request.applicant_name || '').toUpperCase()}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Address</td>
-                            <td>${(request.address || '').toUpperCase()}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Business Name</td>
-                            <td>${(businessDetails.businessName || '').toUpperCase()}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Nature of Business</td>
-                            <td>${(businessDetails.natureOfBusiness || '').toUpperCase()}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Reference Number</td>
-                            <td>${request.reference_number}</td>
-                        </tr>
-                    </table>
-
-                    <div class="amount-section">
-                        <p style="margin: 0 0 10px 0; font-weight: bold;">AMOUNT RECEIVED</p>
-                        <div class="amount-text">₱ ${amount.toFixed(2)}</div>
-                        <p style="margin: 10px 0 0 0; font-size: 10px;">
-                            (${this.numberToWords(amount)} PESOS ONLY)
-                        </p>
-                    </div>
-
-                    <table class="info-table">
-                        <tr>
-                            <td class="label">Payment For</td>
-                            <td>BUSINESS PERMIT PROCESSING FEE</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Payment Method</td>
-                            <td>CASH</td>
-                        </tr>
-                    </table>
+                    <p>${config.headerInfo.country}<br>${config.headerInfo.province}<br>${config.headerInfo.municipality}</p>
+                    <h1>${config.headerInfo.barangayName}</h1>
+                    <h2>OFFICE OF THE BARANGAY TREASURER</h2>
                 </div>
 
-                <div class="signatures">
-                    <div class="signature-block">
-                        <div class="signature-line"></div>
-                        <p style="font-weight: bold; margin: 5px 0;">PAYOR'S SIGNATURE</p>
+                <div class="title-row">
+                    <h2>Official Receipt</h2>
+                    <div class="or-badge">OR No: ${orNumber}</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Date & Time</span>
+                        <span class="value">${currentDate} @ ${currentTime}</span>
                     </div>
-                    <div class="signature-block">
-                        <div class="signature-line"></div>
-                        <p style="font-weight: bold; margin: 5px 0;">${config.treasurer}</p>
-                        <p style="font-size: 10px; margin: 0;">BARANGAY TREASURER</p>
+                    <div class="info-item">
+                        <span class="label">Reference No.</span>
+                        <span class="value">${request.reference_number}</span>
+                    </div>
+                    <div class="info-item full">
+                        <span class="label">Received From</span>
+                        <span class="value">${(request.full_name || request.applicant_name || '').toUpperCase()}</span>
+                    </div>
+                    <div class="info-item full">
+                        <span class="label">Address</span>
+                        <span class="value">${(request.address || '').toUpperCase()}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Business Name</span>
+                        <span class="value">${(businessDetails.businessName || 'NA').toUpperCase()}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Nature of Business</span>
+                        <span class="value">${(businessDetails.natureOfBusiness || 'NA').toUpperCase()}</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #666;">
+                <div class="amount-box">
+                    <div>
+                        <div class="amount-title">Amount Received</div>
+                        <div class="amount-value">₱ ${parseFloat(amount || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="amount-words">
+                        (${this.numberToWords(Math.floor(parseFloat(amount || 0)))} PESOS ONLY)
+                    </div>
+                </div>
+
+                <div class="info-grid" style="margin-bottom: 0;">
+                    <div class="info-item">
+                        <span class="label">Payment For</span>
+                        <span class="value">BUSINESS PERMIT PROCESSING FEE</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Payment Method</span>
+                        <span class="value">CASH</span>
+                    </div>
+                </div>
+
+                <div class="signature-section">
+                    <div class="sig-box">
+                        <div class="sig-line"></div>
+                        <p class="sig-name">PAYOR'S SIGNATURE</p>
+                    </div>
+                    <div class="sig-box">
+                        <div class="sig-line"></div>
+                        <p class="sig-name">${config.treasurer}</p>
+                        <p class="sig-title">Barangay Treasurer</p>
+                    </div>
+                </div>
+
+                <div class="footer">
                     <p>This receipt is valid only when properly signed and dated.</p>
-                    <p>For inquiries, contact: ${config.contactInfo.telephone} | ${config.contactInfo.email}</p>
+                    <p>Contact: ${config.contactInfo.telephone} | ${config.contactInfo.email}</p>
                 </div>
             </div>
         </body>

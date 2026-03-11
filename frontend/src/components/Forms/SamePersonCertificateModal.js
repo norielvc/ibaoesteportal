@@ -291,14 +291,14 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
                       <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm mb-4">
                         <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">2</div>
                         <div>
-                          <h3 className="text-base font-bold text-white">Alias Information / Impormasyon ng Alyas</h3>
+                          <h3 className="text-base font-bold text-white">Second Name / Ikalawang Pangalan</h3>
                           <p className="text-[10px] text-white/90 font-medium tracking-wide">Alternative name or alias / Pangalawang pangalan o alyas</p>
                         </div>
                       </div>
 
                       <div className="space-y-1 relative">
-                        <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Alias Name / Pangalang Alyas <span className="text-red-500">*</span></label>
-                        <input type="text" name="aliasName" value={formData.aliasName} onChange={handleInputChange} placeholder="ENTER ALIAS OR ALTERNATIVE NAME / ILAGAY ANG ALYAS O PANGALAWANG PANGALAN" className={`w-full px-4 py-3 bg-white border-2 ${errors.aliasName ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-lg focus:border-[#2d5a3d] focus:shadow-lg transition-all outline-none uppercase font-bold text-gray-800 shadow-sm`} />
+                        <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Second Name / Ikalawang Pangalan <span className="text-red-500">*</span></label>
+                        <input type="text" name="aliasName" value={formData.aliasName} onChange={handleInputChange} placeholder="ENTER SECOND NAME OR ALTERNATIVE NAME / ILAGAY ANG IKALAWANG PANGALAN O ALYAS" className={`w-full px-4 py-3 bg-white border-2 ${errors.aliasName ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-lg focus:border-[#2d5a3d] focus:shadow-lg transition-all outline-none uppercase font-bold text-gray-800 shadow-sm`} />
                       </div>
                     </div>
 

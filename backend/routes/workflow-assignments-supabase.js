@@ -30,7 +30,7 @@ router.get('/active-assignment/:requestId', authenticateToken, async (req, res) 
     // 2. If NO pending assignment found, check for recently completed assignments (for physical_inspection action)
     if ((!assignments || assignments.length === 0)) {
       console.log(`[FALLBACK] No pending assignments found. Checking for recently completed assignments...`);
-      
+
       const { data: completedAssignments, error: completedError } = await supabase
         .from('workflow_assignments')
         .select('*')
@@ -89,7 +89,7 @@ router.get('/active-assignment/:requestId', authenticateToken, async (req, res) 
 
     // Fallback to any if admin (admins can act on any assignment)
     console.log(`[DEBUG] User role: ${req.user.role}, isAdmin: ${isAdmin}`);
-    
+
     if (!best && isAdmin) {
       best = assignments[0];
       console.log(`[ADMIN-OVERRIDE] Admin ${userId} using assignment from user ${best.assigned_user_id}`);
@@ -324,6 +324,10 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
     const currentStep = steps[currentStepIndex];
     let nextStep = null;
 
+    console.log(`[STATUS-UPDATE] requestId: ${assignment.request_id}, action: ${action}, currentStatus: ${assignment.certificate_requests.status}`);
+    console.log(`[STATUS-UPDATE] stepId: ${assignment.step_id}, currentStepIndex: ${currentStepIndex}, totalSteps: ${steps.length}`);
+    if (currentStep) console.log(`[STATUS-UPDATE] currentStepName: ${currentStep.name}, currentStepStatus: ${currentStep.status}`);
+
     if (action === 'approve') {
       if (currentStep && currentStep.status === 'oic_review') {
         if (assignment.certificate_requests.status !== 'ready') {
@@ -342,8 +346,15 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
         nextStep = steps[currentStepIndex + 1];
         newRequestStatus = nextStep.status;
       } else {
+        // Fallback for final steps or undefined steps
         newStatus = 'completed';
-        newRequestStatus = 'ready';
+        // If it's already oic_review or the last step, it goes to ready
+        if (currentStep?.status === 'oic_review' || (currentStepIndex !== -1 && currentStepIndex === steps.length - 1)) {
+          newRequestStatus = 'ready';
+        } else {
+          // Otherwise, stay at current request status to avoid jumping steps
+          newRequestStatus = assignment.certificate_requests.status;
+        }
       }
     } else if (action === 'reject') {
       newStatus = 'completed';
@@ -381,8 +392,8 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
     if (newStatus === 'completed') {
       const { error: otherAssignmentsError } = await supabase
         .from('workflow_assignments')
-        .update({ 
-          status: 'completed', 
+        .update({
+          status: 'completed',
           completed_at: new Date().toISOString()
         })
         .eq('request_id', assignment.request_id)
@@ -424,7 +435,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
 
     const historyRequestType = ['barangay_guardianship', 'certification_same_person'].includes(assignment.request_type) ? 'note' : assignment.request_type;
     console.log(`[HISTORY] Saving history entry for request ${assignment.request_id}, action: ${action}, comment: "${comment}"`);
-    
+
     const { error: historyError } = await supabase.from('workflow_history').insert([{
       request_id: assignment.request_id,
       request_type: historyRequestType,
@@ -438,7 +449,7 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       signature_data: signatureData,
       official_role: currentStep?.officialRole
     }]);
-    
+
     if (historyError) {
       console.error(`[HISTORY-ERROR] Failed to save history:`, historyError);
     } else {
@@ -638,7 +649,8 @@ router.get('/history/:requestId', async (req, res) => {
 async function processPostApprovalWorkflow(requestId, requestData) {
   console.log(`🚀 Starting post-approval workflow for ${requestData.reference_number}`);
   try {
-    const certificateResult = await certificateGenerationService.generateCertificate(requestId, requestData.certificate_type);
+    // Generate Real Certificate (not a preview)
+    const certificateResult = await certificateGenerationService.generateCertificate(requestId, false);
     const qrResult = await qrCodeService.generateQRCodeForCertificate(requestId, requestData.reference_number);
 
     await supabase.from('certificate_requests').update({
@@ -646,6 +658,47 @@ async function processPostApprovalWorkflow(requestId, requestData) {
       certificate_generated_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }).eq('id', requestId);
+
+    // Create releasing team assignment
+    const { data: workflowConfig } = await supabase
+      .from('workflow_configurations')
+      .select('workflow_config')
+      .eq('certificate_type', requestData.certificate_type)
+      .single();
+
+    const steps = workflowConfig?.workflow_config?.steps || [];
+    const releasingStep = steps.find(s =>
+      s.status === 'oic_review' ||
+      s.status === 'ready' ||
+      s.name?.toLowerCase().includes('releasing') ||
+      s.id === 999
+    );
+
+    if (releasingStep && releasingStep.assignedUsers) {
+      for (const userId of releasingStep.assignedUsers) {
+        // Check if assignment already exists
+        const { data: existing } = await supabase
+          .from('workflow_assignments')
+          .select('id')
+          .eq('request_id', requestId)
+          .eq('step_id', releasingStep.id.toString())
+          .eq('assigned_user_id', userId)
+          .eq('status', 'pending')
+          .single();
+
+        if (!existing) {
+          await supabase.from('workflow_assignments').insert([{
+            request_id: requestId,
+            request_type: requestData.certificate_type,
+            step_id: releasingStep.id.toString(),
+            step_name: releasingStep.name,
+            assigned_user_id: userId,
+            status: 'pending'
+          }]);
+          console.log(`✅ Created releasing team assignment for user: ${userId}`);
+        }
+      }
+    }
 
     await supabase.from('workflow_history').insert([{
       request_id: requestId,

@@ -1,0 +1,97 @@
+
+> admin-dashboard-system@1.0.0 dev
+> concurrently "npm run dev:backend" "npm run dev:frontend"
+
+(node:25400) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[0] 
+[0] > admin-dashboard-system@1.0.0 dev:backend
+[0] > cd backend && npm run dev
+[0] 
+[1] 
+[1] > admin-dashboard-system@1.0.0 dev:frontend
+[1] > cd frontend && npm run dev
+[1] 
+[1] 
+[1] > admin-dashboard-frontend@1.0.0 dev
+[1] > next dev -p 3000
+[1] 
+[0] 
+[0] > admin-dashboard-backend@1.0.0 dev
+[0] > nodemon server.js
+[0] 
+[0] [33m[nodemon] 3.1.11[39m
+[0] [33m[nodemon] to restart at any time, enter `rs`[39m
+[0] [33m[nodemon] watching path(s): *.*[39m
+[0] [33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[0] [32m[nodemon] starting `node server.js`[39m
+[0] Γ£à Supabase Client initialized
+[1]   Γû▓ Next.js 14.2.35
+[1]   - Local:        http://localhost:3000
+[1]   - Environments: .env.local
+[1] 
+[1]  Γ£ô Starting...
+[0] Γ£à Connected to Supabase
+[0] ≡ƒÜÇ Server running on port 5005
+[0] ≡ƒôè Environment: development
+[0] ≡ƒöù API URL: http://0.0.0.0:5005/api
+[0] Γ£à Employee scans table exists and is ready
+[0] Γ£à QR scans table exists and is ready
+[1]  Γ£ô Ready in 2.1s
+[1]  Γùï Compiling / ...
+[1]  Γ£ô Compiled / in 15.4s (510 modules)
+[1]  Γ£ô Compiled in 1375ms (510 modules)
+[1]  GET / 200 in 17657ms
+[1]  Γùï Compiling /_error ...
+[1]  Γ£ô Compiled /_error in 16.9s (512 modules)
+[1]  GET /.well-known/appspecific/com.chrome.devtools.json 404 in 16969ms
+[1]  GET /images/barangay-captain.jpg 404 in 34ms
+[0] Fetching barangay officials...
+[0] Found 26 officials
+[1]  Γ£ô Compiled in 1249ms (510 modules)
+[0] Fetching barangay officials...
+[0] Found 26 officials
+[1]  Γ£ô Compiled in 691ms (510 modules)
+[0] Fetching barangay officials...
+[0] Found 26 officials
+[1]  GET / 200 in 448ms
+[1]  Γ£ô Compiled /_error in 274ms (512 modules)
+[1]  GET /images/barangay-captain.jpg 404 in 371ms
+[0] Fetching barangay officials...
+[0] Found 26 officials
+[1]  Γ£ô Compiled in 610ms (510 modules)
+[0] Fetching barangay officials...
+[0] Found 26 officials
+[1]  Γ£ô Compiled in 664ms (510 modules)
+[0] Fetching barangay officials...
+[0] Found 26 officials
+[1]  Γ£ô Compiled in 1035ms (510 modules)
+[0] Fetching barangay officials...
+[0] Found 26 officials
+[1]  Γ£ô Compiled in 838ms (510 modules)
+[0] Fetching barangay officials...
+[0] Found 26 officials
+[1]  GET / 200 in 449ms
+[0] Fetching barangay officials...
+[1]  Γùï Compiling /_error ...
+[1]  Γ£ô Compiled /_error in 1429ms (512 modules)
+[1]  GET /images/barangay-captain.jpg 404 in 1503ms
+[0] Found 26 officials
+[1]  GET /.well-known/appspecific/com.chrome.devtools.json 404 in 15ms
+[1]  GET / 200 in 319ms
+[1]  GET /images/barangay-captain.jpg 404 in 53ms
+[0] Fetching barangay officials...
+[1]  GET /.well-known/appspecific/com.chrome.devtools.json 404 in 21ms
+[0] Found 26 officials
+[1]  Γ£ô Compiled in 1063ms (510 modules)
+[1]  GET / 200 in 334ms
+[0] Fetching barangay officials...
+[1]  Γùï Compiling /_error ...
+[1]  Γ£ô Compiled /_error in 978ms (512 modules)
+[1]  GET /images/barangay-captain.jpg 404 in 1053ms
+[0] Found 26 officials
+[1]  Γ£ô Compiled in 971ms (510 modules)
+[0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[0] [32m[nodemon] restarting child process[39m
+[0] [32m[nodemon] starting `node server.js`[39m
+[1] [?25h

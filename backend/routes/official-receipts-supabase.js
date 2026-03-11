@@ -43,6 +43,32 @@ router.post('/generate/:requestId', authenticateToken, async (req, res) => {
       });
     }
 
+    // Check if OR already exists for this request
+    const { data: existingOR, error: existingError } = await supabase
+      .from('official_receipts')
+      .select('*')
+      .eq('request_id', requestId)
+      .single();
+
+    if (existingOR) {
+      // OR already exists! Let's just regenerate the file content for updated styling
+      const newOrResult = await officialReceiptService.generateOfficialReceipt(requestId, amount);
+
+      // Update the file path just in case
+      await supabase
+        .from('official_receipts')
+        .update({ file_path: newOrResult.filePath })
+        .eq('id', existingOR.id);
+
+      return res.json({
+        success: true,
+        message: 'Official Receipt retrieved successfully',
+        orNumber: existingOR.or_number,
+        filePath: newOrResult.filePath,
+        orRecord: existingOR
+      });
+    }
+
     // Generate the Official Receipt
     const orResult = await officialReceiptService.generateOfficialReceipt(requestId, amount);
 

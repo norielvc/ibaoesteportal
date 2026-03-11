@@ -1,0 +1,14 @@
+
+> admin-dashboard-system@1.0.0 dev:frontend
+> cd frontend && npm run dev
+
+
+> admin-dashboard-frontend@1.0.0 dev
+> next dev -p 3000
+
+  Γû▓ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ Γ£ô Starting...
+ Γ£ô Ready in 3.4s

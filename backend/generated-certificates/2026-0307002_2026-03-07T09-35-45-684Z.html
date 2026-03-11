@@ -1,0 +1,310 @@
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Barangay Business Clearance - 2026-0307002</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                
+                body { 
+                    font-family: 'Arial', sans-serif; 
+                    background: #f3f4f6;
+                    padding: 2.5cm;
+                    line-height: 1.6;
+                }
+                
+                .certificate-container { 
+                    max-width: 210mm; 
+                    margin: 0 auto; 
+                    background: #ffffff;
+                    border: 4px double #0369a1;
+                    padding: 1.5cm;
+                    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                    position: relative;
+                }
+                
+                .watermark {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    font-size: 120px;
+                    color: rgba(3, 105, 161, 0.05);
+                    font-weight: bold;
+                    z-index: 0;
+                    pointer-events: none;
+                }
+                
+                .content-wrapper {
+                    position: relative;
+                    z-index: 1;
+                    background: rgba(255, 255, 255, 0.95);
+                    padding: 30px;
+                    border-radius: 10px;
+                }
+                
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 30px; 
+                    padding-bottom: 20px;
+                    border-bottom: 3px solid #0369a1;
+                }
+                
+                .title { 
+                    font-size: 32px; 
+                    font-weight: bold; 
+                    color: #0369a1;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin: 20px 0;
+                    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+                }
+                
+                .to-whom { 
+                    font-size: 16px; 
+                    margin: 20px 0;
+                    font-weight: 600;
+                    color: #333;
+                }
+                
+                .intro-text {
+                    font-size: 14px;
+                    margin: 20px 0;
+                    text-align: justify;
+                    color: #444;
+                }
+                
+                .checkbox-section {
+                    display: flex;
+                    gap: 40px;
+                    justify-content: center;
+                    margin: 25px 0;
+                }
+                
+                .checkbox-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 14px;
+                    font-weight: 600;
+                }
+                
+                .checkbox {
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid #0369a1;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #0369a1;
+                }
+                
+                .info-grid {
+                    margin: 25px 0;
+                }
+                
+                .info-row {
+                    display: flex;
+                    margin: 12px 0;
+                    font-size: 14px;
+                }
+                
+                .info-label {
+                    font-weight: bold;
+                    min-width: 200px;
+                    color: #333;
+                }
+                
+                .info-value {
+                    flex: 1;
+                    color: #0369a1;
+                    font-weight: 600;
+                    border-bottom: 1px solid #0369a1;
+                    padding-bottom: 2px;
+                }
+                
+                .compliance-text {
+                    font-size: 13px;
+                    text-align: justify;
+                    margin: 25px 0;
+                    padding: 15px;
+                    background: rgba(3, 105, 161, 0.05);
+                    border-left: 4px solid #0369a1;
+                    line-height: 1.8;
+                    color: #444;
+                }
+                
+                .issuance-text {
+                    font-size: 13px;
+                    margin: 20px 0;
+                    color: #444;
+                }
+                
+                .signature-section {
+                    margin-top: 40px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                }
+                
+                .payment-details {
+                    text-align: left;
+                    flex: 1;
+                }
+                
+                .payment-title {
+                    font-weight: bold;
+                    font-size: 14px;
+                    text-decoration: underline;
+                    margin-bottom: 10px;
+                    color: #0369a1;
+                }
+                
+                .payment-row {
+                    font-size: 13px;
+                    margin: 5px 0;
+                    color: #444;
+                }
+                
+                .signature-block {
+                    text-align: center;
+                    flex: 1;
+                }
+                
+                .truly-yours {
+                    font-size: 14px;
+                    font-weight: 600;
+                    margin-bottom: 50px;
+                    color: #333;
+                }
+                
+                .signature-name {
+                    font-size: 16px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    border-top: 2px solid #000;
+                    padding-top: 5px;
+                    color: #0369a1;
+                }
+                
+                .signature-title {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #666;
+                }
+                
+                @media print {
+                    body { 
+                        background: white; 
+                        padding: 0; 
+                    }
+                    .certificate-container { 
+                        border: 2px solid #0369a1; 
+                        box-shadow: none;
+                        page-break-inside: avoid;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="certificate-container">
+                <div class="watermark">BARANGAY</div>
+                
+                <div class="content-wrapper">
+                    <div class="header">
+                        
+        <div class="header" style="display: flex; align-items: center; justify-content: space-between; padding: 15px 40px; border-bottom: 3px solid #0369a1; background-color: #ffffff; ">
+            <div style="width: 80px; height: 80px; flex-shrink: 0;">
+                <img src="/iba-o-este.png" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div style="text-align: center; flex: 1; padding: 0 20px;">
+                <p style="margin: 0; color: #4b5563; font-size: 11px; font-weight: normal; line-height: 1.2; ">Republic of the Philippines</p>
+                <p style="margin: 0; color: #4b5563; font-size: 11px; font-weight: normal; line-height: 1.2; ">Province of Bulacan</p>
+                <p style="margin: 0; color: #4b5563; font-size: 11px; font-weight: normal; line-height: 1.2; ">Municipality of Calumpit</p>
+                <p style="margin: 4px 0 0; color: #1e40af; font-size: 18px; font-weight: bold; line-height: 1.2; ">BARANGAY IBA O' ESTE</p>
+                <p style="margin: 0; color: #dc2626; font-size: 11px; font-weight: bold; line-height: 1.2; ">Office of the Punong Barangay</p>
+            </div>
+            <div style="width: 80px; height: 80px; flex-shrink: 0;">
+                <img src="/calumpit.png" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+        </div>
+      
+                    </div>
+                    
+                    <div class="title">BARANGAY BUSINESS CLEARANCE</div>
+                    
+                    <div class="to-whom">To Whom It May Concern:</div>
+                    
+                    <div class="intro-text">
+                        This is to certify that below business / trade name as described herein applying for:
+                    </div>
+                    
+                    <div class="checkbox-section">
+                        <div class="checkbox-item">
+                            <span class="checkbox">✓</span>
+                            <span>New Business Clearance</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <span class="checkbox"></span>
+                            <span>Renewal of Existing Business Clearance</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span class="info-label">Name of Owner</span>
+                            <span class="info-value">MARK GARCIA FLORES </span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Owner's Address</span>
+                            <span class="info-value">HOUSE NO. 615B, PUROK MAHARLIKA, BRGY. IBA O' ESTE, CALUMPIT, BULACAN</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Business / Trade Name</span>
+                            <span class="info-value">N/A</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Business Address</span>
+                            <span class="info-value">HOUSE NO. 615B, PUROK MAHARLIKA, BRGY. IBA O' ESTE, CALUMPIT, BULACAN</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Nature of Business</span>
+                            <span class="info-value">N/A</span>
+                        </div>
+                    </div>
+                    
+                    <div class="compliance-text">
+                        The subject business establishment upon occular visit / inspection conducted by this office jointly with Sangguniang Barangay Committees on Health, Environment and Finance and Barangay Treasurer found to be compliant and in confirmity with the existing barangay ordinances, rules and regulations as applicable for this nature of business being applied for clearance.
+                    </div>
+                    
+                    <div class="compliance-text">
+                        In view of the above, this office poses no objection for the issuance of further permits as necessary for the conduct of above business activity including Mayor's Permit, etc.
+                    </div>
+                    
+                    <div class="issuance-text">
+                        Issued this at Barangay Iba O' Este, Calumpit, Bulacan.
+                    </div>
+                    
+                    <div class="signature-section">
+                        <div class="payment-details">
+                            <div class="payment-title">Details of Payment</div>
+                            <div class="payment-row">OR NO. : <strong>_____________</strong></div>
+                            <div class="payment-row">Amount Paid : <strong>_____________</strong></div>
+                            <div class="payment-row">BC Control No.: <strong>2026-0307002</strong></div>
+                        </div>
+                        
+                        <div class="signature-block">
+                            <div class="truly-yours">TRULY YOURS,</div>
+                            <div class="signature-name">ALEXANDER C. MANIO</div>
+                            <div class="signature-title">BARANGAY CHAIRMAN</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        

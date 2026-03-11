@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { supabase } = require('../services/supabaseClient');
 const { requireAdmin } = require('../middleware/auth-supabase');
-const { validateUserCreation } = require('../middleware/validation');
+const { validateUserCreation, validateUserUpdate } = require('../middleware/validation');
 
 const router = express.Router();
 
@@ -57,6 +57,7 @@ router.get('/', requireAdmin, async (req, res) => {
       avatar: user.avatar,
       lastLogin: user.last_login,
       loginCount: user.login_count,
+      employeeCode: user.employee_code,
       createdAt: user.created_at,
       updatedAt: user.updated_at
     }));
@@ -105,6 +106,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
       avatar: user.avatar,
       lastLogin: user.last_login,
       loginCount: user.login_count,
+      employeeCode: user.employee_code,
       createdAt: user.created_at,
       updatedAt: user.updated_at
     };
@@ -129,7 +131,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
  */
 router.post('/', requireAdmin, validateUserCreation, async (req, res) => {
   try {
-    const { firstName, lastName, email, password, role = 'user', status = 'active', position = '' } = req.body;
+    const { firstName, lastName, email, password, role = 'user', status = 'active', position = '', employeeCode = '' } = req.body;
 
     // Check if user already exists
     const { data: existingUser } = await supabase
@@ -158,7 +160,8 @@ router.post('/', requireAdmin, validateUserCreation, async (req, res) => {
         password_hash: hashedPassword,
         role,
         status,
-        position
+        position,
+        employee_code: employeeCode
       }])
       .select()
       .single();
@@ -182,6 +185,7 @@ router.post('/', requireAdmin, validateUserCreation, async (req, res) => {
       avatar: newUser.avatar,
       lastLogin: newUser.last_login,
       loginCount: newUser.login_count,
+      employeeCode: newUser.employee_code,
       createdAt: newUser.created_at,
       updatedAt: newUser.updated_at
     };
@@ -269,9 +273,9 @@ router.put('/:id/reset-password', requireAdmin, async (req, res) => {
  * @desc    Update user
  * @access  Private (Admin only)
  */
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requireAdmin, validateUserUpdate, async (req, res) => {
   try {
-    const { firstName, lastName, email, password, role, status, position } = req.body;
+    const { firstName, lastName, email, password, role, status, position, employeeCode } = req.body;
     const userId = req.params.id;
 
     // Check if user exists
@@ -313,6 +317,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
     if (role) updateData.role = role;
     if (status) updateData.status = status;
     if (position !== undefined) updateData.position = position;
+    if (employeeCode !== undefined) updateData.employee_code = employeeCode;
     updateData.updated_at = new Date().toISOString();
 
     // Update user
@@ -341,6 +346,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
       avatar: updatedUser.avatar,
       lastLogin: updatedUser.last_login,
       loginCount: updatedUser.login_count,
+      employeeCode: updatedUser.employee_code,
       createdAt: updatedUser.created_at,
       updatedAt: updatedUser.updated_at
     };
