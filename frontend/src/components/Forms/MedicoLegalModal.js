@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone, Calendar, ClipboardList } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, FileText, Eye, Send, CheckCircle, AlertCircle, Info, Search, Clock, Phone, Mail, Calendar, ClipboardList } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 
 // API Configuration
@@ -9,37 +9,22 @@ const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api')
 const defaultOfficials = {
     chairman: 'ALEXANDER C. MANIO',
     secretary: 'ROYCE ANN C. GALVEZ',
-    treasurer: 'MA. LUZ S. REYES',
-    skChairman: 'JOHN RUZZEL C. SANTOS',
-    councilors: [
-        'JOELITO C. MANIO',
-        'ENGELBERT M. INDUCTIVO',
-        'NORMANDO T. SANTOS',
-        'JOPHET M. TURLA',
-        'JOHN BRYAN C. CRUZ',
-        'ARNEL D. BERNARDINO',
-        'LORENA G. LOPEZ'
-    ],
     contactInfo: {
-        address: 'Purok 2 (Sitio Banawe) Barangay Iba O\' Este, Calumpit, Bulacan',
-        contactPerson: 'Sec. Royce Ann C. Galvez',
+        address: "Purok 2 (Sitio Banawe) Barangay Iba O' Este, Calumpit, Bulacan",
         telephone: '0967 631 9168',
-        email: 'ibaoeste@calumpit.gov.ph'
+        email: 'anneseriousme@gmail.com'
     },
     headerInfo: {
         country: 'Republic of the Philippines',
         province: 'Province of Bulacan',
         municipality: 'Municipality of Calumpit',
-        barangayName: 'BARANGAY IBA O\' ESTE',
-        officeName: 'Office of the Punong Barangay'
+        barangayName: "BARANGAY IBA O' ESTE",
     },
-    logos: { leftLogo: '/iba-o-este.png', rightLogo: '/calumpit.png', logoSize: 115, captainImage: '/images/brgycaptain.png' },
-    headerStyle: { bgColor: '#ffffff', borderColor: '#1e40af', fontFamily: 'default' },
-    bodyStyle: { bgColor: '#ffffff', textColor: '#1f2937', titleColor: '#1e3a8a', titleSize: 24, textSize: 14, fontFamily: 'default' }
+    logos: { leftLogo: '/iba-o-este.png', rightLogo: '/calumpit.png', logoSize: 115 }
 };
 
-// Enhanced Notification Component
-function Notification({ type, title, message, onClose }) {
+// Memoized Notification Component
+const Notification = React.memo(({ type, title, message, onClose }) => {
     const styles = {
         success: { bg: 'bg-gradient-to-r from-green-50 to-emerald-50', border: 'border-green-200', icon: 'bg-green-100 text-green-600', title: 'text-green-800', message: 'text-green-700' },
         error: { bg: 'bg-gradient-to-r from-red-50 to-rose-50', border: 'border-red-200', icon: 'bg-red-100 text-red-600', title: 'text-red-800', message: 'text-red-700' },
@@ -47,7 +32,6 @@ function Notification({ type, title, message, onClose }) {
     };
     const s = styles[type] || styles.info;
     const Icon = type === 'success' ? CheckCircle : type === 'error' ? AlertCircle : Info;
-
     return (
         <div className={`${s.bg} ${s.border} border rounded-xl p-4 shadow-sm animate-fade-in`}>
             <div className="flex items-start gap-3">
@@ -60,7 +44,8 @@ function Notification({ type, title, message, onClose }) {
             </div>
         </div>
     );
-}
+});
+Notification.displayName = 'Notification';
 
 export default function MedicoLegalModal({ isOpen, onClose }) {
     const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
@@ -72,7 +57,6 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
     const [submittedReferenceNumber, setSubmittedReferenceNumber] = useState('');
     const [isResidentModalOpen, setIsResidentModalOpen] = useState(false);
     const [errors, setErrors] = useState({});
-    const certificateRef = useRef(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -97,17 +81,12 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
         }));
         setIsResidentModalOpen(false);
         setErrors(prev => ({ ...prev, fullName: false }));
-        setNotification({
-            type: 'success',
-            title: 'Profile Found',
-            message: `${resident.full_name}'s details have been auto-filled.`
-        });
+        setNotification({ type: 'success', title: 'Profile Found', message: `${resident.full_name}'s details have been auto-filled.` });
     };
 
     useEffect(() => {
         const now = new Date();
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        setCurrentDate(now.toLocaleDateString('en-US', options));
+        setCurrentDate(now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
     }, [isOpen]);
 
     useEffect(() => {
@@ -117,6 +96,13 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
         }
     }, [isOpen]);
 
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => setNotification(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -124,12 +110,9 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
     };
 
     const validateForm = () => {
-        const required = ['fullName', 'age', 'sex', 'address', 'dateOfBirth', 'contactNumber', 'dateOfExamination', 'usapingBarangay', 'dateOfHearing'];
+        const required = ['fullName', 'contactNumber', 'dateOfExamination', 'usapingBarangay', 'dateOfHearing'];
         const newErrors = {};
-        required.forEach(field => {
-            if (!formData[field]) newErrors[field] = true;
-        });
-
+        required.forEach(field => { if (!formData[field]) newErrors[field] = true; });
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             setNotification({ type: 'error', title: 'Validation Error', message: 'Please fill in all required fields.' });
@@ -152,7 +135,6 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
-
             const result = await response.json();
             if (result.success) {
                 setSubmittedReferenceNumber(result.referenceNumber);
@@ -163,7 +145,7 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
                 throw new Error(result.message || 'Failed to submit application');
             }
         } catch (error) {
-            console.error('Submission error:', error);
+            setShowConfirmationPopup(false);
             setNotification({ type: 'error', title: 'Submission Failed', message: error.message });
         } finally {
             setIsSubmitting(false);
@@ -181,359 +163,312 @@ export default function MedicoLegalModal({ isOpen, onClose }) {
         setShowSuccessModal(false);
         setNotification(null);
         setReferenceNumber('');
+        setSubmittedReferenceNumber('');
         setErrors({});
     };
 
     if (!isOpen) return null;
 
+    const inputClass = (field) =>
+        `w-full px-4 py-2.5 bg-white border-2 ${errors[field] ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-bold text-gray-800 shadow-sm`;
+
     return (
         <>
-            <div className="fixed inset-0 z-50 overflow-y-auto">
-                <div className="flex min-h-screen items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
+            {(!showConfirmationPopup && !showSuccessModal) && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    <div className="flex min-h-screen items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
 
-                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in text-gray-900">
-                        {/* Header */}
-                        <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 px-8 py-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
-                            <div className="flex items-center gap-5">
-                                <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/30 shadow-xl">
-                                    <ClipboardList className="w-8 h-8 text-white shadow-sm" />
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-3 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                                <div className="flex items-center gap-3 relative z-10">
+                                    <div className="bg-white/20 backdrop-blur-md p-2 rounded-lg border border-white/30 shadow-xl">
+                                        <ClipboardList className="w-5 h-5 text-white shadow-sm" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <h2 className="text-lg font-bold text-white tracking-tight drop-shadow-md">Request for Medico Legal / Hiling para sa Medico Legal</h2>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
+                                            <p className="text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 bg-red-600 rounded-md shadow-md">{referenceNumber || 'New Medico Legal Request'}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col">
-                                    <h2 className="text-2xl font-extrabold text-white tracking-tight">Request for Medico Legal</h2>
-                                    <p className="text-blue-100/80 text-xs font-bold uppercase tracking-widest mt-1">Application Form</p>
-                                </div>
+                                <button onClick={onClose} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group relative z-20">
+                                    <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                                </button>
                             </div>
-                            <button onClick={onClose} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
 
-                        {notification && <div className="px-8 pt-4"><Notification type={notification.type} title={notification.title} message={notification.message} onClose={() => setNotification(null)} /></div>}
+                            {notification && <div className="px-4 pt-2"><Notification type={notification.type} title={notification.title} message={notification.message} onClose={() => setNotification(null)} /></div>}
 
-                        <div className="flex-1 overflow-y-auto px-8 py-6">
-                            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-                                {/* Notice */}
-                                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-4 items-start">
-                                    <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                                    <p className="text-sm text-blue-800 leading-relaxed">
-                                        This certification is issued for patience in aide of reconciliatory meeting / hearing of involved individuals to be held in this barangay.
-                                    </p>
-                                </div>
+                            {/* Scrollable Body */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                <form onSubmit={handleSubmit} className="p-4 space-y-4">
 
-                                {/* Patient / Resident Info */}
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                            <Search className="w-5 h-5 text-blue-600" />
-                                            Patient Information / Impormasyon ng Pasyente
-                                        </h3>
-                                        <button type="button" onClick={() => setIsResidentModalOpen(true)} className="text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors">
-                                            <Search className="w-4 h-4" />
-                                            Search Resident / Hanap Residente
-                                        </button>
+                                    {/* Registration Notice */}
+                                    <div className="bg-gradient-to-r from-[#112e1f]/90 to-[#1a3d29]/80 border border-white/10 rounded-lg p-3 shadow-md relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none"></div>
+                                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-400/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl pointer-events-none"></div>
+                                        <div className="flex items-start gap-2 relative z-10">
+                                            <div className="bg-white/10 border border-white/20 p-1.5 rounded-lg shrink-0 mt-0.5"><Info className="w-3 h-3 text-emerald-300" /></div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse"></div>
+                                                    <h4 className="font-bold text-emerald-300 uppercase tracking-wide text-[9px]">Registration Notice / Paunawa</h4>
+                                                </div>
+                                                <p className="text-white/80 text-[10px] font-medium leading-relaxed mb-0.5">If no record is found in the resident directory, please visit the Barangay Hall and coordinate with the staff to register.</p>
+                                                <p className="text-white/50 text-[9px] font-medium leading-relaxed italic">Kung walang rekord sa direktoryo ng residente, mangyaring pumunta sa Barangay Hall upang magparehistro sa ating mga kawani.</p>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Full Name / Buong Pangalan</label>
+                                    {/* Section 1 — Patient Information */}
+                                    <div className="space-y-4">
+                                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                                            <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm">
+                                                <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">1</div>
+                                                <div>
+                                                    <h3 className="text-base font-bold text-white">Patient Information / Impormasyon ng Pasyente</h3>
+                                                    <p className="text-[10px] text-white/90 font-medium tracking-wide">Person requiring medico legal certification</p>
+                                                </div>
+                                            </div>
+                                            <button type="button" onClick={() => setIsResidentModalOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-lg text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-md group">
+                                                <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                                Search Resident Database / Maghanap sa Database ng Residente
+                                            </button>
+                                        </div>
+
+                                        <div className="relative">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wide ml-1 mb-1 block">Patient Full Name / Buong Pangalan ng Pasyente <span className="text-red-500">*</span></label>
                                             <input
-                                                type="text"
-                                                name="fullName"
-                                                value={formData.fullName}
-                                                readOnly
+                                                type="text" name="fullName" value={formData.fullName} readOnly
                                                 onClick={() => setIsResidentModalOpen(true)}
-                                                placeholder="TAP TO SELECT PATIENT... / PINDUTIN UPANG PUMILI NG PASYENTE..."
-                                                className={`w-full px-4 py-3 bg-gray-50 border ${errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-200'} rounded-xl font-bold uppercase cursor-pointer text-gray-900`}
+                                                placeholder="TAP HERE TO SELECT PATIENT / PUMILI NG PASYENTE MULA SA DIRECTORY..."
+                                                className={`w-full px-4 py-3 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-lg transition-all duration-300 font-bold text-base cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`}
                                             />
                                         </div>
 
+                                        {formData.fullName && (
+                                            <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 flex items-center justify-center gap-2 text-emerald-700 shadow-inner">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                                <span className="text-[10px] font-bold uppercase tracking-wide italic">Personal Data Protected Under Data Privacy Act</span>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
 
-                                {/* Medico Legal Details */}
-                                <div className="space-y-6 pt-6 border-t border-gray-100">
-                                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                        <Calendar className="w-5 h-5 text-blue-600" />
-                                        Investigation Details / Detalye ng Imbestigasyon
-                                    </h3>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-blue-700 uppercase tracking-widest ml-1">Date of Examination / Petsa ng Pagsusuri <span className="text-red-500">*</span></label>
-                                            <input
-                                                type="date"
-                                                name="dateOfExamination"
-                                                value={formData.dateOfExamination}
-                                                onChange={handleInputChange}
-                                                className={`w-full px-4 py-3 border ${errors.dateOfExamination ? 'border-red-500 bg-red-50' : 'border-gray-200'} rounded-xl font-bold focus:ring-2 focus:ring-blue-500 outline-none`}
-                                            />
-                                        </div>
-                                        <div className="space-y-1 col-span-1">
-                                            <label className="text-xs font-bold text-blue-700 uppercase tracking-widest ml-1">Usaping Barangay No. <span className="text-red-500">*</span></label>
-                                            <input
-                                                type="text"
-                                                name="usapingBarangay"
-                                                value={formData.usapingBarangay}
-                                                onChange={handleInputChange}
-                                                placeholder="e.g. 009-2026"
-                                                className={`w-full px-4 py-3 border ${errors.usapingBarangay ? 'border-red-500 bg-red-50' : 'border-gray-200'} rounded-xl font-bold focus:ring-2 focus:ring-blue-500 outline-none`}
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-blue-700 uppercase tracking-widest ml-1">Date of Hearing <span className="text-red-500">*</span></label>
-                                            <input
-                                                type="date"
-                                                name="dateOfHearing"
-                                                value={formData.dateOfHearing}
-                                                onChange={handleInputChange}
-                                                className={`w-full px-4 py-3 border ${errors.dateOfHearing ? 'border-red-500 bg-red-50' : 'border-gray-200'} rounded-xl font-bold focus:ring-2 focus:ring-blue-500 outline-none`}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Contact Info & Note */}
-                                <div className="space-y-4 pt-6 border-t border-gray-100">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-blue-700 uppercase tracking-widest ml-1">Contact No. <span className="text-red-500">*</span></label>
-                                            <div className="relative">
-                                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                                <input
-                                                    type="text"
-                                                    name="contactNumber"
-                                                    value={formData.contactNumber}
-                                                    onChange={handleInputChange}
-                                                    placeholder="09XX XXX XXXX"
-                                                    className={`w-full pl-10 pr-4 py-3 border ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-gray-200'} rounded-xl font-bold focus:ring-2 focus:ring-blue-500 outline-none`}
-                                                />
+                                    {/* Section 2 — Investigation Details */}
+                                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                                        <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm mb-4">
+                                            <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">2</div>
+                                            <div>
+                                                <h3 className="text-base font-bold text-white">Investigation Details / Detalye ng Imbestigasyon</h3>
+                                                <p className="text-[10px] text-white/90 font-medium tracking-wide">Case reference and schedule information</p>
                                             </div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-blue-700 uppercase tracking-widest ml-1">Email Address (Optional) / Email (Opsyonal)</label>
-                                            <div className="relative">
-                                                <Info className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block flex items-center gap-1">
+                                                    <Calendar className="w-3 h-3" /> Date of Examination / Petsa ng Pagsusuri <span className="text-red-500">*</span>
+                                                </label>
                                                 <input
-                                                    type="email"
-                                                    name="email"
-                                                    value={formData.email}
+                                                    type="date" name="dateOfExamination" value={formData.dateOfExamination}
                                                     onChange={handleInputChange}
-                                                    placeholder="username@example.com"
-                                                    className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl font-normal focus:ring-2 focus:ring-blue-500 outline-none`}
+                                                    className={inputClass('dateOfExamination')}
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block flex items-center gap-1">
+                                                    <FileText className="w-3 h-3" /> Usaping Barangay No. <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="text" name="usapingBarangay" value={formData.usapingBarangay}
+                                                    onChange={handleInputChange}
+                                                    placeholder="e.g. 009-2026"
+                                                    className={inputClass('usapingBarangay')}
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block flex items-center gap-1">
+                                                    <Calendar className="w-3 h-3" /> Date of Hearing / Petsa ng Pagdinig <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="date" name="dateOfHearing" value={formData.dateOfHearing}
+                                                    onChange={handleInputChange}
+                                                    className={inputClass('dateOfHearing')}
                                                 />
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3 items-start shadow-sm mt-4 tracking-tight">
-                                        <Info className="w-5 h-5 text-amber-600 shrink-0" />
-                                        <p className="text-xs text-amber-800 font-medium leading-relaxed">
-                                            <span className="font-bold underline">Note / Paunawa:</span> The Barangay Administrator will contact you via this number regarding the official status or schedule of your request. / Makikipag-ugnayan ang Barangay Administrator sa numerong ito patungkol sa estado o iskedyul ng iyong request.
-                                        </p>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
 
-                        {/* Footer */}
-                        <div className="px-8 py-6 bg-gray-50 border-t flex flex-col sm:flex-row justify-between items-center gap-4 flex-shrink-0">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Verify all information before starting the approval workflow</p>
-                            <div className="flex gap-3 w-full sm:w-auto">
-                                <button onClick={onClose} className="flex-1 sm:flex-none px-6 py-3 text-gray-500 font-bold hover:text-gray-700 transition-colors uppercase tracking-widest text-xs">Cancel</button>
-                                <button onClick={handleSubmit} className="flex-1 sm:flex-none px-10 py-3 bg-blue-900 hover:bg-blue-800 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg transform hover:-translate-y-0.5 transition-all">Submit Application / Ipadala ang Aplikasyon</button>
+                                    {/* Section 3 — Notification & Contact */}
+                                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                                        <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm mb-4">
+                                            <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">3</div>
+                                            <div>
+                                                <h3 className="text-base font-bold text-white">Notification & Contact / Notipikasyon at Kontak</h3>
+                                                <p className="text-[10px] text-white/90 font-medium tracking-wide">Where to receive updates about your application</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Email Address (Optional) / Email (Opsyonal)</label>
+                                                <div className="relative">
+                                                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none border-r pr-2 border-gray-100"><Mail className="w-4 h-4 text-[#2d5a3d]/50" /></div>
+                                                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className="w-full pl-12 pr-4 py-2.5 bg-white border-2 border-emerald-100 rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-normal text-gray-800 shadow-sm" />
+                                                </div>
+                                                <p className="text-[9px] text-gray-400 font-bold italic ml-2">Notifications will be sent here / Dito ipapadala ang mga abiso</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Contact Number / Numero ng Telepono <span className="text-red-500">*</span></label>
+                                                <div className="relative">
+                                                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none border-r pr-2 border-gray-100"><Phone className="w-4 h-4 text-[#2d5a3d]/50" /></div>
+                                                    <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full pl-12 pr-4 py-2.5 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-bold text-gray-800 shadow-sm`} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Admin note */}
+                                        <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 flex gap-3 items-start shadow-sm">
+                                            <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                            <p className="text-[10px] text-amber-800 font-medium leading-relaxed">
+                                                <span className="font-bold">Note / Paunawa:</span> The Barangay Administrator will contact you via this number regarding the official status or schedule of your request. / Makikipag-ugnayan ang Barangay Administrator sa numerong ito patungkol sa estado o iskedyul ng inyong request.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                </form>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="border-t bg-gray-50/80 backdrop-blur-md px-4 py-3 flex flex-col sm:flex-row gap-2 justify-between items-center no-print flex-shrink-0">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide hidden sm:block">Please check all entries before final submission / Pakisuri ang lahat bago i-submit</p>
+                                <div className="flex gap-2 w-full sm:w-auto">
+                                    <button type="submit" onClick={handleSubmit} className="flex-1 sm:flex-none px-5 py-2.5 bg-gradient-to-r from-[#8cc63f] to-[#7cb342] hover:from-[#7cb342] hover:to-[#689f38] text-white rounded-lg font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-0.5 transition-all group">
+                                        <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                        Submit Application / Ipadala ang Aplikasyon
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
-            <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
-
-            {
-                showConfirmationPopup && (
-                    <div className="fixed inset-0 z-[60] overflow-y-auto">
-                        <div className="flex min-h-screen items-center justify-center p-4">
-                            <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" onClick={() => setShowConfirmationPopup(false)} />
-                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in">
-                                <div className="bg-blue-900 px-8 py-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
-                                    <h2 className="text-xl font-extrabold text-white tracking-tight uppercase">Confirm Application Details</h2>
-                                    <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white"><X className="w-6 h-6" /></button>
+            {/* Confirmation Popup */}
+            {showConfirmationPopup && (
+                <div className="fixed inset-0 z-[60] overflow-y-auto">
+                    <div className="flex min-h-screen items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" onClick={() => setShowConfirmationPopup(false)} />
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+                            <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-3 flex items-center justify-between border-b border-white/10">
+                                <div className="flex items-center gap-3 relative z-10">
+                                    <div className="bg-white/20 backdrop-blur-md p-2 rounded-lg border border-white/30 shadow-xl"><ClipboardList className="w-5 h-5 text-white shadow-sm" /></div>
+                                    <h2 className="text-lg font-bold text-white tracking-tight drop-shadow-md uppercase">Review Application / Suriin ang Aplikasyon</h2>
                                 </div>
-                                <div className="flex-1 overflow-y-auto px-6 py-8 bg-gray-50/80">
-                                    <div className="max-w-2xl mx-auto space-y-4">
-                                        {Object.entries(formData).map(([key, value]) => {
-                                            const excludedKeys = ['residentId', 'signature', 'details', 'age', 'sex', 'gender', 'civilStatus', 'address', 'dateOfBirth', 'placeOfBirth', 'businessAddress', 'ownerAddress', 'nationality', 'occupation'];
-                                            if (!value || excludedKeys.includes(key)) return null;
-                                            const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                                            return (
-                                                <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 bg-white shadow-sm border border-gray-100 rounded-[1.25rem] hover:bg-gray-50 transition-colors group">
-                                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{formattedKey}</span>
-                                                    <span className="text-sm font-bold text-gray-900 break-words md:text-right mt-1 md:mt-0 group-hover:text-blue-700 transition-colors uppercase">{typeof value === 'object' ? JSON.stringify(value) : value.toString()}</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all group">
+                                    <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 bg-gray-50/80">
+                                <div className="max-w-2xl mx-auto space-y-3">
+                                    {Object.entries(formData).map(([key, value]) => {
+                                        const excludedKeys = ['residentId', 'age', 'sex', 'civilStatus', 'address', 'dateOfBirth'];
+                                        if (!value || excludedKeys.includes(key)) return null;
+                                        const labelMap = {
+                                            fullName: 'Patient Full Name',
+                                            dateOfExamination: 'Date of Examination',
+                                            usapingBarangay: 'Usaping Barangay No.',
+                                            dateOfHearing: 'Date of Hearing',
+                                            contactNumber: 'Contact Number',
+                                            email: 'Email Address'
+                                        };
+                                        const formattedKey = labelMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+                                        return (
+                                            <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-4 py-2.5 bg-white shadow-sm border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors group">
+                                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">{formattedKey}</span>
+                                                <span className="text-sm font-bold text-gray-900 break-words md:text-right mt-1 md:mt-0 group-hover:text-emerald-700 transition-colors uppercase">
+                                                    {typeof value === 'object' ? JSON.stringify(value) : value.toString()}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                <div className="px-8 py-6 bg-gray-50 border-t flex flex-col sm:flex-row justify-between items-center gap-4 flex-shrink-0">
-                                    <button onClick={() => setShowConfirmationPopup(false)} disabled={isSubmitting} className="px-6 py-3 text-gray-500 font-bold hover:text-gray-700 uppercase tracking-widest text-xs">Back to Edit</button>
-                                    <button onClick={handleProceedSubmission} disabled={isSubmitting} className="px-10 py-3 bg-blue-900 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg transition-all disabled:opacity-50">
-                                        {isSubmitting ? 'Submitting...' : 'Proceed to Submission'}
-                                    </button>
-                                </div>
+                            </div>
+                            <div className="border-t bg-gray-50/80 px-4 py-3 flex flex-col sm:flex-row gap-2 justify-between items-center">
+                                <button onClick={() => setShowConfirmationPopup(false)} disabled={isSubmitting} className="px-4 py-2.5 border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d]/5 rounded-lg font-bold flex items-center gap-2 outline-none">
+                                    <Eye className="w-4 h-4" /> Go Back & Edit / Bumalik sa Pag-edit
+                                </button>
+                                <button onClick={handleProceedSubmission} disabled={isSubmitting} className="px-4 py-2.5 bg-gradient-to-r from-[#8cc63f] to-[#7cb342] hover:from-[#7cb342] hover:to-[#689f38] text-white rounded-lg font-bold flex items-center gap-2 shadow-xl transform hover:-translate-y-0.5 transition-all">
+                                    {isSubmitting ? 'Processing... / Pinoproseso...' : 'Confirm & Submit / Kumpirmahin at Ipadala'}
+                                </button>
                             </div>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
-            {
-                showSuccessModal && (
-                    <div className="fixed inset-0 z-[70] overflow-y-auto">
-                        <div className="flex min-h-screen items-center justify-center p-4">
-                            <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
-                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
-                                <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-8 py-10 text-center relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                                    <div className="w-20 h-20 bg-blue-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
-                                        <CheckCircle className="w-12 h-12 text-blue-400 animate-bounce" />
-                                    </div>
-                                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Filing Complete!</h2>
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-[70] overflow-y-auto">
+                    <div className="flex min-h-screen items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+                            <div className="bg-gradient-to-r from-[#112e1f] to-[#214431] px-6 py-6 text-center">
+                                <div className="w-16 h-16 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-500/30">
+                                    <CheckCircle className="w-10 h-10 text-emerald-400 animate-bounce" />
                                 </div>
-                                <div className="p-6 text-center">
-                                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6 text-blue-900">
-                                        <p className="text-sm font-medium mb-1 uppercase tracking-widest">Reference Number:</p>
-                                        <p className="text-2xl font-black font-mono tracking-wider">{submittedReferenceNumber}</p>
+                                <h2 className="text-xl font-bold text-white uppercase tracking-tight">Filing Complete! / Tapos na ang Pag-file!</h2>
+                            </div>
+                            <div className="p-4 text-center">
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3 mb-4">
+                                    <p className="text-sm font-medium text-green-800 mb-1">REFERENCE NO:</p>
+                                    <p className="text-xl font-bold text-green-900 font-mono tracking-wider">{submittedReferenceNumber}</p>
+                                </div>
+                                <div className="bg-[#112e1f]/5 border border-[#112e1f]/10 rounded-lg p-4 text-left mb-4">
+                                    <div className="flex items-center gap-2 text-[#112e1f] mb-3">
+                                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                        <h4 className="text-[10px] font-bold uppercase tracking-wide">Next Procedures / Susunod na Pamamaraan</h4>
                                     </div>
-
-                                    <div className="bg-blue-900/5 border border-blue-900/10 rounded-2xl p-6 relative overflow-hidden text-left mb-6">
-                                        <div className="flex items-center gap-3 text-blue-900 mb-4">
-                                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
-                                            <h4 className="text-xs font-black uppercase tracking-[0.1em]">Next Procedures</h4>
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Clock className="w-3 h-3 text-emerald-700" /></div>
+                                            <p className="text-[10px] text-gray-600 font-bold leading-relaxed">Processing typically takes 1-3 business days. Your application is now in the queue for chairman approval.</p>
                                         </div>
-                                        <div className="space-y-4">
-                                            <div className="flex items-start gap-4">
-                                                <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5">
-                                                    <Clock className="w-4 h-4 text-blue-700" />
-                                                </div>
-                                                <p className="text-[11px] text-gray-600 font-bold leading-relaxed">
-                                                    Processing typically takes 1-3 business days. Your application is now in the queue for staff review and initial verification.
-                                                </p>
-                                            </div>
-                                            <div className="flex items-start gap-4">
-                                                <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5">
-                                                    <Phone className="w-4 h-4 text-blue-700" />
-                                                </div>
-                                                <p className="text-[11px] text-gray-600 font-bold leading-relaxed">
-                                                    We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your schedule or provide updates regarding your request.
-                                                </p>
-                                            </div>
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Phone className="w-3 h-3 text-emerald-700" /></div>
+                                            <p className="text-[10px] text-gray-600 font-bold leading-relaxed">We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your pickup schedule at the Barangay Hall.</p>
                                         </div>
                                     </div>
-
-                                    <button onClick={() => { resetForm(); onClose(); }} className="w-full bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95">
-                                        Return to Dashboard
-                                    </button>
                                 </div>
+                                <button onClick={() => { setShowSuccessModal(false); resetForm(); onClose(); }} className="w-full bg-[#112e1f] text-white py-3 rounded-lg font-bold uppercase transition-all shadow-lg active:scale-95">
+                                    Return to Dashboard / Bumalik sa Dashboard
+                                </button>
                             </div>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
-            <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.3s ease-out; }`}</style>
+            {isResidentModalOpen && (
+                <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
+            )}
+
+            <style jsx>{`
+        @keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
+        input::placeholder, textarea::placeholder { font-family: 'Open Sans', sans-serif !important; font-style: italic !important; font-weight: 400 !important; }
+        input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { font-family: 'Open Sans', sans-serif !important; font-style: italic !important; font-weight: 400 !important; }
+        input::-moz-placeholder, textarea::-moz-placeholder { font-family: 'Open Sans', sans-serif !important; font-style: italic !important; font-weight: 400 !important; }
+        input:-ms-input-placeholder, textarea:-ms-input-placeholder { font-family: 'Open Sans', sans-serif !important; font-style: italic !important; font-weight: 400 !important; }
+      `}</style>
         </>
-    );
-}
-
-function MedicoLegalPreview({ formData, currentDate, officials, referenceNumber }) {
-    const logos = officials.logos || {};
-    const [scale, setScale] = useState(1);
-    const containerRef = useRef(null);
-
-    useEffect(() => {
-        const updateScale = () => {
-            if (containerRef.current) setScale(Math.min(containerRef.current.offsetWidth / 794, 1));
-        };
-        updateScale();
-        window.addEventListener('resize', updateScale);
-        return () => window.removeEventListener('resize', updateScale);
-    }, []);
-
-    const formatDate = (dateString) => {
-        if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    };
-
-    return (
-        <div ref={containerRef} className="w-full flex justify-center">
-            <div style={{ width: `${794 * scale}px`, height: `${1123 * scale}px`, position: 'relative' }}>
-                <div className="bg-white text-black" style={{ width: '794px', height: '1123px', transform: `scale(${scale})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0, padding: '60px 80px' }}>
-                    {/* Header */}
-                    <div className="flex justify-between items-center border-b-2 border-black pb-4 mb-8">
-                        <img src={logos.leftLogo} style={{ width: '90px', height: '90px' }} alt="Logo" />
-                        <div className="text-center">
-                            <p className="text-[12px] uppercase font-medium">{officials.headerInfo?.country}</p>
-                            <p className="text-[12px] uppercase font-medium">{officials.headerInfo?.province}</p>
-                            <p className="text-[12px] uppercase font-medium">{officials.headerInfo?.municipality}</p>
-                            <p className="text-[18px] font-bold uppercase">{officials.headerInfo?.barangayName}</p>
-                            <p className="text-[14px] font-extrabold text-red-600 mt-1 uppercase">Office of the Punong Barangay</p>
-                        </div>
-                        <img src={logos.rightLogo} style={{ width: '90px', height: '90px' }} alt="LGU" />
-                    </div>
-
-                    {/* Title */}
-                    <div className="text-center mb-10">
-                        <h1 className="text-[20px] font-bold underline underline-offset-4 uppercase">REQUEST FOR MEDICO LEGAL (COPY)</h1>
-                    </div>
-
-                    {/* Content */}
-                    <div className="space-y-6 text-[15px]">
-                        <p className="font-bold uppercase tracking-tight">TO WHOM IT MAY CONCERN:</p>
-                        <p className="mt-6 font-bold uppercase">GREETINGS!</p>
-                        <p className="leading-relaxed uppercase">
-                            KINDLY REQUESTING YOUR GOOD OFFICE TO FURNISH US A COPY OF "MEDICO LEGAL" OF YOUR BELOW MENTIONED PATIENT IN AIDE OF RECONCILIATORY MEETING / HEARING OF INVOLVED INDIVIDUALS TO BE HELD IN THIS BARANGAY AS DETAILED BELOW:
-                        </p>
-
-                        <div className="space-y-1.5 mt-6">
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start"><span>REQUEST DATE</span><span>:</span><span>{currentDate.toUpperCase()}</span></div>
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start"><span>NAME</span><span>:</span><span className="font-bold uppercase">{formData.fullName}</span></div>
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start"><span>AGE</span><span>:</span><span>{formData.age}</span></div>
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start"><span>SEX</span><span>:</span><span className="uppercase">{formData.sex}</span></div>
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start"><span>RESIDENTIAL ADDRESS</span><span>:</span><span className="uppercase">{formData.address}</span></div>
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start"><span>DATE OF BIRTH</span><span>:</span><span>{formatDate(formData.dateOfBirth).toUpperCase()}</span></div>
-
-                            {/* Date of Examination / Confinement row */}
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start pt-1">
-                                <div className="flex flex-col">
-                                    <span>DATE OF EXAMINATION /</span>
-                                    <span>CONFINEMENT</span>
-                                </div>
-                                <span className="pt-0">:</span>
-                                <span className="pt-0">{formatDate(formData.dateOfExamination).toUpperCase()}</span>
-                            </div>
-
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start pt-1 font-bold"><span>USAPING BARANGAY NO. / NUMERO NG USAPING BARANGAY</span><span>:</span><span>{formData.usapingBarangay?.toUpperCase()}</span></div>
-                            <div className="grid grid-cols-[200px_20px_1fr] items-start font-bold"><span>DATE OF HEARING / PETSA NG PAGDINIG</span><span>:</span><span>{formatDate(formData.dateOfHearing).toUpperCase()}</span></div>
-                        </div>
-
-                        <p className="pt-8 leading-relaxed uppercase">
-                            YOU MAY PLEASE HANDOVER THE REQUESTED "MEDICO LEGAL" TO YOUR ABOVE PATIENT DIRECTLY. PRAYING FOR YOUR FAVORABLE RESPONSE AND ASSISTANCE. KEEP SAFE AND GOD BLESS!
-                        </p>
-
-                        <div className="pt-16">
-                            <p className="font-bold mb-16 uppercase">Truly Yours,</p>
-                            <div className="space-y-0.5">
-                                <p className="text-[18px] font-bold uppercase">{officials.chairman}</p>
-                                <p className="text-[13px] font-bold uppercase">BARANGAY CHAIRMAN</p>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end pt-4 opacity-50">
-                            <p className="text-[10px] font-bold">Reference No: <span className="underline">{referenceNumber || 'ML-XXXX-YYYY'}</span></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     );
 }

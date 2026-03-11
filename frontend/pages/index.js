@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import {
   Menu, X, ChevronRight, ChevronLeft, Plus, Send, Phone, MapPin, Mail,
@@ -699,7 +699,7 @@ export default function BarangayPortal() {
               <span>{currentTime || 'Loading...'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <weatherInfo.icon className={`w-4 h-4 ${weatherInfo.color}`} />
+              {weatherInfo.icon && React.createElement(weatherInfo.icon, { className: `w-4 h-4 ${weatherInfo.color}` })}
               <span>Weather: {weatherInfo.text}</span>
             </div>
           </div>
@@ -1560,7 +1560,7 @@ export default function BarangayPortal() {
                           {section.key === 'captain' ? (
                             <>
                               {/* Left Aligned Captain Card */}
-                              <div className="w-full lg:w-[450px] flex-shrink-0">
+                              <div className="w-full lg:w-[380px] flex-shrink-0 mx-auto">
                                 {displayOfficials.map((official, index) => {
                                   const colorClass = 'from-green-800 to-green-950';
                                   const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
@@ -1589,35 +1589,17 @@ export default function BarangayPortal() {
                                 })}
                               </div>
 
-                              {/* Right Aligned Goal & Vision */}
+                              {/* Right Aligned Plain Goal & Vision */}
                               <div className="flex-grow space-y-8">
-                                <div className="bg-gradient-to-br from-[#112e1f] to-[#1a3d29] rounded-[40px] p-8 md:p-10 shadow-2xl relative overflow-hidden group border border-white/10 hover:shadow-green-900/40 transition-all transform hover:scale-[1.01]">
-                                  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                                    <Target className="w-32 h-32 text-white" />
-                                  </div>
-                                  <div className="relative z-10">
-                                    <div className="flex items-center gap-4 mb-6">
-                                      <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
-                                        <Target className="w-8 h-8 text-green-400" />
-                                      </div>
-                                      <h3 className="text-3xl font-black text-white tracking-widest uppercase">Barangay Vision</h3>
-                                    </div>
-                                    <p className="text-green-50/90 text-xl font-medium leading-relaxed italic border-l-4 border-green-500 pl-6 py-2">
+                                <div className="px-4 py-8">
+                                  <div className="mb-8">
+                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">Barangay Vision</h3>
+                                    <p className="text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 border-green-500 pl-6 py-2">
                                       {`"A model community that is progressive, peaceful, and disaster-resilient, where empowered citizens live in harmony with nature and participate in transparent local governance."`}
                                     </p>
                                   </div>
-                                </div>
-                                <div className="bg-white rounded-[40px] p-8 md:p-10 shadow-2xl relative overflow-hidden group border border-gray-100 hover:border-green-200 transition-all transform hover:scale-[1.01]">
-                                  <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-700">
-                                    <Star className="w-32 h-32 text-green-900" />
-                                  </div>
-                                  <div className="relative z-10">
-                                    <div className="flex items-center gap-4 mb-6">
-                                      <div className="w-14 h-14 bg-green-900 rounded-2xl flex items-center justify-center shadow-lg">
-                                        <Star className="w-8 h-8 text-white" />
-                                      </div>
-                                      <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase">Barangay Goal</h3>
-                                    </div>
+                                  <div>
+                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">Barangay Goal</h3>
                                     <p className="text-gray-700 text-xl font-medium leading-relaxed border-l-4 border-green-900 pl-6 py-2">
                                       {`"To deliver dedicated public service through innovative social programs, sustainable infrastructure, and community-driven initiatives that uplift the dignity and prosperity of every resident."`}
                                     </p>
@@ -1627,35 +1609,17 @@ export default function BarangayPortal() {
                             </>
                           ) : section.key === 'sk_chairman' ? (
                             <>
-                              {/* Left Aligned SK Goal & Vision */}
+                              {/* Left Aligned Plain SK Goal & Vision */}
                               <div className="flex-grow space-y-8 order-2 lg:order-1">
-                                <div className="bg-gradient-to-br from-[#112e1f] to-[#1a3d29] rounded-[40px] p-8 md:p-10 shadow-2xl relative overflow-hidden group border border-white/10 hover:shadow-orange-900/40 transition-all transform hover:scale-[1.01]">
-                                  <div className="absolute top-0 left-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                                    <Trophy className="w-32 h-32 text-white" />
-                                  </div>
-                                  <div className="relative z-10">
-                                    <div className="flex items-center gap-4 mb-6">
-                                      <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
-                                        <Trophy className="w-8 h-8 text-orange-400" />
-                                      </div>
-                                      <h3 className="text-3xl font-black text-white tracking-widest uppercase">SK Vision</h3>
-                                    </div>
-                                    <p className="text-orange-50/90 text-xl font-medium leading-relaxed italic border-l-4 border-orange-500 pl-6 py-2">
+                                <div className="px-4 py-8">
+                                  <div className="mb-8">
+                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">SK Vision</h3>
+                                    <p className="text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 border-orange-500 pl-6 py-2">
                                       {`"An inspired youth community of Iba O' Este that is actively involved in community building, advocating for education, sports, and social responsibility while maintaining the highest level of integrity."`}
                                     </p>
                                   </div>
-                                </div>
-                                <div className="bg-white rounded-[40px] p-8 md:p-10 shadow-2xl relative overflow-hidden group border border-gray-100 hover:border-orange-200 transition-all transform hover:scale-[1.01]">
-                                  <div className="absolute top-0 left-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-700">
-                                    <Star className="w-32 h-32 text-orange-900" />
-                                  </div>
-                                  <div className="relative z-10">
-                                    <div className="flex items-center gap-4 mb-6">
-                                      <div className="w-14 h-14 bg-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                        <Star className="w-8 h-8 text-white" />
-                                      </div>
-                                      <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase">SK Goal</h3>
-                                    </div>
+                                  <div>
+                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">SK Goal</h3>
                                     <p className="text-gray-700 text-xl font-medium leading-relaxed border-l-4 border-orange-600 pl-6 py-2">
                                       {`"To empower the youth through comprehensive development programs in leadership, environment, and wellness, ensuring every young resident has the opportunity to contribute to our barangay's future."`}
                                     </p>
@@ -1664,7 +1628,7 @@ export default function BarangayPortal() {
                               </div>
 
                               {/* Right Aligned SK Chairman Card */}
-                              <div className="w-full lg:w-[450px] flex-shrink-0 order-1 lg:order-2">
+                              <div className="w-full lg:w-[380px] flex-shrink-0 order-1 lg:order-2">
                                 {displayOfficials.map((official, index) => {
                                   const colorClass = 'from-orange-600 to-amber-700';
                                   const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
@@ -1773,16 +1737,16 @@ export default function BarangayPortal() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-8 bg-[#112117]">
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-2">Feel free to contact us</h2>
-            <p className="text-xl text-green-400 italic">Wag mahiya at kami ay inyong tanungin</p>
+      <section id="contact" className="py-6 bg-[#112117]">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-white mb-1">Feel free to contact us</h2>
+            <p className="text-base text-green-400 italic">Wag mahiya at kami ay inyong tanungin</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
             {/* Contact Form */}
-            <div className="bg-white rounded-2xl p-8 shadow-xl h-full">
+            <div className="bg-white rounded-2xl p-5 shadow-xl h-full">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { X, FileText, Eye, Send, CheckCircle, AlertCircle, Info, Search, Clock, Phone, Heart, Users, MapPin } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Heart, Eye, Send, CheckCircle, AlertCircle, Info, Search, Clock, Phone, Mail, Users, MapPin } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 
 // API Configuration
@@ -10,7 +10,7 @@ const defaultOfficials = {
     chairman: 'ALEXANDER C. MANIO',
     secretary: 'ROYCE ANN C. GALVEZ',
     contactInfo: {
-        address: 'Purok 2 (Sitio Banawe) Barangay Iba O\' Este, Calumpit, Bulacan',
+        address: "Purok 2 (Sitio Banawe) Barangay Iba O' Este, Calumpit, Bulacan",
         telephone: '0967 631 9168',
         email: 'anneseriousme@gmail.com'
     },
@@ -18,7 +18,7 @@ const defaultOfficials = {
         country: 'Republic of the Philippines',
         province: 'Province of Bulacan',
         municipality: 'Municipality of Calumpit',
-        barangayName: 'BARANGAY IBA O\' ESTE',
+        barangayName: "BARANGAY IBA O' ESTE",
         officeName: 'Office of the Punong Barangay'
     },
     logos: { leftLogo: '/iba-o-este.png', rightLogo: '/calumpit.png', logoSize: 115 }
@@ -46,11 +46,9 @@ const Notification = React.memo(({ type, title, message, onClose }) => {
         </div>
     );
 });
-
 Notification.displayName = 'Notification';
 
 export default function CohabitationCertificateModal({ isOpen, onClose }) {
-    const [showPreview, setShowPreview] = useState(false);
     const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [notification, setNotification] = useState(null);
@@ -59,9 +57,8 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
     const [referenceNumber, setReferenceNumber] = useState('');
     const [submittedReferenceNumber, setSubmittedReferenceNumber] = useState('');
     const [isResidentModalOpen, setIsResidentModalOpen] = useState(false);
-    const [selectingFor, setSelectingFor] = useState('person1'); // 'person1' or 'person2'
+    const [selectingFor, setSelectingFor] = useState('person1');
     const [errors, setErrors] = useState({});
-    const certificateRef = useRef(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -86,6 +83,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                 residentId: resident.id,
                 person1DbAddress: resident.residential_address || ''
             }));
+            setNotification({ type: 'success', title: 'Person 1 Found', message: `${resident.full_name}'s details have been auto-filled.` });
         } else {
             setFormData(prev => ({
                 ...prev,
@@ -97,6 +95,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                 partnerDbAddress: resident.residential_address || '',
                 email: resident.email || prev.email
             }));
+            setNotification({ type: 'success', title: 'Partner Found', message: `${resident.full_name}'s details have been auto-filled.` });
         }
         setIsResidentModalOpen(false);
     };
@@ -105,8 +104,6 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
         if (isOpen) {
             const now = new Date();
             setCurrentDate(now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
-
-            // Clear reference number - will be generated on submission
             setReferenceNumber('');
         }
     }, [isOpen]);
@@ -119,11 +116,17 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                 ...defaultOfficials, ...parsed,
                 contactInfo: { ...defaultOfficials.contactInfo, ...parsed.contactInfo },
                 headerInfo: { ...defaultOfficials.headerInfo, ...parsed.headerInfo },
-                logos: { ...defaultOfficials.logos, ...parsed.logos },
-                headerStyle: { ...defaultOfficials.headerStyle, ...parsed.headerStyle }
+                logos: { ...defaultOfficials.logos, ...parsed.logos }
             });
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => setNotification(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -132,13 +135,12 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
     };
 
     const validateForm = () => {
-        const required = ['fullName', 'partnerFullName', 'address', 'contactNumber'];
+        const required = ['fullName', 'partnerFullName', 'address', 'contactNumber', 'purpose'];
         const newErrors = {};
         required.forEach(field => { if (!formData[field]) newErrors[field] = true; });
-
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            setNotification({ type: 'error', title: 'Missing Info', message: 'Please fill in the required fields.' });
+            setNotification({ type: 'error', title: 'Missing Info', message: 'Please fill in all required fields.' });
             return false;
         }
         return true;
@@ -156,28 +158,84 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
             const response = await fetch(`${API_URL}/certificates/cohabitation`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    certificate_type: 'barangay_cohabitation'
-                })
+                body: JSON.stringify({ ...formData, certificate_type: 'barangay_cohabitation' })
             });
-
             const result = await response.json();
             if (result.success) {
                 setSubmittedReferenceNumber(result.referenceNumber);
+                setReferenceNumber(result.referenceNumber);
                 setShowConfirmationPopup(false);
                 setShowSuccessModal(true);
             } else {
                 throw new Error(result.message || 'Submission failed');
             }
         } catch (error) {
+            setShowConfirmationPopup(false);
             setNotification({ type: 'error', title: 'Error', message: error.message });
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const resetForm = () => {
+        setFormData({
+            fullName: '', age: '', gender: '', dateOfBirth: '', residentId: null,
+            partnerFullName: '', partnerAge: '', partnerGender: '', partnerDateOfBirth: '', partnerResidentId: null,
+            address: '', noOfChildren: '0', livingTogetherYears: '0', livingTogetherMonths: '0',
+            purpose: '', contactNumber: '', email: '', person1DbAddress: '', partnerDbAddress: ''
+        });
+        setShowConfirmationPopup(false);
+        setShowSuccessModal(false);
+        setNotification(null);
+        setReferenceNumber('');
+        setSubmittedReferenceNumber('');
+        setErrors({});
+    };
+
     if (!isOpen) return null;
+
+    const inputClass = (field) =>
+        `w-full px-4 py-2.5 bg-white border-2 ${errors[field] ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-bold text-gray-800 shadow-sm`;
+
+    const ResidentBlock = ({ nameKey, label, btnLabel, person }) => (
+        <div className="space-y-3">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm">
+                    <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">{person}</div>
+                    <div>
+                        <h3 className="text-base font-bold text-white">{label}</h3>
+                        <p className="text-[10px] text-white/90 font-medium tracking-wide">Select from resident directory</p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => { setSelectingFor(nameKey === 'fullName' ? 'person1' : 'person2'); setIsResidentModalOpen(true); }}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-lg text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-md group"
+                >
+                    <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    {btnLabel}
+                </button>
+            </div>
+            <div className="relative">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wide ml-1 mb-1 block">Full Name / Buong Pangalan <span className="text-red-500">*</span></label>
+                <input
+                    type="text"
+                    name={nameKey}
+                    value={formData[nameKey]}
+                    readOnly
+                    onClick={() => { setSelectingFor(nameKey === 'fullName' ? 'person1' : 'person2'); setIsResidentModalOpen(true); }}
+                    placeholder="TAP HERE TO SELECT FROM RESIDENT DIRECTORY..."
+                    className={`w-full px-4 py-3 bg-white border-2 ${errors[nameKey] ? 'border-red-500 bg-red-50' : (formData[nameKey] ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-lg transition-all duration-300 font-bold text-base cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`}
+                />
+            </div>
+            {formData[nameKey] && (
+                <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 flex items-center justify-center gap-2 text-emerald-700 shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <span className="text-[10px] font-bold uppercase tracking-wide italic">Personal Data Protected Under Data Privacy Act</span>
+                </div>
+            )}
+        </div>
+    );
 
     return (
         <>
@@ -185,227 +243,190 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                 <div className="fixed inset-0 z-50 overflow-y-auto">
                     <div className="flex min-h-screen items-center justify-center p-4">
                         <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
-                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in text-gray-800">
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+
                             {/* Header */}
-                            <div className="bg-gradient-to-r from-pink-900 via-rose-800 to-red-900 px-8 py-6 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
-                                <div className="flex items-center gap-4 relative z-10">
-                                    <div className="bg-white/20 backdrop-blur-md p-3 rounded-xl border border-white/30 shadow-xl text-white">
-                                        <Heart className="w-8 h-8 fill-current" />
+                            <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-3 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                                <div className="flex items-center gap-3 relative z-10">
+                                    <div className="bg-white/20 backdrop-blur-md p-2 rounded-lg border border-white/30 shadow-xl">
+                                        <Heart className="w-5 h-5 text-white shadow-sm" />
                                     </div>
-                                    <div>
-                                        <h2 className="text-2xl font-black text-white tracking-tight uppercase">Co-habitation Certificate</h2>
-                                        <p className="text-rose-100/70 text-xs font-bold uppercase tracking-widest mt-1">Legal Common-Law Partnership Setup</p>
+                                    <div className="flex flex-col">
+                                        <h2 className="text-lg font-bold text-white tracking-tight drop-shadow-md">Co-habitation Certificate / Katunayan ng Pakikipagsamahan</h2>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
+                                            <p className="text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 bg-red-600 rounded-md shadow-md">{referenceNumber || 'New Cohabitation Request'}</p>
+                                        </div>
                                     </div>
                                 </div>
-                                <button onClick={onClose} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all group">
-                                    <X className="w-6 h-6 group-hover:rotate-90 transition-transform" />
+                                <button onClick={onClose} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all duration-300 group relative z-20">
+                                    <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
                                 </button>
                             </div>
 
-                            {notification && <div className="px-8 mt-4"><Notification {...notification} onClose={() => setNotification(null)} /></div>}
+                            {notification && <div className="px-4 pt-2"><Notification type={notification.type} title={notification.title} message={notification.message} onClose={() => setNotification(null)} /></div>}
 
-                            {/* Form Content */}
-                            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+                            {/* Scrollable Body */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                <form onSubmit={handleSubmit} className="p-4 space-y-4">
 
-                                {/* Person 1 Section */}
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                        <div className="w-10 h-10 bg-rose-100 text-rose-700 rounded-xl flex items-center justify-center font-black text-lg shadow-sm">1</div>
-                                        <div>
-                                            <h3 className="text-lg md:text-xl font-bold text-white">First Person Details / Detalye ng Unang Tao</h3>
-                                            <p className="text-sm text-gray-500 font-medium">Primary resident making the request / Pangunahing residente na nagre-request</p>
+                                    {/* Registration Notice */}
+                                    <div className="bg-gradient-to-r from-[#112e1f]/90 to-[#1a3d29]/80 border border-white/10 rounded-lg p-3 shadow-md relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none"></div>
+                                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-400/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl pointer-events-none"></div>
+                                        <div className="flex items-start gap-2 relative z-10">
+                                            <div className="bg-white/10 border border-white/20 p-1.5 rounded-lg shrink-0 mt-0.5"><Info className="w-3 h-3 text-emerald-300" /></div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse"></div>
+                                                    <h4 className="font-bold text-emerald-300 uppercase tracking-wide text-[9px]">Registration Notice / Paunawa</h4>
+                                                </div>
+                                                <p className="text-white/80 text-[10px] font-medium leading-relaxed mb-0.5">If no record is found in the resident directory, please visit the Barangay Hall and coordinate with the staff to register.</p>
+                                                <p className="text-white/50 text-[9px] font-medium leading-relaxed italic">Kung walang rekord sa direktoryo ng residente, mangyaring pumunta sa Barangay Hall upang magparehistro sa ating mga kawani.</p>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
-                                        <div className="md:col-span-2 space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 block">Full Name</label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    name="fullName"
-                                                    value={formData.fullName}
-                                                    readOnly
-                                                    onClick={() => { setSelectingFor('person1'); setIsResidentModalOpen(true); }}
-                                                    className={`flex-1 px-5 py-4 bg-gray-50 border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl font-bold text-gray-900 cursor-pointer hover:bg-white transition-all`}
-                                                    placeholder="Select from directory... / Pumili mula sa direktoryo..."
-                                                />
-                                                <button type="button" onClick={() => { setSelectingFor('person1'); setIsResidentModalOpen(true); }} className="px-5 py-4 bg-rose-600 text-white rounded-2xl font-black hover:bg-rose-700 transition-colors shadow-lg shadow-rose-900/10 flex items-center gap-2">
-                                                    <Search className="w-5 h-5" />
-                                                </button>
+                                    {/* Section 1 — Person 1 */}
+                                    <ResidentBlock nameKey="fullName" label="First Person / Unang Tao" btnLabel="Search Resident Directory / Maghanap sa Directory" person="1" />
+
+                                    {/* Section 2 — Partner */}
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <ResidentBlock nameKey="partnerFullName" label="Partner Details / Detalye ng Kapareha" btnLabel="Search Partner Directory / Maghanap sa Directory ng Kapareha" person="2" />
+                                    </div>
+
+                                    {/* Section 3 — Co-habitation Info */}
+                                    <div className="pt-4 border-t border-gray-100 space-y-4">
+                                        <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm mb-4">
+                                            <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">3</div>
+                                            <div>
+                                                <h3 className="text-base font-bold text-white">Co-habitation Details / Detalye ng Pakikipagsamahan</h3>
+                                                <p className="text-[10px] text-white/90 font-medium tracking-wide">Common address and duration of living together</p>
                                             </div>
                                         </div>
 
-                                    </div>
-                                </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block flex items-center gap-1">
+                                                <MapPin className="w-3 h-3" /> Common Address / Pinasamang Tirahan <span className="text-red-500">*</span>
+                                            </label>
+                                            <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Full address where both parties are living together..." className={inputClass('address')} />
+                                        </div>
 
-                                {/* Person 2 Section */}
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                        <div className="w-10 h-10 bg-rose-100 text-rose-700 rounded-xl flex items-center justify-center font-black text-lg shadow-sm">2</div>
-                                        <div>
-                                            <h3 className="text-lg md:text-xl font-bold text-white">Partner Details / Detalye ng Kapareha</h3>
-                                            <p className="text-sm text-gray-500 font-medium">Second person in the common-law partnership</p>
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block flex items-center gap-1">
+                                                    <Users className="w-3 h-3" /> No. of Children / Bilang ng Anak
+                                                </label>
+                                                <input type="number" min="0" name="noOfChildren" value={formData.noOfChildren} onChange={handleInputChange} className={inputClass('noOfChildren')} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Years Together / Taon na Magkasama</label>
+                                                <input type="number" min="0" name="livingTogetherYears" value={formData.livingTogetherYears} onChange={handleInputChange} className={inputClass('livingTogetherYears')} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Months Together / Buwan na Magkasama</label>
+                                                <input type="number" min="0" max="11" name="livingTogetherMonths" value={formData.livingTogetherMonths} onChange={handleInputChange} className={inputClass('livingTogetherMonths')} />
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
-                                        <div className="md:col-span-2 space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 block">Partner Full Name / Buong Pangalan ng Kapareha</label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    name="partnerFullName"
-                                                    value={formData.partnerFullName}
-                                                    readOnly
-                                                    onClick={() => { setSelectingFor('person2'); setIsResidentModalOpen(true); }}
-                                                    className={`flex-1 px-5 py-4 bg-gray-50 border-2 ${errors.partnerFullName ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl font-bold text-gray-900 cursor-pointer hover:bg-white transition-all`}
-                                                    placeholder="Select from directory... / Pumili mula sa direktoryo..."
-                                                />
-                                                <button type="button" onClick={() => { setSelectingFor('person2'); setIsResidentModalOpen(true); }} className="px-5 py-4 bg-rose-600 text-white rounded-2xl font-black hover:bg-rose-700 transition-colors shadow-lg shadow-rose-900/10 flex items-center gap-2">
-                                                    <Search className="w-5 h-5" />
-                                                </button>
+                                    {/* Section 4 — Notification & Purpose */}
+                                    <div className="pt-4 border-t border-gray-100 space-y-4">
+                                        <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm mb-4">
+                                            <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">4</div>
+                                            <div>
+                                                <h3 className="text-base font-bold text-white">Notification & Purpose / Notipikasyon at Layunin</h3>
+                                                <p className="text-[10px] text-white/90 font-medium tracking-wide">Where to receive updates and reason for the certificate</p>
                                             </div>
                                         </div>
 
-                                    </div>
-                                </div>
-
-                                {/* Partnership Details */}
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                        <div className="w-10 h-10 bg-rose-100 text-rose-700 rounded-xl flex items-center justify-center font-black text-lg shadow-sm">3</div>
-                                        <div>
-                                            <h3 className="text-lg md:text-xl font-bold text-white">Co-habitation Information</h3>
-                                            <p className="text-sm text-gray-500 font-medium">Common house and duration details</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
-                                        <div className="md:col-span-2 space-y-3">
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-1">
-                                                <label className="text-xs font-black text-rose-800 uppercase tracking-widest ml-1 block">Common Residential Address</label>
-
-                                                {/* QUICK SYNC AREA */}
-                                                <div className="flex flex-wrap gap-2">
-                                                    {!formData.fullName && !formData.partnerFullName ? (
-                                                        <span className="text-[9px] font-bold text-gray-300 uppercase tracking-widest border border-dashed border-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                                                            <Users className="w-3 h-3" />
-                                                            Select residents to enable Quick Sync
-                                                        </span>
-                                                    ) : (
-                                                        <>
-                                                            {formData.fullName && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setFormData(prev => ({ ...prev, address: formData.person1DbAddress || '' }))}
-                                                                    className="flex items-center gap-2 text-[10px] font-black bg-rose-600 text-white px-4 py-2 rounded-xl border border-rose-600 hover:bg-rose-700 transition-all uppercase shadow-md shadow-rose-900/20 group/btn"
-                                                                >
-                                                                    <MapPin className="w-3.5 h-3.5 group-hover/btn:animate-bounce" />
-                                                                    Use {formData.fullName.split(' ')[0]}'s Address
-                                                                </button>
-                                                            )}
-                                                            {formData.partnerFullName && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setFormData(prev => ({ ...prev, address: formData.partnerDbAddress || '' }))}
-                                                                    className="flex items-center gap-2 text-[10px] font-black bg-rose-600 text-white px-4 py-2 rounded-xl border border-rose-600 hover:bg-rose-700 transition-all uppercase shadow-md shadow-rose-900/20 group/btn"
-                                                                >
-                                                                    <MapPin className="w-3.5 h-3.5 group-hover/btn:animate-bounce" />
-                                                                    Use {formData.partnerFullName.split(' ')[0]}'s Address
-                                                                </button>
-                                                            )}
-                                                        </>
-                                                    )}
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Email Address (Optional) / Email (Opsyonal)</label>
+                                                <div className="relative">
+                                                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none border-r pr-2 border-gray-100"><Mail className="w-4 h-4 text-[#2d5a3d]/50" /></div>
+                                                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className="w-full pl-12 pr-4 py-2.5 bg-white border-2 border-emerald-100 rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-normal text-gray-800 shadow-sm" />
+                                                </div>
+                                                <p className="text-[9px] text-gray-400 font-bold italic ml-2">Notifications will be sent here / Dito ipapadala ang mga abiso</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Contact Number / Numero ng Telepono <span className="text-red-500">*</span></label>
+                                                <div className="relative">
+                                                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none border-r pr-2 border-gray-100"><Phone className="w-4 h-4 text-[#2d5a3d]/50" /></div>
+                                                    <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`w-full pl-12 pr-4 py-2.5 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-bold text-gray-800 shadow-sm`} />
                                                 </div>
                                             </div>
-                                            <div className="relative group">
-                                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-rose-300 group-focus-within:text-rose-600 transition-colors">
-                                                    <MapPin className="w-5 h-5" />
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    name="address"
-                                                    value={formData.address}
-                                                    onChange={handleInputChange}
-                                                    className={`w-full pl-14 pr-5 py-4 bg-white border-2 ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl font-bold text-gray-900 focus:border-rose-500 outline-none transition-all shadow-inner`}
-                                                    placeholder="Enter or sync shared residential address... / Ilagay o i-sync ang kasalukuyang tirahan..."
-                                                />
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-2 ml-1">
-                                                <Info className="w-4 h-4 text-rose-400" />
-                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider italic">
-                                                    This address will be printed as your shared home in the certificate.
-                                                </p>
-                                            </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 block">Number of Children / Bilang ng Anak</label>
-                                            <input type="number" name="noOfChildren" value={formData.noOfChildren} onChange={handleInputChange} className="w-full px-5 py-3.5 bg-white border border-gray-100 rounded-xl font-bold focus:border-rose-500 outline-none" />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 block">Years Together</label>
-                                                <input type="number" name="livingTogetherYears" value={formData.livingTogetherYears} onChange={handleInputChange} className="w-full px-5 py-3.5 bg-white border border-gray-100 rounded-xl font-bold focus:border-rose-500 outline-none" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1 block">Months Together</label>
-                                                <input type="number" name="livingTogetherMonths" value={formData.livingTogetherMonths} onChange={handleInputChange} className="w-full px-5 py-3.5 bg-white border border-gray-100 rounded-xl font-bold focus:border-rose-500 outline-none" />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-rose-800 uppercase tracking-widest ml-1 block">SMS Contact Number / Numero para sa SMS</label>
-                                            <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} className={`w-full px-5 py-4 bg-white border-2 ${errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl font-bold text-gray-900 focus:border-rose-500 outline-none`} placeholder="09XX XXX XXXX" />
-                                        </div>
-                                        <div className="space-y-2 text-sm">
-                                            <label className="text-xs font-bold text-rose-800 uppercase tracking-widest ml-1 block">Email Address (Optional) / Email (Opsyonal)</label>
-                                            <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className="w-full px-5 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-rose-500 outline-none font-normal text-gray-900 transition-all shadow-sm" />
+
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Request Purpose / Dahilan ng Pagkuha <span className="text-red-500">*</span></label>
+                                            <textarea name="purpose" value={formData.purpose} onChange={handleInputChange} rows={2} placeholder="e.g. For DSWD assistance, legal purposes, school requirement..." className={`w-full px-4 py-3 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-lg focus:border-[#2d5a3d] focus:shadow-lg transition-all outline-none uppercase font-bold text-gray-800 shadow-sm`} />
                                         </div>
                                     </div>
-                                </div>
+
+                                </form>
                             </div>
 
                             {/* Footer */}
-                            <div className="border-t bg-gray-50 px-8 py-6 flex justify-between items-center pb-12 sm:pb-6">
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] hidden sm:block">Common-Law Partnership Certification</p>
-                                <button onClick={handleSubmit} className="px-10 py-4 bg-gradient-to-r from-rose-700 to-red-800 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:shadow-rose-900/20 transform hover:-translate-y-1 transition-all flex items-center gap-3">
-                                    <Send className="w-5 h-5" />
-                                    Submit for Review
-                                </button>
+                            <div className="border-t bg-gray-50/80 backdrop-blur-md px-4 py-3 flex flex-col sm:flex-row gap-2 justify-between items-center no-print flex-shrink-0">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide hidden sm:block">Please check all entries before final submission / Pakisuri ang lahat bago i-submit</p>
+                                <div className="flex gap-2 w-full sm:w-auto">
+                                    <button type="submit" onClick={handleSubmit} className="flex-1 sm:flex-none px-5 py-2.5 bg-gradient-to-r from-[#8cc63f] to-[#7cb342] hover:from-[#7cb342] hover:to-[#689f38] text-white rounded-lg font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-0.5 transition-all group">
+                                        <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                        Submit Application / Ipadala ang Aplikasyon
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
+            {/* Confirmation Popup */}
             {showConfirmationPopup && (
                 <div className="fixed inset-0 z-[60] overflow-y-auto">
                     <div className="flex min-h-screen items-center justify-center p-4">
-                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowConfirmationPopup(false)} />
-                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col overflow-hidden animate-fade-in text-gray-800">
-                            <div className="bg-[#5c0b16] px-8 py-4 flex items-center justify-between">
-                                <h2 className="text-white font-black uppercase tracking-widest">Preview Certificate Format / Pormat ng Katibayan</h2>
-                                <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white"><X /></button>
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" onClick={() => setShowConfirmationPopup(false)} />
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+                            <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-3 flex items-center justify-between border-b border-white/10">
+                                <div className="flex items-center gap-3 relative z-10">
+                                    <div className="bg-white/20 backdrop-blur-md p-2 rounded-lg border border-white/30 shadow-xl"><Heart className="w-5 h-5 text-white shadow-sm" /></div>
+                                    <h2 className="text-lg font-bold text-white tracking-tight drop-shadow-md uppercase">Review Application / Suriin ang Aplikasyon</h2>
+                                </div>
+                                <button onClick={() => setShowConfirmationPopup(false)} className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-xl transition-all group">
+                                    <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+                                </button>
                             </div>
-                            <div className="flex-1 overflow-y-auto px-6 py-8 bg-gray-50/80">
-                                <div className="max-w-2xl mx-auto space-y-4">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 bg-gray-50/80">
+                                <div className="max-w-2xl mx-auto space-y-3">
                                     {Object.entries(formData).map(([key, value]) => {
-                                        const excludedKeys = ['residentId', 'signature', 'details', 'age', 'sex', 'gender', 'civilStatus', 'address', 'dateOfBirth', 'placeOfBirth', 'partnerAge', 'partnerGender', 'partnerDateOfBirth', 'person1DbAddress', 'partnerDbAddress', 'partnerResidentId'];
-                                        if (!value || excludedKeys.includes(key) || key.includes('DbAddress') || key.includes('partnerResidentId')) return null;
-                                        const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                                        const excludedKeys = ['residentId', 'partnerResidentId', 'age', 'gender', 'dateOfBirth', 'partnerAge', 'partnerGender', 'partnerDateOfBirth', 'person1DbAddress', 'partnerDbAddress'];
+                                        if (!value || value === '0' || excludedKeys.includes(key)) return null;
+                                        const labelMap = {
+                                            fullName: 'Person 1 Full Name', partnerFullName: 'Partner Full Name',
+                                            address: 'Common Address', noOfChildren: 'No. of Children',
+                                            livingTogetherYears: 'Years Together', livingTogetherMonths: 'Months Together',
+                                            purpose: 'Purpose', contactNumber: 'Contact Number', email: 'Email Address'
+                                        };
+                                        const formattedKey = labelMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
                                         return (
-                                            <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 bg-white shadow-sm border border-gray-100 rounded-[1.25rem] hover:bg-gray-50 transition-colors group">
-                                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{formattedKey}</span>
-                                                <span className="text-sm font-bold text-gray-900 break-words md:text-right mt-1 md:mt-0 group-hover:text-emerald-700 transition-colors uppercase">{typeof value === 'object' ? JSON.stringify(value) : value.toString()}</span>
+                                            <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-4 py-2.5 bg-white shadow-sm border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors group">
+                                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">{formattedKey}</span>
+                                                <span className="text-sm font-bold text-gray-900 break-words md:text-right mt-1 md:mt-0 group-hover:text-emerald-700 transition-colors uppercase">
+                                                    {typeof value === 'object' ? JSON.stringify(value) : value.toString()}
+                                                </span>
                                             </div>
                                         );
                                     })}
                                 </div>
                             </div>
-                            <div className="border-t bg-gray-50 px-8 py-5 flex justify-between gap-4">
-                                <button onClick={() => setShowConfirmationPopup(false)} className="px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-bold uppercase transition-all">Go Back / Bumalik</button>
-                                <button onClick={handleProceedSubmission} disabled={isSubmitting} className="px-10 py-3 bg-[#5c0b16] text-white rounded-xl font-black uppercase tracking-widest shadow-lg flex items-center gap-3">
-                                    {isSubmitting ? 'Submitting...' : 'Confirm Submission'}
+                            <div className="border-t bg-gray-50/80 px-4 py-3 flex flex-col sm:flex-row gap-2 justify-between items-center">
+                                <button onClick={() => setShowConfirmationPopup(false)} disabled={isSubmitting} className="px-4 py-2.5 border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d]/5 rounded-lg font-bold flex items-center gap-2 outline-none">
+                                    <Eye className="w-4 h-4" /> Go Back & Edit / Bumalik sa Pag-edit
+                                </button>
+                                <button onClick={handleProceedSubmission} disabled={isSubmitting} className="px-4 py-2.5 bg-gradient-to-r from-[#8cc63f] to-[#7cb342] hover:from-[#7cb342] hover:to-[#689f38] text-white rounded-lg font-bold flex items-center gap-2 shadow-xl transform hover:-translate-y-0.5 transition-all">
+                                    {isSubmitting ? 'Processing... / Pinoproseso...' : 'Confirm & Submit / Kumpirmahin at Ipadala'}
                                 </button>
                             </div>
                         </div>
@@ -413,23 +434,43 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
                 </div>
             )}
 
+            {/* Success Modal */}
             {showSuccessModal && (
                 <div className="fixed inset-0 z-[70] overflow-y-auto">
                     <div className="flex min-h-screen items-center justify-center p-4">
-                        <div className="fixed inset-0 bg-black/80 backdrop-blur-md" />
-                        <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-10 text-center animate-fade-in text-gray-800">
-                            <div className="w-24 h-24 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <CheckCircle className="w-14 h-14 text-rose-600" />
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+                            <div className="bg-gradient-to-r from-[#112e1f] to-[#214431] px-6 py-6 text-center">
+                                <div className="w-16 h-16 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-500/30">
+                                    <CheckCircle className="w-10 h-10 text-emerald-400 animate-bounce" />
+                                </div>
+                                <h2 className="text-xl font-bold text-white uppercase tracking-tight">Filing Complete! / Tapos na ang Pag-file!</h2>
                             </div>
-                            <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight mb-2">Application Sent!</h2>
-                            <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 mb-8">
-                                <span className="text-[10px] font-black text-rose-400 uppercase tracking-[0.2em] block mb-1">Reference Number / Numero ng Sanggunian</span>
-                                <span className="text-2xl font-black text-rose-900 font-mono tracking-widest">{submittedReferenceNumber}</span>
+                            <div className="p-4 text-center">
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3 mb-4">
+                                    <p className="text-sm font-medium text-green-800 mb-1">REFERENCE NO:</p>
+                                    <p className="text-xl font-bold text-green-900 font-mono tracking-wider">{submittedReferenceNumber}</p>
+                                </div>
+                                <div className="bg-[#112e1f]/5 border border-[#112e1f]/10 rounded-lg p-4 text-left mb-4">
+                                    <div className="flex items-center gap-2 text-[#112e1f] mb-3">
+                                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                        <h4 className="text-[10px] font-bold uppercase tracking-wide">Next Procedures / Susunod na Pamamaraan</h4>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Clock className="w-3 h-3 text-emerald-700" /></div>
+                                            <p className="text-[10px] text-gray-600 font-bold leading-relaxed">Processing typically takes 1-3 business days. Your application is now in the queue for chairman approval.</p>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Phone className="w-3 h-3 text-emerald-700" /></div>
+                                            <p className="text-[10px] text-gray-600 font-bold leading-relaxed">We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your pickup schedule at the Barangay Hall.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onClick={() => { setShowSuccessModal(false); resetForm(); onClose(); }} className="w-full bg-[#112e1f] text-white py-3 rounded-lg font-bold uppercase transition-all shadow-lg active:scale-95">
+                                    Return to Dashboard / Bumalik sa Dashboard
+                                </button>
                             </div>
-                            <p className="text-sm text-gray-500 font-medium leading-relaxed mb-8">
-                                Your co-habitation certification request is now under review. We will notify you via <strong>SMS at {formData.contactNumber}</strong>.
-                            </p>
-                            <button onClick={() => { setShowSuccessModal(false); onClose(); }} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">Close Dashboard</button>
                         </div>
                     </div>
                 </div>
@@ -438,175 +479,19 @@ export default function CohabitationCertificateModal({ isOpen, onClose }) {
             {isResidentModalOpen && (
                 <ResidentSearchModal isOpen={isResidentModalOpen} onClose={() => setIsResidentModalOpen(false)} onSelect={handleResidentSelect} />
             )}
-            <style jsx>{`@keyframes fade-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in { animation: fade-in 0.2s ease-out; }`}</style>
+
+            <style jsx>{`
+        @keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
+        input::placeholder, textarea::placeholder { font-family: 'Open Sans', sans-serif !important; font-style: italic !important; font-weight: 400 !important; }
+        input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { font-family: 'Open Sans', sans-serif !important; font-style: italic !important; font-weight: 400 !important; }
+        input::-moz-placeholder, textarea::-moz-placeholder { font-family: 'Open Sans', sans-serif !important; font-style: italic !important; font-weight: 400 !important; }
+        input:-ms-input-placeholder, textarea:-ms-input-placeholder { font-family: 'Open Sans', sans-serif !important; font-style: italic !important; font-weight: 400 !important; }
+      `}</style>
         </>
     );
 }
-
-// Memoized Preview Component
-const CohabitationPreview = React.memo(({ formData, currentDate, officials, referenceNumber }) => {
-    const logos = officials.logos || defaultOfficials.logos;
-    const headerInfo = officials.headerInfo || defaultOfficials.headerInfo;
-    const headerStyle = officials.headerStyle || { bgColor: '#ffffff', borderColor: '#1e40af' };
-
-    const [scale, setScale] = useState(1);
-    const containerRef = useRef(null);
-
-    useEffect(() => {
-        let timeoutId;
-        const updateScale = () => { if (containerRef.current) setScale(Math.min(containerRef.current.offsetWidth / 794, 1)); };
-
-        const debouncedScale = () => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(updateScale, 100);
-        };
-
-        updateScale();
-        window.addEventListener('resize', debouncedScale);
-        return () => {
-            window.removeEventListener('resize', debouncedScale);
-            clearTimeout(timeoutId);
-        };
-    }, []);
-
-    const formatBday = (date) => {
-        if (!date) return '____________________';
-        return new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    };
-
-    return (
-        <div ref={containerRef} className="w-full flex justify-center">
-            <div style={{ width: `${794 * scale}px`, height: `${1123 * scale}px`, position: 'relative' }}>
-                <div className="bg-white shadow-xl flex flex-col text-black font-sans leading-tight" style={{ width: '794px', height: '1123px', transform: `scale(${scale})`, transformOrigin: 'top left', position: 'absolute' }}>
-
-                    {/* Official Header */}
-                    <div className="w-full border-b flex justify-center items-center p-8 flex-shrink-0" style={{ backgroundColor: headerStyle.bgColor || '#ffffff', borderColor: headerStyle.borderColor || '#1e40af' }}>
-                        <div className="flex-shrink-0" style={{ width: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 115}px`, height: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 115}px` }}>
-                            {logos.leftLogo && <img src={logos.leftLogo} className="w-full h-full object-contain" alt="Left" />}
-                        </div>
-                        <div className="text-center px-6 flex-1">
-                            <p className="text-[13px] leading-tight text-gray-600">{headerInfo?.country || 'Republic of the Philippines'}</p>
-                            <p className="text-[13px] leading-tight text-gray-600">{headerInfo?.province || 'Province of Bulacan'}</p>
-                            <p className="text-[13px] leading-tight text-gray-600">{headerInfo?.municipality || 'Municipality of Calumpit'}</p>
-                            <p className="text-[18px] font-bold text-blue-900 uppercase leading-tight mt-1">{headerInfo?.barangayName || 'BARANGAY IBA O\' ESTE'}</p>
-                            <p className="text-[14px] font-black text-red-700 uppercase mt-2 tracking-wide">OFFICE OF THE PUNONG BARANGAY</p>
-                        </div>
-                        <div className="flex-shrink-0" style={{ width: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 115}px`, height: `${(logos.logoSize && logos.logoSize > 80) ? logos.logoSize : 115}px` }}>
-                            {logos.rightLogo && <img src={logos.rightLogo} className="w-full h-full object-contain" alt="Right" />}
-                        </div>
-                    </div>
-
-                    <div className="flex-1 p-[1.2in] pt-12 relative overflow-hidden flex flex-col">
-                        {/* Watermark Logo */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none">
-                            <img src={logos.leftLogo} className="w-4/5" alt="" />
-                        </div>
-
-                        <div className="relative z-10 w-full flex flex-col">
-                            {/* Title - EXACT MATCH: Green, Bold, Underlined */}
-                            <div className="text-center mb-12">
-                                <h1 className="text-[26px] font-bold text-[#006600] underline decoration-[#006600] underline-offset-8 uppercase leading-normal">
-                                    BARANGAY CERTIFICATION OF CO-HABITATION
-                                </h1>
-                            </div>
-
-                            <div className="space-y-6 text-[18.5px]">
-                                <p className="font-bold mb-4 uppercase">TO WHOM IT MAY CONCERN:</p>
-
-                                <p className="text-justify leading-relaxed">
-                                    This is to certify that below mentioned persons, bona fide residents of this barangay at
-                                    <span className="uppercase font-bold tracking-tight"> {formData.address || '__________________________________________________'}</span>,
-                                    are living together in common house (yet to undergo church / civil wedding) as detailed below:
-                                </p>
-
-                                {/* Person 1 Details */}
-                                <div className="space-y-1.5 mt-8">
-                                    <div className="grid grid-cols-[160px_20px_1fr] items-baseline">
-                                        <span className="font-bold text-[18.5px]">Name</span>
-                                        <span className="font-bold text-[18.5px]">:</span>
-                                        <span className="font-bold text-[18.5px] uppercase">{formData.fullName || '____________________'}</span>
-                                    </div>
-                                    <div className="grid grid-cols-[160px_20px_1fr] items-baseline">
-                                        <span>Age / Edad</span>
-                                        <span>:</span>
-                                        <span>{formData.age || '_______'}</span>
-                                    </div>
-                                    <div className="grid grid-cols-[160px_20px_1fr] items-baseline">
-                                        <span>Sex / Kasarian</span>
-                                        <span>:</span>
-                                        <span>{formData.gender || '_______'}</span>
-                                    </div>
-                                    <div className="grid grid-cols-[160px_20px_1fr] items-baseline">
-                                        <span>Date of Birth / Petsa ng Kapanganakan</span>
-                                        <span>:</span>
-                                        <span>{formatBday(formData.dateOfBirth)}</span>
-                                    </div>
-                                </div>
-
-                                {/* Person 2 Details */}
-                                <div className="space-y-1.5 mt-8">
-                                    <div className="grid grid-cols-[160px_20px_1fr] items-baseline">
-                                        <span className="font-bold text-[18.5px]">Name</span>
-                                        <span className="font-bold text-[18.5px]">:</span>
-                                        <span className="font-bold text-[18.5px] uppercase">{formData.partnerFullName || '____________________'}</span>
-                                    </div>
-                                    <div className="grid grid-cols-[160px_20px_1fr] items-baseline">
-                                        <span>Age / Edad</span>
-                                        <span>:</span>
-                                        <span>{formData.partnerAge || '_______'}</span>
-                                    </div>
-                                    <div className="grid grid-cols-[160px_20px_1fr] items-baseline">
-                                        <span>Sex / Kasarian</span>
-                                        <span>:</span>
-                                        <span>{formData.partnerGender || '_______'}</span>
-                                    </div>
-                                    <div className="grid grid-cols-[160px_20px_1fr] items-baseline">
-                                        <span>Date of Birth / Petsa ng Kapanganakan</span>
-                                        <span>:</span>
-                                        <span>{formatBday(formData.partnerDateOfBirth)}</span>
-                                    </div>
-                                </div>
-
-                                {/* Partnership Stats */}
-                                <div className="space-y-1.5 mt-8">
-                                    <div className="grid grid-cols-[240px_20px_1fr] items-baseline font-medium">
-                                        <span>No. of Children</span>
-                                        <span>:</span>
-                                        <span>{formData.noOfChildren || '0'}</span>
-                                    </div>
-                                    <div className="grid grid-cols-[240px_20px_1fr] items-baseline font-medium">
-                                        <span>Length Living Together</span>
-                                        <span>:</span>
-                                        <span>{formData.livingTogetherYears || '0'} Year(s) and {formData.livingTogetherMonths || '0'} Month(s)</span>
-                                    </div>
-                                </div>
-
-                                {/* Issuance Footer */}
-                                <p className="text-justify leading-relaxed mt-12">
-                                    Issued this <span className="font-bold">{currentDate || '____________________'}</span> at Barangay Iba O' Este, Calumpit, Bulacan upon the request of above mentioned persons for any legal purposes it may serve.
-                                </p>
-
-                                <div className="mt-20">
-                                    <p className="font-bold uppercase mb-20 text-[18.5px]">TRULY YOURS,</p>
-
-                                    <div className="mt-16">
-                                        <p className="font-black text-[22px] uppercase leading-none mb-1">{officials.chairman}</p>
-                                        <p className="font-bold text-[16px] uppercase tracking-wide">BARANGAY CHAIRMAN</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Reference Footer - Bottom Right */}
-                            <div className="mt-auto flex justify-end items-center gap-4 text-[16px] font-bold">
-                                <span className="uppercase">Reference No:</span>
-                                <span className="font-mono text-[18px] tracking-widest">{referenceNumber || '____________________'}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-});
-
-CohabitationPreview.displayName = 'CohabitationPreview';

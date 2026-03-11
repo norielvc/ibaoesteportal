@@ -169,7 +169,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-0 md:p-4 overflow-hidden">
-      <div className="relative bg-white md:rounded-3xl shadow-2xl w-full max-w-4xl h-full md:h-auto md:max-h-[95vh] flex flex-col overflow-hidden animate-fade-in no-scrollbar">
+      <div className="relative bg-white md:rounded-3xl shadow-2xl w-full max-w-5xl h-full md:h-auto md:max-h-[90vh] flex flex-col overflow-hidden animate-fade-in no-scrollbar" style={{ fontFamily: "'Open Sans', sans-serif" }}>
         {/* Premium Nature Header */}
         <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-4 md:px-8 md:py-8 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
           {/* Decorative elements */}
@@ -250,7 +250,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
                     className="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-2xl text-sm font-black transition-all duration-300 shadow-sm hover:shadow-emerald-900/10 group"
                   >
                     <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    SEARCH RESIDENT DATA
+                    Search Resident Database / Maghanap sa Database ng Residente
                   </button>
                 </div>
 
@@ -597,6 +597,37 @@ export default function EducationalAssistanceModal({ isOpen, onClose }) {
         .animate-scale-in { animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .animate-bounce-subtle { animation: bounceSubtle 3s infinite; }
         .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        
+        /* Open Sans Italic Placeholders */
+        input::placeholder, textarea::placeholder, select::placeholder {
+          font-family: 'Open Sans', sans-serif !important;
+          font-style: italic !important;
+          font-weight: 400 !important;
+        }
+        
+        input::-webkit-input-placeholder, textarea::-webkit-input-placeholder, select::-webkit-input-placeholder {
+          font-family: 'Open Sans', sans-serif !important;
+          font-style: italic !important;
+          font-weight: 400 !important;
+        }
+        
+        input::-moz-placeholder, textarea::-moz-placeholder, select::-moz-placeholder {
+          font-family: 'Open Sans', sans-serif !important;
+          font-style: italic !important;
+          font-weight: 400 !important;
+        }
+        
+        input:-ms-input-placeholder, textarea:-ms-input-placeholder, select:-ms-input-placeholder {
+          font-family: 'Open Sans', sans-serif !important;
+          font-style: italic !important;
+          font-weight: 400 !important;
+        }
+        
+        input:-moz-placeholder, textarea:-moz-placeholder, select:-moz-placeholder {
+          font-family: 'Open Sans', sans-serif !important;
+          font-style: italic !important;
+          font-weight: 400 !important;
+        }
         
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
