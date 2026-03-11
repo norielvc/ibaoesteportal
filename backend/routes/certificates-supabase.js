@@ -326,7 +326,7 @@ router.post('/clearance', async (req, res) => {
         address: address?.toUpperCase() || '',
         contact_number: contactNumber,
         email: req.body.email || '',
-        date_of_birth: dateOfBirth,
+        date_of_birth: dateOfBirth || null,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
         resident_id: residentId,
@@ -483,7 +483,7 @@ router.post('/indigency', async (req, res) => {
         address: address?.toUpperCase() || '',
         contact_number: contactNumber,
         email: req.body.email || '',
-        date_of_birth: dateOfBirth,
+        date_of_birth: dateOfBirth || null,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
         resident_id: residentId,
@@ -636,7 +636,7 @@ router.post('/residency', async (req, res) => {
         address: address?.toUpperCase() || '',
         contact_number: contactNumber,
         email: req.body.email || '',
-        date_of_birth: dateOfBirth,
+        date_of_birth: dateOfBirth || null,
         place_of_birth: placeOfBirth?.toUpperCase() || '',
         purpose: purpose?.toUpperCase() || '',
         resident_id: residentId,
@@ -771,7 +771,7 @@ router.post('/natural-death', async (req, res) => {
         address: address?.toUpperCase() || '',
         contact_number: contactNumber,
         email: req.body.email || '',
-        date_of_death: dateOfDeath,
+        date_of_death: dateOfDeath || null,
         cause_of_death: causeOfDeath?.toUpperCase() || '',
         covid_related: covidRelated === 'Yes',
         requestor_name: requestorName?.toUpperCase() || '',
@@ -1545,6 +1545,18 @@ router.put('/:id', async (req, res) => {
     delete updateData.created_at;
     delete updateData.reference_number;
     delete updateData.residents; // Don't try to update joined data
+
+    // Clean up empty strings for date and numeric fields to avoid Postgres errors
+    const nullableFields = [
+      'date_of_birth', 'date_of_death', 'date_of_examination', 'date_of_hearing', 
+      'partner_date_of_birth', 'age', 'living_together_years', 'living_together_months',
+      'no_of_children'
+    ];
+    nullableFields.forEach(field => {
+      if (updateData[field] === '') {
+        updateData[field] = null;
+      }
+    });
 
     // Convert strings to uppercase if they exist in updateData
     const uppercaseFields = [

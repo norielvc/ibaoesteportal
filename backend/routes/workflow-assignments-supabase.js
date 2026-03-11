@@ -363,6 +363,22 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
       newStatus = 'completed';
       newRequestStatus = 'returned';
       nextStep = steps.find(s => s.id === 1 || s.status === 'staff_review' || s.id === 111);
+    } else if (action === 'send_back_to_start') {
+      newStatus = 'completed';
+      newRequestStatus = 'staff_review';
+      // Always target the very first step in the workflow
+      nextStep = steps[0];
+      
+      // Reset specific fields to null when sending back to start
+      await supabase
+        .from('certificate_requests')
+        .update({
+          approved_at: null,
+          certificate_file_path: null,
+          certificate_generated_at: null,
+          ready_at: null
+        })
+        .eq('id', assignment.request_id);
     } else if (action === 'physical_inspection') {
       // For business permits, physical_inspection should forward to next approver
       if (assignment.request_type === 'business_permit') {

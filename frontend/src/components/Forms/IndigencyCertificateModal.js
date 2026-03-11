@@ -44,6 +44,95 @@ const defaultOfficials = {
   footerStyle: { bgColor: '#f9fafb', textColor: '#374151', borderColor: '#d1d5db', textSize: 9, fontFamily: 'default' }
 };
 
+const PURPOSE_LIST_1 = [
+  "PERSONAL LOAN - GM SYNERGY MICROFINANCE INC. (CITY OF MALOLOS, BULACAN)",
+  "TESDA / SCHOOLING REQUIREMENT",
+  "NATIONAL BUREAU OF INVESTIGATION (NBI) REQUIREMENT",
+  "TAXPAYER IDENTIFICATION NUMBER (TIN) REQUIREMENT",
+  "SOCIAL SECURITY SYSTEM (SSS) REQUIREMENT",
+  "PAG-IBIG REQUIREMENT",
+  "PHILHEALTH REQUIREMENT",
+  "*TAXPAYER IDENTIFICATION NUMBERS (TIN) REQUIREMENT",
+  "PERSONAL LOAN - BPI BANKO (CALUMPIT, BULACAN BRANCH)",
+  "PERSONAL LOAN* - MERZON & SON FINANCING CORPORATION",
+  "POSTAL ID REQUIREMENT - WORK / JOB APPLICATION",
+  "CONVERGE INTERNET CONNECTION REQUIREMNET",
+  "APPLICATION FOR PERSON WITH DISABILITIES (PWD)*",
+  "APPLICATION FOR SENIOR CITIZEN'S ID*",
+  "APPLICATION FOR WATER SERVICE CONNECTION (CAWADI)",
+  "APPLICATION FOR ELECTRICAL SERVICE CONNECTION (MERALCO)",
+  "SCHOLARSHIP ASSISTANCE - LCDFI*",
+  "APPLICATION FOR ELECTRICAL SERVICE CONNECTION (MERALCO)*",
+  "APPLICATION FOR SENIOR CITIZEN'S ID (OSCA)*",
+  "TESDA* - NATIONAL CERTIFICATE II (NCII) APPLICATION REQUIREMENT",
+  "SCHOLARSHIP ASSISTANCE* - LA CONSOLACION UNIVERSITY PHILPPINES (LCUP)",
+  "PERSONAL LOAN* - LIFEBANK MICROFINANCE FOUNDATION INC.",
+  "PERSONAL LOAN - ASA PHILIPPINES FOUNDATION MICRO FINANCE (CAL., BUL)",
+  "PERSONAL LOAN - BPI BANKO (CALUMPIT, BULACAN BRANCH)",
+  "PERSONAL LOAN - CASHLINE LENDING CORP. (PULILAN, BULACAN)",
+  "PERSONAL LOAN - FAST AND EASY LENDING CORP. (CITY OF MAL., BUL.)",
+  "PERSONAL LOAN - GM SYNERGY MICROFINANCE INC. (PULILAN, BULACAN)",
+  "PERSONAL LOAN - KASAGANA (MALOLOS, BULACAN)",
+  "PERSONAL LOAN - KASAGANA LENDING (CITY OF MALOLOS, BUL.)",
+  "PERSONAL LOAN - LIBERTY LENDING (APALIT, PAMPANGA)",
+  "PERSONAL LOAN - LIGHT MICRO FINANCE (MALOLOS, BULACAN)",
+  "PERSONAL LOAN - PAG-ASA LENDING (CITY OF MALOLOS, BUL.)",
+  "PERSONAL LOAN - SKY GO (CALUMPIT, BULACAN)",
+  "PERSONAL LOAN - SUPERBIKES CENTER (CALUMPIT, BULACAN)",
+  "PERSONAL LOAN - TALETE MICRO FINANCE (LONGOS, CITY OF MAL., BUL.)",
+  "PERSONAL LOAN - WHEELTEK (CITY OF MALOLOS, BULACAN BRANCH)",
+  "PERSONAL LOAN* - MITSUKOSHI MOTORS PHILIPPINES INC.",
+  "PERSONAL LOAN - DSE LENDING INC. (CALUMPIT, BULACAN)",
+  "PERSONAL LOAN - 7R FINANCE CO. (MALOLOS, BULACAN)",
+  "PERSONAL LOAN - C4 STAR KAAGAPAY (MALOLOS, BULACAN)",
+  "CANIOGAN COOPERATIVE MEMBERSHIP REQUIREMENT",
+  "PERSONAL LOAN - NWOW EBIKE (CALUMPIT, BULACAN) CO-MAKER",
+  "PERSONAL LOAN* - L5 AND SONS FINANCING CORPORATION",
+  "PERSONAL LOAN - 3R LENDING (APALIT, PAMPANGA)",
+  "PERSONAL LOAN - BISIKLETA STA. RITA (CALUMPIT, BULACAN)",
+  "PERSONAL LOAN - FASTER LENDING (CITY OF MALOLOS, BULACAN)",
+  "PERSONAL LOAN* - JEMS MERCADO AND SONS LENDING CORP.",
+  "PERSONAL LOAN - L5 MICROFINANCE (CITY OF MALOLOS, BUL.)",
+  "APPLICATION FOR INTERNET SERVICE CONNECTION",
+  "FOR NATASHA REQUIREMENT",
+  "ON THE JOB TRAINING (OJT) REQUIREMENT",
+  "POLICE CLEARANCE REQUIREMENT - FOR RENEWAL OF LTOP*",
+  "PERSONAL LOAN - BPI BANKO (APALIT, PAMPANGA)",
+  "PERSONAL LOAN - AJ MICROFINANCE (CITY OF MALOLOS, BULACAN)",
+  "MERALCO - TRANSFER OF METER",
+  "PERSONAL LOAN - GABAY ALAY (MALOLOS, BULACAN)",
+  "PERSONAL LOAN - E1 LENDING (PULILAN, BULACAN)",
+  "BANK TRANSACTION - OPEN ACCOUNT",
+  "APPLICATION FOR BUILDING PERMIT REQUIREMENT",
+  "POLICE CLEARANCE REQUIREMENT - WORK / JOB APPLICATION",
+  "FOR SCHOOL ADMISSION REQUIREMENT"
+];
+
+const PURPOSE_LIST_2 = [
+  "CALUMPIT BRANCH",
+  "BUREAU OF INTERNAL REVENUE (TIKTOK CONTENT CREATOR)",
+  "PULILAN, BULACAN BRANCH",
+  "APPLYING FOR INTERNET INSTALLATION REQUIREMENT",
+  "MEDICAL CERTIFICATE ATTACHED",
+  "OFFICE OF SENIOR CITIZENS AFFAIRS (OSCA)",
+  "LANDBANK COUNTRYSIDE DEVELOPMENT FOUNDATION, INC.",
+  "OFFICE OF THE SENIOR CITIZENS AFFAIR (OSCA)",
+  "SOLAR NET METERING",
+  "OFFICE OF THE SENIOR CITIZEN'S AFFAIR",
+  "TECHNICAL EDUCATION AND SKILLS DEVELOPMENT AUTHORITY",
+  "CITY OF MALOLOS, BULACAN",
+  "IKABUHI",
+  "DAKILA MALOLOS, BULACAN BRANCH",
+  "CALUMPIT, BULACAN",
+  "LICENSE TO OWN AND POSSESS FIREARMS"
+];
+
+const PURPOSE_LIST_3 = [
+  "Medical Bill",
+  "Medical abstract",
+  "MEDICAL prescription"
+];
+
 // Memoized Notification component
 const Notification = React.memo(({ type, title, message, onClose }) => {
   const styles = {
@@ -155,6 +244,29 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: false }));
+    }
+  };
+
+  const handlePurposeSelect = (e) => {
+    const selectedValue = e.target.value;
+    if (!selectedValue) return;
+
+    setFormData(prev => {
+      const currentPurpose = prev.purpose || '';
+      // If the purpose already contains this exact value, don't add it again
+      if (currentPurpose.includes(selectedValue)) return prev;
+
+      const newPurpose = currentPurpose
+        ? `${currentPurpose}\n${selectedValue}`
+        : selectedValue;
+
+      return { ...prev, purpose: newPurpose };
+    });
+
+    // Reset the dropdown after selection
+    e.target.value = '';
+    if (errors.purpose) {
+      setErrors(prev => ({ ...prev, purpose: false }));
     }
   };
 
@@ -352,11 +464,53 @@ export default function IndigencyCertificateModal({ isOpen, onClose }) {
                         <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">3</div>
                         <div>
                           <h3 className="text-base font-bold text-white">Application Intent / Layunin ng Aplikasyon</h3>
+                          <p className="text-[10px] text-white/90 font-medium tracking-wide">Purpose of your request / Dahilan ng inyong pagkuha</p>
                         </div>
                       </div>
-                      <div className="space-y-1 relative">
-                        <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Request Purpose / Dahilan ng Pagkuha <span className="text-red-500">*</span></label>
-                        <textarea name="purpose" value={formData.purpose} onChange={handleInputChange} rows={2} placeholder="e.g. Educational Assistance, Medical Subsidy..." className={`w-full px-4 py-3 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-lg focus:border-[#2d5a3d] focus:shadow-lg transition-all outline-none uppercase font-bold text-gray-800 shadow-sm`} />
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-1 mb-1">
+                            <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1">Request Purpose / Dahilan ng Pagkuha <span className="text-red-500">*</span></label>
+                            <div className="flex flex-wrap gap-2">
+                              <select 
+                                onChange={handlePurposeSelect}
+                                className="text-[9px] font-bold bg-blue-50 border border-blue-200 text-blue-700 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-blue-400 min-w-[120px] uppercase"
+                              >
+                                <option value="">-- PERSONAL LOAN & GOV'T --</option>
+                                {PURPOSE_LIST_1.map((purpose, i) => (
+                                  <option key={i} value={purpose}>{purpose}</option>
+                                ))}
+                              </select>
+                              <select 
+                                onChange={handlePurposeSelect}
+                                className="text-[9px] font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-indigo-400 min-w-[120px] uppercase"
+                              >
+                                <option value="">-- BRANCH & LOCAL --</option>
+                                {PURPOSE_LIST_2.map((purpose, i) => (
+                                  <option key={i} value={purpose}>{purpose}</option>
+                                ))}
+                              </select>
+                              <select 
+                                onChange={handlePurposeSelect}
+                                className="text-[9px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-700 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-emerald-400 min-w-[120px] uppercase"
+                              >
+                                <option value="">-- MEDICAL NEEDS --</option>
+                                {PURPOSE_LIST_3.map((purpose, i) => (
+                                  <option key={i} value={purpose}>{purpose}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <textarea 
+                            name="purpose" 
+                            value={formData.purpose} 
+                            onChange={handleInputChange} 
+                            rows={4} 
+                            placeholder="e.g. Educational Assistance, Medical Subsidy..." 
+                            className={`w-full px-4 py-3 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-emerald-100'} rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-bold text-gray-900 uppercase text-[14px] shadow-sm resize-none min-h-[120px]`} 
+                          />
+                          <p className="text-[9px] text-gray-400 font-bold mt-1 italic ml-1">You can select from the dropdowns above or type manually / Maaaring pumili sa listahan o mag-type nang manu-mano</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -544,7 +698,7 @@ const IndigencyPreview = React.memo(({ formData, referenceNumber, currentDate, o
           <div className="flex-1 px-16 pt-8 pb-16 flex flex-col relative overflow-hidden">
             {logos.leftLogo && <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none"><img src={logos.leftLogo} className="w-3/4 object-contain" alt="Watermark" /></div>}
             <div className="relative z-10 flex flex-col items-center">
-              <h2 className="text-[24px] font-bold mb-10 border-b-4 border-black inline-block pb-1 px-4 uppercase text-[#004d40]">CERTIFICATE OF INDIGENCY</h2>
+              <h2 className="text-[24px] font-bold mb-10 px-4 uppercase text-[#004d40]">CERTIFICATE OF INDIGENCY</h2>
               <div className="w-full space-y-6 text-[15px]">
                 <p className="font-bold text-lg mb-6 uppercase">TO WHOM IT MAY CONCERN:</p>
                 <p className="mb-6 leading-relaxed">This is to certify that below mentioned person is a bona fide resident and their family belongs to the "Indigent Families" of this barangay. Further certifying that their income is not enough to sustain and support their basic needs:</p>
@@ -566,11 +720,11 @@ const IndigencyPreview = React.memo(({ formData, referenceNumber, currentDate, o
                   ))}
                 </div>
                 <div className="mb-8 font-bold text-lg pl-8 underline uppercase">{formData.purpose?.toUpperCase() || 'NOT SPECIFIED'}</div>
-                <p className="mb-16">Issued this {currentDate} at Barangay Iba O' Este, Calumpit, Bulacan.</p>
-                <div className="mt-16 flex flex-col">
-                  <div className="mb-12"><div className="h-16 w-64 border-b border-black"></div><p className="text-sm mt-1">Resident's Signature / Thumb Mark</p></div>
+                <p className="mb-8">Issued this {currentDate} at Barangay Iba O' Este, Calumpit, Bulacan.</p>
+                <div className="mt-0 flex flex-col">
+                  <div className="mb-4"><div className="h-8 w-64 border-b border-black"></div><p className="text-sm mt-1">Resident's Signature / Thumb Mark</p></div>
                   <div className="self-start text-left">
-                    <p className="font-bold text-[15px] mb-8 uppercase">Truly Yours,</p>
+                    <p className="font-bold text-[15px] mb-[130px] uppercase">Truly Yours,</p>
                     <p className="text-[20px] font-bold uppercase underline leading-tight text-black">{officials.chairman}</p>
                     <p className="text-sm font-bold mt-1">BARANGAY CHAIRMAN</p>
                   </div>

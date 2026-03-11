@@ -7,13 +7,208 @@ import {
   FileText, Search, Eye, CheckCircle, XCircle, RotateCcw,
   Clock, User, Calendar, ChevronDown, X, AlertTriangle,
   FileCheck, History, Filter, Shield, Printer, Download, PenTool, ShieldAlert, Info, Edit, Save, RefreshCw, Database,
-  Skull, Activity, Heart, Phone, MessageCircle, MapPin, Home, ShieldCheck, Users, ClipboardCheck, ClipboardList, Receipt, Store
+  Skull, Activity, Heart, Phone, MessageCircle, MapPin, Home, ShieldCheck, Users, ClipboardCheck, ClipboardList, Receipt, Store,
+  Check, FilterX
 } from 'lucide-react';
 import { getAuthToken, getUserData } from '@/lib/auth';
 import Modal from '@/components/UI/Modal';
 import SignaturePad from '@/components/UI/SignaturePad';
 // API Configuration
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
+
+const PURPOSE_LIST_1 = [
+  "PERSONAL LOAN - GM SYNERGY MICROFINANCE INC. (CITY OF MALOLOS, BULACAN)",
+  "TESDA / SCHOOLING REQUIREMENT",
+  "NATIONAL BUREAU OF INVESTIGATION (NBI) REQUIREMENT",
+  "TAXPAYER IDENTIFICATION NUMBER (TIN) REQUIREMENT",
+  "SOCIAL SECURITY SYSTEM (SSS) REQUIREMENT",
+  "PAG-IBIG REQUIREMENT",
+  "PHILHEALTH REQUIREMENT",
+  "*TAXPAYER IDENTIFICATION NUMBERS (TIN) REQUIREMENT",
+  "PERSONAL LOAN - BPI BANKO (CALUMPIT, BULACAN BRANCH)",
+  "PERSONAL LOAN* - MERZON & SON FINANCING CORPORATION",
+  "POSTAL ID REQUIREMENT - WORK / JOB APPLICATION",
+  "CONVERGE INTERNET CONNECTION REQUIREMNET",
+  "APPLICATION FOR PERSON WITH DISABILITIES (PWD)*",
+  "APPLICATION FOR SENIOR CITIZEN'S ID*",
+  "APPLICATION FOR WATER SERVICE CONNECTION (CAWADI)",
+  "APPLICATION FOR ELECTRICAL SERVICE CONNECTION (MERALCO)",
+  "SCHOLARSHIP ASSISTANCE - LCDFI*",
+  "APPLICATION FOR ELECTRICAL SERVICE CONNECTION (MERALCO)*",
+  "APPLICATION FOR SENIOR CITIZEN'S ID (OSCA)*",
+  "TESDA* - NATIONAL CERTIFICATE II (NCII) APPLICATION REQUIREMENT",
+  "SCHOLARSHIP ASSISTANCE* - LA CONSOLACION UNIVERSITY PHILPPINES (LCUP)",
+  "PERSONAL LOAN* - LIFEBANK MICROFINANCE FOUNDATION INC.",
+  "PERSONAL LOAN - ASA PHILIPPINES FOUNDATION MICRO FINANCE (CAL., BUL)",
+  "PERSONAL LOAN - BPI BANKO (CALUMPIT, BULACAN BRANCH)",
+  "PERSONAL LOAN - CASHLINE LENDING CORP. (PULILAN, BULACAN)",
+  "PERSONAL LOAN - FAST AND EASY LENDING CORP. (CITY OF MAL., BUL.)",
+  "PERSONAL LOAN - GM SYNERGY MICROFINANCE INC. (PULILAN, BULACAN)",
+  "PERSONAL LOAN - KASAGANA (MALOLOS, BULACAN)",
+  "PERSONAL LOAN - KASAGANA LENDING (CITY OF MALOLOS, BUL.)",
+  "PERSONAL LOAN - LIBERTY LENDING (APALIT, PAMPANGA)",
+  "PERSONAL LOAN - LIGHT MICRO FINANCE (MALOLOS, BULACAN)",
+  "PERSONAL LOAN - PAG-ASA LENDING (CITY OF MALOLOS, BUL.)",
+  "PERSONAL LOAN - SKY GO (CALUMPIT, BULACAN)",
+  "PERSONAL LOAN - SUPERBIKES CENTER (CALUMPIT, BULACAN)",
+  "PERSONAL LOAN - TALETE MICRO FINANCE (LONGOS, CITY OF MAL., BUL.)",
+  "PERSONAL LOAN - WHEELTEK (CITY OF MALOLOS, BULACAN BRANCH)",
+  "PERSONAL LOAN* - MITSUKOSHI MOTORS PHILIPPINES INC.",
+  "PERSONAL LOAN - DSE LENDING INC. (CALUMPIT, BULACAN)",
+  "PERSONAL LOAN - 7R FINANCE CO. (MALOLOS, BULACAN)",
+  "PERSONAL LOAN - C4 STAR KAAGAPAY (MALOLOS, BULACAN)",
+  "CANIOGAN COOPERATIVE MEMBERSHIP REQUIREMENT",
+  "PERSONAL LOAN - NWOW EBIKE (CALUMPIT, BULACAN) CO-MAKER",
+  "PERSONAL LOAN* - L5 AND SONS FINANCING CORPORATION",
+  "PERSONAL LOAN - 3R LENDING (APALIT, PAMPANGA)",
+  "PERSONAL LOAN - BISIKLETA STA. RITA (CALUMPIT, BULACAN)",
+  "PERSONAL LOAN - FASTER LENDING (CITY OF MALOLOS, BULACAN)",
+  "PERSONAL LOAN* - JEMS MERCADO AND SONS LENDING CORP.",
+  "PERSONAL LOAN - L5 MICROFINANCE (CITY OF MALOLOS, BUL.)",
+  "APPLICATION FOR INTERNET SERVICE CONNECTION",
+  "FOR NATASHA REQUIREMENT",
+  "ON THE JOB TRAINING (OJT) REQUIREMENT",
+  "POLICE CLEARANCE REQUIREMENT - FOR RENEWAL OF LTOP*",
+  "PERSONAL LOAN - BPI BANKO (APALIT, PAMPANGA)",
+  "PERSONAL LOAN - AJ MICROFINANCE (CITY OF MALOLOS, BULACAN)",
+  "MERALCO - TRANSFER OF METER",
+  "PERSONAL LOAN - GABAY ALAY (MALOLOS, BULACAN)",
+  "PERSONAL LOAN - E1 LENDING (PULILAN, BULACAN)",
+  "BANK TRANSACTION - OPEN ACCOUNT",
+  "APPLICATION FOR BUILDING PERMIT REQUIREMENT",
+  "POLICE CLEARANCE REQUIREMENT - WORK / JOB APPLICATION",
+  "FOR SCHOOL ADMISSION REQUIREMENT"
+];
+
+const PURPOSE_LIST_2 = [
+  "CALUMPIT BRANCH",
+  "BUREAU OF INTERNAL REVENUE (TIKTOK CONTENT CREATOR)",
+  "PULILAN, BULACAN BRANCH",
+  "APPLYING FOR INTERNET INSTALLATION REQUIREMENT",
+  "MEDICAL CERTIFICATE ATTACHED",
+  "OFFICE OF SENIOR CITIZENS AFFAIRS (OSCA)",
+  "LANDBANK COUNTRYSIDE DEVELOPMENT FOUNDATION, INC.",
+  "OFFICE OF THE SENIOR CITIZENS AFFAIR (OSCA)",
+  "SOLAR NET METERING",
+  "OFFICE OF THE SENIOR CITIZEN'S AFFAIR",
+  "TECHNICAL EDUCATION AND SKILLS DEVELOPMENT AUTHORITY",
+  "CITY OF MALOLOS, BULACAN",
+  "IKABUHI",
+  "DAKILA MALOLOS, BULACAN BRANCH",
+  "CALUMPIT, BULACAN",
+  "LICENSE TO OWN AND POSSESS FIREARMS"
+];
+
+const PURPOSE_LIST_3 = [
+  "Medical Bill",
+  "Medical abstract",
+  "MEDICAL prescription"
+];
+const STATUS_OPTIONS = [
+  { value: 'staff_review', label: 'Staff Review' },
+  { value: 'pending', label: 'Pending (Group)', description: 'Includes Staff, Submitted, Returned' },
+  { value: 'under_review', label: 'Under Review' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'physical_inspection', label: 'Physical Inspection' },
+  { value: 'Treasury', label: 'Treasury' },
+  { value: 'secretary_approval', label: 'Secretary Approval' },
+  { value: 'captain_approval', label: 'Captain Approval' },
+  { value: 'oic_review', label: 'Releasing Team' },
+  { value: 'ready', label: 'Ready for Pickup' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'rejected', label: 'Rejected' },
+  { value: 'returned', label: 'Returned' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'released', label: 'Released' }
+];
+
+const TYPE_OPTIONS = [
+  { value: 'barangay_clearance', label: 'Clearance' },
+  { value: 'certificate_of_indigency', label: 'Indigency' },
+  { value: 'barangay_residency', label: 'Residency' },
+  { value: 'natural_death', label: 'Natural Death' },
+  { value: 'barangay_guardianship', label: 'Guardianship' },
+  { value: 'barangay_cohabitation', label: 'Co-habitation' },
+  { value: 'business_permit', label: 'Business Permit' }
+];
+
+const STEP_OPTIONS = [
+  { value: 'Review Request Team', label: 'Review Request Team' },
+  { value: 'Releasing Team', label: 'Releasing Team' },
+  { value: 'Physical Inspection Team', label: 'Physical Inspection Team' },
+  { value: 'Treasury Team', label: 'Treasury Team' },
+  { value: 'Secretary Approval', label: 'Secretary Approval' },
+  { value: 'Captain Approval', label: 'Captain Approval' }
+];
+
+const MultiSelectDropdown = ({ label, options, selected, onChange, placeholder, icon: Icon, dropdownRef, isOpen, setIsOpen }) => (
+  <div className="relative" ref={dropdownRef}>
+    <button
+      onClick={() => setIsOpen(!isOpen)}
+      className={`flex items-center justify-between w-full min-w-[160px] pl-3 pr-8 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm transition-all ${
+        selected.length > 0 ? 'border-blue-400 ring-1 ring-blue-50' : 'border-gray-300'
+      }`}
+    >
+      <div className="flex items-center gap-2 truncate">
+        {Icon && <Icon className={`w-4 h-4 ${selected.length > 0 ? 'text-blue-500' : 'text-gray-400'}`} />}
+        <span className={selected.length > 0 ? 'text-blue-700 font-medium' : 'text-gray-500'}>
+          {selected.length === 0 ? placeholder : 
+           selected.length === 1 ? options.find(o => o.value === selected[0])?.label :
+           `${selected.length} ${label}s`}
+        </span>
+      </div>
+      <ChevronDown className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+    </button>
+    
+    {isOpen && (
+      <div className="absolute z-[100] mt-2 min-w-[240px] bg-white border border-gray-200 rounded-xl shadow-xl p-2 animate-in fade-in zoom-in duration-200 origin-top">
+        <div className="flex items-center justify-between p-2 pb-1 border-b border-gray-100 mb-2">
+           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label} Filters</span>
+           {selected.length > 0 && (
+             <button onClick={(e) => { e.stopPropagation(); onChange([]); }} className="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors uppercase">Clear All</button>
+           )}
+        </div>
+        <div className="max-h-60 overflow-y-auto custom-scrollbar">
+          {options.map(option => {
+            const isSelected = selected.includes(option.value);
+            return (
+              <label 
+                key={option.value}
+                className={`flex items-center px-2 py-2 rounded-lg cursor-pointer transition-colors mb-1 ${
+                  isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50'
+                }`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  type="checkbox"
+                  className="hidden"
+                  checked={isSelected}
+                  onChange={() => {
+                    const newSelected = isSelected
+                      ? selected.filter(v => v !== option.value)
+                      : [...selected, option.value];
+                    onChange(newSelected);
+                  }}
+                />
+                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                  isSelected ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300'
+                }`}>
+                  {isSelected && <Check className="w-3 h-3 text-white stroke-[3px]" />}
+                </div>
+                <div className="ml-3 pointer-events-none">
+                  <p className={`text-sm ${isSelected ? 'text-blue-900 font-medium' : 'text-gray-700'}`}>{option.label}</p>
+                  {option.description && (
+                    <p className="text-[10px] text-gray-400 leading-tight">{option.description}</p>
+                  )}
+                </div>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    )}
+  </div>
+);
 
 export default function RequestsPage() {
   const router = useRouter();
@@ -22,8 +217,15 @@ export default function RequestsPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState([]);
+  const [typeFilter, setTypeFilter] = useState([]);
+  const [stepFilter, setStepFilter] = useState([]);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const [showStepDropdown, setShowStepDropdown] = useState(false);
+  const statusDropdownRef = useRef(null);
+  const typeDropdownRef = useRef(null);
+  const stepDropdownRef = useRef(null);
   const [historyGroup, setHistoryGroup] = useState('all'); // 'all', 'active', 'closed'
   const [timeRange, setTimeRange] = useState('all'); // 'all', 'daily', 'weekly', 'monthly', 'yearly', 'custom'
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
@@ -42,6 +244,23 @@ export default function RequestsPage() {
 
   const [userSignature, setUserSignature] = useState(null);
   const [requestHistory, setRequestHistory] = useState([]);
+
+  // Handle clicking outside of dropdowns
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
+        setShowStatusDropdown(false);
+      }
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
+        setShowTypeDropdown(false);
+      }
+      if (stepDropdownRef.current && !stepDropdownRef.current.contains(event.target)) {
+        setShowStepDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Fetch history when selectedRequest changes
   useEffect(() => {
@@ -206,8 +425,9 @@ export default function RequestsPage() {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setStatusFilter('all');
-    setTypeFilter('all');
+    setStatusFilter([]);
+    setTypeFilter([]);
+    setStepFilter([]);
     setHistoryGroup('all');
     setTimeRange('all');
     setDateRange({ start: '', end: '' });
@@ -422,6 +642,7 @@ export default function RequestsPage() {
   const getNextStatus = (currentStatus, action, request) => {
     if (action === 'reject') return 'rejected';
     if (action === 'return') return 'returned';
+    if (action === 'send_back_to_start') return 'staff_review';
     if (action === 'physical_inspection') return 'physical_inspection';
 
     // For approve action, move to next workflow step
@@ -479,6 +700,8 @@ export default function RequestsPage() {
             defaultComment = 'Request rejected';
           } else if (act === 'return') {
             defaultComment = 'Request sent back for revision';
+          } else if (act === 'send_back_to_start') {
+            defaultComment = 'Workflow reset: Sending back to Staff Review for complete re-processing';
           } else if (act === 'physical_inspection') {
             defaultComment = 'Initiated Physical Inspection - Forms Printed';
           } else {
@@ -722,12 +945,17 @@ export default function RequestsPage() {
       req.reference_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.applicant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' ||
-      (statusFilter === 'pending' ? ['pending', 'staff_review', 'submitted', 'returned'].includes(req.status) :
-        statusFilter === 'ready' ? ['ready', 'ready_for_pickup'].includes(req.status) :
-          req.status === statusFilter);
-    const matchesType = typeFilter === 'all' || req.certificate_type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+    const matchesStatus = statusFilter.length === 0 || statusFilter.some(filterValue => {
+      if (filterValue === 'pending') return ['pending', 'staff_review', 'submitted', 'returned'].includes(req.status);
+      if (filterValue === 'ready') return ['ready', 'ready_for_pickup'].includes(req.status);
+      return req.status === filterValue;
+    });
+    const matchesType = typeFilter.length === 0 || typeFilter.includes(req.certificate_type);
+    
+    const currentStep = getCurrentWorkflowStep(req);
+    const matchesStep = stepFilter.length === 0 || (currentStep && stepFilter.includes(currentStep.name));
+
+    return matchesSearch && matchesStatus && matchesType && matchesStep;
   }).filter((req, index, arr) => {
     // Remove duplicates based on ID
     return arr.findIndex(r => r.id === req.id) === index;
@@ -814,42 +1042,43 @@ export default function RequestsPage() {
               </div>
 
               {/* Status Filter */}
-              <div className="relative">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-                >
-                  <option value="all">All Status</option>
-                  <option value="staff_review">Staff Review</option>
-                  <option value="pending">Pending</option>
-                  <option value="processing">Processing</option>
-                  <option value="oic_review">Releasing Team</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="returned">Returned</option>
-                  <option value="released">Released</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
+              <MultiSelectDropdown 
+                label="Status"
+                options={STATUS_OPTIONS}
+                selected={statusFilter}
+                onChange={setStatusFilter}
+                placeholder="All Status"
+                icon={Filter}
+                dropdownRef={statusDropdownRef}
+                isOpen={showStatusDropdown}
+                setIsOpen={setShowStatusDropdown}
+              />
+
               {/* Type Filter */}
-              <div className="relative">
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-                >
-                  <option value="all">All Types</option>
-                  <option value="barangay_clearance">Clearance</option>
-                  <option value="certificate_of_indigency">Indigency</option>
-                  <option value="barangay_residency">Residency</option>
-                  <option value="natural_death">Natural Death</option>
-                  <option value="barangay_guardianship">Guardianship</option>
-                  <option value="barangay_cohabitation">Co-habitation</option>
-                  <option value="business_permit">Business Permit</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
+              <MultiSelectDropdown 
+                label="Type"
+                options={TYPE_OPTIONS}
+                selected={typeFilter}
+                onChange={setTypeFilter}
+                placeholder="All Types"
+                icon={Database}
+                dropdownRef={typeDropdownRef}
+                isOpen={showTypeDropdown}
+                setIsOpen={setShowTypeDropdown}
+              />
+
+              {/* Step Filter */}
+              <MultiSelectDropdown 
+                label="Step"
+                options={STEP_OPTIONS}
+                selected={stepFilter}
+                onChange={setStepFilter}
+                placeholder="All Steps"
+                icon={ClipboardList}
+                dropdownRef={stepDropdownRef}
+                isOpen={showStepDropdown}
+                setIsOpen={setShowStepDropdown}
+              />
 
               {/* History Group */}
               <div className="relative">
@@ -1490,6 +1719,25 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
     setEditFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handlePurposeSelect = (e) => {
+    const selectedValue = e.target.value;
+    if (!selectedValue) return;
+
+    setEditFormData(prev => {
+      const currentPurpose = prev.purpose || '';
+      if (currentPurpose.includes(selectedValue)) return prev;
+      
+      const newPurpose = currentPurpose 
+        ? `${currentPurpose} / ${selectedValue}` 
+        : selectedValue;
+      
+      return { ...prev, purpose: newPurpose };
+    });
+    
+    // Reset the dropdown
+    e.target.value = '';
+  };
+
   const handleEditResident = () => {
     setIsEditResidentMode(true);
     setResidentFormData({
@@ -1960,21 +2208,54 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                     </div>
 
                     {['barangay_clearance', 'certificate_of_indigency', 'barangay_residency'].includes(request.certificate_type) && (
-                      <div className="col-span-full md:col-span-2">
-                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Purpose of Request</p>
+                      <div className="col-span-full">
+                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-2">Purpose of Request</p>
                         {isEditing ? (
-                          <textarea
-                            name="purpose"
-                            value={editFormData.purpose}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
-                            rows="2"
-                            placeholder="ENTER PURPOSE HERE..."
-                          />
+                          <>
+                            <textarea
+                              name="purpose"
+                              value={editFormData.purpose}
+                              onChange={handleInputChange}
+                              className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 font-black text-gray-900 uppercase text-[15px] mb-4 transition-all resize-none"
+                              rows="4"
+                              placeholder="ENTER PURPOSE HERE..."
+                            />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <select 
+                                onChange={handlePurposeSelect}
+                                className="w-full text-[11px] p-3 bg-white border border-gray-200 rounded-xl font-black text-blue-600 focus:ring-2 focus:ring-blue-500 shadow-sm outline-none cursor-pointer uppercase transition-all hover:bg-blue-50"
+                              >
+                                <option value="">-- PURPOSE 1 (SELECT TO ADD) --</option>
+                                {PURPOSE_LIST_1.map((purpose, i) => (
+                                  <option key={i} value={purpose}>{purpose}</option>
+                                ))}
+                              </select>
+                              <select 
+                                onChange={handlePurposeSelect}
+                                className="w-full text-[11px] p-3 bg-white border border-gray-200 rounded-xl font-black text-indigo-600 focus:ring-2 focus:ring-indigo-500 shadow-sm outline-none cursor-pointer uppercase transition-all hover:bg-indigo-50"
+                              >
+                                <option value="">-- PURPOSE 2 (SELECT TO ADD) --</option>
+                                {PURPOSE_LIST_2.map((purpose, i) => (
+                                  <option key={i} value={purpose}>{purpose}</option>
+                                ))}
+                              </select>
+                              <select 
+                                onChange={handlePurposeSelect}
+                                className="w-full text-[11px] p-3 bg-white border border-gray-200 rounded-xl font-black text-emerald-600 focus:ring-2 focus:ring-emerald-500 shadow-sm outline-none cursor-pointer uppercase transition-all hover:bg-emerald-50"
+                              >
+                                <option value="">-- PURPOSE 3 (SELECT TO ADD) --</option>
+                                {PURPOSE_LIST_3.map((purpose, i) => (
+                                  <option key={i} value={purpose}>{purpose}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </>
                         ) : (
-                          <p className="font-bold text-gray-800 text-[13px] uppercase leading-relaxed truncate" title={request.purpose}>
-                            {request.purpose || 'NOT SPECIFIED'}
-                          </p>
+                          <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                            <p className="font-black text-gray-900 text-[15px] uppercase leading-relaxed whitespace-pre-wrap">
+                              {request.purpose || 'NOT SPECIFIED'}
+                            </p>
+                          </div>
                         )}
                       </div>
                     )}
@@ -3098,14 +3379,16 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                       <>
                         {!['ready', 'ready_for_pickup'].includes(request.status) && (
                           <>
-                            <button
-                              onClick={() => onAction(request, 'return')}
-                              disabled={isEditing}
-                              className={`px-6 py-3.5 bg-white border-2 border-amber-200 text-amber-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-amber-50 hover:border-amber-300 active:scale-95'}`}
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                              Send Back
-                            </button>
+                            {request.certificate_type !== 'business_permit' && (
+                              <button
+                                onClick={() => onAction(request, request.status === 'oic_review' ? 'send_back_to_start' : 'return')}
+                                disabled={isEditing}
+                                className={`px-6 py-3.5 bg-white border-2 border-amber-200 text-amber-600 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] flex items-center gap-2 transition-all shadow-sm ${isEditing ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:bg-amber-50 hover:border-amber-300 active:scale-95'}`}
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                                Send Back
+                              </button>
+                            )}
                             <button
                               onClick={() => onAction(request, 'reject')}
                               disabled={isEditing}
@@ -3322,6 +3605,15 @@ function ActionModal({ request, actionType, comment, setComment, onSubmit, onClo
       iconBg: 'bg-orange-100',
       iconColor: 'text-orange-600',
       buttonBg: 'bg-orange-600 hover:bg-orange-700',
+      buttonText: 'Send Back'
+    },
+    send_back_to_start: {
+      title: 'Send Back to Staff',
+      description: 'This will reset the approval workflow and send it back to the first stage (Staff Review).',
+      icon: RotateCcw,
+      iconBg: 'bg-red-50',
+      iconColor: 'text-red-700',
+      buttonBg: 'bg-red-700 hover:bg-red-800',
       buttonText: 'Send Back'
     }
   };
@@ -3993,10 +4285,9 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
             <div className="relative z-10 flex flex-col items-center flex-1">
               {!isBusinessPermit && (
-                <h2 className={`text-center font-bold mb-10 w-full pb-1 px-4 uppercase leading-normal ${!isSamePerson ? 'border-b-4 border-black inline-block' : 'block whitespace-nowrap'}`} style={{
+                <h2 className={`text-center font-bold mb-10 w-full pb-1 px-4 uppercase leading-normal ${isSamePerson ? 'block whitespace-nowrap' : 'inline-block'}`} style={{
                   color: isMedicoLegal ? '#000000' : '#004d40',
-                  fontSize: isSamePerson ? '20px' : '24px',
-                  borderBottom: (isMedicoLegal && !isSamePerson) ? '2px solid black' : (!isSamePerson ? '4px solid black' : 'none')
+                  fontSize: isSamePerson ? '20px' : '24px'
                 }}>
                   {isNaturalDeath ? 'NATURAL DEATH CERTIFICATION' :
                     isGuardianship ? 'BARANGAY CERTIFICATION FOR GUARDIANSHIP' :
@@ -4011,18 +4302,18 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
               {isBusinessPermit ? (
                 selectedTemplate === 'new' ? (
-                  <div className="w-full text-[14px] text-justify px-4">
+                  <div className="w-full text-[14px] text-left">
                     <h2 className="text-center font-bold uppercase mb-10 tracking-tight" style={{ color: '#000000', fontSize: '28px' }}>
-                      <span className="border-b-2 border-black">BARANGAY BUSINESS CLEARANCE</span>
+                      <span>BARANGAY BUSINESS CLEARANCE</span>
                     </h2>
 
-                    <div className="mb-6 font-bold text-gray-900">To Whom It May Concern:</div>
+                    <div className="mb-6 font-bold text-gray-900 uppercase">TO WHOM IT MAY CONCERN:</div>
 
                     <div className="mb-8 leading-relaxed text-gray-800">
                       This is to certify that below business / trade name as described herein applying for:
                     </div>
 
-                    <div className="flex gap-16 justify-start mb-8 font-bold ml-4">
+                    <div className="flex gap-16 justify-start mb-8 font-bold">
                       <div className="flex items-center gap-3">
                         <span className="w-6 h-6 border-2 border-black flex items-center justify-center text-black text-xl font-black">
                           {(additionalDetails.clearanceType !== 'renewal') ? '✓' : ''}
@@ -4037,7 +4328,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                       </div>
                     </div>
 
-                    <div className="space-y-3 mb-10 ml-4">
+                    <div className="space-y-3 mb-10">
                       {[
                         ['Name of Owner', request.ownerFullName || additionalDetails.ownerFullName || formData.fullName],
                         ["Owner's Address", request.ownerAddress || additionalDetails.ownerAddress || formData.address],
@@ -4060,11 +4351,11 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                       ))}
                     </div>
 
-                    <div className="mb-8 leading-relaxed text-black font-normal text-[15px]">
+                    <div className="mb-8 leading-relaxed text-black font-normal text-[15px] text-justify">
                       The subject business establishment upon occular visit / inspection conducted by this office jointly with Sangguniang Barangay Committees on Health, Environment and Finance and Barangay Treasurer found to be compliant and in confirmity with the existing barangay ordinances, rules and regulations as applicable for this nature of business being applied for clearance.
                     </div>
 
-                    <div className="mb-8 leading-relaxed text-black font-normal text-[15px]">
+                    <div className="mb-8 leading-relaxed text-black font-normal text-[15px] text-justify">
                       In view of the above, this office poses no objection for the issuance of further permits as necessary for the conduct of above business activity including Mayor's Permit, etc.
                     </div>
 
@@ -4072,12 +4363,12 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                       Issued this {issuedDate} at Barangay Iba O' Este, Calumpit, Bulacan.
                     </div>
 
-                    <div className="grid grid-cols-2 mt-4 items-start">
+                    <div className="grid grid-cols-2 mt-8 items-start">
                       <div className="text-left">
-                        <p className="font-bold mb-16 text-gray-900">TRULY YOURS,</p>
+                        <p className="font-bold mb-20 text-gray-900">TRULY YOURS,</p>
                         <div className="relative inline-block">
                           {captainApproval?.signature_data && (
-                            <div className="absolute left-0 top-0 -translate-y-2/3 w-64 h-32 pointer-events-none z-0" style={{ mixBlendMode: 'multiply' }}>
+                            <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[80%] w-64 h-32 pointer-events-none z-0" style={{ mixBlendMode: 'multiply' }}>
                               <img src={captainApproval.signature_data} className="w-full h-full object-contain" alt="Sig" />
                             </div>
                           )}
@@ -4090,7 +4381,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
 
                       <div className="text-right flex flex-col items-end">
                         <p className="font-bold mb-4 text-black uppercase tracking-tight text-[15px]">
-                          <span className="border-b-2 border-black pb-0.5">Details of Payment</span>
+                          <span className="border-b-2 border-black pb-0.5">DETAILS OF PAYMENT</span>
                         </p>
                         <div className="grid grid-cols-[140px_10px_120px] gap-x-1 gap-y-2 text-right text-black font-normal">
                           <span>OR NO.</span>
@@ -4426,13 +4717,13 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                     <div
                       className="relative text-left"
                       style={{
-                        marginTop: isSamePerson ? '100px' : ((isGuardianship || isCohabitation || isMedicoLegal) ? '120px' : (request.certificate_type === 'certificate_of_indigency' ? '32px' : '64px'))
+                        marginTop: isSamePerson ? '60px' : ((isGuardianship || isCohabitation || isMedicoLegal) ? '80px' : (request.certificate_type === 'certificate_of_indigency' ? '10px' : '0px'))
                       }}
                     >
-                      {isNaturalDeath && <div className="h-10"></div>}
+                      {isNaturalDeath && <div className="h-6"></div>}
                       {!isNaturalDeath && !isGuardianship && !isCohabitation && !isMedicoLegal && !isSamePerson && (
-                        <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'mb-8' : 'mb-12'}`}>
-                          <div className={`${request.certificate_type === 'certificate_of_indigency' ? 'h-12' : 'h-16'}`}></div>
+                        <div className="mb-4">
+                          <div className="h-6"></div>
                           <div className="border-t border-black w-64 pt-1">
                             <p className="text-[15px]">Resident's Signature / Thumb Mark</p>
                           </div>
@@ -4440,7 +4731,7 @@ function ClearancePreviewForRequests({ request, currentDate, officials, certific
                       )}
 
                       <div className="text-left mb-4 self-start">
-                        <p className={`font-bold text-[15px] ${isSamePerson ? 'mb-32' : 'mb-12'}`}>TRULY YOURS,</p>
+                        <p className={`font-bold text-[15px] ${isSamePerson ? 'mb-44' : (request.certificate_type === 'certificate_of_indigency' ? 'mb-20' : 'mb-32')}`}>TRULY YOURS,</p>
 
                         <div className="relative inline-block">
                           {/* Big Backdrop Signature centered horizontally but positioned above name */}

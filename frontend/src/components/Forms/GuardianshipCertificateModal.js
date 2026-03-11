@@ -50,6 +50,95 @@ const defaultOfficials = {
     footerStyle: { bgColor: '#f9fafb', textColor: '#374151', borderColor: '#d1d5db', textSize: 9, fontFamily: 'default' }
 };
 
+const PURPOSE_LIST_1 = [
+    "PERSONAL LOAN - GM SYNERGY MICROFINANCE INC. (CITY OF MALOLOS, BULACAN)",
+    "TESDA / SCHOOLING REQUIREMENT",
+    "NATIONAL BUREAU OF INVESTIGATION (NBI) REQUIREMENT",
+    "TAXPAYER IDENTIFICATION NUMBER (TIN) REQUIREMENT",
+    "SOCIAL SECURITY SYSTEM (SSS) REQUIREMENT",
+    "PAG-IBIG REQUIREMENT",
+    "PHILHEALTH REQUIREMENT",
+    "*TAXPAYER IDENTIFICATION NUMBERS (TIN) REQUIREMENT",
+    "PERSONAL LOAN - BPI BANKO (CALUMPIT, BULACAN BRANCH)",
+    "PERSONAL LOAN* - MERZON & SON FINANCING CORPORATION",
+    "POSTAL ID REQUIREMENT - WORK / JOB APPLICATION",
+    "CONVERGE INTERNET CONNECTION REQUIREMNET",
+    "APPLICATION FOR PERSON WITH DISABILITIES (PWD)*",
+    "APPLICATION FOR SENIOR CITIZEN'S ID*",
+    "APPLICATION FOR WATER SERVICE CONNECTION (CAWADI)",
+    "APPLICATION FOR ELECTRICAL SERVICE CONNECTION (MERALCO)",
+    "SCHOLARSHIP ASSISTANCE - LCDFI*",
+    "APPLICATION FOR ELECTRICAL SERVICE CONNECTION (MERALCO)*",
+    "APPLICATION FOR SENIOR CITIZEN'S ID (OSCA)*",
+    "TESDA* - NATIONAL CERTIFICATE II (NCII) APPLICATION REQUIREMENT",
+    "SCHOLARSHIP ASSISTANCE* - LA CONSOLACION UNIVERSITY PHILPPINES (LCUP)",
+    "PERSONAL LOAN* - LIFEBANK MICROFINANCE FOUNDATION INC.",
+    "PERSONAL LOAN - ASA PHILIPPINES FOUNDATION MICRO FINANCE (CAL., BUL)",
+    "PERSONAL LOAN - BPI BANKO (CALUMPIT, BULACAN BRANCH)",
+    "PERSONAL LOAN - CASHLINE LENDING CORP. (PULILAN, BULACAN)",
+    "PERSONAL LOAN - FAST AND EASY LENDING CORP. (CITY OF MAL., BUL.)",
+    "PERSONAL LOAN - GM SYNERGY MICROFINANCE INC. (PULILAN, BULACAN)",
+    "PERSONAL LOAN - KASAGANA (MALOLOS, BULACAN)",
+    "PERSONAL LOAN - KASAGANA LENDING (CITY OF MALOLOS, BUL.)",
+    "PERSONAL LOAN - LIBERTY LENDING (APALIT, PAMPANGA)",
+    "PERSONAL LOAN - LIGHT MICRO FINANCE (MALOLOS, BULACAN)",
+    "PERSONAL LOAN - PAG-ASA LENDING (CITY OF MALOLOS, BUL.)",
+    "PERSONAL LOAN - SKY GO (CALUMPIT, BULACAN)",
+    "PERSONAL LOAN - SUPERBIKES CENTER (CALUMPIT, BULACAN)",
+    "PERSONAL LOAN - TALETE MICRO FINANCE (LONGOS, CITY OF MAL., BUL.)",
+    "PERSONAL LOAN - WHEELTEK (CITY OF MALOLOS, BULACAN BRANCH)",
+    "PERSONAL LOAN* - MITSUKOSHI MOTORS PHILIPPINES INC.",
+    "PERSONAL LOAN - DSE LENDING INC. (CALUMPIT, BULACAN)",
+    "PERSONAL LOAN - 7R FINANCE CO. (MALOLOS, BULACAN)",
+    "PERSONAL LOAN - C4 STAR KAAGAPAY (MALOLOS, BULACAN)",
+    "CANIOGAN COOPERATIVE MEMBERSHIP REQUIREMENT",
+    "PERSONAL LOAN - NWOW EBIKE (CALUMPIT, BULACAN) CO-MAKER",
+    "PERSONAL LOAN* - L5 AND SONS FINANCING CORPORATION",
+    "PERSONAL LOAN - 3R LENDING (APALIT, PAMPANGA)",
+    "PERSONAL LOAN - BISIKLETA STA. RITA (CALUMPIT, BULACAN)",
+    "PERSONAL LOAN - FASTER LENDING (CITY OF MALOLOS, BULACAN)",
+    "PERSONAL LOAN* - JEMS MERCADO AND SONS LENDING CORP.",
+    "PERSONAL LOAN - L5 MICROFINANCE (CITY OF MALOLOS, BUL.)",
+    "APPLICATION FOR INTERNET SERVICE CONNECTION",
+    "FOR NATASHA REQUIREMENT",
+    "ON THE JOB TRAINING (OJT) REQUIREMENT",
+    "POLICE CLEARANCE REQUIREMENT - FOR RENEWAL OF LTOP*",
+    "PERSONAL LOAN - BPI BANKO (APALIT, PAMPANGA)",
+    "PERSONAL LOAN - AJ MICROFINANCE (CITY OF MALOLOS, BULACAN)",
+    "MERALCO - TRANSFER OF METER",
+    "PERSONAL LOAN - GABAY ALAY (MALOLOS, BULACAN)",
+    "PERSONAL LOAN - E1 LENDING (PULILAN, BULACAN)",
+    "BANK TRANSACTION - OPEN ACCOUNT",
+    "APPLICATION FOR BUILDING PERMIT REQUIREMENT",
+    "POLICE CLEARANCE REQUIREMENT - WORK / JOB APPLICATION",
+    "FOR SCHOOL ADMISSION REQUIREMENT"
+];
+
+const PURPOSE_LIST_2 = [
+    "CALUMPIT BRANCH",
+    "BUREAU OF INTERNAL REVENUE (TIKTOK CONTENT CREATOR)",
+    "PULILAN, BULACAN BRANCH",
+    "APPLYING FOR INTERNET INSTALLATION REQUIREMENT",
+    "MEDICAL CERTIFICATE ATTACHED",
+    "OFFICE OF SENIOR CITIZENS AFFAIRS (OSCA)",
+    "LANDBANK COUNTRYSIDE DEVELOPMENT FOUNDATION, INC.",
+    "OFFICE OF THE SENIOR CITIZENS AFFAIR (OSCA)",
+    "SOLAR NET METERING",
+    "OFFICE OF THE SENIOR CITIZEN'S AFFAIR",
+    "TECHNICAL EDUCATION AND SKILLS DEVELOPMENT AUTHORITY",
+    "CITY OF MALOLOS, BULACAN",
+    "IKABUHI",
+    "DAKILA MALOLOS, BULACAN BRANCH",
+    "CALUMPIT, BULACAN",
+    "LICENSE TO OWN AND POSSESS FIREARMS"
+];
+
+const PURPOSE_LIST_3 = [
+    "Medical Bill",
+    "Medical abstract",
+    "MEDICAL prescription"
+];
+
 // Enhanced Notification Component
 // Memoized Notification Component
 const Notification = React.memo(({ type, title, message, onClose }) => {
@@ -95,7 +184,7 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
     const [formData, setFormData] = useState({
         fullName: '', age: '', sex: '', civilStatus: '', address: '', dateOfBirth: '',
         guardianName: '', guardianRelationship: '',
-        contactNumber: '', email: '', residentId: null, guardianId: null
+        contactNumber: '', email: '', purpose: '', residentId: null, guardianId: null
     });
 
     const handleResidentSelect = (resident) => {
@@ -136,6 +225,26 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
         setIsResidentModalOpen(false);
     };
 
+    const handlePurposeSelect = (e) => {
+        const selectedValue = e.target.value;
+        if (!selectedValue) return;
+
+        setFormData(prev => {
+            const currentPurpose = prev.purpose || '';
+            // If the purpose already contains this exact value, don't add it again
+            if (currentPurpose.includes(selectedValue)) return prev;
+
+            const newPurpose = currentPurpose
+                ? `${currentPurpose}\n${selectedValue}`
+                : selectedValue;
+
+            return { ...prev, purpose: newPurpose };
+        });
+
+        // Reset the dropdown after selection
+        e.target.value = '';
+    };
+
     useEffect(() => {
         const now = new Date();
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -164,9 +273,14 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
     };
 
     const validateForm = () => {
-        const required = ['fullName', 'guardianName', 'guardianRelationship', 'contactNumber'];
+        const required = ['fullName', 'guardianName', 'guardianRelationship', 'contactNumber', 'purpose'];
         const newErrors = {};
         required.forEach(field => { if (!formData[field]) newErrors[field] = true; });
+
+        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = true;
+        }
+
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             setNotification({ type: 'error', title: 'Validation Error', message: 'Please fill in all required fields.' });
@@ -368,11 +482,61 @@ export default function GuardianshipCertificateModal({ isOpen, onClose }) {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <div className="pt-4 border-t border-gray-100">
+                                            <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm mb-4">
+                                                <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">4</div>
+                                                <div>
+                                                    <h3 className="text-base font-bold text-white">Application Intent / Layunin ng Aplikasyon</h3>
+                                                    <p className="text-[10px] text-white/90 font-medium tracking-wide">Purpose of your request / Dahilan ng inyong pagkuha</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div className="space-y-1">
+                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-1 mb-1">
+                                                        <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1">Request Purpose / Dahilan ng Pagkuha <span className="text-red-500">*</span></label>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <select
+                                                                onChange={handlePurposeSelect}
+                                                                className="text-[9px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-700 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-emerald-400 min-w-[120px]"
+                                                            >
+                                                                <option value="">-- SELECT PURPOSE --</option>
+                                                                {PURPOSE_LIST_1.map((p, i) => <option key={i} value={p}>{p}</option>)}
+                                                            </select>
+                                                            <select
+                                                                onChange={handlePurposeSelect}
+                                                                className="text-[9px] font-bold bg-blue-50 border border-blue-200 text-blue-700 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-blue-400 min-w-[120px]"
+                                                            >
+                                                                <option value="">-- OTHER CATEGORY --</option>
+                                                                {PURPOSE_LIST_2.map((p, i) => <option key={i} value={p}>{p}</option>)}
+                                                            </select>
+                                                            <select
+                                                                onChange={handlePurposeSelect}
+                                                                className="text-[9px] font-bold bg-amber-50 border border-amber-200 text-amber-700 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-amber-400 min-w-[120px]"
+                                                            >
+                                                                <option value="">-- MEDICAL/OTHERS --</option>
+                                                                {PURPOSE_LIST_3.map((p, i) => <option key={i} value={p}>{p}</option>)}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <textarea
+                                                        name="purpose"
+                                                        value={formData.purpose}
+                                                        onChange={handleInputChange}
+                                                        rows={4}
+                                                        placeholder="e.g. For school enrollment, legal guardianship requirement..."
+                                                        className={`w-full px-4 py-3 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-gray-100'} rounded-lg focus:border-[#2d5a3d] focus:shadow-lg transition-all outline-none uppercase font-bold text-gray-800 shadow-sm min-h-[120px] resize-none`}
+                                                    />
+                                                    <p className="text-[9px] text-gray-400 font-bold mt-1 italic ml-1">You can select from the dropdowns above or type manually / Maaaring pumili sa listahan o mag-type nang manu-mano</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="border-t bg-gray-50/80 backdrop-blur-md px-4 py-3 flex flex-col sm:flex-row gap-2 justify-between items-center no-print">
+                            <div className="border-t bg-gray-50/80 backdrop-blur-md px-4 py-3 flex flex-col sm:flex-row gap-2 justify-between items-center no-print flex-shrink-0">
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide hidden sm:block">Please check all entries before final submission / Pakisuri ang lahat bago i-submit</p>
                                 <div className="flex gap-2 w-full sm:w-auto">
                                     <button type="submit" onClick={handleSubmit} className="flex-1 sm:flex-none px-5 py-2.5 bg-gradient-to-r from-[#8cc63f] to-[#7cb342] hover:from-[#7cb342] hover:to-[#689f38] text-white rounded-lg font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-0.5 transition-all group">
@@ -561,7 +725,7 @@ const GuardianshipPreview = React.memo(({ formData, referenceNumber, currentDate
                         </div>
 
                         <div className="relative z-10 flex flex-col items-center">
-                            <h2 className="text-[26px] font-bold mb-12 border-b-4 border-black inline-block pb-1 px-6 uppercase text-[#1e40af] tracking-tight">BARANGAY CERTIFICATION FOR GUARDIANSHIP</h2>
+                            <h2 className="text-[26px] font-bold mb-12 px-6 uppercase text-[#1e40af] tracking-tight">BARANGAY CERTIFICATION FOR GUARDIANSHIP</h2>
 
                             <div className="w-full space-y-4 md:space-y-6 text-[16px] text-black">
                                 <p className="font-bold text-lg mb-8">TO WHOM IT MAY CONCERN:</p>
@@ -590,13 +754,14 @@ const GuardianshipPreview = React.memo(({ formData, referenceNumber, currentDate
                                     ))}
                                 </div>
 
-                                <p className="mb-16 leading-relaxed text-justify">
+                                <p className="mb-6 leading-relaxed text-justify">
                                     Issued this <span className="font-bold">{currentDate}</span> at Barangay Iba O' Este, Calumpit, Bulacan upon the request of above mentioned persons for any legal purposes it may serve.
                                 </p>
 
-                                <div className="flex flex-col justify-end" style={{ marginTop: '120px' }}>
+                                <div className="flex flex-col justify-end" style={{ marginTop: '0px' }}>
+                                    <div className="mb-4"><div className="h-8 w-64 border-b border-black"></div><p className="text-sm mt-1">Resident's Signature / Thumb Mark</p></div>
                                     <div className="self-start text-left">
-                                        <p className="font-bold text-[16px] mb-12">TRULY YOURS,</p>
+                                        <p className="font-bold text-[16px] mb-[130px]">TRULY YOURS,</p>
                                         <p className="text-[22px] font-bold uppercase leading-tight text-[#1e40af]">{officials.chairman}</p>
                                         <p className="text-sm font-bold mt-1 uppercase text-gray-700">BARANGAY CHAIRMAN</p>
                                     </div>

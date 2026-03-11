@@ -828,16 +828,15 @@ export default function CertificateLayoutPage() {
 
                                                     {/* Unified Signature Section (Left Aligned for All) - MATCHING MODAL */}
                                                     <div className="mt-8 relative">
-                                                        <div className="mb-8">
-                                                            <div className="h-12"></div> {/* 3 lines vacant */}
+                                                        <div className="mb-4">
+                                                            <div className="h-4"></div>
                                                             <div className="border-t border-black w-64 pt-1">
                                                                 <p className="text-sm">Resident's Signature / Thumb Mark</p>
                                                             </div>
                                                         </div>
 
                                                         <div className="text-left mb-8 self-start">
-                                                            <p className="font-bold">TRULY YOURS,</p>
-                                                            <div className="h-16 relative"></div>
+                                                            <p className="font-bold mb-20">TRULY YOURS,</p>
                                                             <p className="uppercase font-bold mb-1" style={{
                                                                 color: officials.bodyStyle?.titleColor,
                                                                 fontSize: `${parseInt(officials.bodyStyle?.textSize) + 2}px`
@@ -902,16 +901,15 @@ export default function CertificateLayoutPage() {
 
                                                     {/* Other Certificate Signatures */}
                                                     <div className="mt-8 relative">
-                                                        <div className="mb-12">
-                                                            <div className="h-16"></div>
+                                                        <div className="mb-4">
+                                                            <div className="h-8"></div>
                                                             <div className="border-t border-black w-64 pt-1">
                                                                 <p className="text-sm">Resident's Signature / Thumb Mark</p>
                                                             </div>
                                                         </div>
 
                                                         <div className="text-left mb-8 self-start">
-                                                            <p className="font-bold">TRULY YOURS,</p>
-                                                            <div className="h-12"></div>
+                                                            <p className="font-bold mb-20">TRULY YOURS,</p>
                                                             <p className="uppercase font-bold mb-1" style={{
                                                                 fontSize: `${parseInt(officials.bodyStyle?.textSize) + 2}px`
                                                             }}>
