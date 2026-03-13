@@ -100,7 +100,7 @@ const PURPOSE_LIST_1 = [
   "APPLICATION FOR BUILDING PERMIT REQUIREMENT",
   "POLICE CLEARANCE REQUIREMENT - WORK / JOB APPLICATION",
   "FOR SCHOOL ADMISSION REQUIREMENT"
-];
+].sort((a, b) => a.localeCompare(b));
 
 const PURPOSE_LIST_2 = [
   "CALUMPIT BRANCH",
@@ -119,13 +119,13 @@ const PURPOSE_LIST_2 = [
   "DAKILA MALOLOS, BULACAN BRANCH",
   "CALUMPIT, BULACAN",
   "LICENSE TO OWN AND POSSESS FIREARMS"
-];
+].sort((a, b) => a.localeCompare(b));
 
 const PURPOSE_LIST_3 = [
   "Medical Bill",
   "Medical abstract",
   "MEDICAL prescription"
-];
+].sort((a, b) => a.localeCompare(b));
 
 // Enhanced Notification Component
 const Notification = React.memo(({ type, title, message, onClose }) => {
@@ -152,6 +152,72 @@ const Notification = React.memo(({ type, title, message, onClose }) => {
 });
 
 Notification.displayName = 'Notification';
+
+const SearchableDropdown = ({ items, onSelect, placeholder, label, colorClass, searchPlaceholder = "Search..." }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredItems = items.filter(p => !search || p.toUpperCase().includes(search.toUpperCase()));
+
+  return (
+    <div className="space-y-1 relative" ref={dropdownRef}>
+      <p className={`text-[8px] font-bold ${colorClass.label} uppercase tracking-widest ml-1`}>{label}</p>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full text-[10px] p-2 bg-white border border-gray-200 rounded-lg font-bold ${colorClass.text} flex items-center justify-between shadow-sm hover:bg-gray-50 transition-all uppercase outline-none focus:ring-2 focus:ring-emerald-500/20`}
+      >
+        <span className="truncate">{placeholder}</span>
+        <Search className={`w-3 h-3 ml-2 ${colorClass.icon} ${isOpen ? 'rotate-180' : ''} transition-transform`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-[100] bottom-full mb-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-fade-in flex flex-col min-w-[200px]">
+          <div className="p-2 border-b border-gray-100 sticky top-0 bg-white">
+            <div className="relative">
+              <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 ${colorClass.icon} pointer-events-none`} />
+              <input
+                type="text"
+                autoFocus
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={searchPlaceholder}
+                className={`w-full pl-8 pr-3 py-1.5 text-[9px] ${colorClass.bg} border border-gray-100 rounded-md outline-none focus:ring-2 ${colorClass.ring} ${colorClass.text} placeholder-gray-400 font-medium`}
+              />
+            </div>
+          </div>
+          <div className="overflow-y-auto max-h-[200px] no-scrollbar py-1">
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => { onSelect(item); setIsOpen(false); setSearch(''); }}
+                  className={`w-full text-left px-4 py-2 text-[10px] font-bold ${colorClass.text} hover:${colorClass.bg} transition-colors uppercase border-b border-gray-50 last:border-0`}
+                >
+                  {item}
+                </button>
+              ))
+            ) : (
+              <div className="px-4 py-3 text-[10px] text-gray-400 italic text-center">No matches found</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 export default function SamePersonCertificateModal({ isOpen, onClose }) {
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -429,7 +495,73 @@ export default function SamePersonCertificateModal({ isOpen, onClose }) {
                           <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Email Address (Optional) / Email (Opsyonal)</label>
                           <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className="w-full px-4 py-2.5 bg-white border-2 border-emerald-100 rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-normal text-emerald-900 shadow-sm" />
                         </div>
+                      </div>
+                    </div>
 
+                    <div className="pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm mb-4">
+                        <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">4</div>
+                        <div>
+                          <h3 className="text-base font-bold text-white">Application Intent / Layunin ng Aplikasyon</h3>
+                          <p className="text-[10px] text-white/90 font-medium tracking-wide">Purpose of your request / Dahilan ng inyong pagkuha</p>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-1 mb-1">
+                            <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1">Request Purpose / Dahilan ng Pagkuha <span className="text-red-500">*</span></label>
+                            <div className="flex flex-wrap gap-2">
+                              <SearchableDropdown
+                                label="Quick Select 1"
+                                placeholder="-- PERSONAL LOAN & GOV'T --"
+                                items={PURPOSE_LIST_1}
+                                onSelect={(val) => handlePurposeSelect({ target: { value: val } })}
+                                colorClass={{
+                                  label: "text-blue-400",
+                                  text: "text-blue-600",
+                                  icon: "text-blue-300",
+                                  bg: "bg-blue-50",
+                                  ring: "ring-blue-300"
+                                }}
+                              />
+                              <SearchableDropdown
+                                label="Quick Select 2"
+                                placeholder="-- BRANCH & LOCAL --"
+                                items={PURPOSE_LIST_2}
+                                onSelect={(val) => handlePurposeSelect({ target: { value: val } })}
+                                colorClass={{
+                                  label: "text-indigo-400",
+                                  text: "text-indigo-600",
+                                  icon: "text-indigo-300",
+                                  bg: "bg-indigo-50",
+                                  ring: "ring-indigo-300"
+                                }}
+                              />
+                              <SearchableDropdown
+                                label="Quick Select 3"
+                                placeholder="-- MEDICAL NEEDS --"
+                                items={PURPOSE_LIST_3}
+                                onSelect={(val) => handlePurposeSelect({ target: { value: val } })}
+                                colorClass={{
+                                  label: "text-emerald-500",
+                                  text: "text-emerald-600",
+                                  icon: "text-emerald-300",
+                                  bg: "bg-emerald-50",
+                                  ring: "ring-emerald-300"
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <textarea 
+                            name="purpose" 
+                            value={formData.purpose} 
+                            onChange={handleInputChange} 
+                            rows={4} 
+                            placeholder="e.g. For employment application, business requirement..." 
+                            className={`w-full px-4 py-3 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-emerald-100'} rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-bold text-gray-900 uppercase text-[14px] shadow-sm resize-none min-h-[120px]`} 
+                          />
+                          <p className="text-[9px] text-gray-400 font-bold mt-1 italic ml-1">You can select from the dropdowns above or type manually / Maaaring pumili sa listahan o mag-type nang manu-mano</p>
+                        </div>
                       </div>
                     </div>
                   </div>

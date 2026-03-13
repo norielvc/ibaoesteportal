@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 // Build Trigger: 2026-02-07 17:09
-import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone, Mail } from 'lucide-react';
+import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone, Mail, ShieldAlert, XCircle } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 // API Configuration
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
@@ -112,7 +112,7 @@ const PURPOSE_LIST_1 = [
   "APPLICATION FOR BUILDING PERMIT REQUIREMENT",
   "POLICE CLEARANCE REQUIREMENT - WORK / JOB APPLICATION",
   "FOR SCHOOL ADMISSION REQUIREMENT"
-];
+].sort((a, b) => a.localeCompare(b));
 
 const PURPOSE_LIST_2 = [
   "CALUMPIT BRANCH",
@@ -131,13 +131,13 @@ const PURPOSE_LIST_2 = [
   "DAKILA MALOLOS, BULACAN BRANCH",
   "CALUMPIT, BULACAN",
   "LICENSE TO OWN AND POSSESS FIREARMS"
-];
+].sort((a, b) => a.localeCompare(b));
 
 const PURPOSE_LIST_3 = [
   "Medical Bill",
   "Medical abstract",
   "MEDICAL prescription"
-];
+].sort((a, b) => a.localeCompare(b));
 
 // Enhanced Notification Component - Memoized for performance
 const Notification = React.memo(({ type, title, message, onClose }) => {
@@ -165,6 +165,72 @@ const Notification = React.memo(({ type, title, message, onClose }) => {
 
 Notification.displayName = 'Notification';
 
+const SearchableDropdown = ({ items, onSelect, placeholder, label, colorClass, searchPlaceholder = "Search..." }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredItems = items.filter(p => !search || p.toUpperCase().includes(search.toUpperCase()));
+
+  return (
+    <div className="space-y-1 relative" ref={dropdownRef}>
+      <p className={`text-[8px] font-bold ${colorClass.label} uppercase tracking-widest ml-1`}>{label}</p>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full text-[10px] p-2 bg-white border border-gray-200 rounded-lg font-bold ${colorClass.text} flex items-center justify-between shadow-sm hover:bg-gray-50 transition-all uppercase outline-none focus:ring-2 focus:ring-emerald-500/20`}
+      >
+        <span className="truncate">{placeholder}</span>
+        <Search className={`w-3 h-3 ml-2 ${colorClass.icon} ${isOpen ? 'rotate-180' : ''} transition-transform`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-[100] bottom-full mb-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-fade-in flex flex-col min-w-[200px]">
+          <div className="p-2 border-b border-gray-100 sticky top-0 bg-white">
+            <div className="relative">
+              <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 ${colorClass.icon} pointer-events-none`} />
+              <input
+                type="text"
+                autoFocus
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={searchPlaceholder}
+                className={`w-full pl-8 pr-3 py-1.5 text-[9px] ${colorClass.bg} border border-gray-100 rounded-md outline-none focus:ring-2 ${colorClass.ring} ${colorClass.text} placeholder-gray-400 font-medium`}
+              />
+            </div>
+          </div>
+          <div className="overflow-y-auto max-h-[200px] no-scrollbar py-1">
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => { onSelect(item); setIsOpen(false); setSearch(''); }}
+                  className={`w-full text-left px-4 py-2 text-[10px] font-bold ${colorClass.text} hover:${colorClass.bg} transition-colors uppercase border-b border-gray-50 last:border-0`}
+                >
+                  {item}
+                </button>
+              ))
+            ) : (
+              <div className="px-4 py-3 text-[10px] text-gray-400 italic text-center">No matches found</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function BarangayClearanceModal({ isOpen, onClose }) {
   const [formCounter, setFormCounter] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
@@ -184,7 +250,8 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     fullName: '', age: '', sex: '', civilStatus: '',
     address: '', contactNumber: '', email: '',
-    dateOfBirth: '', placeOfBirth: '', purpose: '', residentId: null
+    dateOfBirth: '', placeOfBirth: '', purpose: '', residentId: null,
+    pending_case: false, case_record_history: ''
   });
 
   const handleResidentSelect = (resident) => {
@@ -199,14 +266,25 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
       placeOfBirth: resident.place_of_birth || '',
       contactNumber: resident.contact_number || prev.contactNumber,
       email: resident.email || prev.email,
-      residentId: resident.id
+      residentId: resident.id,
+      pending_case: resident.pending_case || false,
+      case_record_history: resident.case_record_history || ''
     }));
     setIsResidentModalOpen(false);
-    setNotification({
-      type: 'success',
-      title: 'Profile Found',
-      message: `${resident.full_name}'s details have been auto-filled.`
-    });
+    
+    if (resident.pending_case) {
+      setNotification({
+        type: 'error',
+        title: 'RESTRICTED PROFILE',
+        message: `NOTICE: ${resident.full_name} has a pending case record. Barangay Clearance issuance is restricted.`
+      });
+    } else {
+      setNotification({
+        type: 'success',
+        title: 'Profile Found',
+        message: `${resident.full_name}'s details have been auto-filled.`
+      });
+    }
     setErrors(prev => ({ ...prev, fullName: false }));
   };
 
@@ -263,7 +341,7 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
       if (currentPurpose.includes(selectedValue)) return prev;
       
       const newPurpose = currentPurpose 
-        ? `${currentPurpose} / ${selectedValue}` 
+        ? `${currentPurpose}\n${selectedValue}` 
         : selectedValue;
       
       return { ...prev, purpose: newPurpose };
@@ -276,8 +354,21 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
     }
   };
 
+
+
   const validateForm = () => {
     setErrors({});
+    
+    // Check for pending case restriction
+    if (formData.pending_case) {
+      setNotification({
+        type: 'error',
+        title: 'Application Blocked',
+        message: 'This resident has a pending case and is not eligible for Barangay Clearance at this time.'
+      });
+      return false;
+    }
+
     const required = ['fullName', 'age', 'sex', 'civilStatus', 'dateOfBirth', 'placeOfBirth', 'address', 'purpose', 'contactNumber'];
     const newErrors = {};
 
@@ -406,6 +497,7 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                   </div>
 
                   <div className="space-y-4">
+                    {/* Section 1: Personal Information */}
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                       <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm">
                         <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">1</div>
@@ -425,13 +517,14 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                       <input type="text" name="fullName" value={formData.fullName} readOnly onClick={() => setIsResidentModalOpen(true)} placeholder="TAP HERE TO ACCESS DATABASE..." className={`w-full px-4 py-3 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-lg transition-all duration-300 font-bold text-base cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`} />
                     </div>
 
-
                     {formData.fullName && (
                       <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 mt-2 flex items-center justify-center gap-2 text-emerald-700 shadow-inner">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                         <span className="text-[10px] font-bold uppercase tracking-wide italic">Personal Data Protected Under Data Privacy Act</span>
                       </div>
                     )}
+
+                    {/* Section 2: Notification & Contact */}
                     <div className="pt-4 border-t border-gray-100">
                       <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm mb-4">
                         <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">2</div>
@@ -465,6 +558,7 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                       </div>
                     </div>
 
+                    {/* Section 3: Request Purpose */}
                     <div className="pt-4 border-t border-gray-100">
                       <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm mb-4">
                         <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">3</div>
@@ -486,46 +580,107 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <div className="space-y-1">
-                            <p className="text-[8px] font-bold text-blue-400 uppercase tracking-widest ml-2">Quick Select 1</p>
-                            <select 
-                              onChange={handlePurposeSelect}
-                              className="w-full text-[10px] p-3 bg-white border border-gray-200 rounded-xl font-black text-blue-600 focus:ring-2 focus:ring-blue-500 shadow-sm outline-none cursor-pointer uppercase transition-all hover:bg-blue-50"
-                            >
-                              <option value="">-- PERSONAL LOAN & GOV'T --</option>
-                              {PURPOSE_LIST_1.map((purpose, i) => (
-                                <option key={i} value={purpose}>{purpose}</option>
-                              ))}
-                            </select>
-                          </div>
-                          
-                          <div className="space-y-1">
-                            <p className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest ml-2">Quick Select 2</p>
-                            <select 
-                              onChange={handlePurposeSelect}
-                              className="w-full text-[10px] p-3 bg-white border border-gray-200 rounded-xl font-black text-indigo-600 focus:ring-2 focus:ring-indigo-500 shadow-sm outline-none cursor-pointer uppercase transition-all hover:bg-indigo-50"
-                            >
-                              <option value="">-- BRANCH & LOCAL --</option>
-                              {PURPOSE_LIST_2.map((purpose, i) => (
-                                <option key={i} value={purpose}>{purpose}</option>
-                              ))}
-                            </select>
-                          </div>
+                          {/* ── Quick Select 1 ── */}
+                          <SearchableDropdown
+                            label="Quick Select 1"
+                            placeholder="-- PERSONAL LOAN & GOV'T --"
+                            items={PURPOSE_LIST_1}
+                            onSelect={(val) => handlePurposeSelect({ target: { value: val } })}
+                            colorClass={{
+                              label: "text-blue-400",
+                              text: "text-blue-600",
+                              icon: "text-blue-300",
+                              bg: "bg-blue-50",
+                              ring: "ring-blue-300"
+                            }}
+                          />
 
-                          <div className="space-y-1">
-                            <p className="text-[8px] font-bold text-emerald-400 uppercase tracking-widest ml-2">Quick Select 3</p>
-                            <select 
-                              onChange={handlePurposeSelect}
-                              className="w-full text-[10px] p-3 bg-white border border-gray-200 rounded-xl font-black text-emerald-600 focus:ring-2 focus:ring-emerald-500 shadow-sm outline-none cursor-pointer uppercase transition-all hover:bg-emerald-50"
-                            >
-                              <option value="">-- MEDICAL NEEDS --</option>
-                              {PURPOSE_LIST_3.map((purpose, i) => (
-                                <option key={i} value={purpose}>{purpose}</option>
-                              ))}
-                            </select>
-                          </div>
+                          {/* ── Quick Select 2 ── */}
+                          <SearchableDropdown
+                            label="Quick Select 2"
+                            placeholder="-- BRANCH & LOCAL --"
+                            items={PURPOSE_LIST_2}
+                            onSelect={(val) => handlePurposeSelect({ target: { value: val } })}
+                            colorClass={{
+                              label: "text-indigo-400",
+                              text: "text-indigo-600",
+                              icon: "text-indigo-300",
+                              bg: "bg-indigo-50",
+                              ring: "ring-indigo-300"
+                            }}
+                          />
+
+                          {/* ── Quick Select 3 ── */}
+                          <SearchableDropdown
+                            label="Quick Select 3"
+                            placeholder="-- MEDICAL NEEDS --"
+                            items={PURPOSE_LIST_3}
+                            onSelect={(val) => handlePurposeSelect({ target: { value: val } })}
+                            colorClass={{
+                              label: "text-emerald-500",
+                              text: "text-emerald-600",
+                              icon: "text-emerald-300",
+                              bg: "bg-emerald-50",
+                              ring: "ring-emerald-300"
+                            }}
+                          />
                         </div>
                       </div>
+                    </div>
+
+                    {/* Section 4: Application Intent */}
+                    <div className="pt-4 border-t border-gray-100 mb-6">
+                      <div className="flex items-center gap-3 bg-gradient-to-r from-[#8cc63f] to-[#b4d339] rounded-l-full rounded-r-lg p-1.5 pr-4 shadow-sm mb-4">
+                        <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">4</div>
+                        <div>
+                          <h3 className="text-base font-bold text-white">Application Intent & Review / Layunin at Pagsusuri</h3>
+                          <p className="text-[10px] text-white/90 font-medium tracking-wide">Review applicant record below / Suriin ang rekord ng aplikante</p>
+                        </div>
+                      </div>
+
+                      {formData.fullName && (
+                        <div className="mb-4 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 shadow-inner">
+                          <p className="text-[10px] font-black text-emerald-600 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
+                            <User className="w-3 h-3" />
+                            Applicant Information (Auto-filled)
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1 relative group">
+                              <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Full Name (Auto-filled) / Pangalan (Auto-filled)</label>
+                              <input type="text" value={formData.fullName} readOnly className="w-full px-4 py-2.5 bg-gray-50 border-2 border-emerald-50 rounded-lg font-bold text-gray-600 uppercase text-sm cursor-not-allowed" />
+                            </div>
+                            <div className="space-y-1 relative group">
+                              <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Age / Sex (Auto-filled)</label>
+                              <input type="text" value={`${formData.age || '-'} / ${formData.sex || '-'}`} readOnly className="w-full px-4 py-2.5 bg-gray-50 border-2 border-emerald-50 rounded-lg font-bold text-gray-600 uppercase text-sm cursor-not-allowed" />
+                            </div>
+                            <div className="space-y-1 relative group md:col-span-2">
+                              <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Residential Address (Auto-filled)</label>
+                              <input type="text" value={formData.address} readOnly className="w-full px-4 py-2.5 bg-gray-50 border-2 border-emerald-50 rounded-lg font-bold text-gray-600 uppercase text-sm cursor-not-allowed" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {formData.pending_case && (
+                        <div className="mb-4 bg-red-600 border-2 border-red-400 rounded-xl p-4 shadow-xl animate-pulse">
+                          <div className="flex items-start gap-4">
+                            <div className="bg-white/20 p-2 rounded-lg">
+                              <ShieldAlert className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-white font-black uppercase text-lg leading-tight tracking-wider">RESTRICTED APPLICANT</h4>
+                              <p className="text-red-100 text-xs font-bold uppercase mt-1">This resident has a PENDING CASE in the official records.</p>
+                              <div className="mt-3 bg-black/20 p-3 rounded-lg border border-white/10">
+                                <p className="text-[10px] font-black text-red-200 uppercase mb-1">REASON / HISTORY:</p>
+                                <p className="text-sm font-bold text-white italic">"{formData.case_record_history || 'No specific remarks found in database.'}"</p>
+                              </div>
+                              <p className="mt-3 text-[11px] font-black text-white bg-black/40 px-3 py-2 rounded-md inline-block border border-white/20">
+                                🚫 CLEARANCE ISSUANCE IS AUTOMATICALLY BLOCKED
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </form>

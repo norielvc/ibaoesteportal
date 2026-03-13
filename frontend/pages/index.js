@@ -43,6 +43,7 @@ export default function BarangayPortal() {
   const [showComingSoonModal, setShowComingSoonModal] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
   const [selectedNewsItem, setSelectedNewsItem] = useState(null);
+  const [selectedProgram, setSelectedProgram] = useState(null);
   const [currentFormSlide, setCurrentFormSlide] = useState(0);
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', message: ''
@@ -1095,7 +1096,11 @@ export default function BarangayPortal() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 gap-y-12">
             {programs.map((program, idx) => (
-              <div key={program.id || idx} className="flex flex-col group cursor-pointer h-full">
+              <div 
+                key={program.id || idx} 
+                className="flex flex-col group cursor-pointer h-full"
+                onClick={() => setSelectedProgram(program)}
+              >
                 <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-5 bg-gray-100">
                   <img
                     src={program.image || 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800'}
@@ -1124,7 +1129,7 @@ export default function BarangayPortal() {
       {/* Facilities Section */}
       <section id="directory" className="bg-white relative">
         {/* Top Carousel Hero */}
-        <div className="relative w-full h-[60vh] min-h-[500px] bg-gray-900 overflow-hidden">
+        <div className="relative w-full h-[70vh] min-h-[520px] bg-gray-900 overflow-hidden">
           {facilities.flatMap(f => f.images || []).length > 0 ? (
             facilities
               .flatMap(f => f.images || [])
@@ -1150,23 +1155,38 @@ export default function BarangayPortal() {
               style={{ filter: 'brightness(0.6)' }}
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-            <p className="text-[#8dc63f] text-xs md:text-sm font-bold tracking-[0.25em] mb-4 uppercase">
-              Quality That Is Guaranteed
-            </p>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] mb-8 font-serif">
-              Your community facilities <br className="hidden md:block" />
-              cared for the way they should be
+          {/* Left-aligned Content */}
+          <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-16 lg:px-24 max-w-4xl">
+            {/* Pill Badge */}
+            <div className="inline-flex items-center gap-2 mb-6 w-fit">
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-[#8dc63f]/20 border border-[#8dc63f]/50 backdrop-blur-sm rounded-full">
+                <span className="w-1.5 h-1.5 bg-[#8dc63f] rounded-full animate-pulse" />
+                <span className="text-[#8dc63f] text-[10px] font-bold tracking-[0.3em] uppercase">Kalidad na Garantisado</span>
+              </div>
+            </div>
+
+            {/* Main Heading */}
+            <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight">
+              Ang inyong mga<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8dc63f] to-[#b4d339]">
+                pasilidad
+              </span>
+              {' '}sa komunidad
             </h2>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button className="px-6 py-3.5 bg-[#8dc63f] hover:bg-[#7ab130] text-white font-bold text-xs tracking-wider transition-colors uppercase cursor-pointer rounded-sm">
-                More About Us
-              </button>
-              <button className="px-6 py-3.5 bg-black/20 hover:bg-black/40 border border-white/80 text-white font-bold text-xs tracking-wider backdrop-blur-sm transition-all uppercase cursor-pointer rounded-sm">
-                Get In Touch
-              </button>
+
+            {/* Sub-line */}
+            <p className="text-white/70 text-base md:text-lg font-medium mb-8 max-w-lg leading-relaxed">
+              na inaalagaan sa paraang nararapat para sa bawat mamamayan.
+            </p>
+
+            {/* Decorative Rule */}
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-0.5 bg-[#8dc63f]" />
+              <div className="w-3 h-3 border-2 border-[#8dc63f] rotate-45" />
+              <div className="w-8 h-0.5 bg-[#8dc63f]/40" />
             </div>
           </div>
 
@@ -1176,7 +1196,7 @@ export default function BarangayPortal() {
               const totalImages = facilities.flatMap(f => f.images || []).filter((img, i, arr) => arr.indexOf(img) === i).length || 1;
               setHeroCarouselIndex(prev => (prev === 0 ? totalImages - 1 : prev - 1));
             }}
-            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-[#8dc63f] flex items-center justify-center text-white transition-colors cursor-pointer z-10"
+            className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-[#8dc63f] border border-white/20 flex items-center justify-center text-white transition-all duration-300 cursor-pointer z-10 backdrop-blur-sm"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -1185,13 +1205,26 @@ export default function BarangayPortal() {
               const totalImages = facilities.flatMap(f => f.images || []).filter((img, i, arr) => arr.indexOf(img) === i).length || 1;
               setHeroCarouselIndex(prev => (prev === totalImages - 1 ? 0 : prev + 1));
             }}
-            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-[#8dc63f] flex items-center justify-center text-white transition-colors cursor-pointer z-10"
+            className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-[#8dc63f] border border-white/20 flex items-center justify-center text-white transition-all duration-300 cursor-pointer z-10 backdrop-blur-sm"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
 
-          {/* Bottom green accent line */}
-          <div className="absolute bottom-0 left-1/4 right-0 h-1.5 bg-gradient-to-r from-[#8dc63f] to-[#7ab130]"></div>
+          {/* Bottom Stats Strip */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e3a8a] via-[#1a6f52] to-[#22c55e] px-8 md:px-16 lg:px-24 py-3 flex items-center gap-8 md:gap-16 overflow-x-auto">
+            {[
+              { label: 'Mga Pasilidad', value: `${facilities.length || 0}+` },
+              { label: 'Mga Residente', value: '5,000+' },
+            ].map((stat, i) => (
+              <div key={i} className="flex items-center gap-3 shrink-0">
+                {i > 0 && <div className="hidden md:block w-px h-8 bg-white/30" />}
+                <div>
+                  <div className="text-white font-black text-lg md:text-xl leading-none">{stat.value}</div>
+                  <div className="text-white/80 text-[10px] font-bold uppercase tracking-widest mt-0.5">{stat.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="py-16 md:py-24">
@@ -1369,6 +1402,84 @@ export default function BarangayPortal() {
               <p className="text-[#ebd78c]/90 leading-relaxed text-lg md:text-xl mt-6 lg:mt-8">
                 {selectedAchievement.description}
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Program Detail Modal */}
+      {selectedProgram && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedProgram(null)}>
+          <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-5xl overflow-hidden relative transform transition-all flex flex-col md:flex-row h-full max-h-[90vh] md:max-h-[80vh]" onClick={e => e.stopPropagation()}>
+            
+            {/* Left Column: Fixed Image on Desktop */}
+            <div className="relative w-full md:w-[45%] h-64 md:h-full group overflow-hidden shrink-0">
+              <img src={selectedProgram.image} alt={selectedProgram.title} className="w-full h-full object-cover transform transition-transform duration-1000 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+              
+              {/* Floating Category Badge */}
+              <div className="absolute top-6 left-6 z-20 bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-black px-4 py-2 rounded-full flex items-center gap-2 shadow-2xl uppercase tracking-[0.2em]">
+                <Target className="w-4 h-4 text-green-400" />
+                {selectedProgram.category}
+              </div>
+
+              {/* Mobile Close Button */}
+              <button onClick={() => setSelectedProgram(null)} className="md:hidden absolute top-4 right-4 z-30 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-md border border-white/10">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Right Column: Scrollable Content */}
+            <div className="flex-1 flex flex-col overflow-hidden bg-gray-50/50 text-left">
+              {/* Desktop Close Button */}
+              <button 
+                onClick={() => setSelectedProgram(null)} 
+                className="hidden md:flex absolute top-6 right-6 z-30 w-12 h-12 bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-red-500 rounded-2xl items-center justify-center transition-all shadow-sm border border-gray-200"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <div className="flex-1 overflow-y-auto p-8 md:p-12">
+                <div className="space-y-8">
+                  {/* Header */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-1 bg-green-600 rounded-full"></div>
+                      <p className="text-green-700 font-black text-[10px] tracking-[0.4em] uppercase">PROGRAM PORTFOLIO</p>
+                    </div>
+                    <h2 className="text-3xl md:text-5xl font-black text-gray-900 leading-[1.1] tracking-tight">
+                      {selectedProgram.title}
+                    </h2>
+                  </div>
+
+                  {/* Body Text */}
+                  <div className="max-w-none">
+                    <p className="text-gray-600 leading-relaxed font-medium text-lg md:text-xl italic">
+                      "{selectedProgram.description}"
+                    </p>
+                  </div>
+
+                  {/* Action Footer */}
+                  <div className="pt-8 flex flex-col sm:flex-row items-center justify-between border-t border-gray-100 gap-6">
+                    <button 
+                      onClick={() => setSelectedProgram(null)}
+                      className="w-full sm:w-auto px-10 py-4 bg-[#112117] text-white rounded-2xl font-black hover:bg-black transition-all shadow-xl hover:shadow-green-900/20 text-sm flex items-center justify-center gap-3 group"
+                    >
+                      <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                      BACK TO PORTAL
+                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="text-right hidden sm:block">
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Authenticated by</p>
+                            <p className="text-xs font-black text-gray-900 uppercase">Barangay Secretariat</p>
+                        </div>
+                        <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-green-600" />
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

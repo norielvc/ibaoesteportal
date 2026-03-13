@@ -1,0 +1,246 @@
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Official Receipt - 26-000006</title>
+            <style>
+                body {
+                    font-family: 'Arial', sans-serif;
+                    margin: 0;
+                    padding: 40px;
+                    background: #f8fafc;
+                    color: #0f172a;
+                    line-height: 1.5;
+                }
+                .receipt-container {
+                    max-width: 650px;
+                    margin: 0 auto;
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+                    padding: 40px;
+                    position: relative;
+                }
+                .header {
+                    text-align: center;
+                    border-bottom: 2px dashed #cbd5e1;
+                    padding-bottom: 25px;
+                    margin-bottom: 30px;
+                }
+                .header p { margin: 0 0 5px 0; font-size: 13px; font-weight: normal; color: #475569; }
+                .header h1 { margin: 5px 0; font-size: 20px; font-weight: 900; color: #1e3a8a; letter-spacing: 0.5px; }
+                .header h2 { margin: 0; font-size: 13px; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px;}
+                .title-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 30px;
+                }
+                .title-row h2 {
+                    margin: 0;
+                    font-size: 24px;
+                    font-weight: 900;
+                    color: #0f172a;
+                    text-transform: uppercase;
+                    letter-spacing: -0.5px;
+                }
+                .or-badge {
+                    background: #fef2f2;
+                    color: #dc2626;
+                    border: 1px solid #fecaca;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 18px;
+                    font-weight: 900;
+                    letter-spacing: 0.5px;
+                }
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 15px;
+                    margin-bottom: 30px;
+                }
+                .info-item {
+                    background: #f8fafc;
+                    padding: 15px;
+                    border-radius: 8px;
+                    border: 1px solid #e2e8f0;
+                }
+                .info-item.full {
+                    grid-column: 1 / -1;
+                }
+                .label {
+                    display: block;
+                    font-size: 10px;
+                    text-transform: uppercase;
+                    font-weight: 800;
+                    color: #64748b;
+                    margin-bottom: 4px;
+                    letter-spacing: 0.5px;
+                }
+                .value {
+                    display: block;
+                    font-size: 14px;
+                    font-weight: 800;
+                    color: #0f172a;
+                    word-break: break-word;
+                }
+                .amount-box {
+                    background: linear-gradient(to right, #f8fafc, #f1f5f9);
+                    border: 1px solid #cbd5e1;
+                    border-left: 5px solid #10b981;
+                    padding: 25px;
+                    border-radius: 8px;
+                    margin-bottom: 30px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .amount-title {
+                    font-size: 12px;
+                    font-weight: 800;
+                    color: #475569;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    margin-bottom: 5px;
+                }
+                .amount-value {
+                    font-size: 32px;
+                    font-weight: 900;
+                    color: #0f172a;
+                    letter-spacing: -1px;
+                }
+                .amount-words {
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    max-width: 60%;
+                    text-align: right;
+                }
+                .signature-section {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 50px;
+                }
+                .sig-box {
+                    width: 45%;
+                    text-align: center;
+                }
+                .sig-line {
+                    height: 1px;
+                    background: #cbd5e1;
+                    margin: 30px 0 10px 0;
+                }
+                .sig-name {
+                    font-weight: 900;
+                    font-size: 14px;
+                    color: #0f172a;
+                    margin: 0 0 2px 0;
+                    text-transform: uppercase;
+                }
+                .sig-title {
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: #64748b;
+                    margin: 0;
+                    text-transform: uppercase;
+                }
+                .footer {
+                    margin-top: 40px;
+                    text-align: center;
+                    font-size: 10px;
+                    color: #94a3b8;
+                    font-weight: 600;
+                }
+                @media print {
+                    body { background: white; padding: 0; }
+                    .receipt-container { padding: 25px; box-shadow: none; border: 2px solid #000; border-radius: 0; }
+                    .amount-box { border: 1px solid #000 !important; border-left: 5px solid #000 !important; }
+                    .info-item { border: 1px solid #000; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="receipt-container">
+                <div class="header">
+                    <p>Republic of the Philippines<br>Province of Bulacan<br>Municipality of Calumpit</p>
+                    <h1>BARANGAY IBA O' ESTE</h1>
+                    <h2>OFFICE OF THE BARANGAY TREASURER</h2>
+                </div>
+
+                <div class="title-row">
+                    <h2>Official Receipt</h2>
+                    <div class="or-badge">OR No: 26-000006</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Date & Time</span>
+                        <span class="value">March 13, 2026 @ 03:11 PM</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Reference No.</span>
+                        <span class="value">2026-0313001</span>
+                    </div>
+                    <div class="info-item full">
+                        <span class="label">Received From</span>
+                        <span class="value">MARK GARCIA FLORES </span>
+                    </div>
+                    <div class="info-item full">
+                        <span class="label">Address</span>
+                        <span class="value">HOUSE NO. 615B, PUROK MAHARLIKA, BRGY. IBA O' ESTE, CALUMPIT, BULACAN</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Business Name</span>
+                        <span class="value">ALFA MART</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Nature of Business</span>
+                        <span class="value">RETAIL / TINGIAN</span>
+                    </div>
+                </div>
+
+                <div class="amount-box">
+                    <div>
+                        <div class="amount-title">Amount Received</div>
+                        <div class="amount-value">₱ 100.00</div>
+                    </div>
+                    <div class="amount-words">
+                        (ONE HUNDRED PESOS ONLY)
+                    </div>
+                </div>
+
+                <div class="info-grid" style="margin-bottom: 0;">
+                    <div class="info-item">
+                        <span class="label">Payment For</span>
+                        <span class="value">BUSINESS PERMIT PROCESSING FEE</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Payment Method</span>
+                        <span class="value">CASH</span>
+                    </div>
+                </div>
+
+                <div class="signature-section">
+                    <div class="sig-box">
+                        <div class="sig-line"></div>
+                        <p class="sig-name">PAYOR'S SIGNATURE</p>
+                    </div>
+                    <div class="sig-box">
+                        <div class="sig-line"></div>
+                        <p class="sig-name">MARIA ELENA C. SANTOS</p>
+                        <p class="sig-title">Barangay Treasurer</p>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p>This receipt is valid only when properly signed and dated.</p>
+                    <p>Contact: (044) 913-1234 | ibaeste.calumpit@gmail.com</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        

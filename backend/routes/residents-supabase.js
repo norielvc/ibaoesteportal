@@ -2,6 +2,17 @@ const express = require('express');
 const router = express.Router();
 const { supabase } = require('../services/supabaseClient');
 
+// Helper to sanitize resident data (converts empty strings to null)
+const sanitizeResidentData = (data) => {
+    const sanitized = { ...data };
+    Object.keys(sanitized).forEach(key => {
+        if (sanitized[key] === '') {
+            sanitized[key] = null;
+        }
+    });
+    return sanitized;
+};
+
 // Search residents by name with pagination
 router.get('/search', async (req, res) => {
     try {
@@ -44,10 +55,13 @@ router.post('/bulk-insert', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid residents data' });
         }
 
+        // Sanitize each resident record
+        const sanitizedResidents = residents.map(r => sanitizeResidentData(r));
+
         // Insert data into Supabase
         const { data, error } = await supabase
             .from('residents')
-            .insert(residents)
+            .insert(sanitizedResidents)
             .select();
 
         if (error) throw error;
@@ -63,11 +77,12 @@ router.post('/bulk-insert', async (req, res) => {
     }
 });
 
+
 // Create new resident
 router.post('/', async (req, res) => {
     try {
-        const residentData = { ...req.body };
-
+        const residentData = sanitizeResidentData(req.body);
+        
         // Remove generated or system columns
         delete residentData.full_name;
         delete residentData.id;
@@ -90,7 +105,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const updates = { ...req.body };
+        const updates = sanitizeResidentData(req.body);
 
         // Remove read-only or generated columns to prevent Supabase errors
         delete updates.full_name;

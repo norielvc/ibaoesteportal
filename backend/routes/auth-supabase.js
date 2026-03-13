@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { supabase } = require('../services/supabaseClient');
 const { validateLogin } = require('../middleware/validation');
-const { authenticateToken, generateToken } = require('../middleware/auth');
+const { authenticateToken, generateToken } = require('../middleware/auth-supabase');
 
 const router = express.Router();
 

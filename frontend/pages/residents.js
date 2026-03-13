@@ -121,6 +121,20 @@ export default function Residents() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
+            // Clean up data for database compatibility
+            const cleanedData = { ...formData };
+            
+            // Convert empty date strings to null to avoid timestamp syntax errors
+            if (cleanedData.date_of_birth === "") cleanedData.date_of_birth = null;
+            if (cleanedData.date_of_death === "") cleanedData.date_of_death = null;
+            
+            // Ensure numeric fields are correctly typed
+            if (cleanedData.age === "") {
+                cleanedData.age = null;
+            } else {
+                cleanedData.age = parseInt(cleanedData.age);
+            }
+
             const method = selectedResident ? 'PUT' : 'POST';
             const url = selectedResident
                 ? `${API_URL}/residents/${selectedResident.id}`
@@ -129,7 +143,7 @@ export default function Residents() {
             const response = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(cleanedData)
             });
 
             const data = await response.json();

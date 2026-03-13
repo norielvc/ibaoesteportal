@@ -129,7 +129,10 @@ const TYPE_OPTIONS = [
   { value: 'natural_death', label: 'Natural Death' },
   { value: 'barangay_guardianship', label: 'Guardianship' },
   { value: 'barangay_cohabitation', label: 'Co-habitation' },
-  { value: 'business_permit', label: 'Business Permit' }
+  { value: 'business_permit', label: 'Business Permit' },
+  { value: 'same_person', label: 'Same Person' },
+  { value: 'medico_legal', label: 'Medico Legal' },
+  { value: 'educational_assistance', label: 'Educational Assistance' }
 ];
 
 const STEP_OPTIONS = [
@@ -2027,6 +2030,37 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                       </span>
                     )}
                   </div>
+
+                  {request.residents?.pending_case && (
+                    <div className="mb-6 bg-red-600 border-2 border-red-400 rounded-xl p-5 shadow-xl animate-pulse ring-4 ring-red-600/20">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-white/20 p-2.5 rounded-xl border border-white/20 shadow-lg">
+                          <ShieldAlert className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-white font-black uppercase text-xl leading-tight tracking-wider">RESTRICTED APPLICANT RECORD</h4>
+                            <span className="bg-black/40 text-white text-[10px] font-black px-3 py-1.5 rounded-lg border border-white/20 uppercase tracking-widest">Legal Hold Active</span>
+                          </div>
+                          <p className="text-red-100 text-[11px] font-bold uppercase mt-1 leading-relaxed">This resident has a PENDING CASE in the Master Database. This request requires immediate administrative attention.</p>
+                          <div className="mt-4 bg-black/30 p-4 rounded-[1.25rem] border border-white/10 backdrop-blur-sm">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Info className="w-3.5 h-3.5 text-red-200" />
+                              <p className="text-[10px] font-black text-red-200 uppercase tracking-widest">OFFICIAL CASE REMARKS:</p>
+                            </div>
+                            <p className="text-[15px] font-bold text-white italic leading-relaxed">"{request.residents?.case_record_history || 'No specific case details provided in record.'}"</p>
+                          </div>
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <p className="text-[11px] font-black text-white bg-black/50 px-4 py-2.5 rounded-xl border border-white/10 inline-flex items-center gap-2 shadow-inner">
+                              <XCircle className="w-4 h-4 text-red-400" />
+                              BARANGAY CLEARANCE ISSUANCE IS STRONGLY PROHIBITED
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className={`grid gap-8 ${['oic_review', 'ready', 'ready_for_pickup'].includes(request.status) ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5'}`}>
                     {isEditing ? (
                       <>
@@ -3065,6 +3099,19 @@ function RequestDetailsModal({ request, onClose, onAction, onUpdate, setSelected
                       onChange={(e) => setResidentFormData({ ...residentFormData, second_name: e.target.value })}
                     />
                   </div>
+
+                  {/* Red warning banner for pending case */}
+                  {request.residents?.pending_case && (
+                    <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex items-center gap-3">
+                      <ShieldAlert className="w-5 h-5 text-red-600 shrink-0" />
+                      <div>
+                        <p className="text-sm font-bold text-red-800 leading-tight">This resident has a PENDING CASE.</p>
+                        <p className="text-xs text-red-700 mt-1">Please review the "Legal Records" section for more details.</p>
+                      </div>
+                    </div>
+                  )}
+
+
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
