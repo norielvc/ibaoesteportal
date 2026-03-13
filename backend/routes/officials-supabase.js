@@ -33,8 +33,17 @@ const mapOfficialsToConfig = (officials) => {
       recordKeeper: '', clerk: ''
     },
     committees: {
-      councilors: Array(7).fill(''),
-      skKagawads: Array(8).fill('')
+      skKagawads: Array(8).fill(''),
+      councilors: Array(7).fill('')
+    },
+    visibility: {
+      section: true,
+      chairman: true, secretary: true, treasurer: true, skChairman: true,
+      skSecretary: true, skTreasurer: true,
+      skKagawads: Array(8).fill(true),
+      councilors: Array(7).fill(true),
+      administrator: true, assistantSecretary: true, assistantAdministrator: true,
+      recordKeeper: true, clerk: true
     }
   };
 
@@ -230,7 +239,8 @@ router.put('/config', async (req, res) => {
       municipalityStyle: config.municipalityStyle,
       barangayNameStyle: config.barangayNameStyle,
       officeNameStyle: config.officeNameStyle,
-      heroSection: config.heroSection
+      heroSection: config.heroSection,
+      visibility: config.visibility
     };
 
     const { error: settingsError } = await supabase

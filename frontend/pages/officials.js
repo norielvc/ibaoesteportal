@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout/Layout';
-import { Save, Users, UserCog, Shield, Award, Edit2, Check, X, AlertCircle, CheckCircle, MapPin, Phone, Mail, Building, Crop, Camera, Layout as LayoutIcon } from 'lucide-react';
+import { Save, Users, UserCog, Shield, Award, Edit2, Check, X, AlertCircle, CheckCircle, MapPin, Phone, Mail, Building, Crop, Camera, Layout as LayoutIcon, Eye, EyeOff } from 'lucide-react';
 import { getAuthToken } from '@/lib/auth';
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
@@ -129,7 +129,16 @@ const defaultOfficials = {
     image: '/images/barangay-officials.jpg'
   },
   vision: 'A premier, God-fearing, and empowered barangay with sustainable environment and progressive economy under a transparent and accountable governance.',
-  mission: 'To provide quality basic services, ensure public safety, and promote the general welfare of our constituents through participatory leadership.'
+  mission: 'To provide quality basic services, ensure public safety, and promote the general welfare of our constituents through participatory leadership.',
+  visibility: {
+    section: true,
+    chairman: true, secretary: true, treasurer: true, skChairman: true,
+    skSecretary: true, skTreasurer: true,
+    skKagawads: Array(8).fill(true),
+    councilors: Array(7).fill(true),
+    administrator: true, assistantSecretary: true, assistantAdministrator: true,
+    recordKeeper: true, clerk: true
+  }
 };
 
 
@@ -323,6 +332,33 @@ export default function OfficialsPage() {
     setHasChanges(true);
   };
 
+  const toggleVisibility = (field) => {
+    const newVisibility = { ...officials.visibility };
+    
+    if (field.startsWith('councilor_')) {
+      const idx = parseInt(field.split('_')[1]);
+      const arr = [...newVisibility.councilors];
+      arr[idx] = !arr[idx];
+      newVisibility.councilors = arr;
+    } else if (field.startsWith('skKagawad_')) {
+      const idx = parseInt(field.split('_')[1]);
+      const arr = [...newVisibility.skKagawads];
+      arr[idx] = !arr[idx];
+      newVisibility.skKagawads = arr;
+    } else if (field === 'section') {
+      newVisibility.section = !newVisibility.section;
+    } else {
+      newVisibility[field] = !newVisibility[field];
+    }
+
+    setOfficials({ ...officials, visibility: newVisibility });
+    setHasChanges(true);
+    setNotification({ 
+      type: 'success', 
+      message: `${field === 'section' ? 'Section' : 'Official'} visibility ${newVisibility[field === 'section' ? 'section' : field] ? 'enabled' : 'disabled'}` 
+    });
+  };
+
   const ImageCropperModal = ({ src, onApply, onCancel, cropWidth = 600, cropHeight = 600, modalTitle = 'CROP PROFILE PHOTO', modalSubtitle = '2x2 Official Resolution', outputFormat = 'image/png', quality }) => {
     const canvasRef = useRef(null);
     const [zoom, setZoom] = useState(1.2);
@@ -512,25 +548,36 @@ export default function OfficialsPage() {
     let imageUrl = '';
     let description = '';
     let committee = '';
+    let isVisible = true;
 
     if (field.startsWith('councilor_')) {
       const idx = parseInt(field.split('_')[1]);
       imageUrl = officials.officialImages.councilors[idx];
       description = officials.descriptions?.councilors[idx] || '';
       committee = officials.committees?.councilors[idx] || '';
+      isVisible = officials.visibility?.councilors[idx];
     } else if (field.startsWith('skKagawad_')) {
       const idx = parseInt(field.split('_')[1]);
       imageUrl = officials.officialImages.skKagawads[idx];
       description = officials.descriptions?.skKagawads[idx] || '';
       committee = officials.committees?.skKagawads[idx] || '';
+      isVisible = officials.visibility?.skKagawads[idx];
     } else {
       imageUrl = officials.officialImages[field];
       description = officials.descriptions?.[field] || '';
-      // Non-array fields usually don't have committees in this simple structure, but could extend if needed
+      isVisible = officials.visibility?.[field] ?? true;
     }
 
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all group flex flex-col h-full">
+      <div className={`bg-white rounded-xl border ${isVisible ? 'border-gray-200' : 'border-red-200 bg-red-50/30'} p-4 hover:shadow-md transition-all group flex flex-col h-full relative`}>
+        {/* Visibility Toggle */}
+        <button 
+          onClick={() => toggleVisibility(field)}
+          title={isVisible ? "Visible on Public Portal" : "Hidden from Public Portal"}
+          className={`absolute -top-2 -left-2 z-10 p-2 rounded-full shadow-lg border transition-all ${isVisible ? 'bg-green-600 border-green-700 text-white' : 'bg-red-600 border-red-700 text-white'}`}
+        >
+          {isVisible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+        </button>
         {/* Header: Label & Photo */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -731,11 +778,26 @@ export default function OfficialsPage() {
           <div className="bg-emerald-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
             <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
-                  <LayoutIcon className="w-6 h-6 text-emerald-300" />
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
+                    <LayoutIcon className="w-6 h-6 text-emerald-300" />
+                  </div>
+                  <h3 className="text-xl font-black uppercase tracking-widest">Officials Section Settings</h3>
                 </div>
-                <h3 className="text-xl font-black uppercase tracking-widest">Hero Section Header</h3>
+
+                <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-2 px-4 rounded-2xl border border-white/20">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-emerald-300 uppercase tracking-widest">Portal Visibility</span>
+                        <span className="text-xs font-bold">{officials.visibility?.section ? 'SHOW SECTION' : 'HIDE SECTION'}</span>
+                    </div>
+                    <button 
+                        onClick={() => toggleVisibility('section')}
+                        className={`w-14 h-8 rounded-full relative transition-all duration-300 ${officials.visibility?.section ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-gray-600'}`}
+                    >
+                        <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-300 shadow-sm ${officials.visibility?.section ? 'left-7' : 'left-1'}`} />
+                    </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -245,6 +245,7 @@ export default function BarangayPortal() {
 
   const [facilities, setFacilities] = useState(defaultFacilities);
   const [officials, setOfficials] = useState([]);
+  const [visibilitySettings, setVisibilitySettings] = useState(null);
 
   // Default achievements (fallback)
   const defaultAchievements = [
@@ -475,11 +476,12 @@ export default function BarangayPortal() {
           setOfficials(officialsData.data);
         }
 
-        // Fetch Hero Settings
+        // Fetch Hero & Visibility Settings
         const settingsRes = await fetch(`${API_URL}/officials/config`);
         const settingsData = await settingsRes.json();
-        if (settingsData.success && settingsData.data?.heroSection) {
-          setHeroSettings(settingsData.data.heroSection);
+        if (settingsData.success && settingsData.data) {
+          if (settingsData.data.heroSection) setHeroSettings(settingsData.data.heroSection);
+          if (settingsData.data.visibility) setVisibilitySettings(settingsData.data.visibility);
         }
 
         // Fetch Achievements
@@ -1526,7 +1528,8 @@ export default function BarangayPortal() {
 
 
       {/* Barangay Officials Section - Optimized */}
-      <section id="officials" className="bg-gradient-to-br from-[#112e1f] via-[#1a3d29] to-[#0d1f14] relative overflow-hidden">
+      {visibilitySettings?.section !== false && (
+        <section id="officials" className="bg-gradient-to-br from-[#112e1f] via-[#1a3d29] to-[#0d1f14] relative overflow-hidden">
         {/* Header with modern aesthetic */}
         {/* Header removed as per user request */}
 
@@ -1588,17 +1591,54 @@ export default function BarangayPortal() {
             {officials.length > 0 ? (
               <div className="space-y-16">
                 {(() => {
+                  // Helper to filter by visibility
+                  const filteredOfficials = officials.filter(o => {
+                    if (!visibilitySettings) return true;
+                    const { position_type, position } = o;
+                    
+                    if (position_type === 'captain') return visibilitySettings.chairman !== false;
+                    if (position_type === 'secretary') return visibilitySettings.secretary !== false;
+                    if (position_type === 'treasurer') return visibilitySettings.treasurer !== false;
+                    if (position_type === 'sk_chairman') return visibilitySettings.skChairman !== false;
+                    if (position_type === 'sk_secretary') return visibilitySettings.skSecretary !== false;
+                    if (position_type === 'sk_treasurer') return visibilitySettings.skTreasurer !== false;
+                    
+                    if (position_type === 'sk_kagawad') {
+                      const match = position.match(/SK Kagawad\s+(\d+)/i);
+                      if (match) {
+                        const idx = parseInt(match[1], 10) - 1;
+                        return visibilitySettings.skKagawads?.[idx] !== false;
+                      }
+                    }
+                    
+                    if (position_type === 'kagawad') {
+                      const match = position.match(/Kagawad\s+(\d+)/i);
+                      if (match) {
+                        const idx = parseInt(match[1], 10) - 1;
+                        return visibilitySettings.councilors?.[idx] !== false;
+                      }
+                    }
+                    
+                    if (position === 'Administrator') return visibilitySettings.administrator !== false;
+                    if (position === 'Assistant Secretary') return visibilitySettings.assistantSecretary !== false;
+                    if (position === 'Assistant Administrator') return visibilitySettings.assistantAdministrator !== false;
+                    if (position === 'Barangay Keeper' || position === 'Record Keeper') return visibilitySettings.recordKeeper !== false;
+                    if (position === 'Clerk') return visibilitySettings.clerk !== false;
+                    
+                    return true;
+                  });
+
                   // Group officials by position type
                   const groupedOfficials = {
-                    captain: officials.filter(o => o.position_type === 'captain'),
-                    kagawad: officials.filter(o => o.position_type === 'kagawad'),
-                    secretary: officials.filter(o => o.position_type === 'secretary'),
-                    treasurer: officials.filter(o => o.position_type === 'treasurer'),
-                    sk_chairman: officials.filter(o => o.position_type === 'sk_chairman'),
-                    sk_secretary: officials.filter(o => o.position_type === 'sk_secretary'),
-                    sk_treasurer: officials.filter(o => o.position_type === 'sk_treasurer'),
-                    sk_kagawad: officials.filter(o => o.position_type === 'sk_kagawad'),
-                    staff: officials.filter(o => !['captain', 'kagawad', 'secretary', 'treasurer', 'sk_chairman', 'sk_secretary', 'sk_treasurer', 'sk_kagawad'].includes(o.position_type))
+                    captain: filteredOfficials.filter(o => o.position_type === 'captain'),
+                    kagawad: filteredOfficials.filter(o => o.position_type === 'kagawad'),
+                    secretary: filteredOfficials.filter(o => o.position_type === 'secretary'),
+                    treasurer: filteredOfficials.filter(o => o.position_type === 'treasurer'),
+                    sk_chairman: filteredOfficials.filter(o => o.position_type === 'sk_chairman'),
+                    sk_secretary: filteredOfficials.filter(o => o.position_type === 'sk_secretary'),
+                    sk_treasurer: filteredOfficials.filter(o => o.position_type === 'sk_treasurer'),
+                    sk_kagawad: filteredOfficials.filter(o => o.position_type === 'sk_kagawad'),
+                    staff: filteredOfficials.filter(o => !['captain', 'kagawad', 'secretary', 'treasurer', 'sk_chairman', 'sk_secretary', 'sk_treasurer', 'sk_kagawad'].includes(o.position_type))
                   };
 
                   const sections = [
@@ -1848,6 +1888,7 @@ export default function BarangayPortal() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Contact Section */}
       <section id="contact" className="py-6 bg-[#112117]">
