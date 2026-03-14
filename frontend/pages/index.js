@@ -1626,10 +1626,11 @@ export default function BarangayPortal() {
                     // Special case for SK Council: Combine Secretary, Treasurer, and Kagawads
                     let displayOfficials = section.officials;
                     if (section.key === 'sk_kagawad') {
-                      const sec = groupedOfficials.sk_secretary.length > 0 ? groupedOfficials.sk_secretary : [{ name: 'SK SECRETARY NAME', position: 'SK Secretary', description: 'Official secretary of the Sangguniang Kabataan.' }];
-                      const trs = groupedOfficials.sk_treasurer.length > 0 ? groupedOfficials.sk_treasurer : [{ name: 'SK TREASURER NAME', position: 'SK Treasurer', description: 'Official treasurer of the Sangguniang Kabataan.' }];
-                      const kgw = groupedOfficials.sk_kagawad.length > 0 ? groupedOfficials.sk_kagawad : Array(8).fill({ name: 'SK KAGAWAD NAME', position: 'SK Kagawad', description: 'Member of the Sangguniang Kabataan council.' });
-                      displayOfficials = [...kgw, ...sec, ...trs];
+                      displayOfficials = [
+                        ...groupedOfficials.sk_kagawad,
+                        ...groupedOfficials.sk_secretary,
+                        ...groupedOfficials.sk_treasurer
+                      ];
                     }
 
                     if (displayOfficials.length === 0) return null;
@@ -1790,7 +1791,8 @@ export default function BarangayPortal() {
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#112e1f]/90 via-[#112e1f]/40 to-transparent flex flex-col justify-end p-6 text-center z-20">
                                       <h3 className="text-white font-bold text-xl mb-1 drop-shadow-lg">
                                         {(() => {
-                                          const pos = official.position;
+                                          const pos = official.position || '';
+                                          if (pos.includes('SK Kagawad')) return 'SK Kagawad';
                                           if (pos.includes('Kagawad')) return 'Brgy. Kagawad';
                                           if (['Secretary', 'Treasurer', 'Administrator', 'Clerk', 'Record Keeper'].includes(pos)) return `Brgy. ${pos}`;
                                           if (pos === 'Barangay Keeper') return 'Brgy. Record Keeper';
