@@ -70,7 +70,7 @@ const mapOfficialsToConfig = (officials) => {
     else if (o.position_type === 'sk_secretary') { config.skSecretary = o.name; setImg('skSecretary', url); setDesc('skSecretary', desc); }
     else if (o.position_type === 'sk_treasurer') { config.skTreasurer = o.name; setImg('skTreasurer', url); setDesc('skTreasurer', desc); }
     else if (o.position_type === 'sk_kagawad') {
-      const match = o.position.match(/SK Kagawad\s+(\d+)/i);
+      const match = o.position?.match(/SK Kagawad\s+(\d+)/i);
       if (match) {
         const idx = parseInt(match[1], 10) - 1;
         if (idx >= 0 && idx < 8) {
@@ -82,7 +82,7 @@ const mapOfficialsToConfig = (officials) => {
       }
     }
     else if (o.position_type === 'kagawad') {
-      const match = o.position.match(/Kagawad\s+(\d+)/i);
+      const match = o.position?.match(/Kagawad\s+(\d+)/i);
       let idx = -1;
       if (match) {
         idx = parseInt(match[1], 10) - 1;

@@ -638,28 +638,6 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
                         </div>
                       </div>
 
-                      {formData.fullName && (
-                        <div className="mb-4 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 shadow-inner">
-                          <p className="text-[10px] font-black text-emerald-600 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
-                            <User className="w-3 h-3" />
-                            Applicant Information (Auto-filled)
-                          </p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1 relative group">
-                              <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Full Name (Auto-filled) / Pangalan (Auto-filled)</label>
-                              <input type="text" value={formData.fullName} readOnly className="w-full px-4 py-2.5 bg-gray-50 border-2 border-emerald-50 rounded-lg font-bold text-gray-600 uppercase text-sm cursor-not-allowed" />
-                            </div>
-                            <div className="space-y-1 relative group">
-                              <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Age / Sex (Auto-filled)</label>
-                              <input type="text" value={`${formData.age || '-'} / ${formData.sex || '-'}`} readOnly className="w-full px-4 py-2.5 bg-gray-50 border-2 border-emerald-50 rounded-lg font-bold text-gray-600 uppercase text-sm cursor-not-allowed" />
-                            </div>
-                            <div className="space-y-1 relative group md:col-span-2">
-                              <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Residential Address (Auto-filled)</label>
-                              <input type="text" value={formData.address} readOnly className="w-full px-4 py-2.5 bg-gray-50 border-2 border-emerald-50 rounded-lg font-bold text-gray-600 uppercase text-sm cursor-not-allowed" />
-                            </div>
-                          </div>
-                        </div>
-                      )}
 
                       {formData.pending_case && (
                         <div className="mb-4 bg-red-600 border-2 border-red-400 rounded-xl p-4 shadow-xl animate-pulse">
