@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 // Build Trigger: 2026-02-07 17:09
-import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone, Mail, ShieldAlert, XCircle } from 'lucide-react';
+import { X, FileText, Eye, Send, Printer, CheckCircle, AlertCircle, Info, Download, Search, Clock, Phone, Mail, ShieldAlert, XCircle, User } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 // API Configuration
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
