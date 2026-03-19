@@ -51,6 +51,7 @@ const authenticateToken = async (req, res, next) => {
       avatar: user.avatar,
       lastLogin: user.last_login,
       loginCount: user.login_count,
+      tenant_id: user.tenant_id,
       createdAt: user.created_at,
       updatedAt: user.updated_at
     };
@@ -86,7 +87,7 @@ const authenticateToken = async (req, res, next) => {
  * Middleware to check if user has admin role
  */
 const requireAdmin = (req, res, next) => {
-  const allowedRoles = ['super_admin', 'admin', 'captain', 'secretary'];
+  const allowedRoles = ['superadmin', 'admin', 'captain', 'secretary'];
   if (!allowedRoles.includes(req.user.role)) {
     return res.status(403).json({
       success: false,
@@ -97,11 +98,24 @@ const requireAdmin = (req, res, next) => {
 };
 
 /**
+ * Middleware to check if user has superadmin role exclusively
+ */
+const requireSuperAdmin = (req, res, next) => {
+  if (req.user.role !== 'superadmin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Reserved for System-Wide Administrators only'
+    });
+  }
+  next();
+};
+
+/**
  * Middleware to check if user can access resource (admin or own resource)
  */
 const requireAdminOrOwner = (req, res, next) => {
   const userId = req.params.id || req.params.userId;
-  const allowedRoles = ['super_admin', 'admin', 'captain', 'secretary'];
+  const allowedRoles = ['superadmin', 'admin', 'captain', 'secretary'];
 
   if (allowedRoles.includes(req.user.role) || req.user._id === userId) {
     return next();
@@ -127,6 +141,7 @@ const generateToken = (userId) => {
 module.exports = {
   authenticateToken,
   requireAdmin,
+  requireSuperAdmin,
   requireAdminOrOwner,
   generateToken
 };

@@ -26,6 +26,7 @@ const officialReceiptRoutes = require('./routes/official-receipts-supabase');
 const residentRoutes = require('./routes/residents-supabase');
 const achievementRoutes = require('./routes/achievements-supabase');
 const programRoutes = require('./routes/programs-supabase');
+const tenantRoutes = require('./routes/tenants-supabase');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -161,6 +162,7 @@ app.use('/api/official-receipts', authenticateToken, officialReceiptRoutes); // 
 app.use('/api/residents', residentRoutes); // Residents database (public search)
 app.use('/api/achievements', achievementRoutes); // Achievements/Awards management
 app.use('/api/programs', programRoutes); // Barangay Programs management
+app.use('/api/tenants', tenantRoutes); // System orchestration (Super Admin Only)
 
 // 404 handler
 app.use('*', (req, res) => {

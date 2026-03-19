@@ -13,28 +13,46 @@ import {
 } from 'lucide-react';
 
 export default function SuperAdminDashboard() {
-  const [tenants, setTenants] = useState([
-    {
-      id: 'ibaoeste',
-      name: "Barangay Iba O' Este",
-      domain: 'ibaoesteportal.vercel.app',
-      plan: 'Pro',
-      status: 'Active',
-      requests_this_month: 1250,
-      staff_count: 5,
-      last_active: 'Just now'
-    },
-    {
-      id: 'demo',
-      name: 'Demo System',
-      domain: 'demo.ibaoesteportal.vercel.app',
-      plan: 'Starter',
-      status: 'Active',
-      requests_this_month: 45,
-      staff_count: 2,
-      last_active: '2 hours ago'
-    }
-  ]);
+  const [tenants, setTenants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTenants = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+           window.location.href = '/login';
+           return;
+        }
+
+        // Determine API URL 
+        const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
+
+        const res = await fetch(`${API_URL}/tenants`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'x-tenant-id': 'ibaoeste' // Super admin can interact from any domain
+          }
+        });
+
+        const data = await res.json();
+        
+        if (data.success) {
+          setTenants(data.data);
+        } else {
+          setError(data.message);
+        }
+      } catch (err) {
+        console.error('Super Admin fetch error:', err);
+        setError('Failed to load system-wide data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTenants();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -135,16 +153,16 @@ export default function SuperAdminDashboard() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex px-2.5 py-1 rounded border border-gray-300 bg-white text-xs font-bold text-gray-700 shadow-sm">
-                        {tenant.plan}
+                        {tenant.plan_tier}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
-                        <span className="font-semibold text-gray-900">{tenant.requests_this_month.toLocaleString()}</span>
+                        <span className="font-semibold text-gray-900">{tenant.requests_this_month?.toLocaleString() || 0}</span>
                         <span className="text-gray-500 text-xs ml-1">this mo.</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                        <div className={`h-1.5 rounded-full ${tenant.plan === 'Starter' && tenant.requests_this_month > 250 ? 'bg-orange-500' : 'bg-blue-600'}`} style={{ width: tenant.plan === 'Pro' ? '100%' : `${(tenant.requests_this_month / 300) * 100}%` }}></div>
+                        <div className={`h-1.5 rounded-full ${tenant.plan_tier === 'Starter' && tenant.requests_this_month > 250 ? 'bg-orange-500' : 'bg-blue-600'}`} style={{ width: tenant.plan_tier === 'Pro' ? '100%' : `${(tenant.requests_this_month / 300) * 100}%` }}></div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

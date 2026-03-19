@@ -18,13 +18,31 @@ router.post('/login', validateLogin, async (req, res) => {
     const { email, password } = req.body;
     console.log(`Login attempt for: ${email} on tenant: ${tenantId}`);
 
-    // Get user from Supabase with tenant filter
-    const { data: users, error: fetchError } = await supabase
+    // 1. First, search for the user globally by email
+    const { data: globalUserData, error: globalError } = await supabase
       .from('users')
       .select('*')
       .eq('email', email)
-      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .single();
+
+    let users = null;
+    let fetchError = null;
+
+    if (globalUserData && globalUserData.role === 'superadmin') {
+      // Super Admin found! They bypass the tenant lock.
+      users = globalUserData;
+      console.log('Super Admin Global Access granted for:', email);
+    } else {
+      // Not a super admin, enforce strict tenant filter
+      const { data: tenantUserData, error: tenantError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
+        .single();
+      users = tenantUserData;
+      fetchError = tenantError;
+    }
 
     console.log('Supabase query result:', { users: users ? 'found' : 'not found', error: fetchError });
 
@@ -62,10 +80,10 @@ router.post('/login', validateLogin, async (req, res) => {
       .from('users')
       .update({
         last_login: new Date().toISOString(),
-        login_count: users.login_count + 1
+        login_count: (users.login_count || 0) + 1
       })
-      .eq('id', users.id)
-      .eq('tenant_id', tenantId); // MULTI-TENANT FILTER
+      .eq('id', users.id);
+      // Removed .eq('tenant_id', tenantId) to allow superadmin updates cross-tenant
 
     // Generate token
     const token = generateToken(users.id);
@@ -132,12 +150,30 @@ router.post('/logout', authenticateToken, async (req, res) => {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
-    const { data: user, error } = await supabase
+    let user = null;
+    let error = null;
+
+    // 1. Find the user by ID across the entire network first to check for Super Admin status
+    const { data: globalUser, error: globalError } = await supabase
       .from('users')
       .select('*')
       .eq('id', req.user._id)
-      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .single();
+
+    if (globalUser && globalUser.role === 'superadmin') {
+      // Super Admin found! They bypass the tenant lock.
+      user = globalUser;
+    } else {
+      // Not a super admin, enforce strict tenant isolation
+      const { data: tenantUser, error: tenantError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', req.user._id)
+        .eq('tenant_id', tenantId)
+        .single();
+      user = tenantUser;
+      error = tenantError;
+    }
 
     if (error || !user) {
       return res.status(404).json({
