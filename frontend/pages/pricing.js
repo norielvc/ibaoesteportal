@@ -58,6 +58,7 @@ const plans = [
       'Reference number & status tracking',
     ],
     notIncluded: [
+      'Resident database lookup',
       'Facilities & Programs sections',
       'Achievements & Awards section',
       'All 11 certificate types',
@@ -65,7 +66,7 @@ const plans = [
       'Official Receipt (OR) generation',
       'Physical Inspection Report',
       'Signature capture',
-      'QR attendance system',
+      'QR code scanner feature',
       'Analytics dashboard',
       'Custom domain',
     ]
@@ -100,7 +101,7 @@ const plans = [
     ],
     notIncluded: [
       'Custom domain',
-      'QR attendance system',
+      'QR code scanner feature',
       'Analytics dashboard',
       'Bulk data export',
       'Dedicated support line',
@@ -124,7 +125,7 @@ const plans = [
       'Custom color theme',
       'Unlimited staff accounts',
       'Unlimited requests / month',
-      'QR code employee attendance',
+      'QR code scanner feature',
       'Analytics dashboard',
       'Bulk data export (Excel / CSV)',
       'Priority same-day support',
