@@ -21,9 +21,13 @@ api.interceptors.request.use(
     }
     
     // 2. Send the Tenant ID for Multi-Tenant Architecture
-    // It reads this from the Vercel environment variable, defaulting to ibaoeste
-    console.log('FRONTEND IS SENDING TENANT:', process.env.NEXT_PUBLIC_TENANT_ID); config.headers['x-tenant-id'] = process.env.NEXT_PUBLIC_TENANT_ID || 'ibaoeste';
-    
+    let tenantId = process.env.NEXT_PUBLIC_TENANT_ID;
+    if (typeof window !== 'undefined' && !tenantId) {
+      if (window.location.hostname.includes('demo')) {
+        tenantId = 'demo';
+      }
+    }
+    config.headers['x-tenant-id'] = tenantId || 'ibaoeste';
     return config;
   },
   (error) => {
