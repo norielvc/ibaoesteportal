@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Eye, EyeOff, AlertCircle, ArrowLeft, Shield, Lock, Mail } from 'lucide-react';
 import { login } from '@/lib/auth';
@@ -11,6 +11,65 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+
+  const [tenantConfig, setTenantConfig] = useState({
+    name: "IBA O' ESTE PORTAL",
+    shortName: "Iba O' Este",
+    logo: "/logo.png",
+    colors: {
+      primary: "green-700",
+      primaryHover: "green-800",
+      primaryText: "text-green-600",
+      primaryGradient: "from-green-600 via-green-700 to-green-800",
+      bgGradient: "from-white via-green-50 to-green-100",
+      accentGradient: "from-green-600/10 via-transparent to-green-700/15",
+      bubble1: "from-green-200/30 to-green-300/20",
+      bubble2: "from-green-100/40 to-green-200/30",
+      border: "border-green-200",
+      focusRing: "focus:ring-green-600",
+      focusBorder: "focus:border-green-600",
+      btnGradient: "from-[#2d5a3d] to-[#112e1f]"
+    }
+  });
+
+  useEffect(() => {
+    let tenantId = 'ibaoeste';
+    if (typeof window !== 'undefined') {
+      if (window.location.hostname.includes('demo')) {
+        tenantId = 'demo';
+      } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenantParam = urlParams.get('tenant');
+        if (tenantParam) {
+          tenantId = tenantParam;
+        } else {
+          tenantId = localStorage.getItem('tenant_override') || 'ibaoeste';
+        }
+      }
+    }
+
+    if (tenantId === 'demo') {
+      setTenantConfig({
+        name: "DEMO PORTAL",
+        shortName: "Demo",
+        logo: "/calumpit.png",
+        colors: {
+          primary: "blue-700",
+          primaryHover: "blue-800",
+          primaryText: "text-blue-600",
+          primaryGradient: "from-blue-600 via-blue-700 to-blue-800",
+          bgGradient: "from-white via-blue-50 to-blue-100",
+          accentGradient: "from-blue-600/10 via-transparent to-blue-700/15",
+          bubble1: "from-blue-200/30 to-blue-300/20",
+          bubble2: "from-blue-100/40 to-blue-200/30",
+          border: "border-blue-200",
+          focusRing: "focus:ring-blue-600",
+          focusBorder: "focus:border-blue-600",
+          btnGradient: "from-[#1e3a8a] to-[#0f172a]"
+        }
+      });
+    }
+  }, []);
 
   const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
 
@@ -69,17 +128,17 @@ export default function Login() {
   return (
     <div className="h-screen overflow-hidden relative flex flex-col">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white via-green-50 to-green-100">
-        <div className="absolute inset-0 bg-gradient-to-tr from-green-600/10 via-transparent to-green-700/15" />
-        <div className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-green-200/30 to-green-300/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-gradient-to-br from-green-100/40 to-green-200/30 rounded-full blur-3xl" />
+      <div className={`absolute inset-0 bg-gradient-to-br ${tenantConfig.colors.bgGradient}`}>
+        <div className={`absolute inset-0 bg-gradient-to-tr ${tenantConfig.colors.accentGradient}`} />
+        <div className={`absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br ${tenantConfig.colors.bubble1} rounded-full blur-3xl`} />
+        <div className={`absolute -bottom-32 -left-32 w-64 h-64 bg-gradient-to-br ${tenantConfig.colors.bubble2} rounded-full blur-3xl`} />
       </div>
 
       {/* Top Nav */}
       <div className="relative z-20 px-6 py-3 flex-shrink-0">
         <button
           onClick={() => router.push('/')}
-          className="group inline-flex items-center gap-2 px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-full transition-all duration-300 shadow-md text-sm font-medium"
+          className={`group inline-flex items-center gap-2 px-4 py-2 bg-${tenantConfig.colors.primary} hover:bg-${tenantConfig.colors.primaryHover} text-white rounded-full transition-all duration-300 shadow-md text-sm font-medium`}
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Portal
@@ -96,15 +155,15 @@ export default function Login() {
               <div className="space-y-3">
                 <p className="text-gray-500 text-3xl font-black tracking-widest uppercase">BARANGAY</p>
                 <h1 className="text-6xl xl:text-7xl font-black leading-tight">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-green-700 to-green-800">
-                    IBA O&apos; ESTE<br />PORTAL
+                  <span className={`text-transparent bg-clip-text bg-gradient-to-r ${tenantConfig.colors.primaryGradient}`}>
+                    {tenantConfig.name}
                   </span>
                 </h1>
               </div>
 
-              <div className="w-36 h-1.5 bg-gradient-to-r from-green-600 to-green-800 rounded-full" />
+              <div className={`w-36 h-1.5 bg-gradient-to-r ${tenantConfig.colors.primaryGradient} rounded-full`} />
 
-              <div className="inline-flex items-center gap-3 px-6 py-3 bg-green-700 text-white rounded-full shadow-lg">
+              <div className={`inline-flex items-center gap-3 px-6 py-3 bg-${tenantConfig.colors.primary} text-white rounded-full shadow-lg`}>
                 <Shield className="w-5 h-5" />
                 <span className="text-base font-bold">SECURE PORTAL</span>
               </div>
@@ -117,13 +176,13 @@ export default function Login() {
             {/* Right — Login Card */}
             <div className="flex justify-center lg:justify-end">
               <div className="w-full max-w-sm">
-                <div className="bg-white/85 backdrop-blur-xl rounded-2xl shadow-2xl border border-green-200 p-6 space-y-4">
+                <div className={`bg-white/85 backdrop-blur-xl rounded-2xl shadow-2xl border ${tenantConfig.colors.border} p-6 space-y-4`}>
 
                   {/* Logo + Header */}
                   <div className="text-center">
                     <img
-                      src="/logo.png"
-                      alt="Iba O' Este Logo"
+                      src={tenantConfig.logo}
+                      alt="Barangay Logo"
                       className="w-14 h-14 object-contain drop-shadow-md mx-auto mb-2"
                     />
                     <h2 className="text-2xl font-bold text-gray-800">Welcome Back</h2>
@@ -150,7 +209,7 @@ export default function Login() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required
-                          className="w-full pl-10 pr-3 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-all text-gray-900 placeholder-gray-400 text-sm"
+                          className={`w-full pl-10 pr-3 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 ${tenantConfig.colors.focusRing} ${tenantConfig.colors.focusBorder} transition-all text-gray-900 placeholder-gray-400 text-sm`}
                           placeholder="Enter your email"
                         />
                       </div>
@@ -168,7 +227,7 @@ export default function Login() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
-                          className="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-all text-gray-900 placeholder-gray-400 text-sm"
+                          className={`w-full pl-10 pr-10 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 ${tenantConfig.colors.focusRing} ${tenantConfig.colors.focusBorder} transition-all text-gray-900 placeholder-gray-400 text-sm`}
                           placeholder="Enter your password"
                         />
                         <button
@@ -188,13 +247,13 @@ export default function Login() {
                           type="checkbox"
                           checked={rememberMe}
                           onChange={(e) => setRememberMe(e.target.checked)}
-                          className="w-3.5 h-3.5 text-green-700 bg-white border-gray-300 rounded focus:ring-green-600"
+                          className={`w-3.5 h-3.5 text-${tenantConfig.colors.primary} bg-white border-gray-300 rounded ${tenantConfig.colors.focusRing}`}
                         />
                         <span className="ml-2 text-xs text-gray-600">Remember me</span>
                       </label>
                       <button
                         type="button"
-                        className="text-xs text-green-700 hover:text-green-900 font-medium transition-colors"
+                        className={`text-xs text-${tenantConfig.colors.primary} hover:opacity-80 font-medium transition-colors`}
                       >
                         Forgot password?
                       </button>
@@ -204,7 +263,7 @@ export default function Login() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="group relative w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 rounded-xl font-bold text-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl disabled:cursor-not-allowed overflow-hidden mt-1"
+                      className={`group relative w-full bg-gradient-to-r ${tenantConfig.colors.primaryGradient} disabled:from-gray-400 disabled:to-gray-500 text-white py-3 rounded-xl font-bold text-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl disabled:cursor-not-allowed overflow-hidden mt-1`}
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                       <span className="relative flex items-center justify-center gap-2">
@@ -241,10 +300,9 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Bottom Footer */}
       <div className="relative z-10 flex-shrink-0 text-center py-2 px-6">
         <p className="text-gray-500 text-xs">
-          © 2026 Barangay Iba O&apos; Este, Calumpit, Bulacan. All rights reserved.
+          &copy; 2026 {tenantConfig.name}. All rights reserved.
         </p>
       </div>
     </div>

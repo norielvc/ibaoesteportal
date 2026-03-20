@@ -53,7 +53,7 @@ export default function BarangayPortal() {
         name: "DEMO BARANGAY PORTAL",
         shortName: "Demo Barangay",
         subtitle: "Sample Municipality, Philippines",
-        logo: "/logo.png",
+        logo: "/calumpit.png",
         colorStyle: { background: 'linear-gradient(to right, #1e3a8a, #0f172a)' } // Blue to dark slate
       });
     } else {
@@ -1971,7 +1971,7 @@ export default function BarangayPortal() {
                     </div>
                     <div>
                       <p className="text-white font-medium">Address</p>
-                      <p className="text-green-200">Brgy. Iba O' Este, Calumpit, Bulacan</p>
+                      <p className="text-green-200">{tenantConfig.subtitle}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
