@@ -42,7 +42,11 @@ export default function Login() {
 
       if (data.success) {
         login(data.data.token, data.data.user);
-        router.push('/dashboard');
+        if (data.data.user?.role === 'SuperAdmin') {
+          router.push('/superadmin');
+        } else {
+          router.push('/dashboard');
+        }
       } else {
         setError(data.message || 'Login failed');
       }
