@@ -21,7 +21,47 @@ import SamePersonCertificateModal from '@/components/Forms/SamePersonCertificate
 export default function BarangayPortal() {
   // Version Check Log
   useEffect(() => {
-    console.log('🚀 Barangay Portal Loaded: Version 2.1 (Synced Officials)');
+    console.log('🚀 Barangay Portal Loaded: Version 2.2 (Multi-Tenant Branding)');
+  }, []);
+
+  const [tenantConfig, setTenantConfig] = useState({
+    name: "IBA O' ESTE PORTAL",
+    subtitle: "Calumpit, Bulacan",
+    logo: "/logo.png",
+    colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' }
+  });
+
+  useEffect(() => {
+    let tenantId = 'ibaoeste';
+    if (typeof window !== 'undefined') {
+      if (window.location.hostname.includes('demo')) {
+        tenantId = 'demo';
+      } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenantParam = urlParams.get('tenant');
+        if (tenantParam) {
+          tenantId = tenantParam;
+        } else {
+          tenantId = localStorage.getItem('tenant_override') || 'ibaoeste';
+        }
+      }
+    }
+
+    if (tenantId === 'demo') {
+      setTenantConfig({
+        name: "DEMO BARANGAY PORTAL",
+        subtitle: "Sample Municipality, Philippines",
+        logo: "/logo.png",
+        colorStyle: { background: 'linear-gradient(to right, #1e3a8a, #0f172a)' } // Blue to dark slate
+      });
+    } else {
+      setTenantConfig({
+        name: "IBA O' ESTE PORTAL",
+        subtitle: "Calumpit, Bulacan",
+        logo: "/logo.png",
+        colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' }
+      });
+    }
   }, []);
 
   const router = useRouter();
@@ -618,17 +658,17 @@ export default function BarangayPortal() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Large Portal Header with Date/Time and Weather */}
-      <div className="bg-gradient-to-r from-[#004700] to-[#001a00] py-2 md:py-3">
+      <div className="py-2 md:py-3" style={tenantConfig.colorStyle}>
         <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-6">
           {/* Left Side - Logo and Title */}
           <div className="flex items-center gap-3 md:gap-4">
-            <img src="/logo.png" alt="Iba O' Este Logo" className="h-12 w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 object-contain drop-shadow-2xl" />
+            <img src={tenantConfig.logo} alt="Barangay Logo" className="h-12 w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 object-contain drop-shadow-2xl bg-white rounded-full p-1" />
             <div className="text-center md:text-left">
               <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
-                IBA O' ESTE PORTAL
+                {tenantConfig.name}
               </h1>
-              <p className="text-xs md:text-sm lg:text-base text-green-100 font-medium mt-0.5">
-                Calumpit, Bulacan
+              <p className="text-xs md:text-sm lg:text-base text-gray-200 font-medium mt-0.5">
+                {tenantConfig.subtitle}
               </p>
             </div>
           </div>
