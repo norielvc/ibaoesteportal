@@ -9,38 +9,7 @@ import { getAuthToken } from '@/lib/auth';
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
 
-const defaultAchievements = [
-    {
-        id: 1,
-        title: 'Best in Public Safety',
-        category: 'Community Safety',
-        description: 'Recognized for the lowest crime rate in the municipality and unparalleled rapid response of the Barangay Tanods and safety patrols.',
-        year: '2025',
-        image: 'https://images.unsplash.com/photo-1533481405265-e9ce0c044abb?auto=format&fit=crop&q=80&w=800',
-        color_class: 'bg-red-500',
-        text_color: 'red-400'
-    },
-    {
-        id: 2,
-        title: 'Excellence in Healthcare',
-        category: 'Health Service',
-        description: 'Awarded for the continuous deployment of mobile clinics, free check-ups, and maternal care support for marginalized sectors.',
-        year: '2024',
-        image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800',
-        color_class: 'bg-pink-500',
-        text_color: 'pink-400'
-    },
-    {
-        id: 3,
-        title: 'Champion in Youth Development',
-        category: 'Youth Council',
-        description: 'Honored for establishing local sports tournaments, skill-building workshops, and broad educational assistance distribution.',
-        year: '2025',
-        image: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=800',
-        color_class: 'bg-purple-500',
-        text_color: 'purple-400'
-    }
-];
+const defaultAchievements = [];
 
 const colorOptions = [
     { name: 'Red', value: 'bg-red-500', text: 'red-400' },
@@ -83,14 +52,14 @@ export default function AchievementsPage() {
             const response = await fetch(`${API_URL}/achievements`);
             const data = await response.json();
 
-            if (data.success && data.data.length > 0) {
-                setAchievements(data.data);
+            if (data.success) {
+                setAchievements(data.data || []);
             } else {
-                setAchievements(defaultAchievements);
+                setAchievements([]);
             }
         } catch (error) {
             console.error('Error fetching achievements:', error);
-            setAchievements(defaultAchievements);
+            setAchievements([]);
         } finally {
             setLoading(false);
         }

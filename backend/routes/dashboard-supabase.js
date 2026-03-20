@@ -11,7 +11,8 @@ const router = express.Router();
  */
 router.get('/stats', requireAdmin, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     // Get all users
     const { data: allUsers, error: usersError } = await supabase
       .from('users')
@@ -179,7 +180,8 @@ router.get('/stats', requireAdmin, async (req, res) => {
  */
 router.get('/analytics', requireAdmin, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { period = '30d' } = req.query;
     
     const { data: allUsers, error: usersError } = await supabase
@@ -276,7 +278,8 @@ router.get('/analytics', requireAdmin, async (req, res) => {
  */
 router.get('/certificate-analytics', authenticateToken, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { data: requests, error } = await supabase
       .from('certificate_requests')
       .select('id, certificate_type, status, created_at, updated_at, applicant_name, reference_number, current_step')

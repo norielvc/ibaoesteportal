@@ -36,7 +36,9 @@ api.interceptors.request.use(
         }
       }
     }
-    config.headers['x-tenant-id'] = tenantId || 'ibaoeste';
+    if (tenantId) {
+      config.headers['x-tenant-id'] = tenantId;
+    }
     return config;
   },
   (error) => {

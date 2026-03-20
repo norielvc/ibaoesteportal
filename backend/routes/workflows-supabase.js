@@ -55,7 +55,8 @@ const getWorkflowsFromDB = async (tenantId) => {
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const workflows = await getWorkflowsFromDB(tenantId);
     console.log(`Workflows loaded from DB for tenant ${tenantId}:`, Object.keys(workflows));
 
@@ -79,7 +80,8 @@ router.get('/', authenticateToken, async (req, res) => {
  */
 router.put('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { workflows } = req.body;
 
     if (!workflows || typeof workflows !== 'object') {
@@ -149,7 +151,8 @@ router.put('/', authenticateToken, requireAdmin, async (req, res) => {
  */
 router.post('/sync-assignments', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     console.log(`=== SYNCING WORKFLOW ASSIGNMENTS FOR TENANT ${tenantId} ===`);
 
     // Load current workflows from DB

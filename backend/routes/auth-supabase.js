@@ -35,7 +35,7 @@ router.post('/login', validateLogin, async (req, res) => {
     }
 
     // Set the actual tenant ID from the found user record
-    const actualTenantId = users.tenant_id || 'ibaoeste';
+    const actualTenantId = users.tenant_id || req.user?.tenant_id;
     console.log(`User found! Belonging to tenant: ${actualTenantId}`);
 
     // Check if account is active
@@ -133,7 +133,8 @@ router.post('/logout', authenticateToken, async (req, res) => {
  */
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     let user = null;
     let error = null;
 
@@ -202,7 +203,8 @@ router.get('/me', authenticateToken, async (req, res) => {
  */
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { firstName, lastName, email } = req.body;
     const userId = req.user._id;
 

@@ -107,10 +107,10 @@ export default function FacilitiesPage() {
       const response = await fetch(`${API_URL}/facilities`);
       const data = await response.json();
 
-      if (data.success && data.data.length > 0) {
-        setFacilities(data.data);
+      if (data.success) {
+        setFacilities(data.data || []);
       } else {
-        setFacilities(defaultFacilities);
+        setFacilities([]);
       }
     } catch (error) {
       console.error('Error fetching facilities:', error);

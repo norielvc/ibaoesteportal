@@ -36,10 +36,12 @@ router.get('/stats', authenticateToken, async (req, res) => {
     const endOfDay = new Date(startOfDay);
     endOfDay.setDate(endOfDay.getDate() + 1);
 
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
     // Get today's scans count
     const { count: todayCount, error: todayError } = await supabase
       .from('qr_scans')
       .select('*', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .gte('scan_timestamp', startOfDay.toISOString())
       .lt('scan_timestamp', endOfDay.toISOString());
 
@@ -50,7 +52,8 @@ router.get('/stats', authenticateToken, async (req, res) => {
     // Get total scans count
     const { count: totalCount, error: totalError } = await supabase
       .from('qr_scans')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId); // MULTI-TENANT FILTER
 
     if (totalError) {
       console.error('❌ Error getting total count:', totalError);
@@ -78,12 +81,14 @@ router.get('/recent', authenticateToken, async (req, res) => {
   try {
     const { limit = 10 } = req.query;
 
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
     const { data, error } = await supabase
       .from('qr_scans')
       .select(`
         *,
         users:scanned_by(id, email, first_name, last_name)
       `)
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .order('scan_timestamp', { ascending: false })
       .limit(parseInt(limit));
 
@@ -182,6 +187,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const parsedData = parseQRData(qr_data);
 
     // Check if this QR code has already been scanned
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
     const { data: existingScan, error: checkError } = await supabase
       .from('qr_scans')
       .select(`
@@ -189,6 +195,7 @@ router.post('/', authenticateToken, async (req, res) => {
         users:scanned_by(id, email, first_name, last_name)
       `)
       .eq('qr_data', qr_data)
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -225,6 +232,7 @@ router.post('/', authenticateToken, async (req, res) => {
           scanner_type: scanner_type || 'mobile',
           device_info: device_info || {},
           scanned_by: user_id,
+          tenant_id: tenantId, // MULTI-TENANT ASSIGNMENT
           created_at: new Date().toISOString(),
           // Parsed fields for better reporting (must add columns to DB)
           parsed_household_id: parsedData?.household_id,
@@ -269,12 +277,14 @@ router.get('/', authenticateToken, async (req, res) => {
     const { page = 1, limit = 20, date, qr_data } = req.query;
     const offset = (page - 1) * limit;
 
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
     let query = supabase
       .from('qr_scans')
       .select(`
         *,
         users:scanned_by(id, email, first_name, last_name)
       `)
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .order('scan_timestamp', { ascending: false });
 
     // Filter by date if provided
@@ -329,13 +339,15 @@ router.get('/', authenticateToken, async (req, res) => {
 // GET /api/qr-scans/duplicates - Get duplicate QR scan attempts
 router.get('/duplicates', authenticateToken, async (req, res) => {
   try {
-    // Get all scans and find duplicates in JavaScript
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    // Get all scans for this tenant and find duplicates in JavaScript
     const { data: allScans, error: allScansError } = await supabase
       .from('qr_scans')
       .select(`
         *,
         users:scanned_by(id, email, first_name, last_name)
       `)
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .order('scan_timestamp', { ascending: false });
 
     if (allScansError) {
@@ -408,12 +420,12 @@ router.get('/duplicates', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`🗑️ Deleting QR scan ID: ${id}`);
-
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
     const { error } = await supabase
       .from('qr_scans')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('tenant_id', tenantId); // MULTI-TENANT FILTER
 
     if (error) {
       console.error('❌ Error deleting QR scan:', error);
@@ -444,11 +456,11 @@ router.delete('/', authenticateToken, async (req, res) => {
     //   return res.status(403).json({ success: false, error: 'Unauthorized' });
     // }
 
-    console.log('🗑️ Clearing all QR scan history...');
-
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
     const { error } = await supabase
       .from('qr_scans')
       .delete()
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .neq('id', 0); // Delete all rows where id is not 0 (effectively all rows)
 
     if (error) {

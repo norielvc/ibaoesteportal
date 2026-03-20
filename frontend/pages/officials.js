@@ -7,27 +7,27 @@ const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api')
 
 // Default officials data
 const defaultOfficials = {
-  chairman: 'ALEXANDER C. MANIO',
-  secretary: 'ROYCE ANN C. GALVEZ',
-  treasurer: 'MA. LUZ S. REYES',
-  skChairman: 'JOHN RUZZEL C. SANTOS',
+  chairman: '[CHAIRMAN NAME]',
+  secretary: '[SECRETARY NAME]',
+  treasurer: '[TREASURER NAME]',
+  skChairman: '[SK CHAIRMAN NAME]',
   skSecretary: '',
   skTreasurer: '',
   skKagawads: ['', '', '', '', '', '', '', ''],
   councilors: [
-    'JOELITO C. MANIO',
-    'ENGELBERT M. INDUCTIVO',
-    'NORMANDO T. SANTOS',
-    'JOPHET M. TURLA',
-    'JOHN BRYAN C. CRUZ',
-    'ARNEL D. BERNARDINO',
-    'LORENA G. LOPEZ'
+    '[KAGAWAD 1]',
+    '[KAGAWAD 2]',
+    '[KAGAWAD 3]',
+    '[KAGAWAD 4]',
+    '[KAGAWAD 5]',
+    '[KAGAWAD 6]',
+    '[KAGAWAD 7]'
   ],
-  administrator: 'ROBERT D. SANTOS',
-  assistantSecretary: 'PERLITA C. DE JESUS',
-  assistantAdministrator: 'KHINZ JANZL V. BARROGA',
-  recordKeeper: 'EMIL D. ROBLES',
-  clerk: 'CIELITO B. DE LEON',
+  administrator: '[ADMINISTRATOR NAME]',
+  assistantSecretary: '',
+  assistantAdministrator: '',
+  recordKeeper: '',
+  clerk: '',
 
   officialImages: {
     chairman: '', secretary: '', treasurer: '', skChairman: '',
@@ -38,51 +38,43 @@ const defaultOfficials = {
     recordKeeper: '', clerk: ''
   },
   descriptions: {
-    chairman: 'Detailed leader committed to serving the community.',
-    secretary: 'Responsible for maintaining barangay records.',
-    treasurer: 'Manages barangay funds and financial records.',
-    skChairman: 'Leading the youth towards a better future.',
-    skSecretary: 'Keeps minutes and records of SK meetings.',
-    skTreasurer: 'Handles SK funds and financial reports.',
+    chairman: 'Punong Barangay',
+    secretary: 'Barangay Secretary',
+    treasurer: 'Barangay Treasurer',
+    skChairman: 'Sangguniang Kabataan Chairman',
+    skSecretary: 'SK Secretary',
+    skTreasurer: 'SK Treasurer',
     councilors: Array(7).fill('Brgy. Kagawad'),
     skKagawads: Array(8).fill('SK Kagawad'),
-    administrator: 'Oversees day-to-day operations.',
-    assistantSecretary: 'Assists the Barangay Secretary.',
-    assistantAdministrator: 'Assists the Barangay Administrator.',
-    recordKeeper: 'Maintains official barangay documents.',
-    clerk: 'Assists with clerical work and documentation.'
+    administrator: 'Barangay Administrator',
+    assistantSecretary: 'Assistant Secretary',
+    assistantAdministrator: 'Assistant Administrator',
+    recordKeeper: 'Record Keeper',
+    clerk: 'Barangay Clerk'
   },
   committees: {
-    councilors: [
-      'Committee on Peace & Order',
-      'Committee on Infrastructure',
-      'Committee on Health',
-      'Committee on Education',
-      'Committee on Agriculture',
-      'Committee on Environment',
-      'Committee on Appropriation'
-    ],
-    skKagawads: Array(8).fill('Youth Comittee')
+    councilors: Array(7).fill('Unassigned Committee'),
+    skKagawads: Array(8).fill('Youth Committee')
   },
   contactInfo: {
-    address: 'Purok 2 (Sitio Banawe) Barangay Iba O\' Este, Calumpit, Bulacan',
-    contactPerson: 'Sec. Royce Ann C. Galvez',
-    telephone: '0967 631 9168',
-    email: 'anneseriousme@gmail.com'
+    address: '[BARANGAY ADDRESS]',
+    contactPerson: '[CONTACT PERSON]',
+    telephone: '[TELEPHONE]',
+    email: '[EMAIL ADDRESS]'
   },
   headerInfo: {
     country: 'Republic of the Philippines',
-    province: 'Province of Bulacan',
-    municipality: 'Municipality of Calumpit',
-    barangayName: 'BARANGAY IBA O\' ESTE',
+    province: '[PROVINCE]',
+    municipality: '[MUNICIPALITY]',
+    barangayName: 'BARANGAY [NAME]',
     officeName: 'Office of the Punong Barangay'
   },
   // Logos
   logos: {
-    leftLogo: '/iba-o-este.png',
-    rightLogo: '/calumpit.png',
+    leftLogo: '',
+    rightLogo: '',
     logoSize: 115,
-    captainImage: '/images/brgycaptain.png'
+    captainImage: ''
   },
   // Header Style - General
   headerStyle: {
@@ -125,11 +117,11 @@ const defaultOfficials = {
   },
   heroSection: {
     title: 'BARANGAY OFFICIALS',
-    subtitle: 'Meet our dedicated team serving Iba O\' Este',
-    image: '/images/barangay-officials.jpg'
+    subtitle: 'Meet our dedicated team',
+    image: ''
   },
-  vision: 'A premier, God-fearing, and empowered barangay with sustainable environment and progressive economy under a transparent and accountable governance.',
-  mission: 'To provide quality basic services, ensure public safety, and promote the general welfare of our constituents through participatory leadership.',
+  vision: 'Enter Barangay Vision here...',
+  mission: 'Enter Barangay Mission here...',
   visibility: {
     section: true,
     chairman: true, secretary: true, treasurer: true, skChairman: true,

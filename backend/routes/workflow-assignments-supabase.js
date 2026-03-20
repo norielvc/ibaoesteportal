@@ -18,7 +18,8 @@ router.get('/active-assignment/:requestId', authenticateToken, async (req, res) 
       return res.status(400).json({ success: false, message: 'Invalid Request ID' });
     }
 
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     // 1. First, check for existing pending assignments
     let { data: assignments, error } = await supabase
       .from('workflow_assignments')
@@ -155,7 +156,8 @@ const handleSupabaseError = (res, error, context) => {
 // Get workflow assignments for a specific user
 router.get('/user/:userId', authenticateToken, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { userId } = req.params;
     const { status } = req.query;
 
@@ -218,7 +220,8 @@ router.get('/user/:userId', authenticateToken, async (req, res) => {
 // Get all requests assigned to a user (for "My Assignments" view)
 router.get('/my-assignments', authenticateToken, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const userId = req.user._id;
     const { status = 'pending' } = req.query;
 
@@ -301,7 +304,8 @@ router.get('/my-assignments', authenticateToken, async (req, res) => {
 // Update workflow assignment status (approve, reject, etc.)
 router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { assignmentId } = req.params;
     const { action, comment, signatureData } = req.body;
     const userId = req.user._id;
@@ -609,7 +613,8 @@ router.put('/:assignmentId/status', authenticateToken, async (req, res) => {
 // Add an internal note to a request
 router.post('/add-note', authenticateToken, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { requestId, requestType, comment, stepId, stepName } = req.body;
     const userId = req.user._id;
 

@@ -57,6 +57,7 @@ router.post('/', authenticateToken, async (req, res) => {
           scanner_type: scanner_type || 'mobile',
           device_info: device_info || {},
           scanned_by: user_id,
+          tenant_id: req.user?.tenant_id || req.headers['x-tenant-id'], // MULTI-TENANT ASSIGNMENT
           created_at: new Date().toISOString()
         }
       ])
@@ -95,12 +96,14 @@ router.get('/', authenticateToken, async (req, res) => {
     const { page = 1, limit = 50, date, qr_data } = req.query;
     const offset = (page - 1) * limit;
 
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
     let query = supabase
       .from('employee_scans')
       .select(`
         *,
         users:scanned_by(id, email, first_name, last_name)
       `)
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .order('scan_timestamp', { ascending: false });
 
     // Filter by date if provided
@@ -160,10 +163,12 @@ router.get('/stats', authenticateToken, async (req, res) => {
     const endOfDay = new Date(startOfDay);
     endOfDay.setDate(endOfDay.getDate() + 1);
 
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
     // Get today's scans count
     const { count: todayCount, error: todayError } = await supabase
       .from('employee_scans')
       .select('*', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .gte('scan_timestamp', startOfDay.toISOString())
       .lt('scan_timestamp', endOfDay.toISOString());
 
@@ -174,7 +179,8 @@ router.get('/stats', authenticateToken, async (req, res) => {
     // Get total scans count
     const { count: totalCount, error: totalError } = await supabase
       .from('employee_scans')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId); // MULTI-TENANT FILTER
 
     if (totalError) {
       console.error('❌ Error getting total count:', totalError);
@@ -188,6 +194,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
     const { count: weekCount, error: weekError } = await supabase
       .from('employee_scans')
       .select('*', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .gte('scan_timestamp', startOfWeek.toISOString());
 
     if (weekError) {
@@ -198,6 +205,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
     const { data: uniqueToday, error: uniqueError } = await supabase
       .from('employee_scans')
       .select('qr_data')
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .gte('scan_timestamp', startOfDay.toISOString())
       .lt('scan_timestamp', endOfDay.toISOString());
 
@@ -232,12 +240,15 @@ router.get('/recent', authenticateToken, async (req, res) => {
   try {
     const { limit = 10 } = req.query;
 
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { data, error } = await supabase
       .from('employee_scans')
       .select(`
         *,
         users:scanned_by(id, email, first_name, last_name)
       `)
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .order('scan_timestamp', { ascending: false })
       .limit(parseInt(limit));
 
@@ -268,10 +279,12 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
     const { error } = await supabase
       .from('employee_scans')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('tenant_id', tenantId); // MULTI-TENANT FILTER
 
     if (error) {
       console.error('❌ Error deleting scan:', error);

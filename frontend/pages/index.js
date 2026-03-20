@@ -25,15 +25,15 @@ export default function BarangayPortal() {
   }, []);
 
   const [tenantConfig, setTenantConfig] = useState({
-    name: "IBA O' ESTE PORTAL",
-    shortName: "Iba O' Este",
-    subtitle: "Calumpit, Bulacan",
+    name: "BARANGAY PORTAL",
+    shortName: "Barangay",
+    subtitle: "Public Information and Service Center",
     logo: "/logo.png",
     colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' }
   });
 
   useEffect(() => {
-    let tenantId = 'ibaoeste';
+    let tenantId = '';
     if (typeof window !== 'undefined') {
       if (window.location.hostname.includes('demo')) {
         tenantId = 'demo';
@@ -43,7 +43,7 @@ export default function BarangayPortal() {
         if (tenantParam) {
           tenantId = tenantParam;
         } else {
-          tenantId = localStorage.getItem('tenant_override') || 'ibaoeste';
+          tenantId = localStorage.getItem('tenant_override');
         }
       }
     }
@@ -54,15 +54,24 @@ export default function BarangayPortal() {
         shortName: "Demo Barangay",
         subtitle: "Sample Municipality, Philippines",
         logo: "/calumpit.png",
-        colorStyle: { background: 'linear-gradient(to right, #1e3a8a, #0f172a)' } // Blue to dark slate
+        colorStyle: { background: 'linear-gradient(to right, #1e3a8a, #0f172a)' }
       });
-    } else {
+    } else if (tenantId === 'ibaoeste') {
       setTenantConfig({
         name: "IBA O' ESTE PORTAL",
         shortName: "Iba O' Este",
         subtitle: "Calumpit, Bulacan",
         logo: "/logo.png",
         colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' }
+      });
+    } else {
+      // Default Generic Branding
+      setTenantConfig({
+        name: "BARANGAY PORTAL",
+        shortName: "Barangay",
+        subtitle: "Local Government Unit Hub",
+        logo: "/logo.png",
+        colorStyle: { background: 'linear-gradient(to right, #1a1a1a, #0a0a0a)' }
       });
     }
   }, []);

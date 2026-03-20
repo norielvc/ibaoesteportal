@@ -9,32 +9,7 @@ import { getAuthToken } from '@/lib/auth';
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
 
-const defaultEvents = [
-  {
-    id: 1,
-    title: 'Barangay Clean-Up Drive 2026',
-    description: 'Join us this Saturday for our monthly community clean-up initiative. Together, we can keep Iba O\' Este beautiful!',
-    body: 'Every first Saturday of the month, the residents of Barangay Iba O\' Este come together for our Community Clean-Up Drive. This initiative aims to maintain the cleanliness and beauty of our streets, canals, and public spaces. All residents are encouraged to participate. Bring your own gloves and trash bags. Refreshments will be provided by the Barangay.',
-    image: '/background.jpg',
-    date: 'January 5, 2026'
-  },
-  {
-    id: 2,
-    title: 'Free Medical Mission',
-    description: 'Free check-ups, medicines, and health consultations for all residents. Bring your Barangay ID.',
-    body: 'In partnership with the Municipal Health Office, Barangay Iba O\' Este is offering a Free Medical Mission open to all registered residents. Services include general check-ups, blood pressure monitoring, blood sugar testing, free medicines, and dental consultations. Residents are advised to bring their Barangay ID and arrive early as slots are limited.',
-    image: '/background.jpg',
-    date: 'January 10, 2026'
-  },
-  {
-    id: 3,
-    title: 'Livelihood Training Program',
-    description: 'Register now for free skills training in food processing, handicrafts, and more!',
-    body: 'The Barangay Livelihood Office is now accepting registrations for its free skills training program. Courses offered include food processing, handicrafts, basic electrical, and automotive mechanics. The training is open to all residents aged 18 and above. Classes will run for 2 weeks, Monday to Friday from 8:00 AM to 5:00 PM. Registration is on a first-come, first-served basis. Visit the Barangay Hall to sign up.',
-    image: '/background.jpg',
-    date: 'January 15, 2026'
-  }
-];
+const defaultEvents = [];
 
 export default function EventsPage() {
   const [events, setEvents] = useState([]);
@@ -69,11 +44,11 @@ export default function EventsPage() {
       if (data.success && data.data.length > 0) {
         setEvents(data.data);
       } else {
-        setEvents(defaultEvents);
+        setEvents([]);
       }
     } catch (error) {
       console.error('Error fetching events:', error);
-      setEvents(defaultEvents);
+      setEvents([]);
     } finally {
       setLoading(false);
     }

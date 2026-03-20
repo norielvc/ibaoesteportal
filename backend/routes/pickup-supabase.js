@@ -7,12 +7,16 @@ const { supabase } = require('../services/supabaseClient');
 // Get all pickup records (authenticated)
 router.get('/all', authenticateToken, async (req, res) => {
   try {
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
+
     const { data: pickups, error } = await supabase
       .from('certificate_pickups')
       .select(`
         *,
         certificate_requests:request_id (*)
       `)
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .order('created_at', { ascending: false });
 
     if (error) throw error;

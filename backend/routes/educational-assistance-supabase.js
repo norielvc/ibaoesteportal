@@ -10,9 +10,13 @@ router.get('/', async (req, res) => {
 
     const { status, year_grade, limit = 50, offset = 0 } = req.query;
 
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
+
     let query = supabase
       .from('educational_assistance')
       .select('*')
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .order('submitted_at', { ascending: false });
 
     // Apply filters if provided
@@ -341,10 +345,13 @@ router.patch('/:id/status', async (req, res) => {
 router.get('/stats/summary', async (req, res) => {
   try {
     console.log('Fetching application statistics...');
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
 
     const { data: stats, error } = await supabase
       .from('educational_assistance')
       .select('application_status, year_grade')
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .order('submitted_at', { ascending: false });
 
     if (error) {

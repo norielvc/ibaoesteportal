@@ -95,7 +95,9 @@ router.get('/next-reference/:type', async (req, res) => {
     const year = new Date().getFullYear();
 
     // Get ALL records of this type for this year, ordered by reference_number descending
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
+    // Get ALL records of this type for this year, ordered by reference_number descending
     const { data: records, error } = await supabase
       .from('certificate_requests')
       .select('reference_number')
@@ -188,7 +190,8 @@ router.get('/next-reference/:type', async (req, res) => {
 // Get all certificate requests (with optional filters)
 router.get('/', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { type, status } = req.query;
     console.log(`Fetching certificates for tenant: ${tenantId} with filters:`, { type, status });
 
@@ -223,7 +226,8 @@ router.get('/', async (req, res) => {
 // Get single certificate request
 router.get('/:id', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { data, error } = await supabase
       .from('certificate_requests')
       .select(`
@@ -249,7 +253,8 @@ router.get('/:id', async (req, res) => {
 // Get certificate by reference number
 router.get('/reference/:refNumber', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { refNumber } = req.params;
     const { data, error } = await supabase
       .from('certificate_requests')
@@ -280,7 +285,8 @@ router.get('/reference/:refNumber', async (req, res) => {
 // Create new certificate request (Barangay Clearance)
 router.post('/clearance', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const {
       fullName, first_name, middle_name, last_name, suffix,
       age, sex, civilStatus, address, contactNumber,
@@ -434,7 +440,8 @@ router.post('/clearance', async (req, res) => {
 // Create new certificate request (Certificate of Indigency)
 router.post('/indigency', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     console.log('--- INDIGENCY REQUEST START ---');
     console.log('Body:', JSON.stringify(req.body, null, 2));
     const {
@@ -588,7 +595,8 @@ router.post('/indigency', async (req, res) => {
 // Create new certificate request (Barangay Residency)
 router.post('/residency', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const {
       fullName, first_name, middle_name, last_name, suffix,
       age, sex, civilStatus, address, contactNumber,
@@ -727,7 +735,8 @@ router.post('/residency', async (req, res) => {
 // Create new certificate request (Natural Death Certificate)
 router.post('/natural-death', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const {
       fullName, age, sex, civilStatus, address, contactNumber,
       dateOfDeath, causeOfDeath, covidRelated, requestorName, residentId
@@ -852,7 +861,8 @@ router.post('/natural-death', async (req, res) => {
 // Create new certificate request (Medico Legal Request)
 router.post('/medico-legal', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const {
       fullName, age, sex, civilStatus, address, contactNumber, dateOfBirth,
       dateOfExamination, usapingBarangay, dateOfHearing, residentId
@@ -979,7 +989,8 @@ router.post('/medico-legal', async (req, res) => {
 // Create new certificate request (Guardianship Certificate)
 router.post('/guardianship', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const {
       fullName, age, sex, civilStatus, address, contactNumber,
       dateOfBirth, guardianName, guardianRelationship, purpose, residentId, guardianId
@@ -1107,7 +1118,8 @@ router.post('/guardianship', async (req, res) => {
 // Create new certificate request (Co-habitation Certificate)
 router.post('/cohabitation', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const {
       fullName, age, gender, dateOfBirth, residentId,
       partnerFullName, partnerAge, partnerGender, partnerDateOfBirth, partnerResidentId,
@@ -1242,7 +1254,8 @@ router.post('/cohabitation', async (req, res) => {
 // Create new certificate request (Business Permit / Clearance)
 router.post('/business-permit', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const {
       ownerFullName, ownerAddress, residentId, businessName, natureOfBusiness,
       businessAddress, contactPerson, contactNumber, referenceNumber, applicationDate,
@@ -1359,7 +1372,8 @@ router.post('/business-permit', async (req, res) => {
 // Update certificate status (for admin)
 router.put('/:id/status', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { status, comment, action } = req.body;
     console.log(`Updating status for request ${req.params.id}:`, { status, action, comment });
 
@@ -1536,7 +1550,8 @@ router.put('/:id/status', async (req, res) => {
 // Update certificate details
 router.put('/:id', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { id } = req.params;
     const updateData = { ...req.body };
 
@@ -1606,7 +1621,8 @@ router.put('/:id', async (req, res) => {
 // Delete certificate request
 router.delete('/:id', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { error } = await supabase
       .from('certificate_requests')
       .delete()
@@ -1624,7 +1640,8 @@ router.delete('/:id', async (req, res) => {
 // Sync certificate request data to resident profile
 router.post('/:id/sync-resident', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { id } = req.params;
     const { adminId } = req.body;
 
@@ -1750,7 +1767,8 @@ router.get('/stats/summary', async (req, res) => {
 // Generic create endpoint for new certificate types
 router.post('/create', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { certificate_type } = req.body;
 
     if (certificate_type === 'certification_same_person') {

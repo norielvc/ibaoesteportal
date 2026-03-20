@@ -166,12 +166,16 @@ router.get('/request/:requestId', authenticateToken, async (req, res) => {
 // Get all Official Receipts
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
+
     const { data, error } = await supabase
       .from('official_receipts')
       .select(`
         *,
         certificate_requests!inner(reference_number, full_name, certificate_type)
       `)
+      .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
       .order('created_at', { ascending: false });
 
     if (error) throw error;

@@ -13,7 +13,7 @@ const router = express.Router();
  */
 router.get('/', requireAdmin, async (req, res) => {
   try {
-    let targetTenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    let targetTenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     const { search = '', role, status, tenant_id } = req.query;
 
     let query = supabase.from('users').select('*');
@@ -93,7 +93,8 @@ router.get('/', requireAdmin, async (req, res) => {
  */
 router.get('/:id', requireAdmin, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
@@ -144,7 +145,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
  */
 router.post('/', requireAdmin, validateUserCreation, async (req, res) => {
   try {
-    let targetTenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    let targetTenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     // If super admin specifies a different tenant, anchor to that
     if (req.user.role === 'superadmin' && req.body.tenant_id) {
        targetTenantId = req.body.tenant_id;
@@ -231,7 +232,8 @@ router.post('/', requireAdmin, validateUserCreation, async (req, res) => {
  */
 router.put('/:id/reset-password', requireAdmin, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const userId = req.params.id;
     const { newPassword } = req.body;
 
@@ -298,7 +300,7 @@ router.put('/:id/reset-password', requireAdmin, async (req, res) => {
  */
 router.put('/:id', requireAdmin, validateUserUpdate, async (req, res) => {
   try {
-    let targetTenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    let targetTenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     // If super admin specified a different tenant, anchor to that
     if (req.user.role === 'superadmin' && req.body.tenant_id) {
        targetTenantId = req.body.tenant_id;
@@ -403,7 +405,7 @@ router.put('/:id', requireAdmin, validateUserUpdate, async (req, res) => {
  */
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
-    let targetTenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    let targetTenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     if (req.user.role === 'superadmin' && req.query.tenant_id) {
        targetTenantId = req.query.tenant_id;
     }

@@ -109,7 +109,8 @@ const mapOfficialsToConfig = (officials) => {
 // GET Configuration (Officials + Settings)
 router.get('/config', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     // 1. Fetch Officials
     const { data: officials, error: officialsError } = await supabase
       .from('barangay_officials')
@@ -150,7 +151,8 @@ router.get('/config', async (req, res) => {
 // PUT Configuration (Update Officials + Settings)
 router.put('/config', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const config = req.body;
 
     // 1. Update Officials
@@ -271,7 +273,8 @@ router.put('/config', async (req, res) => {
 // Get all barangay officials (Original Endpoint)
 router.get('/', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     console.log('Fetching barangay officials...');
 
     const { data: officials, error } = await supabase
@@ -341,7 +344,8 @@ router.get('/', async (req, res) => {
 // Get officials by position type
 router.get('/by-type/:type', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { type } = req.params;
     console.log(`Fetching officials by type: ${type}`);
 
@@ -381,7 +385,8 @@ router.get('/by-type/:type', async (req, res) => {
 // Get single official by ID
 router.get('/:id', async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const { id } = req.params;
     console.log(`Fetching official with ID: ${id}`);
 
