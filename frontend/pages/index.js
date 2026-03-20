@@ -41,6 +41,20 @@ export default function BarangayPortal() {
     return process.env.NEXT_PUBLIC_TENANT_ID || 'ibaoeste';
   };
 
+  // Resilient API URL Discovery
+  const getApiUrl = () => {
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+    if (typeof window !== 'undefined') {
+      if (window.location.hostname.includes('railway.app')) {
+         // Guessing the backend URL based on standard Railway patterns
+         const backendHost = window.location.hostname.replace('frontend', 'backend');
+         return `https://${backendHost}/api`;
+      }
+    }
+    return 'http://localhost:5005/api';
+  };
+
+  const API_URL = getApiUrl().replace(/\/$/, '');
   const [tenantId, setTenantId] = useState(() => getInitialTenantId());
 
   useEffect(() => {
