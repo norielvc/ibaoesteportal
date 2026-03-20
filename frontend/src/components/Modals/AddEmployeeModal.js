@@ -65,6 +65,8 @@ export default function AddEmployeeModal({ onClose, onSubmit, isLoading: externa
     if (!formData.employeeCode) newErrors.employeeCode = 'Employee code is required';
     if (!/^[A-Z0-9]{3}$/.test(formData.employeeCode)) newErrors.employeeCode = 'Code must be exactly 3 alphanumeric capital letters';
     if (isSuperAdmin && !formData.tenant_id) newErrors.tenant_id = 'Please select a tenant';
+    
+    setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -237,7 +239,7 @@ export default function AddEmployeeModal({ onClose, onSubmit, isLoading: externa
                         name="role"
                         value={formData.role}
                         onChange={handleChange}
-                        className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all font-black text-gray-900 uppercase text-[10px] tracking-widest appearance-none cursor-pointer"
+                        className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all font-black text-gray-900 uppercase text-[10px] tracking-widest cursor-pointer hover:border-gray-200"
                       >
                         <option value="super_admin">Super Admin</option>
                         <option value="admin">Admin</option>
@@ -252,7 +254,7 @@ export default function AddEmployeeModal({ onClose, onSubmit, isLoading: externa
                         name="status"
                         value={formData.status}
                         onChange={handleChange}
-                        className="w-full px-5 py-4 bg-gray-100/50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-black text-emerald-700 uppercase text-[10px] tracking-widest appearance-none cursor-pointer"
+                        className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-black text-emerald-700 uppercase text-[10px] tracking-widest cursor-pointer hover:border-gray-200"
                       >
                         <option value="active">Active/Authorized</option>
                         <option value="inactive">Inactive</option>
@@ -270,7 +272,7 @@ export default function AddEmployeeModal({ onClose, onSubmit, isLoading: externa
                         name="tenant_id"
                         value={formData.tenant_id}
                         onChange={handleChange}
-                        className={`w-full px-5 py-4 bg-blue-50/50 border-2 rounded-2xl outline-none transition-all font-black text-gray-900 uppercase text-[10px] tracking-widest appearance-none cursor-pointer ${errors.tenant_id ? 'border-rose-500' : 'border-transparent focus:border-blue-500'}`}
+                        className={`w-full px-5 py-4 bg-blue-50/50 border-2 rounded-2xl outline-none transition-all font-black text-gray-900 uppercase text-[10px] tracking-widest cursor-pointer ${errors.tenant_id ? 'border-rose-500' : 'border-gray-100 focus:border-blue-500 hover:border-blue-200'}`}
                       >
                         <option value="">-- CHOOSE TENANT --</option>
                         {tenants.map(t => (
