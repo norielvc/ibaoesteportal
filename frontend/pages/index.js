@@ -26,6 +26,7 @@ export default function BarangayPortal() {
 
   const [tenantConfig, setTenantConfig] = useState({
     name: "IBA O' ESTE PORTAL",
+    shortName: "Iba O' Este",
     subtitle: "Calumpit, Bulacan",
     logo: "/logo.png",
     colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' }
@@ -50,6 +51,7 @@ export default function BarangayPortal() {
     if (tenantId === 'demo') {
       setTenantConfig({
         name: "DEMO BARANGAY PORTAL",
+        shortName: "Demo Barangay",
         subtitle: "Sample Municipality, Philippines",
         logo: "/logo.png",
         colorStyle: { background: 'linear-gradient(to right, #1e3a8a, #0f172a)' } // Blue to dark slate
@@ -57,6 +59,7 @@ export default function BarangayPortal() {
     } else {
       setTenantConfig({
         name: "IBA O' ESTE PORTAL",
+        shortName: "Iba O' Este",
         subtitle: "Calumpit, Bulacan",
         logo: "/logo.png",
         colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' }
@@ -112,7 +115,7 @@ export default function BarangayPortal() {
     },
     {
       title: 'Barangay Residency',
-      description: 'Certificate confirming your residence in Iba O\' Este for various requirements.',
+      description: `Certificate confirming your residence in ${tenantConfig.shortName} for various requirements.`,
       icon: Home,
       color: 'orange',
       features: ['Proof', 'Enrollment', 'ID'],
@@ -120,7 +123,7 @@ export default function BarangayPortal() {
     },
     {
       title: 'Business Permit',
-      description: 'Official permit to operate a business within Iba O\' Este barangay jurisdiction.',
+      description: `Official permit to operate a business within ${tenantConfig.shortName} barangay jurisdiction.`,
       icon: Building2,
       color: 'purple',
       features: ['New Business', 'Renewal', 'Transfer'],
@@ -193,7 +196,8 @@ export default function BarangayPortal() {
     setShowCohabitationModal,
     setShowMedicoLegalModal,
     setShowSamePersonModal,
-    setShowEducationalAssistanceModal
+    setShowEducationalAssistanceModal,
+    tenantConfig.shortName
   ]);
 
   // Responsive items per view for forms carousel
@@ -219,7 +223,7 @@ export default function BarangayPortal() {
   const defaultNewsItems = [
     {
       title: 'Barangay Clean-Up Drive 2026',
-      description: 'Join us this Saturday for our monthly community clean-up initiative. Together, we can keep Iba O\' Este beautiful!',
+      description: `Join us this Saturday for our monthly community clean-up initiative. Together, we can keep ${tenantConfig.shortName} beautiful!`,
       image: '/background.jpg',
       date: 'January 5, 2026'
     },
@@ -1537,7 +1541,7 @@ export default function BarangayPortal() {
               </div>
 
               <h4 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 leading-none uppercase tracking-tight">
-                Barangay Iba O' Este
+                {tenantConfig.name}
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-emerald-400 to-green-300">
                   Leadership Team
                 </span>
@@ -1561,7 +1565,7 @@ export default function BarangayPortal() {
                 Meet Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-950">Officials</span>
               </h5>
               <p className="text-gray-600 text-sm md:text-base font-bold max-w-2xl mx-auto uppercase tracking-[0.2em] leading-relaxed">
-                Dedicated leaders committed to serving the community of Iba O' Este with integrity and excellence
+                Dedicated leaders committed to serving the community of {tenantConfig.shortName} with integrity and excellence
               </p>
             </div>
 
@@ -1713,7 +1717,7 @@ export default function BarangayPortal() {
                                       <div className="p-8 text-center bg-white">
                                         <h4 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">{official.name}</h4>
                                         <p className="text-gray-600 text-base font-medium leading-relaxed italic line-clamp-3">
-                                          {official.description || `Leading Iba O' Este with vision, integrity, and a heartfelt commitment to serve every constituent with excellence.`}
+                                          {official.description || `Leading ${tenantConfig.shortName} with vision, integrity, and a heartfelt commitment to serve every constituent with excellence.`}
                                         </p>
                                       </div>
                                     </div>
@@ -1747,7 +1751,7 @@ export default function BarangayPortal() {
                                   <div className="mb-8">
                                     <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">SK Vision</h3>
                                     <p className="text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 border-orange-500 pl-6 py-2">
-                                      {`"An inspired youth community of Iba O' Este that is actively involved in community building, advocating for education, sports, and social responsibility while maintaining the highest level of integrity."`}
+                                      {`"An inspired youth community of ${tenantConfig.shortName} that is actively involved in community building, advocating for education, sports, and social responsibility while maintaining the highest level of integrity."`}
                                     </p>
                                   </div>
                                   <div>
@@ -1781,7 +1785,7 @@ export default function BarangayPortal() {
                                       <div className="p-8 text-center bg-white">
                                         <h4 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">{official.name}</h4>
                                         <p className="text-gray-600 text-base font-medium leading-relaxed italic line-clamp-3">
-                                          {official.description || `Empowering the youth of Iba O' Este through active participation, leadership development, and community-driven initiatives.`}
+                                          {official.description || `Empowering the youth of ${tenantConfig.shortName} through active participation, leadership development, and community-driven initiatives.`}
                                         </p>
                                       </div>
                                     </div>
