@@ -14,35 +14,15 @@ const router = express.Router();
  */
 router.post('/login', validateLogin, async (req, res) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
     const { email, password } = req.body;
-    console.log(`Login attempt for: ${email} on tenant: ${tenantId}`);
+    console.log(`Login attempt for: ${email}`);
 
-    // 1. First, search for the user globally by email
-    const { data: globalUserData, error: globalError } = await supabase
+    // 1. Search for the user globally by email across all tenants
+    const { data: users, error: fetchError } = await supabase
       .from('users')
       .select('*')
       .eq('email', email)
       .single();
-
-    let users = null;
-    let fetchError = null;
-
-    if (globalUserData && globalUserData.role === 'superadmin') {
-      // Super Admin found! They bypass the tenant lock.
-      users = globalUserData;
-      console.log('Super Admin Global Access granted for:', email);
-    } else {
-      // Not a super admin, enforce strict tenant filter
-      const { data: tenantUserData, error: tenantError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .eq('tenant_id', tenantId) // MULTI-TENANT FILTER
-        .single();
-      users = tenantUserData;
-      fetchError = tenantError;
-    }
 
     console.log('Supabase query result:', { users: users ? 'found' : 'not found', error: fetchError });
 
@@ -53,6 +33,10 @@ router.post('/login', validateLogin, async (req, res) => {
         message: 'Invalid email or password'
       });
     }
+
+    // Set the actual tenant ID from the found user record
+    const actualTenantId = users.tenant_id || 'ibaoeste';
+    console.log(`User found! Belonging to tenant: ${actualTenantId}`);
 
     // Check if account is active
     console.log('User status:', users.status);

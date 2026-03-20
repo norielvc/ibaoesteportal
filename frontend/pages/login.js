@@ -12,64 +12,28 @@ export default function Login() {
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-  const [tenantConfig, setTenantConfig] = useState({
-    name: "IBA O' ESTE PORTAL",
-    shortName: "Iba O' Este",
-    logo: "/logo.png",
+  const [tenantConfig] = useState({
+    name: "LGU HUB PORTAL",
+    shortName: "LGU Hub",
+    logo: "/lgu-hub-logo.png",
     colors: {
-      primary: "green-700",
-      primaryHover: "green-800",
-      primaryText: "text-green-600",
-      primaryGradient: "from-green-600 via-green-700 to-green-800",
-      bgGradient: "from-white via-green-50 to-green-100",
-      accentGradient: "from-green-600/10 via-transparent to-green-700/15",
-      bubble1: "from-green-200/30 to-green-300/20",
-      bubble2: "from-green-100/40 to-green-200/30",
-      border: "border-green-200",
-      focusRing: "focus:ring-green-600",
-      focusBorder: "focus:border-green-600",
-      btnGradient: "from-[#2d5a3d] to-[#112e1f]"
+      primary: "slate-800",
+      primaryHover: "black",
+      primaryText: "text-slate-700",
+      primaryGradient: "from-slate-700 via-slate-800 to-slate-900",
+      bgGradient: "from-white via-slate-50 to-slate-100",
+      accentGradient: "from-slate-600/10 via-transparent to-slate-700/15",
+      bubble1: "from-blue-200/20 to-indigo-300/10",
+      bubble2: "from-slate-100/40 to-blue-200/20",
+      border: "border-slate-200",
+      focusRing: "focus:ring-slate-600",
+      focusBorder: "focus:border-slate-600",
+      btnGradient: "from-[#1e293b] to-[#0f172a]"
     }
   });
 
-  useEffect(() => {
-    let tenantId = 'ibaoeste';
-    if (typeof window !== 'undefined') {
-      if (window.location.hostname.includes('demo')) {
-        tenantId = 'demo';
-      } else {
-        const urlParams = new URLSearchParams(window.location.search);
-        const tenantParam = urlParams.get('tenant');
-        if (tenantParam) {
-          tenantId = tenantParam;
-        } else {
-          tenantId = localStorage.getItem('tenant_override') || 'ibaoeste';
-        }
-      }
-    }
-
-    if (tenantId === 'demo') {
-      setTenantConfig({
-        name: "DEMO PORTAL",
-        shortName: "Demo",
-        logo: "/calumpit.png",
-        colors: {
-          primary: "blue-700",
-          primaryHover: "blue-800",
-          primaryText: "text-blue-600",
-          primaryGradient: "from-blue-600 via-blue-700 to-blue-800",
-          bgGradient: "from-white via-blue-50 to-blue-100",
-          accentGradient: "from-blue-600/10 via-transparent to-blue-700/15",
-          bubble1: "from-blue-200/30 to-blue-300/20",
-          bubble2: "from-blue-100/40 to-blue-200/30",
-          border: "border-blue-200",
-          focusRing: "focus:ring-blue-600",
-          focusBorder: "focus:border-blue-600",
-          btnGradient: "from-[#1e3a8a] to-[#0f172a]"
-        }
-      });
-    }
-  }, []);
+  // Unified login no longer needs to detect tenant ID from URL before logging in
+  // The backend will identify the correct tenant based on the email address.
 
   const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
 
@@ -79,29 +43,10 @@ export default function Login() {
     setError('');
 
     try {
-      // Get tenant ID dynamically
-      let tenantId = process.env.NEXT_PUBLIC_TENANT_ID;
-      if (typeof window !== 'undefined' && !tenantId) {
-        if (window.location.hostname.includes('demo')) {
-          tenantId = 'demo';
-        } else {
-          const urlParams = new URLSearchParams(window.location.search);
-          const tenantParam = urlParams.get('tenant');
-          if (tenantParam) {
-            localStorage.setItem('tenant_override', tenantParam);
-            tenantId = tenantParam;
-          } else {
-            tenantId = localStorage.getItem('tenant_override');
-          }
-        }
-      }
-      tenantId = tenantId || 'ibaoeste';
-
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'x-tenant-id': tenantId
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ email, password }),
       });
