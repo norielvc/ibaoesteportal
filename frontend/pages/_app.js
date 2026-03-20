@@ -31,13 +31,16 @@ export default function App({ Component, pageProps }) {
 
     const fallbackTenantId = getFallbackTenantId();
 
-    // 2. SECURE FETCH WRAPPER:
-    // This intercepts every single 'fetch' call to ensure correct Auth and Tenant context
     const originalFetch = window.fetch;
     window.fetch = async (resource, config = {}) => {
-      const backendUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005').replace(/\/$/, '');
-      const isInternalApi = typeof resource === 'string' && 
-        (resource.includes(backendUrl) || resource.startsWith('/api') || resource.includes('/auth/') || resource.includes('/dashboard/'));
+      // Determine if this is a call to our internal backend API
+      const isInternalApi = typeof resource === 'string' && (
+        resource.startsWith('/api') || 
+        resource.includes('/api/') || 
+        resource.includes('/auth/') || 
+        resource.includes('/dashboard/') ||
+        resource.includes('localhost:5005') // Keep for local dev
+      );
 
       if (isInternalApi) {
         config = config || {};
