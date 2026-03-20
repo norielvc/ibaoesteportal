@@ -151,8 +151,34 @@ const generateToken = (userId) => {
   );
 };
 
+/**
+ * Middleware that tries to authenticate a token but won't fail if it's missing.
+ * Useful for public routes that can ALSO be accessed by logged-in users.
+ */
+const optionalAuthenticateToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return next();
+  }
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { data: user } = await supabase.from('users').select('*').eq('id', decoded.userId).single();
+    if (user && user.status === 'active') {
+      req.user = { id: user.id, tenant_id: user.tenant_id, role: user.role };
+    }
+    next();
+  } catch (err) {
+    // If token is invalid, just proceed as public (it won't have req.user)
+    next();
+  }
+};
+
 module.exports = {
   authenticateToken,
+  optionalAuthenticateToken,
   requireAdmin,
   requireSuperAdmin,
   requireAdminOrOwner,

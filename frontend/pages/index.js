@@ -32,15 +32,20 @@ export default function BarangayPortal() {
     colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' }
   });
 
-  const [tenantId, setTenantId] = useState('ibaoeste');
-
   useEffect(() => {
+    let tId = 'ibaoeste';
     if (typeof window !== 'undefined') {
       const hostname = window.location.hostname;
-      if (hostname.includes('demo')) {
-        setTenantId('demo');
+      const urlParams = new URLSearchParams(window.location.search);
+      const tenantParam = urlParams.get('tenant');
+      
+      if (tenantParam) {
+        tId = tenantParam;
+      } else if (hostname.includes('demo')) {
+        tId = 'demo';
       }
     }
+    setTenantId(tId);
   }, []);
 
   useEffect(() => {

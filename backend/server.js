@@ -30,7 +30,7 @@ const tenantRoutes = require('./routes/tenants-supabase');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
-const { authenticateToken } = require('./middleware/auth-supabase');
+const { authenticateToken, optionalAuthenticateToken } = require('./middleware/auth-supabase');
 
 // Deployment Sync: 2026-03-19 19:39 - fix inline supabase createClient crash in routes
 
@@ -142,15 +142,15 @@ app.use('/api/official-receipts/files', express.static(path.join(__dirname, 'gen
 app.use('/api/certificates/files', express.static(path.join(__dirname, 'generated-certificates')));
 app.use('/api/official-receipts', authenticateToken, officialReceiptRoutes); 
 app.use('/api/residents', authenticateToken, residentRoutes); 
-app.use('/api/achievements', achievementRoutes); 
-app.use('/api/programs', programRoutes); 
+app.use('/api/achievements', optionalAuthenticateToken, achievementRoutes); 
+app.use('/api/programs', optionalAuthenticateToken, programRoutes); 
 app.use('/api/tenants', authenticateToken, tenantRoutes); 
-app.use('/api/officials', officialRoutes); 
+app.use('/api/officials', optionalAuthenticateToken, officialRoutes); 
 app.use('/api/certificates', authenticateToken, certificateRoutes); 
 app.use('/api/workflows', authenticateToken, workflowRoutes); 
 app.use('/api/workflow-assignments', authenticateToken, workflowAssignmentRoutes); 
-app.use('/api/events', eventRoutes); 
-app.use('/api/facilities', facilityRoutes); 
+app.use('/api/events', optionalAuthenticateToken, eventRoutes); 
+app.use('/api/facilities', optionalAuthenticateToken, facilityRoutes); 
 app.use('/api/pickup', pickupRoutes); 
 app.use('/api/educational-assistance', educationalAssistanceRoutes); 
 app.use('/api/employee-scans', authenticateToken, employeeScansRoutes); 

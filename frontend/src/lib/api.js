@@ -14,28 +14,45 @@ const api = axios.create({
 // Request interceptor to add auth token and tenant ID
 api.interceptors.request.use(
   (config) => {
-    // 1. Send the Auth Token
-    const token = Cookies.get('token');
+    // 1. Send the Auth Token - check both cookies and localStorage
+    const token = Cookies.get('token') || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     
     // 2. Send the Tenant ID for Multi-Tenant Architecture
-    let tenantId = process.env.NEXT_PUBLIC_TENANT_ID;
-    if (typeof window !== 'undefined' && !tenantId) {
-      if (window.location.hostname.includes('demo')) {
-        tenantId = 'demo';
-      } else {
-        const urlParams = new URLSearchParams(window.location.search);
-        const tenantParam = urlParams.get('tenant');
-        if (tenantParam) {
-          localStorage.setItem('tenant_override', tenantParam);
-          tenantId = tenantParam;
+    // PRIORITY ORDER:
+    // A. If user is LOGGED IN → use their verified tenant from their user profile
+    // B. If user is NOT logged in → use URL param or hostname for public pages
+    let tenantId = null;
+    
+    if (typeof window !== 'undefined') {
+      // Check if user is logged in and has a stored profile
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser && token) {
+          const userObj = JSON.parse(storedUser);
+          if (userObj?.tenant_id) {
+            // Use the logged-in user's real tenant - cannot be spoofed
+            tenantId = userObj.tenant_id;
+          }
+        }
+      } catch (e) { /* ignore parse errors */ }
+      
+      // If not logged in, detect from URL or hostname (for public pages)
+      if (!tenantId) {
+        if (window.location.hostname.includes('demo')) {
+          tenantId = 'demo';
         } else {
-          tenantId = localStorage.getItem('tenant_override');
+          const urlParams = new URLSearchParams(window.location.search);
+          const tenantParam = urlParams.get('tenant');
+          if (tenantParam) {
+            tenantId = tenantParam;
+          }
         }
       }
     }
+    
     if (tenantId) {
       config.headers['x-tenant-id'] = tenantId;
     }
