@@ -97,7 +97,7 @@ export default function SuperAdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center gap-4">
             <div className="bg-blue-50 p-3 rounded-lg"><Building className="w-6 h-6 text-blue-600" /></div>
-            <div><p className="text-sm text-gray-500 font-medium">Total Barangays</p><h3 className="text-2xl font-bold text-gray-900">2</h3></div>
+            <div><p className="text-sm text-gray-500 font-medium">Total Barangays</p><h3 className="text-2xl font-bold text-gray-900">{tenants.length}</h3></div>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center gap-4">
             <div className="bg-green-50 p-3 rounded-lg"><Activity className="w-6 h-6 text-green-600" /></div>
@@ -105,11 +105,11 @@ export default function SuperAdminDashboard() {
           </div>
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center gap-4">
             <div className="bg-purple-50 p-3 rounded-lg"><Users className="w-6 h-6 text-purple-600" /></div>
-            <div><p className="text-sm text-gray-500 font-medium">Total Active Staff</p><h3 className="text-2xl font-bold text-gray-900">7</h3></div>
+            <div><p className="text-sm text-gray-500 font-medium">Total Active Staff</p><h3 className="text-2xl font-bold text-gray-900">{tenants.reduce((sum, t) => sum + (t.staff_count || 0), 0)}</h3></div>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center gap-4">
             <div className="bg-orange-50 p-3 rounded-lg"><Settings className="w-6 h-6 text-orange-600" /></div>
-            <div><p className="text-sm text-gray-500 font-medium">Monthly Requests</p><h3 className="text-2xl font-bold text-gray-900">1,295</h3></div>
+            <div><p className="text-sm text-gray-500 font-medium">Monthly Requests</p><h3 className="text-2xl font-bold text-gray-900">{tenants.reduce((sum, t) => sum + (t.requests_this_month || 0), 0).toLocaleString()}</h3></div>
           </div>
         </div>
 
