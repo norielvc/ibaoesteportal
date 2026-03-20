@@ -3,25 +3,36 @@ import { useEffect } from 'react';
 
 export default function App({ Component, pageProps }) {
   useEffect(() => {
-    // 1. Determine the Tenant ID Fallback
+    // 1. Determine the Tenant ID Fallback (Improved Logic)
     const getFallbackTenantId = () => {
       if (typeof window === 'undefined') return 'ibaoeste';
       
-      // Try URL parameter first (e.g., ?tenant=demo)
+      // Try URL parameter first - HIGHEST PRIORITY
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.has('tenant')) return urlParams.get('tenant');
       
       // Try hostname (e.g., demo.brgyportal.com)
       if (window.location.hostname.includes('demo')) return 'demo';
 
-      // Try user profile from localStorage if logged in (for dashboard paths)
-      try {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          const user = JSON.parse(userData);
-          if (user.tenant_id) return user.tenant_id;
-        }
-      } catch (e) {}
+      // Check if this is the dashboard/management area
+      const isDashboard = window.location.pathname.startsWith('/dashboard') || 
+                         window.location.pathname.startsWith('/employees') ||
+                         window.location.pathname.startsWith('/officials') ||
+                         window.location.pathname.startsWith('/facilities') ||
+                         window.location.pathname.startsWith('/events') ||
+                         window.location.pathname.startsWith('/achievements') ||
+                         window.location.pathname.startsWith('/programs');
+
+      // Try user profile if in dashboard
+      if (isDashboard) {
+        try {
+          const userData = localStorage.getItem('user');
+          if (userData) {
+            const user = JSON.parse(userData);
+            if (user.tenant_id) return user.tenant_id;
+          }
+        } catch (e) {}
+      }
 
       // Try environment variable
       if (process.env.NEXT_PUBLIC_TENANT_ID) return process.env.NEXT_PUBLIC_TENANT_ID;
@@ -31,6 +42,8 @@ export default function App({ Component, pageProps }) {
 
     const fallbackTenantId = getFallbackTenantId();
 
+    // 2. SECURE FETCH WRAPPER:
+    // This intercepts every single 'fetch' call to ensure correct Auth and Tenant context
     const originalFetch = window.fetch;
     window.fetch = async (resource, config = {}) => {
       // Determine if this is a call to our internal backend API
@@ -52,7 +65,8 @@ export default function App({ Component, pageProps }) {
           config.headers['Authorization'] = `Bearer ${token}`;
         }
         
-        // Detect/Inject Tenant ID
+        // Force/Inject Tenant ID:
+        // Priority: 1. Header already in call, 2. Global fallback
         if (!config.headers['x-tenant-id']) {
           config.headers['x-tenant-id'] = fallbackTenantId;
         }

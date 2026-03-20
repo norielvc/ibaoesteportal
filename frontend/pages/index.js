@@ -36,10 +36,9 @@ export default function BarangayPortal() {
   const getInitialTenantId = () => {
     if (typeof window === 'undefined') return 'ibaoeste';
     const urlParams = new URLSearchParams(window.location.search);
-    const tenantParam = urlParams.get('tenant');
-    if (tenantParam) return tenantParam;
+    if (urlParams.has('tenant')) return urlParams.get('tenant');
     if (window.location.hostname.includes('demo')) return 'demo';
-    return 'ibaoeste';
+    return process.env.NEXT_PUBLIC_TENANT_ID || 'ibaoeste';
   };
 
   const [tenantId, setTenantId] = useState(() => getInitialTenantId());
