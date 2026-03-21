@@ -21,7 +21,7 @@ import SamePersonCertificateModal from '@/components/Forms/SamePersonCertificate
 export default function BarangayPortal() {
   // Version Check Log
   useEffect(() => {
-    console.log('🚀 Barangay Portal Loaded: Version 2.2 (Multi-Tenant Branding)');
+    console.log('🚀 Barangay Portal Loaded: Version 2.5 (Multi-Tenant Branding)');
   }, []);
 
   const [tenantConfig, setTenantConfig] = useState({
@@ -393,7 +393,7 @@ export default function BarangayPortal() {
       await new Promise(r => setTimeout(r, 200));
       if (!tenantId) return;
       try {
-        console.log(`📡 Fetching dynamic content from: ${API_URL} for tenant: ${tenantId}`);
+        console.log(`🌐 BRGY PORTAL [V2.5]: Fetching dynamic content for tenant: ${tenantId}`);
 
         // Fetch Officials
         const officialsRes = await fetch(`${API_URL}/officials`, {

@@ -55,7 +55,7 @@ export default function App({ Component, pageProps }) {
       };
 
       const backendUrl = getBaseUrl().replace(/\/$/, '');
-      console.log(`🌐 BRGY PORTAL: API Backend URL resolved to: ${backendUrl}`);
+      console.log(`🌐 BRGY PORTAL [V2.5]: API Backend URL resolved to: ${backendUrl}`);
 
       window.fetch = async (resource, config = {}) => {
         const isInternalApi = typeof resource === 'string' && (
