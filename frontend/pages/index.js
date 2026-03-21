@@ -308,8 +308,6 @@ export default function BarangayPortal() {
   // Load events from API
   useEffect(() => {
     const fetchEvents = async () => {
-      // Small delay on first load to ensure interceptor is ready
-      await new Promise(r => setTimeout(r, 100));
       if (!tenantId) return;
       try {
         console.log(`📡 Fetching events from: ${API_URL}/events for tenant: ${tenantId}`);
@@ -343,8 +341,6 @@ export default function BarangayPortal() {
   // Load facilities from API
   useEffect(() => {
     const fetchFacilities = async () => {
-      // Small delay on first load to ensure interceptor is ready
-      await new Promise(r => setTimeout(r, 150));
       if (!tenantId) return;
       try {
         console.log(`📡 Fetching facilities from: ${API_URL}/facilities for tenant: ${tenantId}`);
@@ -377,7 +373,7 @@ export default function BarangayPortal() {
     const totalImages = facilities.flatMap(f => f.images || []).filter((img, i, arr) => arr.indexOf(img) === i).length || 1;
     // Don't setup interval if there aren't multiple images to flip through
     if (totalImages <= 1) return;
-
+    
     const timer = setInterval(() => {
       setHeroCarouselIndex((prev) => (prev === totalImages - 1 ? 0 : prev + 1));
     }, 5000);
@@ -385,67 +381,56 @@ export default function BarangayPortal() {
     return () => clearInterval(timer);
   }, [facilities]);
 
-
   // Fetch local government details and achievements
+  // Load other dynamic content from API
   useEffect(() => {
-    const fetchData = async () => {
-      // Small delay on first load to ensure interceptor is ready
-      await new Promise(r => setTimeout(r, 200));
+    const fetchDynamicContent = async () => {
       if (!tenantId) return;
       try {
         console.log(`🌐 BRGY PORTAL [V2.5]: Fetching dynamic content for tenant: ${tenantId}`);
 
-        // Fetch Officials
-        const officialsRes = await fetch(`${API_URL}/officials`, {
-          headers: { 'x-tenant-id': tenantId }
-        });
-        const officialsData = await officialsRes.json();
+        // Fetch all in parallel for speed
+        const [officialsRes, programsRes, achievementsRes, configRes] = await Promise.all([
+          fetch(`${API_URL}/officials`, { headers: { 'x-tenant-id': tenantId } }),
+          fetch(`${API_URL}/programs`, { headers: { 'x-tenant-id': tenantId } }),
+          fetch(`${API_URL}/achievements`, { headers: { 'x-tenant-id': tenantId } }),
+          fetch(`${API_URL}/officials/config`, { headers: { 'x-tenant-id': tenantId } })
+        ]);
+        
+        const [officialsData, programsData, achievementsData, settingsData] = await Promise.all([
+          officialsRes.json(),
+          programsRes.json(),
+          achievementsRes.json(),
+          configRes.json()
+        ]);
+
         if (officialsData.success && officialsData.data) {
           setOfficials(Array.isArray(officialsData.data) ? officialsData.data : []);
         }
 
-        // Fetch Hero & Visibility Settings
-        const configRes = await fetch(`${API_URL}/officials/config`, {
-          headers: { 'x-tenant-id': tenantId }
-        });
-        const settingsData = await configRes.json();
         if (settingsData.success && settingsData.data) {
           if (settingsData.data.heroSection) setHeroSettings(settingsData.data.heroSection);
           if (settingsData.data.visibility) setVisibilitySettings(settingsData.data.visibility);
         }
 
-        // Fetch Achievements
-        const achievementsRes = await fetch(`${API_URL}/achievements`, {
-          headers: { 'x-tenant-id': tenantId }
-        });
-        if (achievementsRes.ok) {
-          const achievementsData = await achievementsRes.json();
-          if (achievementsData.success && achievementsData.data?.length > 0) {
-            const mappedAchievements = achievementsData.data.map(ach => ({
-              ...ach,
-              colorClass: ach.color_class || 'bg-blue-500',
-              textColor: ach.text_color || 'blue-400'
-            }));
-            setAchievements(mappedAchievements);
-          }
+        if (achievementsData.success && achievementsData.data?.length > 0) {
+          const mappedAchievements = achievementsData.data.map(ach => ({
+            ...ach,
+            colorClass: ach.color_class || 'bg-blue-500',
+            textColor: ach.text_color || 'blue-400'
+          }));
+          setAchievements(mappedAchievements);
         }
 
-        // Fetch Programs
-        const programsRes = await fetch(`${API_URL}/programs`, {
-          headers: { 'x-tenant-id': tenantId }
-        });
-        if (programsRes.ok) {
-          const programsData = await programsRes.json();
-          if (programsData.success && programsData.data?.length > 0) {
-            setPrograms(programsData.data);
-          }
+        if (programsData.success && programsData.data?.length > 0) {
+          setPrograms(programsData.data);
         }
       } catch (error) {
         console.error('❌ Error fetching dynamic content:', error);
       }
     };
 
-    fetchData();
+    fetchDynamicContent();
   }, [tenantId]);
 
 
