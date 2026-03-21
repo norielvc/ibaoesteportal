@@ -47,11 +47,11 @@ export default function App({ Component, pageProps }) {
       
       const getBaseUrl = () => {
         if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-        if (window.location.hostname.includes('railway.app')) {
-           const backendHost = window.location.hostname.replace('frontend', 'backend');
-           return `https://${backendHost}`;
+        if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+           // HARDCODED PRODUCTION BACKEND FOR RELIABILITY
+           return `https://brgyportal-backend-production.up.railway.app/api`;
         }
-        return 'http://localhost:5005';
+        return 'http://localhost:5005/api';
       };
 
       const backendUrl = getBaseUrl().replace(/\/$/, '');

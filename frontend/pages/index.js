@@ -44,12 +44,9 @@ export default function BarangayPortal() {
   // Resilient API URL Discovery
   const getApiUrl = () => {
     if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-    if (typeof window !== 'undefined') {
-      if (window.location.hostname.includes('railway.app')) {
-         // Guessing the backend URL based on standard Railway patterns
-         const backendHost = window.location.hostname.replace('frontend', 'backend');
-         return `https://${backendHost}/api`;
-      }
+    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+       // HARDCODED PRODUCTION BACKEND FOR RELIABILITY
+       return `https://brgyportal-backend-production.up.railway.app/api`;
     }
     return 'http://localhost:5005/api';
   };
