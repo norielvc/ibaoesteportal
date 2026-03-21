@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import {
   Menu, X, ChevronRight, ChevronLeft, Plus, Send, Phone, MapPin, Mail,
@@ -233,6 +233,26 @@ export default function BarangayPortal() {
   const [facilities, setFacilities] = useState([]);
   const [officials, setOfficials] = useState([]);
   const [visibilitySettings, setVisibilitySettings] = useState(null);
+  const [missionGoals, setMissionGoals] = useState({
+    barangayVision: 'A model community that is progressive, peaceful, and disaster-resilient, where empowered citizens live in harmony with nature and participate in transparent local governance.',
+    barangayMission: '',
+    barangayGoal: 'To deliver dedicated public service through innovative social programs, sustainable infrastructure, and community-driven initiatives that uplift the dignity and prosperity of every resident.',
+    skVision: 'An inspired youth community that is actively involved in community building, advocating for education, sports, and social responsibility while maintaining the highest level of integrity.',
+    skMission: '',
+    skGoal: "To empower the youth through comprehensive development programs in leadership, environment, and wellness, ensuring every young resident has the opportunity to contribute to our barangay's future.",
+  });
+  const [siteContact, setSiteContact] = useState({
+    address: 'Calumpit, Bulacan',
+    phone: '(044) 123-4567',
+    email: 'ibaoeste@calumpit.gov.ph',
+    officeHours: 'Monday - Friday: 8:00 AM - 5:00 PM\nSaturday: 8:00 AM - 12:00 PM\nSunday: Closed',
+    hotlines: [
+      { name: 'Barangay Emergency', number: '(044) 123-4567' },
+      { name: 'Police Station', number: '911' },
+      { name: 'Fire Department', number: '(044) 765-4321' },
+      { name: 'Medical Emergency', number: '(044) 987-6543' },
+    ],
+  });
 
   const [achievements, setAchievements] = useState([]);
 
@@ -305,49 +325,103 @@ export default function BarangayPortal() {
     setTouchEnd(null);
   };
 
-  // Load ALL homepage data in a single request
+  // Track which sections have been fetched
+  const fetchedSections = useRef({ aboveFold: false, facilities: false, achievements: false, officials: false });
+
+  // Above-fold fetch: events + portal branding — fires immediately
+  useEffect(() => {
+    if (!tenantId || fetchedSections.current.aboveFold) return;
+    fetchedSections.current.aboveFold = true;
+    const headers = { 'x-tenant-id': tenantId };
+    // Fetch events and branding in parallel
+    Promise.all([
+      fetch(`${API_URL}/events`, { headers }).then(r => r.json()).catch(() => ({ success: false })),
+      fetch(`${API_URL}/officials/config`, { headers }).then(r => r.json()).catch(() => ({ success: false })),
+    ]).then(([evData, cfgData]) => {
+      if (evData.success && evData.data?.length > 0) setNewsItems(evData.data);
+      if (cfgData.success && cfgData.data) {
+        if (cfgData.data.heroSection) setHeroSettings(cfgData.data.heroSection);
+        if (cfgData.data.visibility) setVisibilitySettings(cfgData.data.visibility);
+        if (cfgData.data.missionGoals) setMissionGoals(prev => ({ ...prev, ...cfgData.data.missionGoals }));
+        if (cfgData.data.siteContact) setSiteContact(prev => ({ ...prev, ...cfgData.data.siteContact, hotlines: cfgData.data.siteContact.hotlines || prev.hotlines }));
+        if (cfgData.data.portalBranding) {
+          const b = cfgData.data.portalBranding;
+          setTenantConfig({
+            name: b.portalName || tenantConfig.name,
+            shortName: b.shortName || tenantConfig.shortName,
+            subtitle: b.subtitle || tenantConfig.subtitle,
+            logo: b.logoUrl || tenantConfig.logo,
+            colorStyle: { background: `linear-gradient(to right, ${b.primaryColor || '#004700'}, ${b.secondaryColor || '#001a00'})` },
+          });
+        }
+      }
+    });
+  }, [tenantId]);
+
+  // Facilities — lazy load when #directory scrolls into view
   useEffect(() => {
     if (!tenantId) return;
-    const fetchHomepage = async () => {
-      try {
-        console.log(`📡 Fetching homepage data for tenant: ${tenantId}`);
-        const response = await fetch(`${API_URL}/homepage`, {
-          headers: { 'x-tenant-id': tenantId }
-        });
-        const data = await response.json();
-        if (!data.success) return;
-
-        const { events, facilities: facs, officials: offs, achievements: achs, programs: progs, settings } = data.data;
-
-        if (events?.length > 0) setNewsItems(events);
-
-        if (facs?.length > 0) {
-          setFacilities(facs.map(f => ({ ...f, icon: getIconComponent(f.icon) })));
-        }
-
-        if (offs?.length > 0) setOfficials(Array.isArray(offs) ? offs : []);
-
-        if (settings) {
-          if (settings.heroSection) setHeroSettings(settings.heroSection);
-          if (settings.visibility) setVisibilitySettings(settings.visibility);
-        }
-
-        if (achs?.length > 0) {
-          setAchievements(achs.map(ach => ({
-            ...ach,
-            colorClass: ach.color_class || 'bg-blue-500',
-            textColor: ach.text_color || 'blue-400'
-          })));
-        }
-
-        if (progs?.length > 0) setPrograms(progs);
-
-        console.log('✅ Homepage data loaded');
-      } catch (error) {
-        console.error('❌ Error fetching homepage data:', error);
+    const el = document.getElementById('directory');
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !fetchedSections.current.facilities) {
+        fetchedSections.current.facilities = true;
+        observer.disconnect();
+        const headers = { 'x-tenant-id': tenantId };
+        fetch(`${API_URL}/facilities`, { headers })
+          .then(r => r.json())
+          .then(d => { if (d.success && d.data?.length > 0) setFacilities(d.data.map(f => ({ ...f, icon: getIconComponent(f.icon) }))); })
+          .catch(() => {});
       }
-    };
-    fetchHomepage();
+    }, { rootMargin: '200px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [tenantId]);
+
+  // Achievements + Programs — lazy load when #achievements scrolls into view
+  useEffect(() => {
+    if (!tenantId) return;
+    const el = document.getElementById('achievements');
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !fetchedSections.current.achievements) {
+        fetchedSections.current.achievements = true;
+        observer.disconnect();
+        const headers = { 'x-tenant-id': tenantId };
+        Promise.all([
+          fetch(`${API_URL}/achievements`, { headers }).then(r => r.json()),
+          fetch(`${API_URL}/programs`, { headers }).then(r => r.json()),
+        ]).then(([achData, progData]) => {
+          if (achData.success && achData.data?.length > 0)
+            setAchievements(achData.data.map(ach => ({ ...ach, colorClass: ach.color_class || 'bg-blue-500', textColor: ach.text_color || 'blue-400' })));
+          if (progData.success && progData.data?.length > 0)
+            setPrograms(progData.data);
+        }).catch(() => {});
+      }
+    }, { rootMargin: '200px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [tenantId]);
+
+  // Officials — lazy load when #officials scrolls into view (config already fetched above-fold)
+  useEffect(() => {
+    if (!tenantId) return;
+    const el = document.getElementById('officials');
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !fetchedSections.current.officials) {
+        fetchedSections.current.officials = true;
+        observer.disconnect();
+        const headers = { 'x-tenant-id': tenantId };
+        fetch(`${API_URL}/officials`, { headers })
+          .then(r => r.json())
+          .then(offData => {
+            if (offData.success && offData.data) setOfficials(Array.isArray(offData.data) ? offData.data : []);
+          }).catch(() => {});
+      }
+    }, { rootMargin: '200px' });
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [tenantId]);
 
   // SELF-HEALING: Reset currentSlide if it becomes NaN or out of bounds when data arrives
@@ -514,12 +588,7 @@ export default function BarangayPortal() {
     { label: 'Forms Processed This Month', value: '1,256', icon: FileText }
   ];
 
-  const hotlines = [
-    { name: 'Barangay Emergency', number: '(044) 123-4567' },
-    { name: 'Police Station', number: '911' },
-    { name: 'Fire Department', number: '(044) 765-4321' },
-    { name: 'Medical Emergency', number: '(044) 987-6543' }
-  ];
+  const hotlines = siteContact.hotlines;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1253,7 +1322,7 @@ export default function BarangayPortal() {
             </button>
             <div className="relative h-64 sm:h-80 lg:h-[450px] w-full group overflow-hidden">
               <div className="absolute inset-0 bg-[#113821]/20 z-10"></div>
-              <img src={selectedAchievement.image} alt={selectedAchievement.title} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105" />
+              <img src={selectedAchievement.image} alt={selectedAchievement.title} loading="lazy" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
               <div className={`absolute top-6 left-6 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-white text-sm md:text-base font-bold px-4 md:px-5 py-2 md:py-2.5 rounded-full shadow-lg flex items-center gap-2 backdrop-blur-md`}>
                 <Award className="w-5 h-5" />
@@ -1280,7 +1349,7 @@ export default function BarangayPortal() {
             
             {/* Left Column: Fixed Image on Desktop */}
             <div className="relative w-full md:w-[45%] h-64 md:h-full group overflow-hidden shrink-0">
-              <img src={selectedProgram.image} alt={selectedProgram.title} className="w-full h-full object-cover transform transition-transform duration-1000 group-hover:scale-105" />
+              <img src={selectedProgram.image} alt={selectedProgram.title} loading="lazy" className="w-full h-full object-cover transform transition-transform duration-1000 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
               
               {/* Floating Category Badge */}
@@ -1586,7 +1655,7 @@ export default function BarangayPortal() {
                                     <div key={official.id || index} className="bg-white rounded-[40px] shadow-2xl hover:shadow-green-900/20 transition-all duration-500 overflow-hidden border border-gray-100 group w-full transform hover:-translate-y-2">
                                       <div className="relative aspect-[4/5] overflow-hidden group bg-white">
                                         {official.image_url ? (
-                                          <img src={official.image_url} alt={official.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10" />
+                                          <img src={official.image_url} alt={official.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10" />
                                         ) : (
                                           <div className={`w-full h-full bg-gradient-to-br ${colorClass} flex items-center justify-center`}>
                                             <span className="text-7xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity font-serif">{initials}</span>
@@ -1613,13 +1682,13 @@ export default function BarangayPortal() {
                                   <div className="mb-8">
                                     <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">Barangay Vision</h3>
                                     <p className="text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 border-green-500 pl-6 py-2">
-                                      {`"A model community that is progressive, peaceful, and disaster-resilient, where empowered citizens live in harmony with nature and participate in transparent local governance."`}
+                                      {`"${missionGoals.barangayVision}"`}
                                     </p>
                                   </div>
                                   <div>
                                     <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">Barangay Goal</h3>
                                     <p className="text-gray-700 text-xl font-medium leading-relaxed border-l-4 border-green-900 pl-6 py-2">
-                                      {`"To deliver dedicated public service through innovative social programs, sustainable infrastructure, and community-driven initiatives that uplift the dignity and prosperity of every resident."`}
+                                      {`"${missionGoals.barangayGoal}"`}
                                     </p>
                                   </div>
                                 </div>
@@ -1633,13 +1702,13 @@ export default function BarangayPortal() {
                                   <div className="mb-8">
                                     <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">SK Vision</h3>
                                     <p className="text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 border-orange-500 pl-6 py-2">
-                                      {`"An inspired youth community of ${tenantConfig.shortName} that is actively involved in community building, advocating for education, sports, and social responsibility while maintaining the highest level of integrity."`}
+                                      {`"${missionGoals.skVision}"`}
                                     </p>
                                   </div>
                                   <div>
                                     <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">SK Goal</h3>
                                     <p className="text-gray-700 text-xl font-medium leading-relaxed border-l-4 border-orange-600 pl-6 py-2">
-                                      {`"To empower the youth through comprehensive development programs in leadership, environment, and wellness, ensuring every young resident has the opportunity to contribute to our barangay's future."`}
+                                      {`"${missionGoals.skGoal}"`}
                                     </p>
                                   </div>
                                 </div>
@@ -1654,7 +1723,7 @@ export default function BarangayPortal() {
                                     <div key={official.id || index} className="bg-white rounded-[40px] shadow-2xl hover:shadow-orange-900/20 transition-all duration-500 overflow-hidden border border-gray-100 group w-full transform hover:-translate-y-2">
                                       <div className="relative aspect-[4/5] overflow-hidden group bg-white">
                                         {official.image_url ? (
-                                          <img src={official.image_url} alt={official.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10" />
+                                          <img src={official.image_url} alt={official.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10" />
                                         ) : (
                                           <div className={`w-full h-full bg-gradient-to-br ${colorClass} flex items-center justify-center`}>
                                             <span className="text-7xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity font-serif">{initials}</span>
@@ -1708,7 +1777,7 @@ export default function BarangayPortal() {
                                 <div key={official.id || index} className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group ${widthClass}`}>
                                   <div className="relative aspect-square overflow-hidden group bg-white">
                                     {official.image_url ? (
-                                      <img src={official.image_url} alt={official.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10" />
+                                      <img src={official.image_url} alt={official.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10" />
                                     ) : (
                                       <div className={`w-full h-full bg-gradient-to-br ${colorClass} flex items-center justify-center`}>
                                         <span className="text-5xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity">{initials}</span>
@@ -1853,7 +1922,7 @@ export default function BarangayPortal() {
                     </div>
                     <div>
                       <p className="text-white font-medium">Address</p>
-                      <p className="text-green-200">{tenantConfig.subtitle}</p>
+                      <p className="text-green-200">{siteContact.address || tenantConfig.subtitle}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -1862,7 +1931,7 @@ export default function BarangayPortal() {
                     </div>
                     <div>
                       <p className="text-white font-medium">Phone</p>
-                      <p className="text-green-200">(044) 123-4567</p>
+                      <p className="text-green-200">{siteContact.phone}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -1871,7 +1940,7 @@ export default function BarangayPortal() {
                     </div>
                     <div>
                       <p className="text-white font-medium">Email</p>
-                      <p className="text-green-200">ibaoeste@calumpit.gov.ph</p>
+                      <p className="text-green-200">{siteContact.email}</p>
                     </div>
                   </div>
                 </div>
@@ -1880,9 +1949,7 @@ export default function BarangayPortal() {
               <div className="bg-green-950/50 backdrop-blur-sm rounded-2xl p-8 border border-green-800/50">
                 <h3 className="text-xl font-bold text-white mb-4">Office Hours</h3>
                 <div className="space-y-2 text-green-200">
-                  <p>Monday - Friday: 8:00 AM - 5:00 PM</p>
-                  <p>Saturday: 8:00 AM - 12:00 PM</p>
-                  <p>Sunday: Closed</p>
+                  {siteContact.officeHours.split('\n').map((line, i) => <p key={i}>{line}</p>)}
                 </div>
               </div>
             </div>

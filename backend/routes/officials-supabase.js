@@ -124,7 +124,28 @@ router.get('/config', async (req, res) => {
 
     const settings = settingsRow?.value || {};
     const officialsConfig = mapOfficialsToConfig(officials || []);
-    const fullConfig = { ...officialsConfig, ...settings };
+
+    // Merge siteContact: only use saved values if non-empty, otherwise keep defaults
+    const defaultSiteContact = {
+      address: 'Calumpit, Bulacan',
+      phone: '(044) 123-4567',
+      email: 'ibaoeste@calumpit.gov.ph',
+      officeHours: 'Monday - Friday: 8:00 AM - 5:00 PM\nSaturday: 8:00 AM - 12:00 PM\nSunday: Closed',
+      hotlines: [
+        { name: 'Barangay Emergency', number: '(044) 123-4567' },
+        { name: 'Police Station', number: '911' },
+        { name: 'Fire Department', number: '(044) 765-4321' },
+        { name: 'Medical Emergency', number: '(044) 987-6543' },
+      ],
+    };
+    const savedContact = settings.siteContact || {};
+    const mergedContact = {
+      ...defaultSiteContact,
+      ...Object.fromEntries(Object.entries(savedContact).filter(([k, v]) => k !== 'hotlines' && v !== '' && v !== null && v !== undefined)),
+      hotlines: savedContact.hotlines?.length > 0 ? savedContact.hotlines : defaultSiteContact.hotlines,
+    };
+
+    const fullConfig = { ...officialsConfig, ...settings, siteContact: mergedContact };
 
     res.json({ success: true, data: fullConfig });
   } catch (error) {
@@ -199,7 +220,10 @@ router.put('/config', async (req, res) => {
       footerStyle: config.footerStyle, countryStyle: config.countryStyle,
       provinceStyle: config.provinceStyle, municipalityStyle: config.municipalityStyle,
       barangayNameStyle: config.barangayNameStyle, officeNameStyle: config.officeNameStyle,
-      heroSection: config.heroSection, visibility: config.visibility
+      heroSection: config.heroSection, visibility: config.visibility,
+      portalBranding: config.portalBranding,
+      missionGoals: config.missionGoals,
+      siteContact: config.siteContact,
     };
 
     const { error: settingsError } = await supabase

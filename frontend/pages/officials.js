@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout/Layout';
-import { Save, Users, UserCog, Shield, Award, Edit2, Check, X, AlertCircle, CheckCircle, MapPin, Phone, Mail, Building, Crop, Camera, Layout as LayoutIcon, Eye, EyeOff } from 'lucide-react';
+import { Save, Users, UserCog, Shield, Award, Edit2, Check, X, AlertCircle, CheckCircle, MapPin, Phone, Mail, Building, Crop, Camera, Layout as LayoutIcon, Eye, EyeOff, Trash2, Activity } from 'lucide-react';
 import { getAuthToken } from '@/lib/auth';
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
@@ -122,8 +122,34 @@ const defaultOfficials = {
   },
   vision: 'Enter Barangay Vision here...',
   mission: 'Enter Barangay Mission here...',
-  visibility: {
-    section: true,
+  siteContact: {
+    address: 'Calumpit, Bulacan',
+    phone: '(044) 123-4567',
+    email: 'ibaoeste@calumpit.gov.ph',
+    officeHours: 'Monday - Friday: 8:00 AM - 5:00 PM\nSaturday: 8:00 AM - 12:00 PM\nSunday: Closed',
+    hotlines: [
+      { name: 'Barangay Emergency', number: '(044) 123-4567' },
+      { name: 'Police Station', number: '911' },
+      { name: 'Fire Department', number: '(044) 765-4321' },
+      { name: 'Medical Emergency', number: '(044) 987-6543' },
+    ],
+  },
+  portalBranding: {    portalName: "IBA O' ESTE PORTAL",
+    shortName: "Iba O' Este",
+    subtitle: 'Calumpit, Bulacan',
+    logoUrl: '/logo.png',
+    primaryColor: '#004700',
+    secondaryColor: '#001a00',
+  },
+  missionGoals: {
+    barangayMission: '',
+    barangayGoal: 'To deliver dedicated public service through innovative social programs, sustainable infrastructure, and community-driven initiatives that uplift the dignity and prosperity of every resident.',
+    barangayVision: 'A model community that is progressive, peaceful, and disaster-resilient, where empowered citizens live in harmony with nature and participate in transparent local governance.',
+    skMission: '',
+    skGoal: "To empower the youth through comprehensive development programs in leadership, environment, and wellness, ensuring every young resident has the opportunity to contribute to our barangay's future.",
+    skVision: "An inspired youth community that is actively involved in community building, advocating for education, sports, and social responsibility while maintaining the highest level of integrity.",
+  },
+  visibility: {    section: true,
     chairman: true, secretary: true, treasurer: true, skChairman: true,
     skSecretary: true, skTreasurer: true,
     skKagawads: Array(8).fill(true),
@@ -150,6 +176,9 @@ export default function OfficialsPage() {
     { id: 'officials', label: 'Officials & Vision', icon: Users },
     { id: 'branding', label: 'Branding & Header', icon: LayoutIcon },
     { id: 'appearance', label: 'Appearance & Themes', icon: Award },
+    { id: 'portal', label: 'Portal Branding', icon: Shield },
+    { id: 'mission', label: 'Mission & Goals', icon: MapPin },
+    { id: 'contact', label: 'Contact & Hotlines', icon: Phone },
   ];
 
   useEffect(() => {
@@ -177,6 +206,9 @@ export default function OfficialsPage() {
             sidebarStyle: { ...prev.sidebarStyle, ...(data.data.sidebarStyle || {}) },
             bodyStyle: { ...prev.bodyStyle, ...(data.data.bodyStyle || {}) },
             footerStyle: { ...prev.footerStyle, ...(data.data.footerStyle || {}) },
+            portalBranding: { ...prev.portalBranding, ...(data.data.portalBranding || {}) },
+            missionGoals: { ...prev.missionGoals, ...(data.data.missionGoals || {}) },
+            siteContact: { ...prev.siteContact, ...(data.data.siteContact || {}), hotlines: data.data.siteContact?.hotlines?.length > 0 ? data.data.siteContact.hotlines : prev.siteContact?.hotlines },
           }));
         }
       } catch (error) {
@@ -1059,6 +1091,296 @@ export default function OfficialsPage() {
                   <h3 className="text-2xl font-black text-white uppercase tracking-tight" style={{ color: officials.barangayNameStyle.color }}>{officials.headerInfo.barangayName}</h3>
                   <p className="text-white/50 text-xs font-bold uppercase tracking-widest">{officials.headerInfo.province} • {officials.headerInfo.municipality}</p>
                </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Portal Branding Tab */}
+      {activeTab === 'portal' && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Live Preview */}
+          <div className="rounded-3xl p-6 flex items-center gap-4 overflow-hidden relative" style={{ background: `linear-gradient(to right, ${officials.portalBranding?.primaryColor || '#004700'}, ${officials.portalBranding?.secondaryColor || '#001a00'})` }}>
+            <img src={officials.portalBranding?.logoUrl || '/logo.png'} alt="Portal Logo" className="h-16 w-16 object-contain bg-white rounded-full p-1 shrink-0" />
+            <div>
+              <div className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-0.5">Live Preview</div>
+              <h2 className="text-xl font-extrabold text-white">{officials.portalBranding?.portalName || 'PORTAL NAME'}</h2>
+              <p className="text-white/70 text-sm">{officials.portalBranding?.subtitle || 'Subtitle'}</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-green-100 p-2 rounded-xl"><Shield className="w-5 h-5 text-green-600" /></div>
+              <h3 className="text-lg font-black uppercase tracking-widest text-gray-900">Portal Identity</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Portal Name (Header Title)</label>
+                <input
+                  type="text"
+                  value={officials.portalBranding?.portalName || ''}
+                  onChange={e => { setOfficials({ ...officials, portalBranding: { ...officials.portalBranding, portalName: e.target.value } }); setHasChanges(true); }}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="e.g. IBA O' ESTE PORTAL"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Short Name</label>
+                <input
+                  type="text"
+                  value={officials.portalBranding?.shortName || ''}
+                  onChange={e => { setOfficials({ ...officials, portalBranding: { ...officials.portalBranding, shortName: e.target.value } }); setHasChanges(true); }}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="e.g. Iba O' Este"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Subtitle (Municipality, Province)</label>
+                <input
+                  type="text"
+                  value={officials.portalBranding?.subtitle || ''}
+                  onChange={e => { setOfficials({ ...officials, portalBranding: { ...officials.portalBranding, subtitle: e.target.value } }); setHasChanges(true); }}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="e.g. Calumpit, Bulacan"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Primary Color</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={officials.portalBranding?.primaryColor || '#004700'}
+                    onChange={e => { setOfficials({ ...officials, portalBranding: { ...officials.portalBranding, primaryColor: e.target.value } }); setHasChanges(true); }}
+                    className="w-12 h-12 rounded-xl border border-gray-200 cursor-pointer p-1" />
+                  <input type="text" value={officials.portalBranding?.primaryColor || '#004700'}
+                    onChange={e => { setOfficials({ ...officials, portalBranding: { ...officials.portalBranding, primaryColor: e.target.value } }); setHasChanges(true); }}
+                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-green-500" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Secondary Color</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={officials.portalBranding?.secondaryColor || '#001a00'}
+                    onChange={e => { setOfficials({ ...officials, portalBranding: { ...officials.portalBranding, secondaryColor: e.target.value } }); setHasChanges(true); }}
+                    className="w-12 h-12 rounded-xl border border-gray-200 cursor-pointer p-1" />
+                  <input type="text" value={officials.portalBranding?.secondaryColor || '#001a00'}
+                    onChange={e => { setOfficials({ ...officials, portalBranding: { ...officials.portalBranding, secondaryColor: e.target.value } }); setHasChanges(true); }}
+                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-green-500" />
+                </div>
+              </div>
+            </div>
+
+            {/* Logo Upload */}
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">Portal Logo</label>
+              <div className="flex items-center gap-6">
+                <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 overflow-hidden">
+                  {officials.portalBranding?.logoUrl
+                    ? <img src={officials.portalBranding.logoUrl} alt="Logo" className="w-full h-full object-contain p-2" />
+                    : <span className="text-xs text-gray-400 text-center px-2">No logo</span>}
+                </div>
+                <div className="space-y-2">
+                  <label className="cursor-pointer bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors">
+                    <Camera className="w-4 h-4" />
+                    Upload Logo
+                    <input type="file" accept="image/*" className="hidden" onChange={e => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setOfficials({ ...officials, portalBranding: { ...officials.portalBranding, logoUrl: reader.result } });
+                        setHasChanges(true);
+                      };
+                      reader.readAsDataURL(file);
+                    }} />
+                  </label>
+                  {officials.portalBranding?.logoUrl && (
+                    <button onClick={() => { setOfficials({ ...officials, portalBranding: { ...officials.portalBranding, logoUrl: '' } }); setHasChanges(true); }}
+                      className="text-xs text-red-500 hover:text-red-700 font-semibold flex items-center gap-1">
+                      <X className="w-3 h-3" /> Remove
+                    </button>
+                  )}
+                  <p className="text-xs text-gray-400">PNG or SVG recommended. Will appear in the portal header.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mission & Goals Tab */}
+      {activeTab === 'mission' && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Barangay Vision */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-100 p-2 rounded-xl"><Eye className="w-5 h-5 text-emerald-600" /></div>
+                <h3 className="text-lg font-black uppercase tracking-widest text-gray-900">Barangay Vision</h3>
+              </div>
+              <textarea rows={6} value={officials.missionGoals?.barangayVision || ''}
+                onChange={e => { setOfficials({ ...officials, missionGoals: { ...officials.missionGoals, barangayVision: e.target.value } }); setHasChanges(true); }}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                placeholder="Enter the barangay's vision statement..." />
+            </div>
+
+            {/* Barangay Mission */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-green-100 p-2 rounded-xl"><MapPin className="w-5 h-5 text-green-600" /></div>
+                <h3 className="text-lg font-black uppercase tracking-widest text-gray-900">Barangay Mission</h3>
+              </div>
+              <textarea rows={6} value={officials.missionGoals?.barangayMission || ''}
+                onChange={e => { setOfficials({ ...officials, missionGoals: { ...officials.missionGoals, barangayMission: e.target.value } }); setHasChanges(true); }}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                placeholder="Enter the barangay's mission statement..." />
+            </div>
+
+            {/* Barangay Goal */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-4 lg:col-span-2">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 p-2 rounded-xl"><Award className="w-5 h-5 text-blue-600" /></div>
+                <h3 className="text-lg font-black uppercase tracking-widest text-gray-900">Barangay Goal</h3>
+              </div>
+              <textarea rows={4} value={officials.missionGoals?.barangayGoal || ''}
+                onChange={e => { setOfficials({ ...officials, missionGoals: { ...officials.missionGoals, barangayGoal: e.target.value } }); setHasChanges(true); }}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="Enter the barangay's goal..." />
+            </div>
+
+            {/* Divider */}
+            <div className="lg:col-span-2 border-t border-gray-100 pt-2">
+              <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Sangguniang Kabataan</p>
+            </div>
+
+            {/* SK Vision */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-orange-100 p-2 rounded-xl"><Eye className="w-5 h-5 text-orange-500" /></div>
+                <h3 className="text-lg font-black uppercase tracking-widest text-gray-900">SK Vision</h3>
+              </div>
+              <textarea rows={6} value={officials.missionGoals?.skVision || ''}
+                onChange={e => { setOfficials({ ...officials, missionGoals: { ...officials.missionGoals, skVision: e.target.value } }); setHasChanges(true); }}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                placeholder="Enter the SK's vision statement..." />
+            </div>
+
+            {/* SK Mission */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-100 p-2 rounded-xl"><Users className="w-5 h-5 text-purple-600" /></div>
+                <h3 className="text-lg font-black uppercase tracking-widest text-gray-900">SK Mission</h3>
+              </div>
+              <textarea rows={6} value={officials.missionGoals?.skMission || ''}
+                onChange={e => { setOfficials({ ...officials, missionGoals: { ...officials.missionGoals, skMission: e.target.value } }); setHasChanges(true); }}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                placeholder="Enter the SK's mission statement..." />
+            </div>
+
+            {/* SK Goal */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-4 lg:col-span-2">
+              <div className="flex items-center gap-3">
+                <div className="bg-yellow-100 p-2 rounded-xl"><Award className="w-5 h-5 text-yellow-600" /></div>
+                <h3 className="text-lg font-black uppercase tracking-widest text-gray-900">SK Goal</h3>
+              </div>
+              <textarea rows={4} value={officials.missionGoals?.skGoal || ''}
+                onChange={e => { setOfficials({ ...officials, missionGoals: { ...officials.missionGoals, skGoal: e.target.value } }); setHasChanges(true); }}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-none"
+                placeholder="Enter the SK's goal..." />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contact & Hotlines Tab */}
+      {activeTab === 'contact' && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Contact Info */}
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-green-100 p-2 rounded-xl"><Phone className="w-5 h-5 text-green-600" /></div>
+              <h3 className="text-lg font-black uppercase tracking-widest text-gray-900">Contact Information</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Address</label>
+                <input type="text" value={officials.siteContact?.address || ''}
+                  onChange={e => { setOfficials({ ...officials, siteContact: { ...officials.siteContact, address: e.target.value } }); setHasChanges(true); }}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Barangay address" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Phone</label>
+                <input type="text" value={officials.siteContact?.phone || ''}
+                  onChange={e => { setOfficials({ ...officials, siteContact: { ...officials.siteContact, phone: e.target.value } }); setHasChanges(true); }}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="(044) 123-4567" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Email</label>
+                <input type="text" value={officials.siteContact?.email || ''}
+                  onChange={e => { setOfficials({ ...officials, siteContact: { ...officials.siteContact, email: e.target.value } }); setHasChanges(true); }}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="email@barangay.gov.ph" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Office Hours</label>
+              <textarea rows={4} value={officials.siteContact?.officeHours || ''}
+                onChange={e => { setOfficials({ ...officials, siteContact: { ...officials.siteContact, officeHours: e.target.value } }); setHasChanges(true); }}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                placeholder={'Monday - Friday: 8:00 AM - 5:00 PM\nSaturday: 8:00 AM - 12:00 PM\nSunday: Closed'} />
+            </div>
+          </div>
+
+          {/* Emergency Hotlines */}
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-red-100 p-2 rounded-xl"><AlertCircle className="w-5 h-5 text-red-600" /></div>
+                <h3 className="text-lg font-black uppercase tracking-widest text-gray-900">Emergency Hotlines</h3>
+              </div>
+              <button onClick={() => {
+                const newHotlines = [...(officials.siteContact?.hotlines || []), { name: '', number: '' }];
+                setOfficials({ ...officials, siteContact: { ...officials.siteContact, hotlines: newHotlines } });
+                setHasChanges(true);
+              }} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+                + Add Hotline
+              </button>
+            </div>
+            <div className="space-y-3">
+              {(officials.siteContact?.hotlines || []).map((hotline, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <input type="text" value={hotline.name}
+                    onChange={e => {
+                      const h = [...officials.siteContact.hotlines];
+                      h[i] = { ...h[i], name: e.target.value };
+                      setOfficials({ ...officials, siteContact: { ...officials.siteContact, hotlines: h } });
+                      setHasChanges(true);
+                    }}
+                    className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                    placeholder="e.g. Barangay Emergency" />
+                  <input type="text" value={hotline.number}
+                    onChange={e => {
+                      const h = [...officials.siteContact.hotlines];
+                      h[i] = { ...h[i], number: e.target.value };
+                      setOfficials({ ...officials, siteContact: { ...officials.siteContact, hotlines: h } });
+                      setHasChanges(true);
+                    }}
+                    className="w-48 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                    placeholder="(044) 123-4567" />
+                  <button onClick={() => {
+                    const h = officials.siteContact.hotlines.filter((_, idx) => idx !== i);
+                    setOfficials({ ...officials, siteContact: { ...officials.siteContact, hotlines: h } });
+                    setHasChanges(true);
+                  }} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
