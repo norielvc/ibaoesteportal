@@ -712,7 +712,7 @@ export default function BarangayPortal() {
       </nav>
 
       {/* Hero Section with News Carousel */}
-      <section id="news" className="relative h-[280px] md:h-[320px] lg:h-[400px] xl:h-[420px] overflow-hidden animate-on-scroll">
+      <section id="news" className="relative h-[280px] md:h-[320px] lg:h-[400px] xl:h-[420px] overflow-hidden">
         {newsItems.map((item, index) => (
           <div
             key={index}
