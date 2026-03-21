@@ -57,6 +57,11 @@ export default function App({ Component, pageProps }) {
       const backendUrl = getBaseUrl().replace(/\/$/, '');
       console.log(`🌐 BRGY PORTAL [V2.5]: API Backend URL resolved to: ${backendUrl}`);
 
+      // Keep backend warm — ping every 9 minutes to prevent Railway cold starts
+      const ping = () => originalFetch(`${backendUrl}/health`, { method: 'GET' }).catch(() => {});
+      ping(); // immediate ping on load
+      setInterval(ping, 9 * 60 * 1000);
+
       window.fetch = async (resource, config = {}) => {
         const isInternalApi = typeof resource === 'string' && (
           resource.startsWith('/api') || 

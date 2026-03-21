@@ -5,6 +5,24 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'http', hostname: '**' },
+    ],
+    formats: ['image/webp'],
+    minimumCacheTTL: 3600,
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
