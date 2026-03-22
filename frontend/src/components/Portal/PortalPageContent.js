@@ -605,7 +605,10 @@ export default function PortalPageContent({ initialTenantId }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Google Sans', 'Product Sans', 'Nunito Sans', sans-serif" }}>
+      <style jsx global>{`
+        * { font-family: 'Google Sans', 'Product Sans', 'Nunito Sans', sans-serif !important; }
+      `}</style>
       {/* Large Portal Header with Date/Time and Weather */}
       <div className="py-2 md:py-3" style={tenantConfig.colorStyle}>
         <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-6">
