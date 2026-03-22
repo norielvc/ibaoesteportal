@@ -24,7 +24,7 @@ export default function PortalPageContent({ initialTenantId }) {
   
   // Version Check Log
   useEffect(() => {
-    console.log('🚀 Barangay Portal Loaded: Version 2.6 (Multi-Tenant Component)');
+    console.log('🚀 Barangay Portal Loaded: Version 2.7 (Dynamic Themes)');
   }, []);
 
   const [tenantConfig, setTenantConfig] = useState({
@@ -32,7 +32,12 @@ export default function PortalPageContent({ initialTenantId }) {
     shortName: "Barangay",
     subtitle: "Public Information and Service Center",
     logo: "/logo.png",
-    colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' }
+    colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' },
+    primaryColor: '#008000',
+    primaryHover: '#006400',
+    accentColor: '#008000',
+    secondaryColor: '#2d5a3d',
+    cardBackground: '#112e1f'
   });
 
   // Resilient API URL Discovery
@@ -57,7 +62,12 @@ export default function PortalPageContent({ initialTenantId }) {
         shortName: "Demo Barangay",
         subtitle: "Sample Municipality, Philippines",
         logo: "/calumpit.png",
-        colorStyle: { background: 'linear-gradient(to right, #1e3a8a, #0f172a)' }
+        colorStyle: { background: 'linear-gradient(to right, #000000, #333333)' },
+        primaryColor: '#1a1a1a',
+        primaryHover: '#333333',
+        accentColor: '#C9A84C', // Gold
+        secondaryColor: '#4a4a4a',
+        cardBackground: '#1a1a1a'
       });
     } else {
       setTenantConfig({
@@ -65,7 +75,12 @@ export default function PortalPageContent({ initialTenantId }) {
         shortName: "Iba O' Este",
         subtitle: "Calumpit, Bulacan",
         logo: "/logo.png",
-        colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' }
+        colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' },
+        primaryColor: '#008000',
+        primaryHover: '#006400',
+        accentColor: '#008000',
+        secondaryColor: '#2d5a3d',
+        cardBackground: '#112e1f'
       });
     }
   }, [tenantId]);
@@ -665,7 +680,8 @@ export default function PortalPageContent({ initialTenantId }) {
               </a>
               <button
                 onClick={() => router.push('/login')}
-                className="bg-[#008000] hover:bg-[#006400] text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-all shadow-md"
+                className="text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-all shadow-md"
+                style={{ backgroundColor: tenantConfig.primaryColor }}
               >
                 Login
               </button>
@@ -704,7 +720,8 @@ export default function PortalPageContent({ initialTenantId }) {
             </a>
             <button
               onClick={() => router.push('/login')}
-              className="w-full bg-[#008000] hover:bg-[#006400] text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className="w-full text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              style={{ backgroundColor: tenantConfig.primaryColor }}
             >
               Login
             </button>
@@ -831,7 +848,7 @@ export default function PortalPageContent({ initialTenantId }) {
               </div>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 drop-shadow-2xl mb-2">
-              Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2d5a3d] to-[#112117] drop-shadow-lg">Forms</span>
+              Available Barangay <span className="text-transparent bg-clip-text drop-shadow-lg" style={{ backgroundImage: `linear-gradient(to right, ${tenantConfig.accentColor}, ${tenantConfig.primaryColor})` }}>Forms</span>
             </h2>
             <p className="text-gray-700 drop-shadow-lg max-w-2xl mx-auto text-base font-medium">
               Request official documents and certificates online. Fast, easy, and convenient.
@@ -916,23 +933,23 @@ export default function PortalPageContent({ initialTenantId }) {
 
                         // Theme definitions for better blending
                         const theme = isPrimary ? {
-                          bg: '#112e1f',              // Dark Forest
+                          bg: tenantConfig.cardBackground,
                           title: 'text-white',
-                          desc: 'text-green-100/80',
-                          iconBg: 'from-emerald-500 to-green-600',
-                          badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-                          button: 'from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600',
-                          buttonShadow: 'shadow-emerald-900/40',
-                          countBg: 'bg-emerald-400 text-[#112e1f]'
+                          desc: tenantId === 'demo' ? 'text-gray-300' : 'text-green-100/80',
+                          iconBg: tenantId === 'demo' ? `from-[${tenantConfig.accentColor}] to-black` : 'from-emerald-500 to-green-600',
+                          badge: tenantId === 'demo' ? `bg-[#C9A84C]/20 text-[#C9A84C] border-[#C9A84C]/30` : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                          button: tenantId === 'demo' ? `from-[#C9A84C] to-[#A07830] hover:from-[#E8C96A] hover:to-[#C9A84C]` : 'from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600',
+                          buttonShadow: tenantId === 'demo' ? 'shadow-yellow-900/40' : 'shadow-emerald-900/40',
+                          countBg: tenantId === 'demo' ? 'bg-[#C9A84C] text-black' : 'bg-emerald-400 text-[#112e1f]'
                         } : {
-                          bg: '#d1e0d3',              // Sage
-                          title: 'text-[#112e1f]',
-                          desc: 'text-[#2d5a3d]',
-                          iconBg: 'from-[#2d5a3d] to-[#112e1f]',
-                          badge: 'bg-[#2d5a3d]/10 text-[#2d5a3d] border-[#2d5a3d]/20',
-                          button: 'from-[#2d5a3d] to-[#112e1f] hover:from-[#3a6d4b] hover:to-[#1a3826]',
-                          buttonShadow: 'shadow-[#112e1f]/20',
-                          countBg: 'bg-[#112e1f] text-white'
+                          bg: tenantId === 'demo' ? '#f5f5f5' : '#d1e0d3',
+                          title: 'text-black',
+                          desc: tenantId === 'demo' ? 'text-gray-600' : 'text-[#2d5a3d]',
+                          iconBg: tenantId === 'demo' ? 'from-black to-gray-700' : 'from-[#2d5a3d] to-[#112e1f]',
+                          badge: tenantId === 'demo' ? 'bg-black/10 text-black border-black/20' : 'bg-[#2d5a3d]/10 text-[#2d5a3d] border-[#2d5a3d]/20',
+                          button: tenantId === 'demo' ? 'from-black to-gray-800 hover:from-gray-800 hover:to-black' : 'from-[#2d5a3d] to-[#112e1f] hover:from-[#3a6d4b] hover:to-[#1a3826]',
+                          buttonShadow: 'shadow-black/20',
+                          countBg: 'bg-black text-white'
                         };
 
                         return (
@@ -1591,7 +1608,7 @@ export default function PortalPageContent({ initialTenantId }) {
                       title: 'Barangay Captain',
                       subtitle: 'Chief Executive Officer',
                       officials: groupedOfficials.captain,
-                      bgColor: 'from-[#112e1f] to-[#2d5a3d]',
+                      bgColor: tenantId === 'demo' ? 'from-black to-gray-950' : 'from-[#112e1f] to-[#2d5a3d]',
                       icon: '👑'
                     },
                     {
@@ -1599,7 +1616,7 @@ export default function PortalPageContent({ initialTenantId }) {
                       title: 'Barangay Kagawad',
                       subtitle: 'Council Members, Secretary, and Treasurer',
                       officials: [...groupedOfficials.kagawad, ...groupedOfficials.secretary, ...groupedOfficials.treasurer],
-                      bgColor: 'from-green-600 to-emerald-700',
+                      bgColor: tenantId === 'demo' ? 'from-gray-900 to-black' : 'from-green-600 to-emerald-700',
                       icon: '🏛️'
                     },
                     {
@@ -1607,7 +1624,7 @@ export default function PortalPageContent({ initialTenantId }) {
                       title: 'SK Chairman',
                       subtitle: 'Youth Representative',
                       officials: groupedOfficials.sk_chairman,
-                      bgColor: 'from-emerald-600 to-green-700',
+                      bgColor: tenantId === 'demo' ? 'from-black to-gray-800' : 'from-emerald-600 to-green-700',
                       icon: '🌟'
                     },
                     {
@@ -1615,7 +1632,7 @@ export default function PortalPageContent({ initialTenantId }) {
                       title: 'SK Council',
                       subtitle: 'Youth Council Secretary, Treasurer, and Members',
                       officials: [], // Will be populated in the logic below
-                      bgColor: 'from-orange-500 to-amber-600',
+                      bgColor: tenantId === 'demo' ? 'from-gray-700 to-black' : 'from-orange-500 to-amber-600',
                       icon: '⚡'
                     },
                     {
@@ -1623,7 +1640,7 @@ export default function PortalPageContent({ initialTenantId }) {
                       title: 'Barangay Staff',
                       subtitle: 'Administrative Team',
                       officials: groupedOfficials.staff,
-                      bgColor: 'from-teal-600 to-green-700',
+                      bgColor: tenantId === 'demo' ? 'from-gray-600 to-gray-900' : 'from-teal-600 to-green-700',
                       icon: '👥'
                     }
                   ];
@@ -1660,7 +1677,7 @@ export default function PortalPageContent({ initialTenantId }) {
                               {/* Left Aligned Captain Card */}
                               <div className="w-full lg:w-[380px] flex-shrink-0 mx-auto">
                                 {displayOfficials.map((official, index) => {
-                                  const colorClass = 'from-green-800 to-green-950';
+                                  const colorClass = tenantId === 'demo' ? 'from-black to-gray-800' : 'from-green-800 to-green-950';
                                   const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
                                   return (
                                     <div key={official.id || index} className="bg-white rounded-[40px] shadow-2xl hover:shadow-green-900/20 transition-all duration-500 overflow-hidden border border-gray-100 group w-full transform hover:-translate-y-2">
@@ -1672,7 +1689,7 @@ export default function PortalPageContent({ initialTenantId }) {
                                             <span className="text-7xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity font-serif">{initials}</span>
                                           </div>
                                         )}
-                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#112e1f] via-[#112e1f]/40 to-transparent flex flex-col justify-end p-8 text-center z-20 h-1/2">
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-8 text-center z-20 h-1/2" style={tenantId !== 'demo' ? { backgroundImage: 'linear-gradient(to top, #112e1f, rgba(17,46,31,0.4), transparent)' } : {}}>
                                           <h3 className="text-white font-black text-2xl mb-1 drop-shadow-lg tracking-tight">Punong Barangay</h3>
                                         </div>
                                       </div>
@@ -2322,12 +2339,13 @@ export default function PortalPageContent({ initialTenantId }) {
               </p>
               <div className="flex items-center justify-between pt-5 mt-5 border-t border-gray-100">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Shield className="w-4 h-4 text-[#008000]" />
-                  <span>Barangay Iba O&apos; Este — Official Announcement</span>
+                  <Shield className="w-4 h-4" style={{ color: tenantConfig.accentColor }} />
+                  <span>Barangay {tenantConfig.shortName} — Official Announcement</span>
                 </div>
                 <button
                   onClick={() => setSelectedNewsItem(null)}
-                  className="px-5 py-2 bg-[#008000] hover:bg-[#006400] text-white rounded-lg font-semibold text-sm transition-all shadow-md"
+                  className="px-5 py-2 text-white rounded-lg font-semibold text-sm transition-all shadow-md"
+                  style={{ backgroundColor: tenantConfig.primaryColor }}
                 >
                   Close
                 </button>
