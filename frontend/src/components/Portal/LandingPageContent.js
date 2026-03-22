@@ -74,6 +74,7 @@ export default function LandingPageContent() {
     { label: 'Features', href: '#features' },
     { label: 'How It Works', href: '#how' },
     { label: 'Certificates', href: '#certs' },
+    { label: 'Demo', href: '#demo' },
     { label: 'Pricing', href: '#pricing' },
     { label: 'FAQ', href: '#faq' },
   ];
@@ -123,6 +124,17 @@ export default function LandingPageContent() {
             <button onClick={() => router.push('/login')} className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors px-4 py-2">
               Log in
             </button>
+            <a
+              href="https://brgydesk.up.railway.app/demo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold px-5 py-2.5 rounded-xl border transition-colors"
+              style={{ borderColor: `${GOLD}50`, color: GOLD_DARK, background: `${GOLD}10` }}
+              onMouseEnter={e => { e.currentTarget.style.background = `${GOLD}20`; }}
+              onMouseLeave={e => { e.currentTarget.style.background = `${GOLD}10`; }}
+            >
+              Visit Demo
+            </a>
             <button
               onClick={() => router.push('/pricing')}
               className="btn-gold text-sm font-semibold px-5 py-2.5 rounded-xl text-white"
@@ -144,6 +156,7 @@ export default function LandingPageContent() {
             ))}
             <div className="pt-3 flex flex-col gap-3">
               <button onClick={() => router.push('/login')} className="w-full py-3 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700">Log in</button>
+              <a href="https://brgydesk.up.railway.app/demo" target="_blank" rel="noopener noreferrer" className="w-full py-3 rounded-xl text-sm font-semibold text-center border" style={{ borderColor: `${GOLD}50`, color: GOLD_DARK, background: `${GOLD}10` }}>Visit Demo</a>
               <button onClick={() => router.push('/pricing')} className="btn-gold w-full py-3 rounded-xl text-sm font-semibold text-white" style={{ background: `linear-gradient(135deg, ${GOLD_DARK}, ${GOLD})` }}>See Pricing</button>
             </div>
           </div>
@@ -641,6 +654,89 @@ export default function LandingPageContent() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── LIVE DEMO ── */}
+      <section id="demo" className="py-28 px-8 bg-white">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <span className="text-sm font-semibold uppercase tracking-widest" style={{ color: GOLD }}>Live Demo</span>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mt-3 mb-6 tracking-tight leading-tight">
+                See BrgyDesk<br />in action
+              </h2>
+              <p className="text-lg text-gray-500 leading-relaxed mb-8 font-medium">
+                Explore a fully working demo of BrgyDesk — the public portal, certificate request flow, and resident experience. No sign-up needed. Just click and explore.
+              </p>
+              <div className="space-y-4 mb-10">
+                {[
+                  'Browse the public barangay portal',
+                  'Submit a sample certificate request',
+                  'See the approval workflow in action',
+                  'Track application status with a reference number',
+                ].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: `${GOLD}15`, border: `1px solid ${GOLD}30` }}>
+                      <CheckCircle className="w-3.5 h-3.5" style={{ color: GOLD }} />
+                    </div>
+                    <span className="text-base font-medium text-gray-700">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <a
+                href="https://brgydesk.up.railway.app/demo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-gold inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base font-semibold text-white"
+                style={{ background: `linear-gradient(135deg, ${GOLD_DARK}, ${GOLD})` }}
+              >
+                Visit Live Demo <ArrowRight className="w-5 h-5" />
+              </a>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 rounded-[2rem] pointer-events-none" style={{ background: `${GOLD}08`, filter: 'blur(60px)' }} />
+              <div className="relative bg-gray-950 rounded-[2rem] p-8 border border-white/5 shadow-2xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                  <div className="flex-1 mx-4 bg-white/5 rounded-lg px-4 py-1.5 text-xs text-gray-500 font-mono">
+                    brgydesk.up.railway.app/demo
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Barangay', value: 'Demo Barangay' },
+                    { label: 'Active Requests', value: '24 pending' },
+                    { label: 'Residents', value: '3,200+' },
+                    { label: 'Status', value: 'Live & Running' },
+                  ].map(row => (
+                    <div key={row.label} className="flex items-center justify-between bg-white/5 rounded-xl px-5 py-3.5 border border-white/5">
+                      <span className="text-sm text-gray-400 font-medium">{row.label}</span>
+                      <span className="text-sm font-bold text-white">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-xs text-gray-500 font-medium">Demo is live</span>
+                  </div>
+                  <a
+                    href="https://brgydesk.up.railway.app/demo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-bold flex items-center gap-1"
+                    style={{ color: GOLD }}
+                  >
+                    Open Demo <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
