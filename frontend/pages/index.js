@@ -21,18 +21,27 @@ export default function Home() {
       // Detection logic
       if (hostname === 'brgydesk.up.railway.app' || hostname === 'localhost' || hostname === '127.0.0.1') {
         setView('landing');
+      } else if (hostname.includes('-brgydesk.up.railway.app')) {
+        // Support for ibaoeste-brgydesk.up.railway.app structure (SSL compatible)
+        const tenant = hostname.split('-brgydesk')[0];
+        setTenantId(tenant);
+        setView('portal');
       } else if (hostname.startsWith('ibaoeste.')) {
+        // Preserve legacy fallback structure
         setTenantId('ibaoeste');
         setView('portal');
       } else if (hostname.includes('demo')) {
         setTenantId('demo');
         setView('portal');
       } else if (hostname.includes('railway.app') && !hostname.startsWith('brgydesk.')) {
-        // Fallback for other railway subdomains (like old one)
-        setTenantId('ibaoeste');
+        // Fallback for generic or old railway subdomains (like demo-brgydesk or old name)
+        const parts = hostname.split('.');
+        const prefix = parts[0];
+        const tenant = prefix.includes('-') ? prefix.split('-')[0] : prefix;
+        setTenantId(tenant || 'ibaoeste');
         setView('portal');
       } else {
-        // Default to landing if it's the main domain, otherwise portal
+        // Default to landing
         setView('landing');
       }
     }
