@@ -13,9 +13,9 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
 
   const [tenantConfig] = useState({
-    name: "LGU HUB PORTAL",
-    shortName: "LGU Hub",
-    logo: "/lgu-hub-logo.png",
+    name: "BRGYDESK",
+    shortName: "BrgyDesk",
+    logo: "/logo.png",
     colors: {
       primary: "slate-800",
       primaryHover: "black",
@@ -120,7 +120,7 @@ export default function Login() {
               </div>
 
               <p className="text-gray-600 text-lg leading-relaxed max-w-sm font-medium">
-                Your gateway to efficient municipal management and digital governance
+                Your gateway to efficient barangay services and digital governance
               </p>
             </div>
 
@@ -133,11 +133,11 @@ export default function Login() {
                   <div className="text-center">
                     <img
                       src={tenantConfig.logo}
-                      alt="LGU Hub Logo"
+                      alt="BrgyDesk Logo"
                       className="w-16 h-16 object-contain drop-shadow-md mx-auto mb-2"
                     />
                     <h2 className="text-2xl font-bold text-gray-800">Welcome Back</h2>
-                    <p className="text-gray-500 text-sm mt-1">Sign in to your management dashboard</p>
+                    <p className="text-gray-500 text-sm mt-1">Sign in to your BrgyDesk dashboard</p>
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-3">
