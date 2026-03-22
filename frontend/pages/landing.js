@@ -170,7 +170,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className="pt-20 pb-20 px-8 bg-white overflow-hidden relative">
+      <section className="pt-24 pb-16 lg:pt-20 lg:pb-20 px-6 lg:px-8 bg-white overflow-hidden relative">
         <div className='absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.04] pointer-events-none' style={{ background: GOLD, filter: 'blur(120px)', transform: 'translate(30%, -30%)' }} />
         <div className={`max-w-[1400px] mx-auto transition-all duration-800 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
           <div className="max-w-3xl mb-12">
@@ -178,7 +178,7 @@ export default function LandingPage() {
               <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: GOLD }}></span>
               Built for Philippine Barangays
             </span>
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-[1.08] tracking-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-gray-900 leading-[1.1] tracking-tight">
               The complete digital<br />
               system for your<br />
               <span className="relative inline-block">
@@ -189,8 +189,8 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-20 items-start">
-            <div>
-              <p className="text-xl text-gray-500 leading-relaxed mb-10 max-w-2xl font-medium">
+            <div className="z-10 relative">
+              <p className="text-lg lg:text-xl text-gray-500 leading-relaxed mb-10 max-w-2xl font-medium">
                 BrgyDesk gives your barangay a public website, online certificate requests, multi-step approval workflows, official receipts, and a full admin dashboard — all in one platform.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -201,26 +201,26 @@ export default function LandingPage() {
                   Log in to Dashboard
                 </button>
               </div>
-              <div className="flex flex-wrap items-center gap-6 mt-12 pt-10 border-t border-gray-100">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-6 mt-12 pt-10 border-t border-gray-100">
                 {[ { val: "10+", label: "Certificate Types" }, { val: "Multi-Step", label: "Approval Workflow" }, { val: "100%", label: "RA 10173 Compliant" }, { val: "Multi-Tenant", label: "LGU Ready" } ].map(s => (
                   <div key={s.label}>
-                    <div className="text-2xl font-bold text-gray-900">{s.val}</div>
-                    <div className="text-sm text-gray-400 font-medium">{s.label}</div>
+                    <div className="text-xl lg:text-2xl font-bold text-gray-900">{s.val}</div>
+                    <div className="text-xs lg:text-sm text-gray-400 font-medium">{s.label}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="relative lg:-mt-40">
+            <div className="hidden lg:block relative lg:-mt-40">
               {/* Background Glow */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full blur-[100px] opacity-10 pointer-events-none" style={{ background: GOLD }} />
 
-              {/* Primary Wide Desktop View - CROPPED to remove built-in frame */}
+              {/* Primary Wide Desktop View (Cropped) */}
               <div className="relative z-10 w-full aspect-video rounded-[1.5rem] shadow-[0_45px_100px_rgba(0,0,0,0.1)] bg-white overflow-hidden border border-gray-100">
                 <img src="/images/landing/hero.png" alt="BrgyDesk Desktop View" className="w-full h-full object-cover scale-[1.15]" />
               </div>
 
-              {/* Secondary Vertical Tablet View - CROPPED to remove bezel */}
+              {/* Secondary Vertical Tablet View (Cropped) */}
               <div className="absolute -left-12 -bottom-10 z-20 w-1/2 aspect-[4/5] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.15)] bg-white overflow-hidden hidden sm:block transform -rotate-3 border border-gray-100 hover:rotate-0 transition-transform duration-500">
                 <img src="/images/landing/hero-tablet.png" alt="BrgyDesk Tablet View" className="w-full h-full object-cover scale-[1.3]" />
               </div>
