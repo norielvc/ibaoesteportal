@@ -97,6 +97,8 @@ if (process.env.FRONTEND_URL) {
 // Force inclusion of the production frontend URL
 allowedOrigins.push('https://brgyportal-frontend-production.up.railway.app');
 allowedOrigins.push('http://brgyportal-frontend-production.up.railway.app');
+allowedOrigins.push('https://brgydesk.up.railway.app');
+allowedOrigins.push('http://brgydesk.up.railway.app');
 
 if (process.env.ALLOWED_ORIGINS) {
   const extraOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
