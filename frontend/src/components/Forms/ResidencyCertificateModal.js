@@ -176,11 +176,11 @@ const SearchableDropdown = ({ items, onSelect, placeholder, label, colorClass, s
 
   return (
     <div className="space-y-1 relative" ref={dropdownRef}>
-      <p className={`text-[8px] font-bold ${colorClass.label} uppercase tracking-widest ml-1`}>{label}</p>
+      <p className={`text-sm font-bold ${colorClass.label} uppercase tracking-widest ml-1`}>{label}</p>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full text-[10px] p-2 bg-white border border-gray-200 rounded-lg font-bold ${colorClass.text} flex items-center justify-between shadow-sm hover:bg-gray-50 transition-all uppercase outline-none focus:ring-2 focus:ring-emerald-500/20`}
+        className={`w-full text-sm p-2 bg-white border border-gray-200 rounded-lg font-bold ${colorClass.text} flex items-center justify-between shadow-sm hover:bg-gray-50 transition-all uppercase outline-none focus:ring-2 focus:ring-emerald-500/20`}
       >
         <span className="truncate">{placeholder}</span>
         <Search className={`w-3 h-3 ml-2 ${colorClass.icon} ${isOpen ? 'rotate-180' : ''} transition-transform`} />
@@ -197,7 +197,7 @@ const SearchableDropdown = ({ items, onSelect, placeholder, label, colorClass, s
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder={searchPlaceholder}
-                className={`w-full pl-8 pr-3 py-1.5 text-[9px] ${colorClass.bg} border border-gray-100 rounded-md outline-none focus:ring-2 ${colorClass.ring} ${colorClass.text} placeholder-gray-400 font-medium`}
+                className={`w-full pl-8 pr-3 py-1.5 text-sm ${colorClass.bg} border border-gray-100 rounded-md outline-none focus:ring-2 ${colorClass.ring} ${colorClass.text} placeholder-gray-400 font-medium`}
               />
             </div>
           </div>
@@ -208,13 +208,13 @@ const SearchableDropdown = ({ items, onSelect, placeholder, label, colorClass, s
                   key={i}
                   type="button"
                   onClick={() => { onSelect(item); setIsOpen(false); setSearch(''); }}
-                  className={`w-full text-left px-4 py-2 text-[10px] font-bold ${colorClass.text} hover:${colorClass.bg} transition-colors uppercase border-b border-gray-50 last:border-0`}
+                  className={`w-full text-left px-4 py-2 text-sm font-bold ${colorClass.text} hover:${colorClass.bg} transition-colors uppercase border-b border-gray-50 last:border-0`}
                 >
                   {item}
                 </button>
               ))
             ) : (
-              <div className="px-4 py-3 text-[10px] text-gray-400 italic text-center">No matches found</div>
+              <div className="px-4 py-3 text-sm text-gray-400 italic text-center">No matches found</div>
             )}
           </div>
         </div>
@@ -485,10 +485,10 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
       <div className="brgy-modal-wrap">
       {(!showConfirmationPopup && !showSuccessModal) && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-screen items-center justify-center p-4">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-10">
             <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
 
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in no-scrollbar" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col overflow-hidden animate-fade-in no-scrollbar" style={{ minHeight: '800px', height: '90vh', maxHeight: '95vh' /* BUST-CACHE-800 */, fontFamily: "'Open Sans', sans-serif" }}>
               <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-3 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
                 <div className="flex items-center gap-3 relative z-10">
@@ -497,7 +497,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
                     <h2 className="text-lg font-bold text-white tracking-tight drop-shadow-md">Barangay Residency / Katunayan ng Paninirahan</h2>
                     <div className="flex items-center gap-2 mt-0.5">
                       <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
-                      <p className="text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 bg-red-600 rounded-md shadow-md">{referenceNumber || 'New Residency Request'}</p>
+                      <p className="text-white text-sm font-bold uppercase tracking-wide px-2 py-0.5 bg-red-600 rounded-md shadow-md">{referenceNumber || 'New Residency Request'}</p>
                     </div>
                   </div>
                 </div>
@@ -506,8 +506,8 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
 
               {notification && <div className="px-4 pt-2"><Notification type={notification.type} title={notification.title} message={notification.message} onClose={() => setNotification(null)} /></div>}
 
-              <div className="flex-1 overflow-y-auto">
-                <form onSubmit={handleSubmit} className="p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto px-2 py-4">
+                <form onSubmit={handleSubmit} className="p-4 space-y-6">
                   <div className="bg-gradient-to-r from-[#112e1f]/90 to-[#1a3d29]/80 border border-white/10 rounded-lg p-3 shadow-md relative overflow-hidden flex-shrink-0">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none"></div>
                     <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-400/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl pointer-events-none"></div>
@@ -518,14 +518,14 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse"></div>
-                          <h4 className="font-bold text-emerald-300 uppercase tracking-wide text-[9px]">
+                          <h4 className="font-bold text-emerald-300 uppercase tracking-wide text-sm">
                             Registration Notice / Paunawa
                           </h4>
                         </div>
-                        <p className="text-white/80 text-[10px] font-medium leading-relaxed mb-0.5">
+                        <p className="text-white/80 text-sm font-medium leading-relaxed mb-0.5">
                           If no record is found in the resident directory, please visit the Barangay Hall and coordinate with the staff to register.
                         </p>
-                        <p className="text-white/50 text-[9px] font-medium leading-relaxed italic">
+                        <p className="text-white/50 text-sm font-medium leading-relaxed italic">
                           Kung walang rekord sa direktoryo ng residente, mangyaring pumunta sa Barangay Hall upang magparehistro sa ating mga kawani.
                         </p>
                       </div>
@@ -538,7 +538,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
                         <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">1</div>
                         <div>
                           <h3 className="text-base font-bold text-white">Personal Information / Impormasyong Personal</h3>
-                          <p className="text-[10px] text-white/90 font-medium tracking-wide">Auto-filled via community database / Awtomatikong napupuno sa database</p>
+                          <p className="text-sm text-white/90 font-medium tracking-wide">Auto-filled via community database / Awtomatikong napupuno sa database</p>
                         </div>
                       </div>
                       <button type="button" onClick={() => setIsResidentModalOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#2d5a3d]/20 text-[#2d5a3d] hover:bg-[#2d5a3d] hover:text-white rounded-lg text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-md group">
@@ -548,7 +548,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
                     </div>
 
                     <div className="relative group">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wide ml-1 mb-1 block">Resident Full Name / Buong Pangalan ng Residente</label>
+                      <label className="text-sm font-bold text-gray-400 uppercase tracking-wide ml-1 mb-1 block">Resident Full Name / Buong Pangalan ng Residente</label>
                       <input type="text" name="fullName" value={formData.fullName} readOnly onClick={() => setIsResidentModalOpen(true)} placeholder="TAP HERE TO SELECT FROM RESIDENT / PUMILI MULA SA RESIDENTE DIRECTORY..." className={`w-full px-4 py-3 bg-white border-2 ${errors.fullName ? 'border-red-500 bg-red-50' : (formData.fullName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-lg transition-all duration-300 font-bold text-base cursor-pointer hover:border-emerald-300 text-center tracking-wide shadow-sm`} />
                     </div>
 
@@ -558,24 +558,24 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
                         <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">2</div>
                         <div>
                           <h3 className="text-base font-bold text-white">Notification & Contact / Notipikasyon at Contact</h3>
-                          <p className="text-[10px] text-white/90 font-medium tracking-wide">Where to receive your updates / Kung saan matatanggap ang mga update</p>
+                          <p className="text-sm text-white/90 font-medium tracking-wide">Where to receive your updates / Kung saan matatanggap ang mga update</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div className="space-y-1 relative group">
-                          <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Email Address (Optional) / Email (Opsyonal)</label>
+                          <label className="text-sm font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Email Address (Optional) / Email (Opsyonal)</label>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none border-r pr-2 border-gray-100">
                               <Mail className="w-4 h-4 text-[#2d5a3d]/50" />
                             </div>
                             <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="username@example.com" className={`w-full pl-12 pr-4 py-2.5 bg-white border-2 ${errors.email ? 'border-red-500 bg-red-50' : 'border-emerald-100'} rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-normal text-gray-800 shadow-sm`} />
                           </div>
-                          <p className="text-[9px] text-gray-400 font-bold italic ml-2">Notifications will be sent here / Dito ipapadala ang mga abiso</p>
+                          <p className="text-sm text-gray-400 font-bold italic ml-2">Notifications will be sent here / Dito ipapadala ang mga abiso</p>
                         </div>
 
                         <div className="space-y-1 relative group">
-                          <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Contact Number / Numero ng Telepono <span className="text-red-500">*</span></label>
+                          <label className="text-sm font-bold text-[#2d5a3d] uppercase tracking-wide ml-1 block">Contact Number / Numero ng Telepono <span className="text-red-500">*</span></label>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none border-r pr-2 border-gray-100">
                               <Phone className="w-4 h-4 text-[#2d5a3d]/50" />
@@ -591,13 +591,13 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
                         <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shadow-sm shrink-0">3</div>
                         <div>
                           <h3 className="text-base font-bold text-white">Application Intent / Layunin ng Aplikasyon</h3>
-                          <p className="text-[10px] text-white/90 font-medium tracking-wide">Purpose of your request / Dahilan ng inyong pagkuha</p>
+                          <p className="text-sm text-white/90 font-medium tracking-wide">Purpose of your request / Dahilan ng inyong pagkuha</p>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div className="space-y-1">
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-1 mb-1">
-                            <label className="text-[10px] font-bold text-[#2d5a3d] uppercase tracking-wide ml-1">Request Purpose / Dahilan ng Pagkuha <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-bold text-[#2d5a3d] uppercase tracking-wide ml-1">Request Purpose / Dahilan ng Pagkuha <span className="text-red-500">*</span></label>
                             <div className="flex flex-wrap gap-2">
                               <SearchableDropdown
                                 label="Quick Select 1"
@@ -648,7 +648,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
                             placeholder="e.g. School Enrollment, ID Application..." 
                             className={`w-full px-4 py-3 bg-white border-2 ${errors.purpose ? 'border-red-500 bg-red-50 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-emerald-100'} rounded-lg focus:border-emerald-500 focus:shadow-lg transition-all outline-none font-bold text-gray-900 uppercase text-[14px] shadow-sm resize-none min-h-[120px]`} 
                           />
-                          <p className="text-[9px] text-gray-400 font-bold mt-1 italic ml-1">You can select from the dropdowns above or type manually / Maaaring pumili sa listahan o mag-type nang manu-mano</p>
+                          <p className="text-sm text-gray-400 font-bold mt-1 italic ml-1">You can select from the dropdowns above or type manually / Maaaring pumili sa listahan o mag-type nang manu-mano</p>
                         </div>
                       </div>
                     </div>
@@ -657,7 +657,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
               </div>
 
               <div className="border-t bg-gray-50/80 backdrop-blur-md px-4 py-3 flex flex-col sm:flex-row gap-2 justify-between items-center no-print">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide hidden sm:block">Please check all entries before final submission / Pakisuri ang lahat bago i-submit</p>
+                <p className="text-sm font-bold text-gray-400 uppercase tracking-wide hidden sm:block">Please check all entries before final submission / Pakisuri ang lahat bago i-submit</p>
                 <div className="flex gap-2 w-full sm:w-auto">
                   <button type="submit" onClick={handleSubmit} className="flex-1 sm:flex-none px-5 py-2.5 bg-gradient-to-r from-[#8cc63f] to-[#7cb342] hover:from-[#7cb342] hover:to-[#689f38] text-white rounded-lg font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 shadow-xl hover:shadow-emerald-900/20 transform hover:-translate-y-0.5 transition-all group">
                     <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
@@ -672,9 +672,9 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
 
       {showConfirmationPopup && (
         <div className="fixed inset-0 z-60 overflow-y-auto">
-          <div className="flex min-h-screen items-center justify-center p-4">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-10">
             <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" onClick={() => setShowConfirmationPopup(false)} />
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in" style={{ backfaceVisibility: 'hidden', transform: 'translateZ(0)', fontFamily: "'Open Sans', sans-serif" }}>
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col overflow-hidden animate-fade-in" style={{ minHeight: '800px', height: '90vh', maxHeight: '95vh' /* BUST-CACHE-800 */, fontFamily: "'Open Sans', sans-serif" }}>
               <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-3 flex items-center justify-between border-b border-white/10 relative overflow-hidden">
                 <div className="flex items-center gap-3 relative z-10">
                   <div className="bg-white/20 backdrop-blur-md p-2 rounded-lg border border-white/30 shadow-xl"><FileText className="w-5 h-5 text-white shadow-sm" /></div>
@@ -690,7 +690,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
                     const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                     return (
                       <div key={key} className="flex flex-col md:flex-row md:items-center justify-between px-4 py-2.5 bg-white shadow-sm border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors group">
-                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">{formattedKey}</span>
+                        <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">{formattedKey}</span>
                         <span className="text-sm font-bold text-gray-900 break-words md:text-right mt-1 md:mt-0 group-hover:text-emerald-700 transition-colors uppercase">{typeof value === 'object' ? JSON.stringify(value) : value.toString()}</span>
                       </div>
                     );
@@ -710,7 +710,7 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
 
       {showSuccessModal && (
         <div className="fixed inset-0 z-70 overflow-y-auto">
-          <div className="flex min-h-screen items-center justify-center p-4">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-10">
             <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in" style={{ fontFamily: "'Open Sans', sans-serif" }}>
               <div className="bg-gradient-to-r from-[#112e1f] to-[#214431] px-6 py-6 text-center relative">
@@ -725,16 +725,16 @@ export default function ResidencyCertificateModal({ isOpen, onClose, isDemo = fa
                 <div className="bg-[#112e1f]/5 border border-[#112e1f]/10 rounded-lg p-4 relative overflow-hidden text-left mb-4">
                   <div className="flex items-center gap-2 text-[#112e1f] mb-3">
                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wide">Next Procedures / Susunod na Pamamaraan</h4>
+                    <h4 className="text-sm font-bold uppercase tracking-wide">Next Procedures / Susunod na Pamamaraan</h4>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Clock className="w-3 h-3 text-emerald-700" /></div>
-                      <p className="text-[10px] text-gray-600 font-bold leading-relaxed">Processing typically takes 1-3 business days. Your application is now in the queue for chairman approval.</p>
+                      <p className="text-sm text-gray-600 font-bold leading-relaxed">Processing typically takes 1-3 business days. Your application is now in the queue for chairman approval.</p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Phone className="w-3 h-3 text-emerald-700" /></div>
-                      <p className="text-[10px] text-gray-600 font-bold leading-relaxed">We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your pickup schedule at the Barangay Hall.</p>
+                      <p className="text-sm text-gray-600 font-bold leading-relaxed">We will coordinate via <strong>SMS at {formData.contactNumber}</strong> to confirm your pickup schedule at the Barangay Hall.</p>
                     </div>
                   </div>
                 </div>
@@ -872,11 +872,11 @@ const ResidencyPreview = React.memo(({ formData, referenceNumber, currentDate, o
             </div>
             {/* Reference Number Section */}
             <div className="w-full text-right mt-auto mb-2 opacity-60">
-              <p className="text-[10px] italic">Ref No: <strong>{referenceNumber}</strong></p>
+              <p className="text-sm italic">Ref No: <strong>{referenceNumber}</strong></p>
             </div>
 
             {/* Footer Divider and info */}
-            <div className="w-full border-t border-gray-400 pt-1 text-[10px] opacity-60">
+            <div className="w-full border-t border-gray-400 pt-1 text-sm opacity-60">
               <div className="flex flex-col items-start italic">
                 <p>Address: {officials.contactInfo?.address}</p>
               </div>

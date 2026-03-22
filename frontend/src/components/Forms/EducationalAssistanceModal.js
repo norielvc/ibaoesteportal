@@ -238,7 +238,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
       {demoTheme}
       <div className="brgy-modal-wrap">
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-0 md:p-4 overflow-hidden">
-      <div className="relative bg-white md:rounded-3xl shadow-2xl w-full max-w-5xl h-full md:h-auto md:max-h-[90vh] flex flex-col overflow-hidden animate-fade-in no-scrollbar" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+      <div className="relative bg-white md:rounded-3xl shadow-2xl w-full max-w-[1400px] h-full md:h-auto md:max-h-[85vh] flex flex-col overflow-hidden animate-fade-in no-scrollbar" style={{ fontFamily: "'Open Sans', sans-serif" }}>
         {/* Premium Nature Header */}
         <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-4 py-4 md:px-8 md:py-8 flex items-center justify-between border-b border-white/10 relative overflow-hidden flex-shrink-0">
           {/* Decorative elements */}
@@ -253,7 +253,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
               <h2 className="text-lg md:text-2xl font-black text-white leading-none tracking-tight">Educational Assistance</h2>
               <div className="flex items-center gap-2 mt-1.5">
                 <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                <p className="text-white text-[10px] md:text-xs font-black uppercase tracking-widest px-4 py-1.5 bg-red-600 rounded-l-full rounded-tr-md rounded-br-md shadow-md mt-2 block">Scholarship Filing Portal</p>
+                <p className="text-white text-sm md:text-sm font-black uppercase tracking-widest px-4 py-1.5 bg-red-600 rounded-l-full rounded-tr-md rounded-br-md shadow-md mt-2 block">Scholarship Filing Portal</p>
               </div>
             </div>
           </div>
@@ -277,13 +277,13 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                 </div>
                 <div className="space-y-2.5 flex-1">
                   <div>
-                    <h4 className="font-extrabold text-amber-900 uppercase tracking-widest text-[11px] flex items-center gap-2 mb-1">
+                    <h4 className="font-extrabold text-amber-900 uppercase tracking-widest text-sm flex items-center gap-2 mb-1">
                       Registration Notice / Paunawa
                     </h4>
-                    <p className="text-amber-800 text-xs font-bold leading-relaxed mb-1">
+                    <p className="text-amber-800 text-sm font-bold leading-relaxed mb-1">
                       If no record is found in the resident directory, please visit the Barangay Hall and coordinate with the staff to register.
                     </p>
-                    <p className="text-amber-800/80 text-[11px] font-bold leading-relaxed">
+                    <p className="text-amber-800/80 text-sm font-bold leading-relaxed">
                       Kung walang rekord sa direktoryo ng residente, mangyaring pumunta sa Barangay Hall upang magparehistro sa ating mga kawani.
                     </p>
                   </div>
@@ -296,7 +296,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                 <div className="bg-rose-100 p-2 rounded-lg text-rose-600"><AlertCircle className="w-5 h-5" /></div>
                 <div>
                   <h4 className="text-sm font-bold text-rose-900 uppercase tracking-wide">Filing Error Occurred</h4>
-                  <p className="text-rose-700 text-xs text-balance">Pakisuri ang mga patlang na may pulang border o ang iyong lagda or punan ang lahat ng kinakailangang impormasyon.</p>
+                  <p className="text-rose-700 text-sm text-balance">Pakisuri ang mga patlang na may pulang border o ang iyong lagda or punan ang lahat ng kinakailangang impormasyon.</p>
                 </div>
               </div>
             )}
@@ -309,7 +309,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                     <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">1</div>
                     <div>
                       <h3 className="text-lg md:text-xl font-black text-white tracking-tight">Personal Profile</h3>
-                      <p className="text-xs text-white/90 font-bold uppercase tracking-widest">Verified Community Identity</p>
+                      <p className="text-sm text-white/90 font-bold uppercase tracking-widest">Verified Community Identity</p>
                     </div>
                   </div>
 
@@ -326,7 +326,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                 <div className="relative group">
                   <div className={`absolute inset-0 bg-emerald-500/5 rounded-3xl blur-2xl opacity-0 ${formData.firstName ? 'opacity-100' : ''} transition-opacity duration-500`}></div>
                   <div className="relative space-y-4">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.2em] ml-1 block opacity-60">Applicant Full Name</label>
+                    <label className="text-sm font-black text-emerald-800 uppercase tracking-[0.2em] ml-1 block opacity-60">Applicant Full Name</label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
                         <input
@@ -338,15 +338,15 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                           onClick={() => setIsResidentModalOpen(true)}
                           className={`w-full px-4 py-3 md:px-6 md:py-4.5 bg-white border-2 ${errors.firstName ? 'border-red-500 bg-red-50' : (formData.firstName ? 'border-emerald-200 ring-2 ring-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400 italic')} rounded-2xl transition-all duration-300 font-black text-base md:text-lg cursor-pointer hover:border-emerald-300 shadow-sm text-center`}
                         />
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center block">First Name / Pangalan</span>
+                        <span className="text-sm font-black text-gray-400 uppercase tracking-widest text-center block">First Name / Pangalan</span>
                       </div>
                       <div className="space-y-2">
                         <input type="text" value={formData.middleName} readOnly disabled className="w-full px-4 py-3 md:px-6 md:py-4.5 bg-gray-50/50 border-2 border-gray-100 rounded-2xl text-gray-500 font-bold text-center italic" />
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center block">Middle Name</span>
+                        <span className="text-sm font-black text-gray-400 uppercase tracking-widest text-center block">Middle Name</span>
                       </div>
                       <div className="space-y-2">
                         <input type="text" value={formData.lastName} readOnly disabled className="w-full px-4 py-3 md:px-6 md:py-4.5 bg-gray-50/50 border-2 border-gray-100 rounded-2xl text-gray-500 font-bold text-center italic" />
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center block">Last Name / Apelyido</span>
+                        <span className="text-sm font-black text-gray-400 uppercase tracking-widest text-center block">Last Name / Apelyido</span>
                       </div>
                     </div>
                   </div>
@@ -359,13 +359,13 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                   <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">2</div>
                   <div>
                     <h3 className="text-lg md:text-xl font-black text-white tracking-tight">Notification & Residency</h3>
-                    <p className="text-xs text-white/90 font-bold uppercase tracking-widest">Where to receive your updates / Kung saan matatanggap ang mga update</p>
+                    <p className="text-sm text-white/90 font-bold uppercase tracking-widest">Where to receive your updates / Kung saan matatanggap ang mga update</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3 relative group">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Email Address (Optional) / Email (Opsyonal)</label>
+                    <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block">Email Address (Optional) / Email (Opsyonal)</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none border-r pr-3 border-gray-100">
                         <Pen className="w-4 h-4 text-emerald-600/50" />
@@ -375,7 +375,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                   </div>
 
                   <div className="space-y-3 relative group">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">SMS Alert Receiver <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block">SMS Alert Receiver <span className="text-red-500">*</span></label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none border-r pr-3 border-gray-100">
                         <Phone className="w-4 h-4 text-emerald-600/50" />
@@ -387,7 +387,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Purok / Area Unit <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block">Purok / Area Unit <span className="text-red-500">*</span></label>
                     <select
                       name="purok"
                       value={formData.purok}
@@ -402,20 +402,20 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Identification Number / Numero ng Pagkakakilanlan <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block">Identification Number / Numero ng Pagkakakilanlan <span className="text-red-500">*</span></label>
                     {formData.purok === 'NV9' ? (
                       <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
                           <input type="text" name="phaseNumber" value={formData.phaseNumber} onChange={handleInputChange} placeholder="PH" className={`w-full px-4 py-4 bg-white border-2 ${errors.phaseNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl focus:border-[#2d5a3d] outline-none text-center font-black`} />
-                          <span className="text-[8px] text-gray-400 font-black uppercase text-center block">Phase / Bahagi</span>
+                          <span className="text-sm text-gray-400 font-black uppercase text-center block">Phase / Bahagi</span>
                         </div>
                         <div className="space-y-1">
                           <input type="text" name="blockNumber" value={formData.blockNumber} onChange={handleInputChange} placeholder="BLK" className={`w-full px-4 py-4 bg-white border-2 ${errors.blockNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl focus:border-[#2d5a3d] outline-none text-center font-black`} />
-                          <span className="text-[8px] text-gray-400 font-black uppercase text-center block">Block / Bloke</span>
+                          <span className="text-sm text-gray-400 font-black uppercase text-center block">Block / Bloke</span>
                         </div>
                         <div className="space-y-1">
                           <input type="text" name="lotNumber" value={formData.lotNumber} onChange={handleInputChange} placeholder="LOT" className={`w-full px-4 py-4 bg-white border-2 ${errors.lotNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-xl focus:border-[#2d5a3d] outline-none text-center font-black`} />
-                          <span className="text-[8px] text-gray-400 font-black uppercase text-center block">Lot / Lote</span>
+                          <span className="text-sm text-gray-400 font-black uppercase text-center block">Lot / Lote</span>
                         </div>
                       </div>
                     ) : (
@@ -438,13 +438,13 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                   <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">3</div>
                   <div>
                     <h3 className="text-lg md:text-xl font-black text-white tracking-tight">Academic Profile / Akademikong Profile</h3>
-                    <p className="text-xs text-white/90 font-bold uppercase tracking-widest">Educational Status & performance / Katayuan sa Edukasyon</p>
+                    <p className="text-sm text-white/90 font-bold uppercase tracking-widest">Educational Status & performance / Katayuan sa Edukasyon</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Level / Grade (A.Y. 2024-2025) / Taon o Antas <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block">Level / Grade (A.Y. 2024-2025) / Taon o Antas <span className="text-red-500">*</span></label>
                     <select
                       name="yearGrade"
                       value={formData.yearGrade}
@@ -458,7 +458,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                     </select>
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">General Weighted Average / Pangkalahatang Average <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block">General Weighted Average / Pangkalahatang Average <span className="text-red-500">*</span></label>
                     <div className="relative">
                       <input
                         type="number"
@@ -469,24 +469,24 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                         placeholder="ENTER GWA (E.G. 1.25)... / ILAGAY ANG GWA (HAL. 1.25)..."
                         className={`w-full px-4 py-3 md:px-6 md:py-4 bg-white border-2 ${errors.gwa ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none`}
                       />
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-[10px] font-black">NUMERIC</div>
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-sm font-black">NUMERIC</div>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Target Institution <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block">Target Institution <span className="text-red-500">*</span></label>
                     <input type="text" name="schoolToAttend" value={formData.schoolToAttend} onChange={handleInputChange} placeholder="PAARALANG PAPASUKAN..." className={`w-full px-4 py-3 md:px-6 md:py-4 bg-white border-2 ${errors.schoolToAttend ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase`} />
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Current Institution</label>
+                    <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block">Current Institution</label>
                     <input type="text" name="schoolAttending" value={formData.schoolAttending} onChange={handleInputChange} placeholder="PAARALANG PINAPASUKAN (OPTIONAL)..." className="w-full px-4 py-3 md:px-6 md:py-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-[#2d5a3d] font-black text-emerald-900 outline-none uppercase" />
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">Honorary Awards Received</label>
+                  <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block">Honorary Awards Received</label>
                   <textarea
                     name="academicAwards"
                     value={formData.academicAwards}
@@ -504,14 +504,14 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                   <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-2xl shadow-sm shrink-0">4</div>
                   <div>
                     <h3 className="text-lg md:text-xl font-black text-white tracking-tight">Identity Validation</h3>
-                    <p className="text-xs text-white/90 font-bold uppercase tracking-widest">Digital Signature & Contact</p>
+                    <p className="text-sm text-white/90 font-bold uppercase tracking-widest">Digital Signature & Contact</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                   <div className="space-y-6">
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block">SMS Alert Receiver <span className="text-red-500">*</span></label>
+                      <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block">SMS Alert Receiver <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <input
                           type="tel"
@@ -527,23 +527,23 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                           <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
                         </div>
                       </div>
-                      <p className="text-[10px] text-emerald-700/60 font-bold italic leading-tight">We will send a status update for your scholarship eligibility via SMS.</p>
+                      <p className="text-sm text-emerald-700/60 font-bold italic leading-tight">We will send a status update for your scholarship eligibility via SMS.</p>
                     </div>
 
                     <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 space-y-2 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-xl"></div>
                       <div className="flex items-center gap-2 text-amber-800 mb-1">
                         <Pen className="w-4 h-4" />
-                        <h4 className="text-[10px] font-black uppercase tracking-widest">Legal Declaration</h4>
+                        <h4 className="text-sm font-black uppercase tracking-widest">Legal Declaration</h4>
                       </div>
-                      <p className="text-[11px] text-amber-800/80 leading-relaxed font-bold">
+                      <p className="text-sm text-amber-800/80 leading-relaxed font-bold">
                         Sa pagpipirma, pinapatunayan ko na ang lahat ng datos ay totoo at tama. Ito ay may katumbas na legal na pananagutan.
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1 block text-center">Digital Thumbmark / Signature <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-black text-emerald-800 uppercase tracking-widest ml-1 block text-center">Digital Thumbmark / Signature <span className="text-red-500">*</span></label>
                     <div className={`bg-white border-2 ${errors.signature ? 'border-red-500 bg-red-50' : 'border-gray-100'} rounded-3xl p-4 shadow-inner ring-4 ring-gray-50 transition-all hover:ring-emerald-50 focus-within:ring-emerald-50`}>
                       <SignatureInput
                         onSignatureChange={(sig) => {
@@ -565,12 +565,12 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
 
         {/* Premium Footer */}
         <div className="border-t bg-gray-50/80 backdrop-blur-md px-4 py-3 md:px-6 md:py-4 flex flex-col sm:flex-row gap-4 justify-between items-center no-print pb-6 md:pb-6 flex-shrink-0 safe-pb">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] hidden sm:block">Verify information before final filing / Suriin ang impormasyon bago ang pinal na pagpapasa</p>
+          <p className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] hidden sm:block">Verify information before final filing / Suriin ang impormasyon bago ang pinal na pagpapasa</p>
 
           <div className="flex gap-4 w-full sm:w-auto">
             <button
               onClick={onClose}
-              className="flex-1 sm:flex-none px-8 py-4 border-2 border-gray-200 text-gray-500 hover:bg-white hover:text-[#112e1f] hover:border-[#112e1f]/20 rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-300"
+              className="flex-1 sm:flex-none px-8 py-4 border-2 border-gray-200 text-gray-500 hover:bg-white hover:text-[#112e1f] hover:border-[#112e1f]/20 rounded-2xl font-black uppercase tracking-widest text-sm transition-all duration-300"
               disabled={isSubmitting}
             >
               Cancel
@@ -578,7 +578,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="flex-1 sm:flex-none px-12 py-4 bg-gradient-to-r from-[#8cc63f] to-[#7cb342] hover:from-[#7cb342] hover:to-[#689f38] text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl hover:shadow-emerald-900/40 transform hover:-translate-y-1 transition-all duration-500 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed group"
+              className="flex-1 sm:flex-none px-12 py-4 bg-gradient-to-r from-[#8cc63f] to-[#7cb342] hover:from-[#7cb342] hover:to-[#689f38] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-2xl hover:shadow-emerald-900/40 transform hover:-translate-y-1 transition-all duration-500 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed group"
             >
               {isSubmitting ? (
                 <>
@@ -609,14 +609,14 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                 <CheckCircle className="w-12 h-12 text-emerald-400" />
               </div>
               <h2 className="text-3xl font-black text-white uppercase tracking-tight leading-none mb-2">Filing Successful!</h2>
-              <p className="text-emerald-300/60 text-xs font-black uppercase tracking-[0.2em]">Application Queued For Review</p>
+              <p className="text-emerald-300/60 text-sm font-black uppercase tracking-[0.2em]">Application Queued For Review</p>
             </div>
 
             {/* Success Details */}
             <div className="p-8 text-center space-y-4 md:space-y-6">
               <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-[2rem] p-8 shadow-inner relative group">
                 <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-200/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                <p className="text-[10px] font-black text-emerald-800 uppercase tracking-[0.3em] mb-4 opacity-50">Reference ID</p>
+                <p className="text-sm font-black text-emerald-800 uppercase tracking-[0.3em] mb-4 opacity-50">Reference ID</p>
                 <p className="text-4xl font-black text-[#112e1f] font-mono tracking-tighter scale-110">
                   {referenceNumber}
                 </p>
@@ -625,16 +625,16 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
               <div className="bg-[#112e1f]/5 border border-[#112e1f]/10 rounded-2xl p-6 relative overflow-hidden text-left">
                 <div className="flex items-center gap-3 text-[#112e1f] mb-4">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                  <h4 className="text-xs font-black uppercase tracking-[0.1em]">Next Procedures</h4>
+                  <h4 className="text-sm font-black uppercase tracking-[0.1em]">Next Procedures</h4>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Clock className="w-4 h-4 text-emerald-700" /></div>
-                    <p className="text-[11px] text-gray-600 font-bold leading-relaxed">System-wide verification of your GWA and Residence status will commence immediately.</p>
+                    <p className="text-sm text-gray-600 font-bold leading-relaxed">System-wide verification of your GWA and Residence status will commence immediately.</p>
                   </div>
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center border border-gray-100 shrink-0 shadow-sm mt-0.5"><Phone className="w-4 h-4 text-emerald-700" /></div>
-                    <p className="text-[11px] text-gray-600 font-bold leading-relaxed">Our staff will coordinate via <strong>SMS</strong> to confirm if you meet the scholarship criteria.</p>
+                    <p className="text-sm text-gray-600 font-bold leading-relaxed">Our staff will coordinate via <strong>SMS</strong> to confirm if you meet the scholarship criteria.</p>
                   </div>
                 </div>
               </div>
@@ -645,7 +645,7 @@ export default function EducationalAssistanceModal({ isOpen, onClose, isDemo = f
                   resetForm();
                   onClose();
                 }}
-                className="w-full bg-[#112e1f] hover:bg-[#112117] text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-xs transition-all shadow-xl hover:shadow-emerald-900/30 transform active:scale-95 group"
+                className="w-full bg-[#112e1f] hover:bg-[#112117] text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-sm transition-all shadow-xl hover:shadow-emerald-900/30 transform active:scale-95 group"
               >
                 Return to Dashboard
               </button>

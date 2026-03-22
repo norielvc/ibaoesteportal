@@ -629,6 +629,9 @@ export default function PortalPageContent({ initialTenantId }) {
     <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Google Sans', 'Product Sans', 'Nunito Sans', sans-serif" }}>
       <style jsx global>{`
         * { font-family: 'Google Sans', 'Product Sans', 'Nunito Sans', sans-serif !important; }
+        nav a:hover { color: ${tenantConfig.accentColor} !important; border-bottom-color: ${tenantConfig.accentColor} !important; }
+        .mobile-nav-link:hover { color: ${tenantConfig.accentColor} !important; }
+        .program-card:hover .program-title { color: ${tenantConfig.accentColor} !important; }
       `}</style>
       {/* Large Portal Header with Date/Time and Weather */}
       <div className="py-2 md:py-3" style={tenantConfig.colorStyle}>
@@ -660,33 +663,32 @@ export default function PortalPageContent({ initialTenantId }) {
         </div>
       </div>
 
-      {/* Sticky Navigation Bar */}
-      <nav className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-200">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-end items-center h-9 gap-6">
+      <nav className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-100 transition-all duration-500 py-2">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-end items-center h-10 md:h-12 gap-8">
             {/* Desktop Navigation - Right Side */}
-            <div className="hidden md:flex items-center gap-6">
-              <a href="#news" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#news" className="text-gray-700 text-sm lg:text-base font-bold transition-all py-1 border-b-2 border-transparent hover:border-current transform hover:scale-105" style={{ color: 'inherit', '--hover-color': tenantConfig.accentColor }}>
                 News &amp; Updates
               </a>
-              <a href="#forms" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
+              <a href="#forms" className="text-gray-700 text-sm lg:text-base font-bold transition-all py-1 border-b-2 border-transparent hover:border-current transform hover:scale-105" style={{ color: 'inherit', '--hover-color': tenantConfig.accentColor }}>
                 Barangay Forms
               </a>
-              <a href="#directory" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
+              <a href="#directory" className="text-gray-700 text-sm lg:text-base font-bold transition-all py-1 border-b-2 border-transparent hover:border-current transform hover:scale-105" style={{ color: 'inherit', '--hover-color': tenantConfig.accentColor }}>
                 Facilities
               </a>
-              <a href="#achievements" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
+              <a href="#achievements" className="text-gray-700 text-sm lg:text-base font-bold transition-all py-1 border-b-2 border-transparent hover:border-current transform hover:scale-105" style={{ color: 'inherit', '--hover-color': tenantConfig.accentColor }}>
                 Achievements &amp; Awards
               </a>
-              <a href="#officials" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
+              <a href="#officials" className="text-gray-700 text-sm lg:text-base font-bold transition-all py-1 border-b-2 border-transparent hover:border-current transform hover:scale-105" style={{ color: 'inherit', '--hover-color': tenantConfig.accentColor }}>
                 Barangay Officials
               </a>
-              <a href="#contact" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
+              <a href="#contact" className="text-gray-700 text-sm lg:text-base font-bold transition-all py-1 border-b-2 border-transparent hover:border-current transform hover:scale-105" style={{ color: 'inherit', '--hover-color': tenantConfig.accentColor }}>
                 Contact Us
               </a>
               <button
                 onClick={() => router.push('/login')}
-                className="text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-all shadow-md"
+                className="text-white px-5 py-2 rounded-lg text-sm font-bold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 ml-2"
                 style={{ backgroundColor: tenantConfig.primaryColor }}
               >
                 Login
@@ -706,22 +708,22 @@ export default function PortalPageContent({ initialTenantId }) {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200 py-4 px-4 space-y-3">
-            <a href="#news" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#news" className="block py-2 text-gray-700 font-medium mobile-nav-link">
               News & Updates
             </a>
-            <a href="#forms" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#forms" className="block py-2 text-gray-700 font-medium mobile-nav-link">
               Barangay Forms
             </a>
-            <a href="#directory" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#directory" className="block py-2 text-gray-700 font-medium mobile-nav-link">
               Facilities
             </a>
-            <a href="#achievements" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#achievements" className="block py-2 text-gray-700 font-medium mobile-nav-link">
               Achievements & Awards
             </a>
-            <a href="#officials" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#officials" className="block py-2 text-gray-700 font-medium mobile-nav-link">
               Barangay Officials
             </a>
-            <a href="#contact" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#contact" className="block py-2 text-gray-700 font-medium mobile-nav-link">
               Contact Us
             </a>
             <button
@@ -736,7 +738,7 @@ export default function PortalPageContent({ initialTenantId }) {
       </nav>
 
       {/* Hero Section with News Carousel - Trimmed Balanced Height */}
-      <section id="news" className="relative h-[320px] md:h-[380px] lg:h-[450px] xl:h-[480px] overflow-hidden bg-gray-900">
+      <section id="news" className="relative h-[360px] md:h-[420px] lg:h-[520px] xl:h-[580px] overflow-hidden bg-gray-900">
         {/* Loading Skeleton */}
         {newsItems.length === 0 && (
           <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
@@ -761,10 +763,10 @@ export default function PortalPageContent({ initialTenantId }) {
                 style={{ backgroundImage: `url(${item.image})` }}
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#112117]/80 to-[#112e1f]/60" />
+            <div className={`absolute inset-0 bg-gradient-to-r ${tenantId === 'demo' ? 'from-black/90 to-black/40' : 'from-[#112117]/80 to-[#112e1f]/60'}`} />
             <div className="relative h-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
               <div className="max-w-2xl text-white">
-                <span className="inline-block bg-[#648a6a] text-white px-3 py-1 rounded-full text-xs font-semibold mb-2">
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 text-white shadow-lg`} style={{ backgroundColor: tenantConfig.accentColor }}>
                   <Calendar className="w-3 h-3 inline mr-1" />
                   {item.date}
                 </span>
@@ -772,7 +774,8 @@ export default function PortalPageContent({ initialTenantId }) {
                 <p className="text-sm md:text-base text-gray-200 mb-4 line-clamp-2 overflow-hidden">{item.description}</p>
                 <button
                   onClick={() => setSelectedNewsItem(item)}
-                  className="bg-[#efefef] text-[#112117] px-5 py-2 rounded-lg font-semibold hover:bg-white transition-all transform hover:scale-105 flex items-center gap-2 shadow-lg text-sm"
+                  className="bg-[#efefef] px-5 py-2 rounded-lg font-semibold hover:bg-white transition-all transform hover:scale-105 flex items-center gap-2 shadow-lg text-sm"
+                  style={{ color: tenantConfig.primaryColor }}
                 >
                   Read More <ChevronRight className="w-4 h-4" />
                 </button>
@@ -814,7 +817,7 @@ export default function PortalPageContent({ initialTenantId }) {
       </section>
 
       {/* Available Forms Section - Modern Design with Responsive Background */}
-      <section id="forms" className="py-6 md:py-8 relative overflow-hidden animate-on-scroll">
+      <section id="forms" className="py-4 md:py-6 relative overflow-hidden animate-on-scroll">
         {/* Removed redundant hardcoded image to fix 404 */}
         <div
           className="absolute inset-0 bg-cover bg-no-repeat hidden md:block"
@@ -841,7 +844,7 @@ export default function PortalPageContent({ initialTenantId }) {
 
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Section Header */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-3">
             {/* Enhanced Online Services Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 backdrop-blur-sm border text-white rounded-full text-xs font-semibold mb-4 shadow-lg" style={{ backgroundColor: `${tenantConfig.secondaryColor}E6`, borderColor: `${tenantConfig.accentColor}40` }}>
               <div className="flex items-center justify-center w-6 h-6 bg-white/20 rounded-full">
@@ -876,14 +879,24 @@ export default function PortalPageContent({ initialTenantId }) {
                   feature: 'bg-blue-50 text-blue-600'
                 },
                 green: {
-                  gradient: 'from-green-500 to-green-600',
-                  shadow: 'shadow-green-500/30',
-                  bg: 'bg-green-100',
-                  text: 'text-green-600',
-                  button: 'from-green-600 to-green-700 hover:from-green-700 hover:to-green-800',
-                  buttonShadow: 'shadow-green-500/25 group-hover:shadow-green-500/40',
-                  overlay: 'from-green-600/5 to-green-600/10',
-                  feature: 'bg-green-50 text-green-600'
+                  gradient: tenantId === 'demo' ? 'from-[#C9A84C] to-[#aa8c2c]' : 'from-green-500 to-green-600',
+                  shadow: tenantId === 'demo' ? 'shadow-[#C9A84C]/30' : 'shadow-green-500/30',
+                  bg: tenantId === 'demo' ? 'bg-[#C9A84C]/10' : 'bg-green-100',
+                  text: tenantId === 'demo' ? 'text-[#C9A84C]' : 'text-green-600',
+                  button: tenantId === 'demo' ? 'from-[#C9A84C] to-[#aa8c2c] hover:from-[#aa8c2c] hover:to-amber-700' : 'from-green-600 to-green-700 hover:from-green-700 hover:to-green-800',
+                  buttonShadow: tenantId === 'demo' ? 'shadow-[#C9A84C]/25 group-hover:shadow-[#C9A84C]/40' : 'shadow-green-500/25 group-hover:shadow-green-500/40',
+                  overlay: tenantId === 'demo' ? 'from-[#C9A84C]/5 to-[#C9A84C]/10' : 'from-green-600/5 to-green-600/10',
+                  feature: tenantId === 'demo' ? 'bg-[#C9A84C]/10 text-[#C9A84C]' : 'bg-green-50 text-green-600'
+                },
+                gold: {
+                  gradient: 'from-[#C9A84C] to-[#aa8c2c]',
+                  shadow: 'shadow-[#C9A84C]/30',
+                  bg: 'bg-[#C9A84C]/10',
+                  text: 'text-[#C9A84C]',
+                  button: 'from-[#C9A84C] to-[#aa8c2c] hover:from-[#aa8c2c] hover:to-amber-700',
+                  buttonShadow: 'shadow-[#C9A84C]/25 group-hover:shadow-[#C9A84C]/40',
+                  overlay: 'from-[#C9A84C]/5 to-[#C9A84C]/10',
+                  feature: 'bg-[#C9A84C]/10 text-[#C9A84C]'
                 },
                 orange: {
                   gradient: 'from-orange-500 to-orange-600',
@@ -1017,7 +1030,8 @@ export default function PortalPageContent({ initialTenantId }) {
                         const maxSlide = Math.max(0, forms.length - itemsPerView);
                         setCurrentFormSlide((prev) => (prev - 1 + (maxSlide + 1)) % (maxSlide + 1));
                       }}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border opacity-80 hover:opacity-100"
+                      style={{ backgroundColor: tenantConfig.primaryColor, borderColor: `${tenantConfig.accentColor}40` }}
                     >
                       <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </button>
@@ -1026,7 +1040,8 @@ export default function PortalPageContent({ initialTenantId }) {
                         const maxSlide = Math.max(0, forms.length - itemsPerView);
                         setCurrentFormSlide((prev) => (prev + 1) % (maxSlide + 1));
                       }}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border opacity-80 hover:opacity-100"
+                      style={{ backgroundColor: tenantConfig.primaryColor, borderColor: `${tenantConfig.accentColor}40` }}
                     >
                       <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </button>
@@ -1038,8 +1053,8 @@ export default function PortalPageContent({ initialTenantId }) {
                       <button
                         key={index}
                         onClick={() => setCurrentFormSlide(index)}
-                        className={`w-3 h-3 rounded-full transition-all ${currentFormSlide === index ? 'bg-[#2d5a3d] w-8 shadow-lg' : 'bg-gray-400 hover:bg-gray-500'
-                          }`}
+                        className={`w-3 h-3 rounded-full transition-all ${currentFormSlide === index ? 'w-8 shadow-lg' : 'bg-gray-400 hover:bg-gray-500'}`}
+                        style={{ backgroundColor: currentFormSlide === index ? tenantConfig.primaryColor : undefined }}
                       />
                     ))}
                   </div>
@@ -1052,39 +1067,39 @@ export default function PortalPageContent({ initialTenantId }) {
       </section>
 
       {/* Barangay Programs Section - 8 items grid matching reference design */}
-      <section className="py-16 md:py-24 bg-white w-full border-t border-gray-100">
+      <section className="py-2 md:py-4 bg-white w-full border-t border-gray-100">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8">
 
-          <div className="flex justify-between items-end mb-10">
+          <div className="flex justify-between items-end mb-2">
             <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
+              <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">
                 Barangay Programs
               </h2>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 gap-y-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 gap-y-6">
             {programs.map((program, idx) => (
               <div 
                 key={program.id || idx} 
-                className="flex flex-col group cursor-pointer h-full"
+                className="flex flex-col group cursor-pointer h-full program-card"
                 onClick={() => setSelectedProgram(program)}
               >
-                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-5 bg-gray-100">
+                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-100">
                   <img
                     src={program.image || 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800'}
                     alt={program.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
-                <div className="flex flex-col flex-1 px-1">
-                  <p className="text-[#6366f1] text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2.5">
+                <div className="flex flex-col flex-1 px-1 text-left">
+                  <p className="text-[10px] md:text-left font-bold uppercase tracking-widest mb-1" style={{ color: tenantConfig.accentColor }}>
                     {program.category}
                   </p>
-                  <h3 className="text-gray-900 text-lg md:text-xl font-bold mb-3 leading-snug group-hover:text-[#6366f1] transition-colors">
+                  <h3 className="text-gray-900 text-base md:text-lg font-bold mb-1 leading-snug transition-colors program-title">
                     {program.title}
                   </h3>
-                  <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-4 flex-1">
+                  <p className="text-gray-600 text-xs md:text-sm leading-relaxed mb-2 flex-1">
                     {program.description}
                   </p>
                 </div>
@@ -1098,7 +1113,7 @@ export default function PortalPageContent({ initialTenantId }) {
       {/* Facilities Section */}
       <section id="directory" className="bg-white relative">
         {/* Top Carousel Hero */}
-        <div className="relative w-full h-[70vh] min-h-[520px] bg-gray-900 overflow-hidden">
+        <div className="relative w-full h-[60vh] min-h-[480px] bg-gray-900 overflow-hidden">
           {facilities.flatMap(f => f.images || []).length > 0 ? (
             facilities
               .flatMap(f => f.images || [])
@@ -1124,13 +1139,13 @@ export default function PortalPageContent({ initialTenantId }) {
               style={{ filter: 'brightness(0.6)' }}
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-l from-black/80 via-black/40 to-transparent pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
-          {/* Left-aligned Content */}
-          <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-16 lg:px-24 max-w-4xl">
+          {/* Right-aligned Content */}
+          <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-16 lg:px-24 max-w-4xl ml-auto items-end text-right">
             {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2 mb-6 w-fit">
+            <div className="inline-flex items-center gap-2 mb-4 w-fit">
               <div className="flex items-center gap-2 px-4 py-1.5 backdrop-blur-sm rounded-full border border-white/20" style={{ backgroundColor: `${tenantConfig.accentColor}33`, borderColor: `${tenantConfig.accentColor}80` }}>
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: tenantConfig.accentColor }} />
                 <span className="text-[10px] font-bold tracking-[0.3em] uppercase" style={{ color: tenantConfig.accentColor }}>Kalidad na Garantisado</span>
@@ -1138,24 +1153,24 @@ export default function PortalPageContent({ initialTenantId }) {
             </div>
 
             {/* Main Heading */}
-            <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight">
+            <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-4 tracking-tight">
               Ang inyong mga<br />
-              <span className="text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(to right, ${tenantConfig.accentColor}, #FFFFFF)` }}>
+              <span className="text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(to left, ${tenantConfig.accentColor}, #FFFFFF)` }}>
                 pasilidad
               </span>
               {' '}sa komunidad
             </h2>
 
             {/* Sub-line */}
-            <p className="text-white/70 text-base md:text-lg font-medium mb-8 max-w-lg leading-relaxed">
+            <p className="text-white/70 text-base md:text-lg font-medium mb-6 max-w-lg leading-relaxed">
               na inaalagaan sa paraang nararapat para sa bawat mamamayan.
             </p>
 
             {/* Decorative Rule */}
             <div className="flex items-center gap-4">
-              <div className="w-16 h-0.5" style={{ backgroundColor: tenantConfig.accentColor }} />
-              <div className="w-3 h-3 border-2 rotate-45" style={{ borderColor: tenantConfig.accentColor }} />
               <div className="w-8 h-0.5 opacity-40" style={{ backgroundColor: tenantConfig.accentColor }} />
+              <div className="w-3 h-3 border-2 rotate-45" style={{ borderColor: tenantConfig.accentColor }} />
+              <div className="w-16 h-0.5" style={{ backgroundColor: tenantConfig.accentColor }} />
             </div>
           </div>
 
@@ -1181,31 +1196,14 @@ export default function PortalPageContent({ initialTenantId }) {
             <ChevronRight className="w-5 h-5" />
           </button>
 
-          {/* Bottom Stats Strip */}
-          <div 
-            className="absolute bottom-0 left-0 right-0 px-8 md:px-16 lg:px-24 py-3 flex items-center gap-8 md:gap-16 overflow-x-auto"
-            style={{ backgroundImage: tenantId === 'demo' ? 'linear-gradient(to right, #000000, #333333, #000000)' : 'linear-gradient(to right, #1e3a8a, #1a6f52, #22c55e)' }}
-          >
-            {[
-              { label: 'Mga Pasilidad', value: `${facilities.length || 0}+` },
-              { label: 'Mga Residente', value: '5,000+' },
-            ].map((stat, i) => (
-              <div key={i} className="flex items-center gap-3 shrink-0">
-                {i > 0 && <div className="hidden md:block w-px h-8 bg-white/30" />}
-                <div>
-                  <div className="text-white font-black text-lg md:text-xl leading-none">{stat.value}</div>
-                  <div className="text-white/80 text-[10px] font-bold uppercase tracking-widest mt-0.5">{stat.label}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+
         </div>
 
-        <div className="py-16 md:py-24">
+        <div className="py-4 md:py-6">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             {/* Facilities Grid */}
             <div className="w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6">
                 {facilities.map((facility, index) => (
                   <div
                     key={index}
@@ -1215,7 +1213,7 @@ export default function PortalPageContent({ initialTenantId }) {
                       setFacilityImageIndex(0);
                     }}
                   >
-                    <div className="w-full h-48 mb-4 overflow-hidden">
+                    <div className="w-full h-48 mb-3 overflow-hidden">
                       <img
                         src={(facility.images && facility.images.length > 0) ? facility.images[0] : '/background.jpg'}
                         alt={facility.name}
@@ -1237,7 +1235,7 @@ export default function PortalPageContent({ initialTenantId }) {
       </section>
 
       {/* Barangay Achievement and Awards Section */}
-      <section id="achievements" className={`py-16 md:py-24 bg-gradient-to-br ${tenantConfig.darkHeader} relative overflow-hidden flex items-center animate-on-scroll`}>
+      <section id="achievements" className={`py-10 md:py-16 bg-gradient-to-br ${tenantConfig.darkHeader} relative overflow-hidden flex items-center animate-on-scroll`}>
         {/* Background Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-48 h-48 md:w-96 md:h-96 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
@@ -1260,16 +1258,16 @@ export default function PortalPageContent({ initialTenantId }) {
           <div className="max-w-[1400px] mx-auto">
 
             {/* Section Header */}
-            <div className="text-center mb-12 md:mb-16">
-              <div className="flex justify-center mb-4 md:mb-6">
-                <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-[#113821]/40 backdrop-blur-sm border border-[#d4af37]/30 rounded-full shadow-lg">
+            <div className="text-center mb-8 md:mb-10">
+              <div className="flex justify-center mb-3 md:mb-4">
+                <div className={`inline-flex items-center gap-3 px-6 py-2.5 backdrop-blur-sm border rounded-full shadow-lg ${tenantId === 'demo' ? 'bg-black/60 border-white/20' : 'bg-[#113821]/40 border-[#d4af37]/30'}`}>
                   <Award className="w-5 h-5 md:w-6 md:h-6 text-[#d4af37]" />
                   <span className="text-[#ebd78c] font-semibold text-sm md:text-base tracking-widest uppercase">Honors & Recognitions</span>
                   <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(250,204,21,0.6)]"></div>
                 </div>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight font-serif tracking-tight">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 leading-tight font-serif tracking-tight">
                 BARANGAY{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-amber-500">
                   ACHIEVEMENTS
@@ -1277,7 +1275,7 @@ export default function PortalPageContent({ initialTenantId }) {
                 <br className="hidden md:block" /> & AWARDS
               </h2>
 
-              <div className="flex justify-center mb-6">
+              <div className="flex justify-center mb-3">
                 <div className="w-24 md:w-32 h-1.5 bg-gradient-to-r from-transparent via-yellow-400 to-transparent rounded-full opacity-70"></div>
               </div>
 
@@ -1287,12 +1285,16 @@ export default function PortalPageContent({ initialTenantId }) {
             </div>
 
             {/* Achievements Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-10">
               {achievements.map((achievement, idx) => (
                 <div
                   key={achievement.id || idx}
                   onClick={() => setSelectedAchievement(achievement)}
-                  className="cursor-pointer bg-[#0a1f12]/60 backdrop-blur-md rounded-2xl border border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2"
+                  className={`cursor-pointer backdrop-blur-md rounded-2xl border transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2 ${
+                    tenantId === 'demo'
+                    ? 'bg-black/60 border-white/10 hover:bg-black/80 hover:border-[#d4af37]/50'
+                    : 'bg-[#0a1f12]/60 border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50'
+                  }`}
                 >
                   <div className="relative h-48 md:h-56 w-full overflow-hidden">
                     <div className="absolute inset-0 bg-[#0f2e1b]/30 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
@@ -1301,7 +1303,7 @@ export default function PortalPageContent({ initialTenantId }) {
                       alt={achievement.title}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
                     />
-                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
+                    <div className={`absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t to-transparent z-10 ${tenantId === 'demo' ? 'from-black' : 'from-[#081a0f]'}`}></div>
                     {/* Floating Badge */}
                     <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
                       <Award className="w-4 h-4" />
@@ -1311,7 +1313,7 @@ export default function PortalPageContent({ initialTenantId }) {
 
                   {/* Content */}
                   <div className="p-6 flex-1 flex flex-col relative z-20 -mt-10">
-                    <div className="flex items-center mb-4">
+                    <div className="flex items-center mb-3">
                       <div className="w-12 h-12 bg-gradient-to-br from-[#d4af37] to-[#ebd78c] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)] border-2 border-[#0a1f12] mr-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
                         <Trophy className="w-6 h-6 text-white" />
                       </div>
@@ -1329,7 +1331,7 @@ export default function PortalPageContent({ initialTenantId }) {
             </div>
 
             {/* Statistics Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-12 bg-[#113821]/20 backdrop-blur-sm p-6 md:p-8 rounded-3xl border border-[#d4af37]/20">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-8 bg-[#113821]/20 backdrop-blur-sm p-6 md:p-8 rounded-3xl border border-[#d4af37]/20">
               <div className="text-center p-4">
                 <div className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500 mb-2">12+</div>
                 <div className={`${tenantId === 'demo' ? 'text-gray-400' : 'text-green-100/80'} text-xs md:text-sm font-bold uppercase tracking-widest`}>Major Awards</div>
@@ -1385,12 +1387,12 @@ export default function PortalPageContent({ initialTenantId }) {
       {selectedProgram && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedProgram(null)}>
           <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-5xl overflow-hidden relative transform transition-all flex flex-col md:flex-row h-full max-h-[90vh] md:max-h-[80vh]" onClick={e => e.stopPropagation()}>
-            
+
             {/* Left Column: Fixed Image on Desktop */}
             <div className="relative w-full md:w-[45%] h-64 md:h-full group overflow-hidden shrink-0">
               <img src={selectedProgram.image} alt={selectedProgram.title} className="w-full h-full object-cover transform transition-transform duration-1000 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-              
+
               {/* Floating Category Badge */}
               <div className="absolute top-6 left-6 z-20 bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-black px-4 py-2 rounded-full flex items-center gap-2 shadow-2xl uppercase tracking-[0.2em]">
                 <Target className="w-4 h-4 text-green-400" />
@@ -1406,8 +1408,8 @@ export default function PortalPageContent({ initialTenantId }) {
             {/* Right Column: Scrollable Content */}
             <div className="flex-1 flex flex-col overflow-hidden bg-gray-50/50 text-left">
               {/* Desktop Close Button */}
-              <button 
-                onClick={() => setSelectedProgram(null)} 
+              <button
+                onClick={() => setSelectedProgram(null)}
                 className="hidden md:flex absolute top-6 right-6 z-30 w-12 h-12 bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-red-500 rounded-2xl items-center justify-center transition-all shadow-sm border border-gray-200"
               >
                 <X className="w-6 h-6" />
@@ -1435,7 +1437,7 @@ export default function PortalPageContent({ initialTenantId }) {
 
                   {/* Action Footer */}
                   <div className="pt-8 flex flex-col sm:flex-row items-center justify-between border-t border-gray-100 gap-6">
-                    <button 
+                    <button
                       onClick={() => setSelectedProgram(null)}
                       className="w-full sm:w-auto px-10 py-4 bg-[#112117] text-white rounded-2xl font-black hover:bg-black transition-all shadow-xl hover:shadow-green-900/20 text-sm flex items-center justify-center gap-3 group"
                     >
@@ -1463,48 +1465,50 @@ export default function PortalPageContent({ initialTenantId }) {
       <BarangayClearanceModal
         isOpen={showClearanceModal}
         onClose={() => setShowClearanceModal(false)}
+        isDemo={tenantId === 'demo'}
       />
 
       {/* Certificate of Indigency Modal */}
       <IndigencyCertificateModal
         isOpen={showIndigencyModal}
         onClose={() => setShowIndigencyModal(false)}
+        isDemo={tenantId === 'demo'}
       />
 
       {/* Barangay Residency Modal */}
       <ResidencyCertificateModal
         isOpen={showResidencyModal}
         onClose={() => setShowResidencyModal(false)}
+        isDemo={tenantId === 'demo'}
       />
 
       {/* Business Permit Modal */}
       <BusinessPermitModal
         isOpen={showBusinessPermitModal}
         onClose={() => setShowBusinessPermitModal(false)}
+        isDemo={tenantId === 'demo'}
       />
 
       {/* Educational Assistance Modal */}
       <EducationalAssistanceModal
         isOpen={showEducationalAssistanceModal}
         onClose={() => setShowEducationalAssistanceModal(false)}
+        isDemo={tenantId === 'demo'}
       />
 
       {/* Natural Death Certificate Modal */}
-      <NaturalDeathCertificateModal isOpen={showNaturalDeathModal} onClose={() => setShowNaturalDeathModal(false)} />
-      <GuardianshipCertificateModal isOpen={showGuardianshipModal} onClose={() => setShowGuardianshipModal(false)} />
-      <CohabitationCertificateModal isOpen={showCohabitationModal} onClose={() => setShowCohabitationModal(false)} />
-      <MedicoLegalModal isOpen={showMedicoLegalModal} onClose={() => setShowMedicoLegalModal(false)} />
-      <SamePersonCertificateModal isOpen={showSamePersonModal} onClose={() => setShowSamePersonModal(false)} />
+      <NaturalDeathCertificateModal isOpen={showNaturalDeathModal} onClose={() => setShowNaturalDeathModal(false)} isDemo={tenantId === 'demo'} />
+      <GuardianshipCertificateModal isOpen={showGuardianshipModal} onClose={() => setShowGuardianshipModal(false)} isDemo={tenantId === 'demo'} />
+      <CohabitationCertificateModal isOpen={showCohabitationModal} onClose={() => setShowCohabitationModal(false)} isDemo={tenantId === 'demo'} />
+      <MedicoLegalModal isOpen={showMedicoLegalModal} onClose={() => setShowMedicoLegalModal(false)} isDemo={tenantId === 'demo'} />
+      <SamePersonCertificateModal isOpen={showSamePersonModal} onClose={() => setShowSamePersonModal(false)} isDemo={tenantId === 'demo'} />
 
 
 
 
       {/* Barangay Officials Section - Optimized */}
       {visibilitySettings?.section !== false && (
-        <section id="officials" className="bg-gradient-to-br from-[#112e1f] via-[#1a3d29] to-[#0d1f14] relative overflow-hidden">
-        {/* Header with modern aesthetic */}
-        {/* Header removed as per user request */}
-
+        <section id="officials" className={`relative overflow-hidden transition-colors duration-500 bg-gradient-to-br ${tenantId === 'demo' ? 'from-black via-gray-950 to-black' : 'from-[#112e1f] via-[#1a3d29] to-[#0d1f14]'}`}>
         {/* Photo - Full visibility without overlay */}
         <div className="relative">
           <img
@@ -1515,31 +1519,31 @@ export default function PortalPageContent({ initialTenantId }) {
               e.target.src = '';
             }}
           />
-          {/* Green Shadow Overlay on Edges */}
-          <div className="absolute inset-0 shadow-[inset_0_0_150px_60px_#112e1f] pointer-events-none z-10 hidden md:block"></div>
+          {/* Edge Shadow Overlay */}
+          <div className="absolute inset-0 pointer-events-none z-10 hidden md:block" style={{ boxShadow: `inset 0 0 150px 60px ${tenantId === 'demo' ? '#000000' : '#112e1f'}` }}></div>
         </div>
 
         {/* Text Section - Professional Leadership Introduction */}
-        <div className="bg-gradient-to-br from-[#112117] via-[#2d5a3d] to-[#112e1f] py-8 md:py-10 px-4">
-          <div className="max-w-6xl mx-auto">
+        <div className={`py-4 md:py-6 px-4 bg-gradient-to-br ${tenantId === 'demo' ? 'from-black via-gray-900 to-black' : 'from-[#112117] via-[#2d5a3d] to-[#112e1f]'}`}>
+          <div className="max-w-[1400px] mx-auto">
             {/* Leadership Header */}
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full mb-4">
-                <div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div>
-                <span className="text-green-200 font-semibold text-[10px] tracking-wide uppercase">Leadership Team</span>
-                <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+            <div className="text-center mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full mb-3">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tenantConfig.accentColor }}></div>
+                <span className="text-white font-semibold text-[10px] tracking-wide uppercase">Leadership Team</span>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tenantConfig.accentColor }}></div>
               </div>
 
-              <h4 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 leading-none uppercase tracking-tight">
+              <h4 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3 leading-none uppercase tracking-tight">
                 {tenantConfig.name}
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-emerald-400 to-green-300">
+                <span className="block text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(to right, ${tenantConfig.accentColor}, #ebd78c, ${tenantConfig.accentColor})` }}>
                   Leadership Team
                 </span>
               </h4>
 
-              <div className="w-24 h-1 bg-gradient-to-r from-green-600 via-emerald-500 to-green-400 mx-auto mb-4 rounded-full"></div>
+              <div className="w-24 h-1 mx-auto mb-3 rounded-full" style={{ backgroundImage: `linear-gradient(to right, transparent, ${tenantConfig.accentColor}, transparent)` }}></div>
 
-              <p className="text-lg md:text-xl text-green-100 font-light leading-relaxed max-w-2xl mx-auto">
+              <p className="text-lg md:text-xl text-white/90 font-light leading-relaxed max-w-2xl mx-auto">
                 Working together for our community's progress and development
               </p>
             </div>
@@ -1547,12 +1551,12 @@ export default function PortalPageContent({ initialTenantId }) {
         </div>
 
         {/* Officials Details Section */}
-        <div className="bg-gradient-to-br from-gray-50 to-green-50 py-6 md:py-10 px-4">
-          <div className="max-w-6xl mx-auto">
+        <div className="bg-gradient-to-br from-gray-50 to-green-50 py-4 md:py-8 px-4">
+          <div className="max-w-[1400px] mx-auto">
             {/* Section Header */}
-            <div className="text-center mb-12">
-              <h5 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 uppercase tracking-tighter">
-                Meet Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-950">Officials</span>
+            <div className="text-center mb-4">
+              <h5 className="text-4xl md:text-5xl font-black text-gray-900 mb-3 uppercase tracking-tighter">
+                Meet Our <span className="text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(to right, ${tenantId === 'demo' ? '#1a1a1a' : '#064e3b'}, ${tenantId === 'demo' ? tenantConfig.accentColor : '#065f46'})` }}>Officials</span>
               </h5>
               <p className="text-gray-600 text-sm md:text-base font-bold max-w-2xl mx-auto uppercase tracking-[0.2em] leading-relaxed">
                 Dedicated leaders committed to serving the community of {tenantConfig.shortName} with integrity and excellence
@@ -1561,20 +1565,20 @@ export default function PortalPageContent({ initialTenantId }) {
 
             {/* Officials Segregated by Position */}
             {officials.length > 0 ? (
-              <div className="space-y-16">
+              <div className="space-y-8">
                 {(() => {
                   // Helper to filter by visibility
                   const filteredOfficials = officials.filter(o => {
                     if (!visibilitySettings) return true;
                     const { position_type, position } = o;
-                    
+
                     if (position_type === 'captain') return visibilitySettings.chairman !== false;
                     if (position_type === 'secretary') return visibilitySettings.secretary !== false;
                     if (position_type === 'treasurer') return visibilitySettings.treasurer !== false;
                     if (position_type === 'sk_chairman') return visibilitySettings.skChairman !== false;
                     if (position_type === 'sk_secretary') return visibilitySettings.skSecretary !== false;
                     if (position_type === 'sk_treasurer') return visibilitySettings.skTreasurer !== false;
-                    
+
                     if (position_type === 'sk_kagawad') {
                       const match = position.match(/SK Kagawad\s+(\d+)/i);
                       if (match) {
@@ -1582,7 +1586,7 @@ export default function PortalPageContent({ initialTenantId }) {
                         return visibilitySettings.skKagawads?.[idx] !== false;
                       }
                     }
-                    
+
                     if (position_type === 'kagawad') {
                       const match = position.match(/Kagawad\s+(\d+)/i);
                       if (match) {
@@ -1590,13 +1594,13 @@ export default function PortalPageContent({ initialTenantId }) {
                         return visibilitySettings.councilors?.[idx] !== false;
                       }
                     }
-                    
+
                     if (position === 'Administrator') return visibilitySettings.administrator !== false;
                     if (position === 'Assistant Secretary') return visibilitySettings.assistantSecretary !== false;
                     if (position === 'Assistant Administrator') return visibilitySettings.assistantAdministrator !== false;
                     if (position === 'Barangay Keeper' || position === 'Record Keeper') return visibilitySettings.recordKeeper !== false;
                     if (position === 'Clerk') return visibilitySettings.clerk !== false;
-                    
+
                     return true;
                   });
 
@@ -1670,9 +1674,9 @@ export default function PortalPageContent({ initialTenantId }) {
                     if (displayOfficials.length === 0) return null;
 
                     return (
-                      <div key={section.key} className="mb-16">
+                      <div key={section.key} className="mb-10">
                         {section.key === 'staff' && (
-                          <div className="text-center mb-8">
+                          <div className="text-center mb-6">
                             <div className={`inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r ${section.bgColor} text-white rounded-full mb-4 shadow-lg`}>
                               <span className="text-2xl">{section.icon}</span>
                               <span className="font-bold text-lg tracking-wide">{section.title.toUpperCase()}</span>
@@ -1682,7 +1686,7 @@ export default function PortalPageContent({ initialTenantId }) {
                         )}
 
                         {/* Officials Layout Wrapper */}
-                        <div className={(section.key === 'captain' || section.key === 'sk_chairman') ? "max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 px-4 mb-20" : "flex flex-wrap gap-6 justify-center"}>
+                        <div className={(section.key === 'captain' || section.key === 'sk_chairman') ? "max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 px-4 mb-12" : "flex flex-wrap gap-4 lg:gap-5 justify-center"}>
                           {section.key === 'captain' ? (
                             <>
                               {/* Left Aligned Captain Card */}
@@ -1691,7 +1695,7 @@ export default function PortalPageContent({ initialTenantId }) {
                                   const colorClass = tenantId === 'demo' ? 'from-black to-gray-800' : 'from-green-800 to-green-950';
                                   const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
                                   return (
-                                    <div key={official.id || index} className="bg-white rounded-[40px] shadow-2xl hover:shadow-green-900/20 transition-all duration-500 overflow-hidden border border-gray-100 group w-full transform hover:-translate-y-2">
+                                    <div key={official.id || index} className={`bg-white rounded-[40px] shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 group w-full transform hover:-translate-y-2 ${tenantId === 'demo' ? 'hover:shadow-black/20' : 'hover:shadow-green-900/20'}`}>
                                       <div className="relative aspect-[4/5] overflow-hidden group bg-white">
                                         {official.image_url ? (
                                           <img src={official.image_url} alt={official.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10" />
@@ -1700,12 +1704,12 @@ export default function PortalPageContent({ initialTenantId }) {
                                             <span className="text-7xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity font-serif">{initials}</span>
                                           </div>
                                         )}
-                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-8 text-center z-20 h-1/2" style={tenantId !== 'demo' ? { backgroundImage: 'linear-gradient(to top, #112e1f, rgba(17,46,31,0.4), transparent)' } : {}}>
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t flex flex-col justify-end p-8 text-center z-20 h-1/2" style={{ backgroundImage: `linear-gradient(to top, ${tenantId === 'demo' ? '#000000' : '#112e1f'}, ${tenantId === 'demo' ? 'rgba(0,0,0,0.4)' : 'rgba(17,46,31,0.4)'}, transparent)` }}>
                                           <h3 className="text-white font-black text-2xl mb-1 drop-shadow-lg tracking-tight">Punong Barangay</h3>
                                         </div>
                                       </div>
                                       <div className="p-8 text-center bg-white">
-                                        <h4 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">{official.name}</h4>
+                                        <h4 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">{official.name}</h4>
                                         <p className="text-gray-600 text-base font-medium leading-relaxed italic line-clamp-3">
                                           {official.description || `Leading ${tenantConfig.shortName} with vision, integrity, and a heartfelt commitment to serve every constituent with excellence.`}
                                         </p>
@@ -1716,17 +1720,17 @@ export default function PortalPageContent({ initialTenantId }) {
                               </div>
 
                               {/* Right Aligned Plain Goal & Vision */}
-                              <div className="flex-grow space-y-8">
+                              <div className="flex-grow space-y-6">
                                 <div className="px-4 py-8">
-                                  <div className="mb-8">
-                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">Barangay Vision</h3>
-                                    <p className="text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 border-green-500 pl-6 py-2">
+                                  <div className="mb-6">
+                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-3">Barangay Vision</h3>
+                                    <p className="text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 pl-6 py-2" style={{ borderColor: tenantConfig.accentColor }}>
                                       {`"A model community that is progressive, peaceful, and disaster-resilient, where empowered citizens live in harmony with nature and participate in transparent local governance."`}
                                     </p>
                                   </div>
                                   <div>
-                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">Barangay Goal</h3>
-                                    <p className="text-gray-700 text-xl font-medium leading-relaxed border-l-4 border-green-900 pl-6 py-2">
+                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-3">Barangay Goal</h3>
+                                    <p className="text-gray-700 text-xl font-medium leading-relaxed border-l-4 pl-6 py-2" style={{ borderColor: tenantConfig.primaryColor }}>
                                       {`"To deliver dedicated public service through innovative social programs, sustainable infrastructure, and community-driven initiatives that uplift the dignity and prosperity of every resident."`}
                                     </p>
                                   </div>
@@ -1736,17 +1740,17 @@ export default function PortalPageContent({ initialTenantId }) {
                           ) : section.key === 'sk_chairman' ? (
                             <>
                               {/* Left Aligned Plain SK Goal & Vision */}
-                              <div className="flex-grow space-y-8 order-2 lg:order-1">
+                              <div className="flex-grow space-y-6 order-2 lg:order-1">
                                 <div className="px-4 py-8">
-                                  <div className="mb-8">
-                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">SK Vision</h3>
-                                    <p className="text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 border-orange-500 pl-6 py-2">
+                                  <div className="mb-6">
+                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-3">SK Vision</h3>
+                                    <p className="text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 pl-6 py-2" style={{ borderColor: tenantId === 'demo' ? tenantConfig.accentColor : '#f97316' }}>
                                       {`"An inspired youth community of ${tenantConfig.shortName} that is actively involved in community building, advocating for education, sports, and social responsibility while maintaining the highest level of integrity."`}
                                     </p>
                                   </div>
                                   <div>
-                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">SK Goal</h3>
-                                    <p className="text-gray-700 text-xl font-medium leading-relaxed border-l-4 border-orange-600 pl-6 py-2">
+                                    <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-3">SK Goal</h3>
+                                    <p className="text-gray-700 text-xl font-medium leading-relaxed border-l-4 pl-6 py-2" style={{ borderColor: tenantId === 'demo' ? tenantConfig.primaryColor : '#ea580c' }}>
                                       {`"To empower the youth through comprehensive development programs in leadership, environment, and wellness, ensuring every young resident has the opportunity to contribute to our barangay's future."`}
                                     </p>
                                   </div>
@@ -1759,7 +1763,7 @@ export default function PortalPageContent({ initialTenantId }) {
                                   const colorClass = 'from-orange-600 to-amber-700';
                                   const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
                                   return (
-                                    <div key={official.id || index} className="bg-white rounded-[40px] shadow-2xl hover:shadow-orange-900/20 transition-all duration-500 overflow-hidden border border-gray-100 group w-full transform hover:-translate-y-2">
+                                    <div key={official.id || index} className={`bg-white rounded-[40px] shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 group w-full transform hover:-translate-y-2 ${tenantId === 'demo' ? 'hover:shadow-black/20' : 'hover:shadow-orange-900/20'}`}>
                                       <div className="relative aspect-[4/5] overflow-hidden group bg-white">
                                         {official.image_url ? (
                                           <img src={official.image_url} alt={official.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10" />
@@ -1768,12 +1772,12 @@ export default function PortalPageContent({ initialTenantId }) {
                                             <span className="text-7xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity font-serif">{initials}</span>
                                           </div>
                                         )}
-                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-orange-900 via-orange-900/40 to-transparent flex flex-col justify-end p-8 text-center z-20 h-1/2">
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t flex flex-col justify-end p-8 text-center z-20 h-1/2" style={{ backgroundImage: `linear-gradient(to top, ${tenantId === 'demo' ? '#000000' : '#831a1a'}, ${tenantId === 'demo' ? 'rgba(0,0,0,0.4)' : 'rgba(131,26,26,0.4)'}, transparent)` }}>
                                           <h3 className="text-white font-black text-2xl mb-1 drop-shadow-lg tracking-tight">SK Chairman</h3>
                                         </div>
                                       </div>
                                       <div className="p-8 text-center bg-white">
-                                        <h4 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">{official.name}</h4>
+                                        <h4 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">{official.name}</h4>
                                         <p className="text-gray-600 text-base font-medium leading-relaxed italic line-clamp-3">
                                           {official.description || `Empowering the youth of ${tenantConfig.shortName} through active participation, leadership development, and community-driven initiatives.`}
                                         </p>
@@ -1785,7 +1789,14 @@ export default function PortalPageContent({ initialTenantId }) {
                             </>
                           ) : (
                             displayOfficials.map((official, index) => {
-                              const colors = [
+                              const colors = tenantId === 'demo' ? [
+                                'from-gray-800 to-gray-900',
+                                'from-gray-700 to-gray-800',
+                                'from-gray-600 to-gray-700',
+                                'from-black to-gray-900',
+                                'from-gray-900 to-black',
+                                'from-gray-500 to-gray-600'
+                              ] : [
                                 'from-[#112e1f] to-[#2d5a3d]',
                                 'from-teal-600 to-green-700',
                                 'from-emerald-600 to-green-700',
@@ -1802,16 +1813,13 @@ export default function PortalPageContent({ initialTenantId }) {
                               ];
                               let colorClass;
                               if (section.key === 'kagawad') colorClass = colors[index % colors.length];
-                              else if (section.key === 'sk_secretary') colorClass = 'from-orange-500 to-amber-600';
-                              else if (section.key === 'sk_treasurer') colorClass = 'from-amber-600 to-orange-500';
-                              else if (section.key === 'sk_kagawad') colorClass = 'from-amber-500 to-orange-600';
+                              else if (section.key === 'sk_secretary') colorClass = tenantId === 'demo' ? 'from-gray-800 to-black' : 'from-orange-500 to-amber-600';
+                              else if (section.key === 'sk_treasurer') colorClass = tenantId === 'demo' ? 'from-black to-gray-800' : 'from-amber-600 to-orange-500';
+                              else if (section.key === 'sk_kagawad') colorClass = tenantId === 'demo' ? 'from-gray-700 to-gray-900' : 'from-amber-500 to-orange-600';
                               else colorClass = colors[(index + 8) % colors.length];
 
                               const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
-                              const widthClass = (section.key === 'sk_kagawad' || section.key === 'staff' || section.key === 'kagawad') ?
-                                'w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(25%-1.5rem)]' :
-                                'w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-1.5rem)]';
-
+                              const widthClass = 'w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.75rem)] lg:w-[calc(20%-1rem)]';
                               return (
                                 <div key={official.id || index} className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group ${widthClass}`}>
                                   <div className="relative aspect-square overflow-hidden group bg-white">
@@ -1822,7 +1830,7 @@ export default function PortalPageContent({ initialTenantId }) {
                                         <span className="text-5xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity">{initials}</span>
                                       </div>
                                     )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#112e1f]/90 via-[#112e1f]/40 to-transparent flex flex-col justify-end p-6 text-center z-20">
+                                    <div className="absolute inset-0 bg-gradient-to-t flex flex-col justify-end p-6 text-center z-20" style={{ backgroundImage: `linear-gradient(to top, ${tenantId === 'demo' ? '#000000E6' : '#112e1fE6'}, ${tenantId === 'demo' ? '#00000066' : '#112e1f66'}, transparent)` }}>
                                       <h3 className="text-white font-bold text-xl mb-1 drop-shadow-lg">
                                         {(() => {
                                           const pos = official.position || '';
@@ -1864,9 +1872,9 @@ export default function PortalPageContent({ initialTenantId }) {
       </section>
       )}
 
-      <section id="contact" className={`py-6 bg-gradient-to-br ${tenantConfig.darkBackground}`}>
+      <section id="contact" className={`py-8 bg-gradient-to-br ${tenantConfig.darkBackground}`}>
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-6">
+          <div className="text-center mb-4">
             <h2 className="text-2xl font-bold text-white mb-1">Feel free to contact us</h2>
             <p className={`text-base italic ${tenantId === 'demo' ? 'text-gray-400' : 'text-green-400'}`}>Wag mahiya at kami ay inyong tanungin</p>
           </div>
@@ -1874,7 +1882,7 @@ export default function PortalPageContent({ initialTenantId }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
             {/* Contact Form */}
             <div className="bg-white rounded-2xl p-5 shadow-xl h-full">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
@@ -1951,12 +1959,12 @@ export default function PortalPageContent({ initialTenantId }) {
             </div>
 
             {/* Contact Info & Office Hours */}
-            <div className="space-y-8 h-full flex flex-col">
-              <div className="bg-green-950/50 backdrop-blur-sm rounded-2xl p-8 border border-green-800/50 flex-1">
-                <h3 className="text-xl font-bold text-white mb-6">Contact Information</h3>
+            <div className="space-y-6 h-full flex flex-col">
+              <div className={`backdrop-blur-sm rounded-2xl p-8 border flex-1 ${tenantId === 'demo' ? 'bg-black/80 border-white/10' : 'bg-green-950/50 border-green-800/50'}`}>
+                <h3 className="text-xl font-bold text-white mb-4">Contact Information</h3>
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
-                    <div className="bg-green-800 p-3 rounded-lg">
+                    <div className="p-3 rounded-lg" style={{ backgroundColor: tenantConfig.primaryColor }}>
                       <MapPin className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -1997,11 +2005,11 @@ export default function PortalPageContent({ initialTenantId }) {
 
             {/* Emergency Hotlines */}
             <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 h-full" style={{ borderColor: `${tenantConfig.secondaryColor}40` }}>
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <AlertTriangle className="w-6 h-6 text-red-500 animate-pulse" />
                 Emergency Hotlines
               </h3>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {hotlines.map((hotline, index) => (
                   <div key={index} className="flex items-start gap-4 group">
                     <div className="p-3 rounded-lg group-hover:opacity-80 transition-colors" style={{ backgroundColor: tenantId === 'demo' ? '#4a4a4a' : '#991b1b' }}>
@@ -2019,7 +2027,7 @@ export default function PortalPageContent({ initialTenantId }) {
                   </div>
                 ))}
               </div>
-              <div className="mt-8 p-4 bg-white/10 rounded-xl text-center border border-white/10">
+              <div className="mt-6 p-4 bg-white/10 rounded-xl text-center border border-white/10">
                 <p className={`${tenantId === 'demo' ? 'text-gray-400' : 'text-green-300'} text-[10px] font-bold tracking-widest mb-1 uppercase`}>Available 24/7</p>
                 <p className="text-white font-bold">READY TO RESPOND</p>
               </div>
@@ -2029,29 +2037,6 @@ export default function PortalPageContent({ initialTenantId }) {
         </div>
       </section>
 
-      {/* Transparency Stats Section - Barangay at a Glance */}
-      <section className={`py-16 bg-gradient-to-r ${tenantConfig.darkBackground} animate-on-scroll`}>
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Barangay at a Glance</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={index}
-                  className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center transform hover:scale-105 transition-all border border-white/20"
-                >
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <p className="text-4xl font-bold text-white mb-2">{stat.value}</p>
-                  <p className={tenantId === 'demo' ? 'text-gray-400' : 'text-[#bdcdc0]'}>{stat.label}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {/* Emergency Hotlines - Floating Button */}
       <div className="fixed bottom-6 right-6 z-50">
@@ -2067,7 +2052,7 @@ export default function PortalPageContent({ initialTenantId }) {
                   <span className="text-sm font-medium text-gray-700">{hotline.name}</span>
                   <a
                     href={`tel:${hotline.number}`}
-                    className="text-green-700 font-semibold hover:text-green-800 transition-colors"
+                    className={`font-semibold transition-colors ${tenantId === 'demo' ? 'text-gray-900 hover:text-[#C9A84C]' : 'text-green-700 hover:text-green-800'}`}
                   >
                     {hotline.number}
                   </a>
@@ -2091,62 +2076,62 @@ export default function PortalPageContent({ initialTenantId }) {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        
+
         @keyframes slide-up {
-          from { 
-            opacity: 0; 
-            transform: translateY(50px); 
+          from {
+            opacity: 0;
+            transform: translateY(50px);
           }
-          to { 
-            opacity: 1; 
-            transform: translateY(0); 
+          to {
+            opacity: 1;
+            transform: translateY(0);
           }
         }
-        
+
         @keyframes slide-left {
-          from { 
-            opacity: 0; 
-            transform: translateX(50px); 
+          from {
+            opacity: 0;
+            transform: translateX(50px);
           }
-          to { 
-            opacity: 1; 
-            transform: translateX(0); 
+          to {
+            opacity: 1;
+            transform: translateX(0);
           }
         }
-        
+
         @keyframes slide-right {
-          from { 
-            opacity: 0; 
-            transform: translateX(-50px); 
+          from {
+            opacity: 0;
+            transform: translateX(-50px);
           }
-          to { 
-            opacity: 1; 
-            transform: translateX(0); 
+          to {
+            opacity: 1;
+            transform: translateX(0);
           }
         }
-        
+
         @keyframes scale-in {
-          from { 
-            opacity: 0; 
-            transform: scale(0.8); 
+          from {
+            opacity: 0;
+            transform: scale(0.8);
           }
-          to { 
-            opacity: 1; 
-            transform: scale(1); 
+          to {
+            opacity: 1;
+            transform: scale(1);
           }
         }
-        
+
         @keyframes rotate-in {
-          from { 
-            opacity: 0; 
-            transform: rotate(-10deg) scale(0.8); 
+          from {
+            opacity: 0;
+            transform: rotate(-10deg) scale(0.8);
           }
-          to { 
-            opacity: 1; 
-            transform: rotate(0deg) scale(1); 
+          to {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
           }
         }
-        
+
         /* Base state for animated elements - RESTORED BUT ROBUST */
         .animate-on-scroll {
           opacity: 0;
@@ -2159,7 +2144,7 @@ export default function PortalPageContent({ initialTenantId }) {
           opacity: 1;
           transform: translateY(0);
         }
-        
+
         @keyframes pulse-light {
           0%, 100% { opacity: 0.1; }
           50% { opacity: 0.2; }
@@ -2167,37 +2152,37 @@ export default function PortalPageContent({ initialTenantId }) {
         .animate-pulse {
           animation: pulse-light 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        
+
         /* Animated states */
         .animate-fade-in {
           animation: fade-in 0.3s ease-out;
         }
-        
+
         .animate-in {
           opacity: 1 !important;
           transform: translateY(0) !important;
         }
-        
+
         .animate-slide-up {
           animation: slide-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-        
+
         .animate-slide-left {
           animation: slide-left 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-        
+
         .animate-slide-right {
           animation: slide-right 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-        
+
         .animate-scale-in {
           animation: scale-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-        
+
         .animate-rotate-in {
           animation: rotate-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-        
+
         /* Staggered animations */
         .animate-on-scroll:nth-child(1) { transition-delay: 0.1s; }
         .animate-on-scroll:nth-child(2) { transition-delay: 0.2s; }
@@ -2219,7 +2204,6 @@ export default function PortalPageContent({ initialTenantId }) {
               <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500" style={{ backgroundColor: `${tenantConfig.accentColor}20` }}>
                 <Clock className="w-10 h-10 animate-pulse" style={{ color: tenantConfig.accentColor }} />
               </div>
-
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon!</h3>
               <p className="text-gray-600 mb-8 leading-relaxed">
                 We are currently finalizing this online service to serve you better. Please visit the Barangay Hall for manual processing in the meantime.
