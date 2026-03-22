@@ -103,7 +103,8 @@ const mapOfficialsToConfig = (officials) => {
 // GET Configuration (Officials + Settings)
 router.get('/config', async (req, res) => {
   try {
-    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    // x-tenant-id header always wins for public routes (supports ?tenant=demo style browsing)
+    const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
 
     const { data: officials, error: officialsError } = await supabase
@@ -157,7 +158,7 @@ router.get('/config', async (req, res) => {
 // PUT Configuration (Update Officials + Settings)
 router.put('/config', async (req, res) => {
   try {
-    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     const config = req.body;
 
@@ -242,7 +243,8 @@ router.put('/config', async (req, res) => {
 // GET all barangay officials
 router.get('/', async (req, res) => {
   try {
-    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    // x-tenant-id header always wins for public routes (supports ?tenant=demo style browsing)
+    const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
     console.log('Fetching barangay officials...');
 
@@ -278,7 +280,7 @@ router.get('/', async (req, res) => {
 // GET officials by position type
 router.get('/by-type/:type', async (req, res) => {
   try {
-    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
 
     const { data: officials, error } = await supabase
@@ -299,7 +301,7 @@ router.get('/by-type/:type', async (req, res) => {
 // GET single official by ID
 router.get('/:id', async (req, res) => {
   try {
-    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
 
     const { data: official, error } = await supabase

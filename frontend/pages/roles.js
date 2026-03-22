@@ -230,12 +230,12 @@ export default function RolesPermissions() {
       {/* Create Role Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-            <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex items-center justify-between text-white">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex items-center justify-between text-white shrink-0">
               <h2 className="text-lg font-bold">Create New Role</h2>
               <button onClick={() => setShowCreateModal(false)} className="text-white hover:bg-white hover:bg-opacity-20 p-1 rounded">✕</button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="label">Role Name</label>
                 <input type="text" placeholder="e.g., Manager" className="input" />
@@ -256,12 +256,12 @@ export default function RolesPermissions() {
       {/* Edit Role Modal */}
       {showEditModal && selectedRole && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-            <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex items-center justify-between text-white">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex items-center justify-between text-white shrink-0">
               <h2 className="text-lg font-bold">Edit Role: {selectedRole.name}</h2>
               <button onClick={() => setShowEditModal(false)} className="text-white hover:bg-white hover:bg-opacity-20 p-1 rounded">✕</button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="label">Role Name</label>
                 <input type="text" defaultValue={selectedRole.name} className="input" />
@@ -282,12 +282,12 @@ export default function RolesPermissions() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedRole && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full">
-            <div className="bg-red-50 border-b border-red-200 px-6 py-4 flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full flex flex-col max-h-[90vh]">
+            <div className="bg-red-50 border-b border-red-200 px-6 py-4 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-bold text-gray-900">Delete Role</h2>
               <button onClick={() => setShowDeleteModal(false)} className="text-gray-600 hover:bg-red-100 p-1 rounded">✕</button>
             </div>
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto flex-1">
               <p className="text-gray-600">Are you sure you want to delete the <strong>{selectedRole.name}</strong> role? This action cannot be undone.</p>
               <div className="flex gap-3 pt-6">
                 <button onClick={() => setShowDeleteModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">Cancel</button>

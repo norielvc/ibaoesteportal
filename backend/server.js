@@ -147,6 +147,7 @@ app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/official-receipts/files', express.static(path.join(__dirname, 'generated-receipts')));
 app.use('/api/certificates/files', express.static(path.join(__dirname, 'generated-certificates')));
 app.use('/api/official-receipts', authenticateToken, officialReceiptRoutes); 
+app.use('/api/residents/search', optionalAuthenticateToken, residentRoutes); // public search
 app.use('/api/residents', authenticateToken, residentRoutes); 
 app.use('/api/achievements', optionalAuthenticateToken, achievementRoutes); 
 app.use('/api/programs', optionalAuthenticateToken, programRoutes); 

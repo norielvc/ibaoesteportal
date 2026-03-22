@@ -3,7 +3,7 @@ import { Search, X, User, MapPin, Calendar, Phone, Check, AlertCircle, Database 
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api').replace(/\/$/, '').replace(/\/api$/, '') + '/api';
 
-export default function ResidentSearchModal({ isOpen, onClose, onSelect }) {
+export default function ResidentSearchModal({ isOpen, onClose, onSelect, isDemo = false }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [results, setResults] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +25,13 @@ export default function ResidentSearchModal({ isOpen, onClose, onSelect }) {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/residents/search?name=${encodeURIComponent(searchTerm)}`);
+            const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+            const tenantId = typeof window !== 'undefined'
+                ? (new URLSearchParams(window.location.search).get('tenant') || localStorage.getItem('tenantId') || 'ibaoeste')
+                : 'ibaoeste';
+            const headers = { 'x-tenant-id': tenantId };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const response = await fetch(`${API_URL}/residents/search?name=${encodeURIComponent(searchTerm)}`, { headers });
             const data = await response.json();
             if (data.success) {
                 setResults(data.residents);
@@ -48,16 +54,16 @@ export default function ResidentSearchModal({ isOpen, onClose, onSelect }) {
 
                 <div className="relative bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh] animate-scale-in border border-white/20">
                     {/* Premium Nature Header */}
-                    <div className="bg-gradient-to-r from-[#112e1f] via-[#2d5a3d] to-[#112117] px-8 py-6 flex items-center justify-between text-white relative overflow-hidden flex-shrink-0">
+                    <div className={`bg-gradient-to-r ${isDemo ? 'from-gray-900 via-gray-800 to-gray-900' : 'from-[#112e1f] via-[#2d5a3d] to-[#112117]'} px-8 py-6 flex items-center justify-between text-white relative overflow-hidden flex-shrink-0`}>
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
 
                         <div className="flex items-center gap-4 relative z-10">
                             <div className="bg-white/10 backdrop-blur-lg p-2.5 rounded-xl border border-white/20 shadow-lg">
-                                <Database className="w-5 h-5 text-emerald-400" />
+                                <Database className={`w-5 h-5 ${isDemo ? 'text-[#c9a84c]' : 'text-emerald-400'}`} />
                             </div>
                             <div>
                                 <h2 className="text-xl font-black tracking-tight leading-none uppercase">Resident Database</h2>
-                                <p className="text-emerald-100/60 text-[10px] font-black uppercase tracking-widest mt-1">Official Census Records Only</p>
+                            <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${isDemo ? 'text-[#c9a84c]/60' : 'text-emerald-100/60'}`}>Official Census Records Only</p>
                             </div>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all group">

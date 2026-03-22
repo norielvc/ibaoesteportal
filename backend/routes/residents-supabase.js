@@ -16,7 +16,7 @@ const sanitizeResidentData = (data) => {
 // Search residents by name with pagination
 router.get('/search', async (req, res) => {
     try {
-        const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+        const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
         if (!tenantId) {
             return res.status(403).json({ success: false, message: 'Tenant context required' });
         }
@@ -54,7 +54,7 @@ router.get('/search', async (req, res) => {
 // Bulk insert residents (for data import)
 router.post('/bulk-insert', async (req, res) => {
     try {
-        const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+        const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
         const { residents } = req.body;
 
         if (!residents || !Array.isArray(residents)) {
@@ -90,7 +90,7 @@ router.post('/bulk-insert', async (req, res) => {
 // Create new resident
 router.post('/', async (req, res) => {
     try {
-        const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+        const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
         const residentData = sanitizeResidentData(req.body);
         
@@ -118,7 +118,7 @@ router.post('/', async (req, res) => {
 // Update resident
 router.put('/:id', async (req, res) => {
     try {
-        const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+        const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
         const { id } = req.params;
         const updates = sanitizeResidentData(req.body);
@@ -150,7 +150,7 @@ router.put('/:id', async (req, res) => {
 // Delete resident
 router.delete('/:id', async (req, res) => {
     try {
-        const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+        const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
         const { id } = req.params;
         const { error } = await supabase

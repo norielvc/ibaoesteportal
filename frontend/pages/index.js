@@ -61,7 +61,8 @@ export default function BarangayPortal() {
         shortName: "Demo Barangay",
         subtitle: "Sample Municipality, Philippines",
         logo: "/calumpit.png",
-        colorStyle: { background: 'linear-gradient(to right, #1e3a8a, #0f172a)' }
+        colorStyle: { background: 'linear-gradient(to right, #1a1a1a, #2d2d2d)' },
+        isDemo: true
       });
     } else {
       setTenantConfig({
@@ -69,7 +70,8 @@ export default function BarangayPortal() {
         shortName: "Iba O' Este",
         subtitle: "Calumpit, Bulacan",
         logo: "/logo.png",
-        colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' }
+        colorStyle: { background: 'linear-gradient(to right, #004700, #001a00)' },
+        isDemo: false
       });
     }
   }, [tenantId]);
@@ -344,15 +346,19 @@ export default function BarangayPortal() {
         if (cfgData.data.visibility) setVisibilitySettings(cfgData.data.visibility);
         if (cfgData.data.missionGoals) setMissionGoals(prev => ({ ...prev, ...cfgData.data.missionGoals }));
         if (cfgData.data.siteContact) setSiteContact(prev => ({ ...prev, ...cfgData.data.siteContact, hotlines: cfgData.data.siteContact.hotlines || prev.hotlines }));
-        if (cfgData.data.portalBranding) {
+        // Only apply DB portal branding for non-hardcoded tenants
+        // demo and ibaoeste use hardcoded configs — DB branding would overwrite them
+        if (cfgData.data.portalBranding && tenantId !== 'demo' && tenantId !== 'ibaoeste') {
           const b = cfgData.data.portalBranding;
-          setTenantConfig({
-            name: b.portalName || tenantConfig.name,
-            shortName: b.shortName || tenantConfig.shortName,
-            subtitle: b.subtitle || tenantConfig.subtitle,
-            logo: b.logoUrl || tenantConfig.logo,
+          setTenantConfig(prev => ({
+            ...prev,
+            name: b.portalName || prev.name,
+            shortName: b.shortName || prev.shortName,
+            subtitle: b.subtitle || prev.subtitle,
+            logo: b.logoUrl || prev.logo,
             colorStyle: { background: `linear-gradient(to right, ${b.primaryColor || '#004700'}, ${b.secondaryColor || '#001a00'})` },
-          });
+            isDemo: prev.isDemo,
+          }));
         }
       }
     });
@@ -599,29 +605,39 @@ export default function BarangayPortal() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Large Portal Header with Date/Time and Weather */}
-      <div className="py-2 md:py-3" style={tenantConfig.colorStyle}>
+      <div
+        className={tenantConfig.isDemo ? "py-2 md:py-3 border-b border-gray-200" : "py-2 md:py-3"}
+        style={tenantConfig.isDemo
+          ? { background: 'linear-gradient(to right, #f9f9f9, #ffffff)', borderBottom: '3px solid #c9a84c' }
+          : tenantConfig.colorStyle
+        }
+      >
         <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-6">
           {/* Left Side - Logo and Title */}
           <div className="flex items-center gap-3 md:gap-4">
-            <img src={tenantConfig.logo} alt="Barangay Logo" className="h-12 w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 object-contain drop-shadow-2xl bg-white rounded-full p-1" />
+            <img
+              src={tenantConfig.logo}
+              alt="Barangay Logo"
+              className={`h-12 w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 object-contain drop-shadow-2xl rounded-full p-1 ${tenantConfig.isDemo ? 'bg-gray-100 border border-gray-200' : 'bg-white'}`}
+            />
             <div className="text-center md:text-left">
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
+              <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight drop-shadow-lg ${tenantConfig.isDemo ? 'text-gray-900' : 'text-white'}`}>
                 {tenantConfig.name}
               </h1>
-              <p className="text-xs md:text-sm lg:text-base text-gray-200 font-medium mt-0.5">
+              <p className={`text-xs md:text-sm lg:text-base font-medium mt-0.5 ${tenantConfig.isDemo ? 'text-[#c9a84c]' : 'text-gray-200'}`}>
                 {tenantConfig.subtitle}
               </p>
             </div>
           </div>
 
           {/* Right Side - Date/Time and Weather */}
-          <div className="flex flex-col items-end gap-1 mt-4 md:mt-0 text-white text-sm">
+          <div className={`flex flex-col items-end gap-1 mt-4 md:mt-0 text-sm ${tenantConfig.isDemo ? 'text-gray-700' : 'text-white'}`}>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
               <span>{currentTime || 'Loading...'}</span>
             </div>
             <div className="flex items-center gap-2">
-              {weatherInfo.icon && React.createElement(weatherInfo.icon, { className: `w-4 h-4 ${weatherInfo.color}` })}
+              {weatherInfo.icon && React.createElement(weatherInfo.icon, { className: `w-4 h-4 ${tenantConfig.isDemo ? 'text-[#c9a84c]' : weatherInfo.color}` })}
               <span>Weather: {weatherInfo.text}</span>
             </div>
           </div>
@@ -634,27 +650,33 @@ export default function BarangayPortal() {
           <div className="flex justify-end items-center h-9 gap-6">
             {/* Desktop Navigation - Right Side */}
             <div className="hidden md:flex items-center gap-6">
-              <a href="#news" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
-                News &amp; Updates
-              </a>
-              <a href="#forms" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
-                Barangay Forms
-              </a>
-              <a href="#directory" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
-                Facilities
-              </a>
-              <a href="#achievements" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
-                Achievements &amp; Awards
-              </a>
-              <a href="#officials" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
-                Barangay Officials
-              </a>
-              <a href="#contact" className="text-gray-700 hover:text-[#008000] text-sm font-semibold transition-colors py-2 border-b-2 border-transparent hover:border-[#008000]">
-                Contact Us
-              </a>
+              {[
+                { href: '#news', label: 'News & Updates' },
+                { href: '#forms', label: 'Barangay Forms' },
+                { href: '#directory', label: 'Facilities' },
+                { href: '#achievements', label: 'Achievements & Awards' },
+                { href: '#officials', label: 'Barangay Officials' },
+                { href: '#contact', label: 'Contact Us' },
+              ].map(({ href, label }) => (
+                <a
+                  key={href}
+                  href={href}
+                  className={`text-gray-700 text-sm font-semibold transition-colors py-2 border-b-2 border-transparent ${
+                    tenantConfig.isDemo
+                      ? 'hover:text-[#c9a84c] hover:border-[#c9a84c]'
+                      : 'hover:text-[#008000] hover:border-[#008000]'
+                  }`}
+                >
+                  {label}
+                </a>
+              ))}
               <button
                 onClick={() => router.push('/login')}
-                className="bg-[#008000] hover:bg-[#006400] text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-all shadow-md"
+                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all shadow-md text-white ${
+                  tenantConfig.isDemo
+                    ? 'bg-gray-900 hover:bg-black border border-[#c9a84c]'
+                    : 'bg-[#008000] hover:bg-[#006400]'
+                }`}
               >
                 Login
               </button>
@@ -673,27 +695,31 @@ export default function BarangayPortal() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200 py-4 px-4 space-y-3">
-            <a href="#news" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#news" className={`block py-2 text-gray-700 font-medium ${tenantConfig.isDemo ? 'hover:text-[#c9a84c]' : 'hover:text-green-600'}`}>
               News & Updates
             </a>
-            <a href="#forms" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#forms" className={`block py-2 text-gray-700 font-medium ${tenantConfig.isDemo ? 'hover:text-[#c9a84c]' : 'hover:text-green-600'}`}>
               Barangay Forms
             </a>
-            <a href="#directory" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#directory" className={`block py-2 text-gray-700 font-medium ${tenantConfig.isDemo ? 'hover:text-[#c9a84c]' : 'hover:text-green-600'}`}>
               Facilities
             </a>
-            <a href="#achievements" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#achievements" className={`block py-2 text-gray-700 font-medium ${tenantConfig.isDemo ? 'hover:text-[#c9a84c]' : 'hover:text-green-600'}`}>
               Achievements & Awards
             </a>
-            <a href="#officials" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#officials" className={`block py-2 text-gray-700 font-medium ${tenantConfig.isDemo ? 'hover:text-[#c9a84c]' : 'hover:text-green-600'}`}>
               Barangay Officials
             </a>
-            <a href="#contact" className="block py-2 text-gray-700 hover:text-green-600 font-medium">
+            <a href="#contact" className={`block py-2 text-gray-700 font-medium ${tenantConfig.isDemo ? 'hover:text-[#c9a84c]' : 'hover:text-green-600'}`}>
               Contact Us
             </a>
             <button
               onClick={() => router.push('/login')}
-              className="w-full bg-[#008000] hover:bg-[#006400] text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className={`w-full px-6 py-3 rounded-lg font-medium transition-colors text-white ${
+                tenantConfig.isDemo
+                  ? 'bg-gray-900 hover:bg-black border border-[#c9a84c]'
+                  : 'bg-[#008000] hover:bg-[#006400]'
+              }`}
             >
               Login
             </button>
@@ -727,10 +753,10 @@ export default function BarangayPortal() {
                 style={{ backgroundImage: `url(${item.image})` }}
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#112117]/80 to-[#112e1f]/60" />
+            <div className={`absolute inset-0 bg-gradient-to-r to-transparent ${tenantConfig.isDemo ? 'from-gray-950/80 via-gray-900/60' : 'from-[#112117]/80 to-[#112e1f]/60'}`} />
             <div className="relative h-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
               <div className="max-w-2xl text-white">
-                <span className="inline-block bg-[#648a6a] text-white px-3 py-1 rounded-full text-xs font-semibold mb-2">
+                <span className={`inline-block text-white px-3 py-1 rounded-full text-xs font-semibold mb-2 ${tenantConfig.isDemo ? 'bg-gray-700' : 'bg-[#648a6a]'}`}>
                   <Calendar className="w-3 h-3 inline mr-1" />
                   {item.date}
                 </span>
@@ -738,7 +764,7 @@ export default function BarangayPortal() {
                 <p className="text-sm md:text-base text-gray-200 mb-4 line-clamp-2 overflow-hidden">{item.description}</p>
                 <button
                   onClick={() => setSelectedNewsItem(item)}
-                  className="bg-[#efefef] text-[#112117] px-5 py-2 rounded-lg font-semibold hover:bg-white transition-all transform hover:scale-105 flex items-center gap-2 shadow-lg text-sm"
+                  className={`px-5 py-2 rounded-lg font-semibold transition-all transform hover:scale-105 flex items-center gap-2 shadow-lg text-sm ${tenantConfig.isDemo ? 'bg-[#c9a84c] text-black hover:bg-[#e8c96a]' : 'bg-[#efefef] text-[#112117] hover:bg-white'}`}
                 >
                   Read More <ChevronRight className="w-4 h-4" />
                 </button>
@@ -790,11 +816,6 @@ export default function BarangayPortal() {
           }}
         />
 
-        {/* Barangay Logo Watermark - Even Bigger & Impactful */}
-        <div
-          className="absolute right-[-5%] md:right-[-2%] top-1/2 -translate-y-1/2 w-[600px] md:w-[1100px] h-[110%] md:h-[115%] bg-contain bg-right bg-no-repeat opacity-10 pointer-events-none z-0 hidden md:block"
-          style={{ backgroundImage: 'url(/images/ibalogo.png)', backgroundPosition: 'right center' }}
-        />
 
         {/* Light Overlay for Text Readability */}
 
@@ -809,18 +830,19 @@ export default function BarangayPortal() {
           {/* Section Header */}
           <div className="text-center mb-6">
             {/* Enhanced Online Services Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#2d5a3d]/90 backdrop-blur-sm border border-[#4b6c56]/50 text-white rounded-full text-xs font-semibold mb-4 shadow-lg">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 backdrop-blur-sm rounded-full text-xs font-semibold mb-4 shadow-lg text-white ${tenantConfig.isDemo ? 'bg-gray-800 border border-[#c9a84c]/60' : 'bg-[#2d5a3d]/90 border border-[#4b6c56]/50'}`}>
               <div className="flex items-center justify-center w-6 h-6 bg-white/20 rounded-full">
                 <FileText className="w-3 h-3 text-white" />
               </div>
               <span className="tracking-wide">ONLINE SERVICES</span>
               <div className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-                <span className="text-[10px] text-green-300 font-bold">LIVE</span>
+                <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${tenantConfig.isDemo ? 'bg-[#c9a84c]' : 'bg-green-400'}`}></span>
+                <span className={`text-[10px] font-bold ${tenantConfig.isDemo ? 'text-[#e8c96a]' : 'text-green-300'}`}>LIVE</span>
               </div>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 drop-shadow-2xl mb-2">
-              Available Barangay <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2d5a3d] to-[#112117] drop-shadow-lg">Forms</span>
+              Available Barangay{' '}
+              <span className={`text-transparent bg-clip-text bg-gradient-to-r drop-shadow-lg ${tenantConfig.isDemo ? 'from-[#c9a84c] to-[#a07830]' : 'from-[#2d5a3d] to-[#112117]'}`}>Forms</span>
             </h2>
             <p className="text-gray-700 drop-shadow-lg max-w-2xl mx-auto text-base font-medium">
               Request official documents and certificates online. Fast, easy, and convenient.
@@ -904,25 +926,45 @@ export default function BarangayPortal() {
                         const isPrimary = formIndex % 2 === 0;
 
                         // Theme definitions for better blending
-                        const theme = isPrimary ? {
-                          bg: '#112e1f',              // Dark Forest
-                          title: 'text-white',
-                          desc: 'text-green-100/80',
-                          iconBg: 'from-emerald-500 to-green-600',
-                          badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-                          button: 'from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600',
-                          buttonShadow: 'shadow-emerald-900/40',
-                          countBg: 'bg-emerald-400 text-[#112e1f]'
-                        } : {
-                          bg: '#d1e0d3',              // Sage
-                          title: 'text-[#112e1f]',
-                          desc: 'text-[#2d5a3d]',
-                          iconBg: 'from-[#2d5a3d] to-[#112e1f]',
-                          badge: 'bg-[#2d5a3d]/10 text-[#2d5a3d] border-[#2d5a3d]/20',
-                          button: 'from-[#2d5a3d] to-[#112e1f] hover:from-[#3a6d4b] hover:to-[#1a3826]',
-                          buttonShadow: 'shadow-[#112e1f]/20',
-                          countBg: 'bg-[#112e1f] text-white'
-                        };
+                        const theme = tenantConfig.isDemo
+                          ? (isPrimary ? {
+                              bg: '#1a1a1a',
+                              title: 'text-white',
+                              desc: 'text-gray-300',
+                              iconBg: 'from-[#c9a84c] to-[#a07830]',
+                              badge: 'bg-[#c9a84c]/20 text-[#e8c96a] border-[#c9a84c]/30',
+                              button: 'from-[#c9a84c] to-[#a07830] hover:from-[#d4b55a] hover:to-[#b08840]',
+                              buttonShadow: 'shadow-[#c9a84c]/30',
+                              countBg: 'bg-[#c9a84c] text-black'
+                            } : {
+                              bg: '#2a2a2a',
+                              title: 'text-white',
+                              desc: 'text-gray-400',
+                              iconBg: 'from-gray-600 to-gray-800',
+                              badge: 'bg-white/10 text-gray-300 border-white/20',
+                              button: 'from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800',
+                              buttonShadow: 'shadow-gray-900/20',
+                              countBg: 'bg-white text-gray-900'
+                            })
+                          : (isPrimary ? {
+                              bg: '#112e1f',
+                              title: 'text-white',
+                              desc: 'text-green-100/80',
+                              iconBg: 'from-emerald-500 to-green-600',
+                              badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                              button: 'from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600',
+                              buttonShadow: 'shadow-emerald-900/40',
+                              countBg: 'bg-emerald-400 text-[#112e1f]'
+                            } : {
+                              bg: '#d1e0d3',
+                              title: 'text-[#112e1f]',
+                              desc: 'text-[#2d5a3d]',
+                              iconBg: 'from-[#2d5a3d] to-[#112e1f]',
+                              badge: 'bg-[#2d5a3d]/10 text-[#2d5a3d] border-[#2d5a3d]/20',
+                              button: 'from-[#2d5a3d] to-[#112e1f] hover:from-[#3a6d4b] hover:to-[#1a3826]',
+                              buttonShadow: 'shadow-[#112e1f]/20',
+                              countBg: 'bg-[#112e1f] text-white'
+                            });
 
                         return (
                           <div key={formIndex} className="w-full flex-shrink-0 flex items-center justify-center p-3 md:p-4" style={{ width: `${100 / forms.length}%` }}>
@@ -983,7 +1025,7 @@ export default function BarangayPortal() {
                         const maxSlide = Math.max(0, forms.length - itemsPerView);
                         setCurrentFormSlide((prev) => (prev - 1 + (maxSlide + 1)) % (maxSlide + 1));
                       }}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
+                      className={`absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 ${tenantConfig.isDemo ? 'bg-gray-800 hover:bg-black border border-[#c9a84c]/50' : 'bg-[#2d5a3d]/90 hover:bg-[#112e1f] border border-[#4b6c56]/50'}`}
                     >
                       <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </button>
@@ -992,7 +1034,7 @@ export default function BarangayPortal() {
                         const maxSlide = Math.max(0, forms.length - itemsPerView);
                         setCurrentFormSlide((prev) => (prev + 1) % (maxSlide + 1));
                       }}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-[#2d5a3d]/90 hover:bg-[#112e1f] backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border border-[#4b6c56]/50"
+                      className={`absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 ${tenantConfig.isDemo ? 'bg-gray-800 hover:bg-black border border-[#c9a84c]/50' : 'bg-[#2d5a3d]/90 hover:bg-[#112e1f] border border-[#4b6c56]/50'}`}
                     >
                       <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </button>
@@ -1004,8 +1046,9 @@ export default function BarangayPortal() {
                       <button
                         key={index}
                         onClick={() => setCurrentFormSlide(index)}
-                        className={`w-3 h-3 rounded-full transition-all ${currentFormSlide === index ? 'bg-[#2d5a3d] w-8 shadow-lg' : 'bg-gray-400 hover:bg-gray-500'
-                          }`}
+                        className={`w-3 h-3 rounded-full transition-all ${currentFormSlide === index
+                          ? (tenantConfig.isDemo ? 'bg-[#c9a84c] w-8 shadow-lg' : 'bg-[#2d5a3d] w-8 shadow-lg')
+                          : 'bg-gray-400 hover:bg-gray-500'}`}
                       />
                     ))}
                   </div>
@@ -1044,10 +1087,10 @@ export default function BarangayPortal() {
                   />
                 </div>
                 <div className="flex flex-col flex-1 px-1">
-                  <p className="text-[#6366f1] text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2.5">
+                  <p className={`text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2.5 ${tenantConfig.isDemo ? 'text-[#c9a84c]' : 'text-[#6366f1]'}`}>
                     {program.category}
                   </p>
-                  <h3 className="text-gray-900 text-lg md:text-xl font-bold mb-3 leading-snug group-hover:text-[#6366f1] transition-colors">
+                  <h3 className={`text-gray-900 text-lg md:text-xl font-bold mb-3 leading-snug transition-colors ${tenantConfig.isDemo ? 'group-hover:text-[#c9a84c]' : 'group-hover:text-[#6366f1]'}`}>
                     {program.title}
                   </h3>
                   <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-4 flex-1">
@@ -1097,16 +1140,16 @@ export default function BarangayPortal() {
           <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-16 lg:px-24 max-w-4xl">
             {/* Pill Badge */}
             <div className="inline-flex items-center gap-2 mb-6 w-fit">
-              <div className="flex items-center gap-2 px-4 py-1.5 bg-[#8dc63f]/20 border border-[#8dc63f]/50 backdrop-blur-sm rounded-full">
-                <span className="w-1.5 h-1.5 bg-[#8dc63f] rounded-full animate-pulse" />
-                <span className="text-[#8dc63f] text-[10px] font-bold tracking-[0.3em] uppercase">Kalidad na Garantisado</span>
+              <div className={`flex items-center gap-2 px-4 py-1.5 backdrop-blur-sm rounded-full ${tenantConfig.isDemo ? 'bg-[#c9a84c]/20 border border-[#c9a84c]/50' : 'bg-[#8dc63f]/20 border border-[#8dc63f]/50'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${tenantConfig.isDemo ? 'bg-[#c9a84c]' : 'bg-[#8dc63f]'}`} />
+                <span className={`text-[10px] font-bold tracking-[0.3em] uppercase ${tenantConfig.isDemo ? 'text-[#c9a84c]' : 'text-[#8dc63f]'}`}>Kalidad na Garantisado</span>
               </div>
             </div>
 
             {/* Main Heading */}
             <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight">
               Ang inyong mga<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8dc63f] to-[#b4d339]">
+              <span className={`text-transparent bg-clip-text bg-gradient-to-r ${tenantConfig.isDemo ? 'from-[#c9a84c] to-[#e8c96a]' : 'from-[#8dc63f] to-[#b4d339]'}`}>
                 pasilidad
               </span>
               {' '}sa komunidad
@@ -1119,9 +1162,9 @@ export default function BarangayPortal() {
 
             {/* Decorative Rule */}
             <div className="flex items-center gap-4">
-              <div className="w-16 h-0.5 bg-[#8dc63f]" />
-              <div className="w-3 h-3 border-2 border-[#8dc63f] rotate-45" />
-              <div className="w-8 h-0.5 bg-[#8dc63f]/40" />
+              <div className={`w-16 h-0.5 ${tenantConfig.isDemo ? 'bg-[#c9a84c]' : 'bg-[#8dc63f]'}`} />
+              <div className={`w-3 h-3 border-2 rotate-45 ${tenantConfig.isDemo ? 'border-[#c9a84c]' : 'border-[#8dc63f]'}`} />
+              <div className={`w-8 h-0.5 ${tenantConfig.isDemo ? 'bg-[#c9a84c]/40' : 'bg-[#8dc63f]/40'}`} />
             </div>
           </div>
 
@@ -1131,7 +1174,7 @@ export default function BarangayPortal() {
               const totalImages = facilities.flatMap(f => f.images || []).filter((img, i, arr) => arr.indexOf(img) === i).length || 1;
               setHeroCarouselIndex(prev => (prev === 0 ? totalImages - 1 : prev - 1));
             }}
-            className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-[#8dc63f] border border-white/20 flex items-center justify-center text-white transition-all duration-300 cursor-pointer z-10 backdrop-blur-sm"
+            className={`absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white transition-all duration-300 cursor-pointer z-10 backdrop-blur-sm ${tenantConfig.isDemo ? 'hover:bg-[#c9a84c]' : 'hover:bg-[#8dc63f]'}`}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -1140,13 +1183,13 @@ export default function BarangayPortal() {
               const totalImages = facilities.flatMap(f => f.images || []).filter((img, i, arr) => arr.indexOf(img) === i).length || 1;
               setHeroCarouselIndex(prev => (prev === totalImages - 1 ? 0 : prev + 1));
             }}
-            className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-[#8dc63f] border border-white/20 flex items-center justify-center text-white transition-all duration-300 cursor-pointer z-10 backdrop-blur-sm"
+            className={`absolute right-4 md:right-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white transition-all duration-300 cursor-pointer z-10 backdrop-blur-sm ${tenantConfig.isDemo ? 'hover:bg-[#c9a84c]' : 'hover:bg-[#8dc63f]'}`}
           >
             <ChevronRight className="w-5 h-5" />
           </button>
 
           {/* Bottom Stats Strip */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e3a8a] via-[#1a6f52] to-[#22c55e] px-8 md:px-16 lg:px-24 py-3 flex items-center gap-8 md:gap-16 overflow-x-auto">
+          <div className={`absolute bottom-0 left-0 right-0 px-8 md:px-16 lg:px-24 py-3 flex items-center gap-8 md:gap-16 overflow-x-auto ${tenantConfig.isDemo ? 'bg-gradient-to-r from-gray-900 via-gray-800 to-black' : 'bg-gradient-to-r from-[#1e3a8a] via-[#1a6f52] to-[#22c55e]'}`}>
             {[
               { label: 'Mga Pasilidad', value: `${facilities.length || 0}+` },
               { label: 'Mga Residente', value: '5,000+' },
@@ -1184,7 +1227,7 @@ export default function BarangayPortal() {
                       />
                     </div>
                     <div className="px-1">
-                      <h3 className="text-lg font-bold text-gray-800 mb-2 leading-snug group-hover:text-[#8dc63f] transition-colors">{facility.name}</h3>
+                      <h3 className={`text-lg font-bold text-gray-800 mb-2 leading-snug transition-colors ${tenantConfig.isDemo ? 'group-hover:text-[#c9a84c]' : 'group-hover:text-[#8dc63f]'}`}>{facility.name}</h3>
                       <p className="text-gray-500 text-sm leading-relaxed line-clamp-3">
                         {facility.description}
                       </p>
@@ -1198,7 +1241,7 @@ export default function BarangayPortal() {
       </section>
 
       {/* Barangay Achievement and Awards Section */}
-      <section id="achievements" className="py-16 md:py-24 bg-gradient-to-br from-[#0a1f12] via-[#113821] to-[#0a1f12] relative overflow-hidden flex items-center animate-on-scroll">
+      <section id="achievements" className={`py-16 md:py-24 relative overflow-hidden flex items-center animate-on-scroll ${tenantConfig.isDemo ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950' : 'bg-gradient-to-br from-[#0a1f12] via-[#113821] to-[#0a1f12]'}`}>
         {/* Background Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-48 h-48 md:w-96 md:h-96 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
@@ -1214,8 +1257,7 @@ export default function BarangayPortal() {
               filter: 'grayscale(1) contrast(1.5)',
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1e1b4b] via-transparent to-[#1e1b4b]"></div>
-        </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1e1b4b] via-transparent to-[#1e1b4b]"></div>        </div>
 
         <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
           <div className="max-w-[1400px] mx-auto">
@@ -1223,14 +1265,14 @@ export default function BarangayPortal() {
             {/* Section Header */}
             <div className="text-center mb-12 md:mb-16">
               <div className="flex justify-center mb-4 md:mb-6">
-                <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-[#113821]/40 backdrop-blur-sm border border-[#d4af37]/30 rounded-full shadow-lg">
+                <div className={`inline-flex items-center gap-3 px-6 py-2.5 backdrop-blur-sm border border-[#d4af37]/30 rounded-full shadow-lg ${tenantConfig.isDemo ? 'bg-gray-800/60' : 'bg-[#113821]/40'}`}>
                   <Award className="w-5 h-5 md:w-6 md:h-6 text-[#d4af37]" />
                   <span className="text-[#ebd78c] font-semibold text-sm md:text-base tracking-widest uppercase">Honors & Recognitions</span>
                   <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(250,204,21,0.6)]"></div>
                 </div>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight font-serif tracking-tight">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight tracking-tight">
                 BARANGAY{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-amber-500">
                   ACHIEVEMENTS
@@ -1242,7 +1284,7 @@ export default function BarangayPortal() {
                 <div className="w-24 md:w-32 h-1.5 bg-gradient-to-r from-transparent via-yellow-400 to-transparent rounded-full opacity-70"></div>
               </div>
 
-              <p className="text-lg md:text-xl text-green-100/80 font-light leading-relaxed max-w-3xl mx-auto">
+              <p className={`text-lg md:text-xl font-light leading-relaxed max-w-3xl mx-auto ${tenantConfig.isDemo ? 'text-gray-300' : 'text-green-100/80'}`}>
                 Celebrating our shared milestones, exemplary performance, and outstanding service to the community.
               </p>
             </div>
@@ -1253,7 +1295,7 @@ export default function BarangayPortal() {
                 <div
                   key={achievement.id || idx}
                   onClick={() => setSelectedAchievement(achievement)}
-                  className="cursor-pointer bg-[#0a1f12]/60 backdrop-blur-md rounded-2xl border border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2"
+                  className={`cursor-pointer backdrop-blur-md rounded-2xl border hover:shadow-[0_0_20px_rgba(201,168,76,0.2)] transition-all duration-300 group shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex flex-col hover:-translate-y-2 ${tenantConfig.isDemo ? 'bg-gray-800/60 border-[#c9a84c]/20 hover:bg-gray-700/60 hover:border-[#c9a84c]/50' : 'bg-[#0a1f12]/60 border-[#d4af37]/20 hover:bg-[#113821]/60 hover:border-[#d4af37]/50'}`}
                 >
                   <div className="relative h-48 md:h-56 w-full overflow-hidden">
                     <div className="absolute inset-0 bg-[#0f2e1b]/30 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
@@ -1262,7 +1304,7 @@ export default function BarangayPortal() {
                       alt={achievement.title}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
                     />
-                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-gray-950 to-transparent z-10"></div>
                     {/* Floating Badge */}
                     <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
                       <Award className="w-4 h-4" />
@@ -1281,7 +1323,7 @@ export default function BarangayPortal() {
                         <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-[#d4af37] transition-colors line-clamp-2 leading-tight">{achievement.title}</h3>
                       </div>
                     </div>
-                    <p className="text-[#ebd78c]/80 leading-relaxed text-sm flex-1 pt-3 border-t border-[#d4af37]/20 mt-1">
+                    <p className={`leading-relaxed text-sm flex-1 pt-3 border-t mt-1 ${tenantConfig.isDemo ? 'text-gray-300 border-[#c9a84c]/20' : 'text-[#ebd78c]/80 border-[#d4af37]/20'}`}>
                       {achievement.description}
                     </p>
                   </div>
@@ -1290,22 +1332,22 @@ export default function BarangayPortal() {
             </div>
 
             {/* Statistics Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-12 bg-[#113821]/20 backdrop-blur-sm p-6 md:p-8 rounded-3xl border border-[#d4af37]/20">
+            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-12 backdrop-blur-sm p-6 md:p-8 rounded-3xl border ${tenantConfig.isDemo ? 'bg-gray-800/30 border-[#c9a84c]/20' : 'bg-[#113821]/20 border-[#d4af37]/20'}`}>
               <div className="text-center p-4">
                 <div className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500 mb-2">12+</div>
-                <div className="text-green-100/80 text-xs md:text-sm font-bold uppercase tracking-widest">Major Awards</div>
+                <div className={`text-xs md:text-sm font-bold uppercase tracking-widest ${tenantConfig.isDemo ? 'text-gray-400' : 'text-green-100/80'}`}>Major Awards</div>
               </div>
-              <div className="text-center p-4 border-l border-[#d4af37]/20">
+              <div className={`text-center p-4 border-l ${tenantConfig.isDemo ? 'border-[#c9a84c]/20' : 'border-[#d4af37]/20'}`}>
                 <div className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500 mb-2">100%</div>
-                <div className="text-green-100/80 text-xs md:text-sm font-bold uppercase tracking-widest">Transparency</div>
+                <div className={`text-xs md:text-sm font-bold uppercase tracking-widest ${tenantConfig.isDemo ? 'text-gray-400' : 'text-green-100/80'}`}>Transparency</div>
               </div>
-              <div className="text-center p-4 border-t md:border-t-0 md:border-l border-[#d4af37]/20">
+              <div className={`text-center p-4 border-t md:border-t-0 md:border-l ${tenantConfig.isDemo ? 'border-[#c9a84c]/20' : 'border-[#d4af37]/20'}`}>
                 <div className="text-3xl md:text-4xl font-extrabold text-white mb-2">Top 5</div>
-                <div className="text-green-100/80 text-xs md:text-sm font-bold uppercase tracking-widest">City Ranking</div>
+                <div className={`text-xs md:text-sm font-bold uppercase tracking-widest ${tenantConfig.isDemo ? 'text-gray-400' : 'text-green-100/80'}`}>City Ranking</div>
               </div>
-              <div className="text-center p-4 border-l border-t md:border-t-0 border-[#d4af37]/20">
+              <div className={`text-center p-4 border-l border-t md:border-t-0 ${tenantConfig.isDemo ? 'border-[#c9a84c]/20' : 'border-[#d4af37]/20'}`}>
                 <div className="text-3xl md:text-4xl font-extrabold text-white mb-2">A+</div>
-                <div className="text-green-100/80 text-xs md:text-sm font-bold uppercase tracking-widest">Audit Rating</div>
+                <div className={`text-xs md:text-sm font-bold uppercase tracking-widest ${tenantConfig.isDemo ? 'text-gray-400' : 'text-green-100/80'}`}>Audit Rating</div>
               </div>
             </div>
 
@@ -1316,25 +1358,25 @@ export default function BarangayPortal() {
       {/* Achievement Modal */}
       {selectedAchievement && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md" onClick={() => setSelectedAchievement(null)}>
-          <div className="bg-[#0a1f12] border border-[#d4af37]/20 rounded-2xl md:rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden relative transform transition-all" onClick={e => e.stopPropagation()}>
+          <div className={`border border-[#d4af37]/20 rounded-2xl md:rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden relative transform transition-all ${tenantConfig.isDemo ? 'bg-gray-900' : 'bg-[#0a1f12]'}`} onClick={e => e.stopPropagation()}>
             <button onClick={() => setSelectedAchievement(null)} className="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-red-500 transition-colors backdrop-blur-md">
               <X className="w-6 h-6" />
             </button>
             <div className="relative h-64 sm:h-80 lg:h-[450px] w-full group overflow-hidden">
-              <div className="absolute inset-0 bg-[#113821]/20 z-10"></div>
+              <div className={`absolute inset-0 z-10 ${tenantConfig.isDemo ? 'bg-gray-900/20' : 'bg-[#113821]/20'}`}></div>
               <img src={selectedAchievement.image} alt={selectedAchievement.title} loading="lazy" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105" />
-              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#081a0f] to-transparent z-10"></div>
-              <div className={`absolute top-6 left-6 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#0a1f12] text-white text-sm md:text-base font-bold px-4 md:px-5 py-2 md:py-2.5 rounded-full shadow-lg flex items-center gap-2 backdrop-blur-md`}>
+              <div className={`absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t to-transparent z-10 ${tenantConfig.isDemo ? 'from-gray-950' : 'from-[#081a0f]'}`}></div>
+              <div className="absolute top-6 left-6 z-20 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-black text-sm md:text-base font-bold px-4 md:px-5 py-2 md:py-2.5 rounded-full shadow-lg flex items-center gap-2 backdrop-blur-md">
                 <Award className="w-5 h-5" />
                 {selectedAchievement.year}
               </div>
             </div>
-            <div className="p-8 md:p-10 relative z-20 -mt-10 md:-mt-16 bg-[#0a1f12]/90 backdrop-blur-xl border-t border-[#d4af37]/30">
+            <div className={`p-8 md:p-10 relative z-20 -mt-10 md:-mt-16 backdrop-blur-xl border-t border-[#d4af37]/30 ${tenantConfig.isDemo ? 'bg-gray-900/90' : 'bg-[#0a1f12]/90'}`}>
               <div className="mb-4">
-                <p className={` text-sm md:text-base font-bold tracking-widest uppercase mb-2`}>{selectedAchievement.category}</p>
+                <p className="text-[#c9a84c] text-sm md:text-base font-bold tracking-widest uppercase mb-2">{selectedAchievement.category}</p>
                 <h3 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight">{selectedAchievement.title}</h3>
               </div>
-              <p className="text-[#ebd78c]/90 leading-relaxed text-lg md:text-xl mt-6 lg:mt-8">
+              <p className={`leading-relaxed text-lg md:text-xl mt-6 lg:mt-8 ${tenantConfig.isDemo ? 'text-gray-300' : 'text-[#ebd78c]/90'}`}>
                 {selectedAchievement.description}
               </p>
             </div>
@@ -1424,45 +1466,50 @@ export default function BarangayPortal() {
       <BarangayClearanceModal
         isOpen={showClearanceModal}
         onClose={() => setShowClearanceModal(false)}
+        isDemo={tenantConfig.isDemo}
       />
 
       {/* Certificate of Indigency Modal */}
       <IndigencyCertificateModal
         isOpen={showIndigencyModal}
         onClose={() => setShowIndigencyModal(false)}
+        isDemo={tenantConfig.isDemo}
       />
 
       {/* Barangay Residency Modal */}
       <ResidencyCertificateModal
         isOpen={showResidencyModal}
         onClose={() => setShowResidencyModal(false)}
+        isDemo={tenantConfig.isDemo}
       />
 
       {/* Business Permit Modal */}
       <BusinessPermitModal
         isOpen={showBusinessPermitModal}
         onClose={() => setShowBusinessPermitModal(false)}
+        isDemo={tenantConfig.isDemo}
       />
 
       {/* Educational Assistance Modal */}
       <EducationalAssistanceModal
         isOpen={showEducationalAssistanceModal}
         onClose={() => setShowEducationalAssistanceModal(false)}
+        isDemo={tenantConfig.isDemo}
       />
 
       {/* Natural Death Certificate Modal */}
-      <NaturalDeathCertificateModal isOpen={showNaturalDeathModal} onClose={() => setShowNaturalDeathModal(false)} />
-      <GuardianshipCertificateModal isOpen={showGuardianshipModal} onClose={() => setShowGuardianshipModal(false)} />
-      <CohabitationCertificateModal isOpen={showCohabitationModal} onClose={() => setShowCohabitationModal(false)} />
-      <MedicoLegalModal isOpen={showMedicoLegalModal} onClose={() => setShowMedicoLegalModal(false)} />
-      <SamePersonCertificateModal isOpen={showSamePersonModal} onClose={() => setShowSamePersonModal(false)} />
+      <NaturalDeathCertificateModal isOpen={showNaturalDeathModal} onClose={() => setShowNaturalDeathModal(false)} isDemo={tenantConfig.isDemo} />
+      <GuardianshipCertificateModal isOpen={showGuardianshipModal} onClose={() => setShowGuardianshipModal(false)} isDemo={tenantConfig.isDemo} />
+      <CohabitationCertificateModal isOpen={showCohabitationModal} onClose={() => setShowCohabitationModal(false)} isDemo={tenantConfig.isDemo} />
+      <MedicoLegalModal isOpen={showMedicoLegalModal} onClose={() => setShowMedicoLegalModal(false)} isDemo={tenantConfig.isDemo} />
+      <SamePersonCertificateModal isOpen={showSamePersonModal} onClose={() => setShowSamePersonModal(false)} isDemo={tenantConfig.isDemo} />
 
 
 
 
       {/* Barangay Officials Section - Optimized */}
       {visibilitySettings?.section !== false && (
-        <section id="officials" className="bg-gradient-to-br from-[#112e1f] via-[#1a3d29] to-[#0d1f14] relative overflow-hidden">
+        <section id="officials" className={`relative overflow-hidden ${tenantConfig.isDemo ? 'bg-gray-950' : 'bg-gradient-to-br from-[#112e1f] via-[#1a3d29] to-[#0d1f14]'}`}>
         {/* Header with modern aesthetic */}
         {/* Header removed as per user request */}
 
@@ -1477,30 +1524,30 @@ export default function BarangayPortal() {
             }}
           />
           {/* Green Shadow Overlay on Edges */}
-          <div className="absolute inset-0 shadow-[inset_0_0_150px_60px_#112e1f] pointer-events-none z-10 hidden md:block"></div>
+          <div className={`absolute inset-0 pointer-events-none z-10 hidden md:block ${tenantConfig.isDemo ? 'shadow-[inset_0_0_150px_60px_#030712]' : 'shadow-[inset_0_0_150px_60px_#112e1f]'}`}></div>
         </div>
 
         {/* Text Section - Professional Leadership Introduction */}
-        <div className="bg-gradient-to-br from-[#112117] via-[#2d5a3d] to-[#112e1f] py-8 md:py-10 px-4">
+        <div className={`py-8 md:py-10 px-4 ${tenantConfig.isDemo ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-[#112117] via-[#2d5a3d] to-[#112e1f]'}`}>
           <div className="max-w-6xl mx-auto">
             {/* Leadership Header */}
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full mb-4">
-                <div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div>
-                <span className="text-green-200 font-semibold text-[10px] tracking-wide uppercase">Leadership Team</span>
-                <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                <div className={`w-1.5 h-1.5 rounded-full ${tenantConfig.isDemo ? 'bg-[#c9a84c]' : 'bg-green-600'}`}></div>
+                <span className={`font-semibold text-[10px] tracking-wide uppercase ${tenantConfig.isDemo ? 'text-[#e8c96a]' : 'text-green-200'}`}>Leadership Team</span>
+                <div className={`w-1.5 h-1.5 rounded-full ${tenantConfig.isDemo ? 'bg-[#c9a84c]' : 'bg-green-400'}`}></div>
               </div>
 
               <h4 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 leading-none uppercase tracking-tight">
                 {tenantConfig.name}
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-emerald-400 to-green-300">
+                <span className={`block text-transparent bg-clip-text bg-gradient-to-r ${tenantConfig.isDemo ? 'from-[#c9a84c] via-[#e8c96a] to-[#c9a84c]' : 'from-green-500 via-emerald-400 to-green-300'}`}>
                   Leadership Team
                 </span>
               </h4>
 
-              <div className="w-24 h-1 bg-gradient-to-r from-green-600 via-emerald-500 to-green-400 mx-auto mb-4 rounded-full"></div>
+              <div className={`w-24 h-1 mx-auto mb-4 rounded-full bg-gradient-to-r ${tenantConfig.isDemo ? 'from-[#c9a84c] via-[#e8c96a] to-[#c9a84c]' : 'from-green-600 via-emerald-500 to-green-400'}`}></div>
 
-              <p className="text-lg md:text-xl text-green-100 font-light leading-relaxed max-w-2xl mx-auto">
+              <p className={`text-lg md:text-xl font-light leading-relaxed max-w-2xl mx-auto ${tenantConfig.isDemo ? 'text-gray-300' : 'text-green-100'}`}>
                 Working together for our community's progress and development
               </p>
             </div>
@@ -1508,12 +1555,12 @@ export default function BarangayPortal() {
         </div>
 
         {/* Officials Details Section */}
-        <div className="bg-gradient-to-br from-gray-50 to-green-50 py-6 md:py-10 px-4">
+        <div className={`py-6 md:py-10 px-4 ${tenantConfig.isDemo ? 'bg-gray-50' : 'bg-gradient-to-br from-gray-50 to-green-50'}`}>
           <div className="max-w-6xl mx-auto">
             {/* Section Header */}
             <div className="text-center mb-12">
               <h5 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 uppercase tracking-tighter">
-                Meet Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-950">Officials</span>
+                Meet Our <span className={`text-transparent bg-clip-text bg-gradient-to-r ${tenantConfig.isDemo ? 'from-[#c9a84c] to-[#a07830]' : 'from-green-800 to-green-950'}`}>Officials</span>
               </h5>
               <p className="text-gray-600 text-sm md:text-base font-bold max-w-2xl mx-auto uppercase tracking-[0.2em] leading-relaxed">
                 Dedicated leaders committed to serving the community of {tenantConfig.shortName} with integrity and excellence
@@ -1537,19 +1584,21 @@ export default function BarangayPortal() {
                     if (position_type === 'sk_treasurer') return visibilitySettings.skTreasurer !== false;
                     
                     if (position_type === 'sk_kagawad') {
-                      const match = position.match(/SK Kagawad\s+(\d+)/i);
+                      const match = position?.match(/SK Kagawad\s+(\d+)/i);
                       if (match) {
                         const idx = parseInt(match[1], 10) - 1;
                         return visibilitySettings.skKagawads?.[idx] !== false;
                       }
+                      return true; // show if no match
                     }
                     
                     if (position_type === 'kagawad') {
-                      const match = position.match(/Kagawad\s+(\d+)/i);
+                      const match = position?.match(/Kagawad\s+(\d+)/i);
                       if (match) {
                         const idx = parseInt(match[1], 10) - 1;
                         return visibilitySettings.councilors?.[idx] !== false;
                       }
+                      return true; // show if no match
                     }
                     
                     if (position === 'Administrator') return visibilitySettings.administrator !== false;
@@ -1634,7 +1683,7 @@ export default function BarangayPortal() {
                       <div key={section.key} className="mb-16">
                         {section.key === 'staff' && (
                           <div className="text-center mb-8">
-                            <div className={`inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r ${section.bgColor} text-white rounded-full mb-4 shadow-lg`}>
+                            <div className={`inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r ${tenantConfig.isDemo ? 'from-gray-700 to-gray-900' : section.bgColor} text-white rounded-full mb-4 shadow-lg`}>
                               <span className="text-2xl">{section.icon}</span>
                               <span className="font-bold text-lg tracking-wide">{section.title.toUpperCase()}</span>
                             </div>
@@ -1649,8 +1698,8 @@ export default function BarangayPortal() {
                               {/* Left Aligned Captain Card */}
                               <div className="w-full lg:w-[380px] flex-shrink-0 mx-auto">
                                 {displayOfficials.map((official, index) => {
-                                  const colorClass = 'from-green-800 to-green-950';
-                                  const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
+                                  const colorClass = tenantConfig.isDemo ? 'from-gray-700 to-gray-900' : 'from-green-800 to-green-950';
+                                  const initials = (official.name || '').split(' ').filter(Boolean).slice(0, 2).map(n => n[0]).join('') || '?';
                                   return (
                                     <div key={official.id || index} className="bg-white rounded-[40px] shadow-2xl hover:shadow-green-900/20 transition-all duration-500 overflow-hidden border border-gray-100 group w-full transform hover:-translate-y-2">
                                       <div className="relative aspect-[4/5] overflow-hidden group bg-white">
@@ -1658,10 +1707,10 @@ export default function BarangayPortal() {
                                           <img src={official.image_url} alt={official.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10" />
                                         ) : (
                                           <div className={`w-full h-full bg-gradient-to-br ${colorClass} flex items-center justify-center`}>
-                                            <span className="text-7xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity font-serif">{initials}</span>
+                                            <span className="text-7xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity">{initials}</span>
                                           </div>
                                         )}
-                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#112e1f] via-[#112e1f]/40 to-transparent flex flex-col justify-end p-8 text-center z-20 h-1/2">
+                                        <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t to-transparent flex flex-col justify-end p-8 text-center z-20 h-1/2 ${tenantConfig.isDemo ? 'from-gray-900 via-gray-900/40' : 'from-[#112e1f] via-[#112e1f]/40'}`}>
                                           <h3 className="text-white font-black text-2xl mb-1 drop-shadow-lg tracking-tight">Punong Barangay</h3>
                                         </div>
                                       </div>
@@ -1681,13 +1730,13 @@ export default function BarangayPortal() {
                                 <div className="px-4 py-8">
                                   <div className="mb-8">
                                     <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">Barangay Vision</h3>
-                                    <p className="text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 border-green-500 pl-6 py-2">
+                                    <p className={`text-gray-700 text-xl font-medium leading-relaxed italic border-l-4 pl-6 py-2 ${tenantConfig.isDemo ? 'border-[#c9a84c]' : 'border-green-500'}`}>
                                       {`"${missionGoals.barangayVision}"`}
                                     </p>
                                   </div>
                                   <div>
                                     <h3 className="text-3xl font-black text-gray-900 tracking-widest uppercase mb-4">Barangay Goal</h3>
-                                    <p className="text-gray-700 text-xl font-medium leading-relaxed border-l-4 border-green-900 pl-6 py-2">
+                                    <p className={`text-gray-700 text-xl font-medium leading-relaxed border-l-4 pl-6 py-2 ${tenantConfig.isDemo ? 'border-[#c9a84c]' : 'border-green-900'}`}>
                                       {`"${missionGoals.barangayGoal}"`}
                                     </p>
                                   </div>
@@ -1718,7 +1767,7 @@ export default function BarangayPortal() {
                               <div className="w-full lg:w-[380px] flex-shrink-0 order-1 lg:order-2">
                                 {displayOfficials.map((official, index) => {
                                   const colorClass = 'from-orange-600 to-amber-700';
-                                  const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
+                                  const initials = (official.name || '').split(' ').filter(Boolean).slice(0, 2).map(n => n[0]).join('') || '?';
                                   return (
                                     <div key={official.id || index} className="bg-white rounded-[40px] shadow-2xl hover:shadow-orange-900/20 transition-all duration-500 overflow-hidden border border-gray-100 group w-full transform hover:-translate-y-2">
                                       <div className="relative aspect-[4/5] overflow-hidden group bg-white">
@@ -1726,7 +1775,7 @@ export default function BarangayPortal() {
                                           <img src={official.image_url} alt={official.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10" />
                                         ) : (
                                           <div className={`w-full h-full bg-gradient-to-br ${colorClass} flex items-center justify-center`}>
-                                            <span className="text-7xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity font-serif">{initials}</span>
+                                            <span className="text-7xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity">{initials}</span>
                                           </div>
                                         )}
                                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-orange-900 via-orange-900/40 to-transparent flex flex-col justify-end p-8 text-center z-20 h-1/2">
@@ -1746,7 +1795,21 @@ export default function BarangayPortal() {
                             </>
                           ) : (
                             displayOfficials.map((official, index) => {
-                              const colors = [
+                              const colors = tenantConfig.isDemo ? [
+                                'from-gray-700 to-gray-900',
+                                'from-gray-600 to-gray-800',
+                                'from-gray-800 to-black',
+                                'from-gray-700 to-gray-800',
+                                'from-gray-600 to-gray-900',
+                                'from-gray-500 to-gray-700',
+                                'from-gray-800 to-gray-950',
+                                'from-gray-700 to-gray-800',
+                                'from-gray-600 to-gray-800',
+                                'from-gray-800 to-gray-900',
+                                'from-gray-500 to-gray-700',
+                                'from-gray-600 to-gray-800',
+                                'from-gray-700 to-gray-900'
+                              ] : [
                                 'from-[#112e1f] to-[#2d5a3d]',
                                 'from-teal-600 to-green-700',
                                 'from-emerald-600 to-green-700',
@@ -1768,7 +1831,7 @@ export default function BarangayPortal() {
                               else if (section.key === 'sk_kagawad') colorClass = 'from-amber-500 to-orange-600';
                               else colorClass = colors[(index + 8) % colors.length];
 
-                              const initials = official.name.split(' ').slice(0, 2).map(n => n[0]).join('');
+                              const initials = (official.name || '').split(' ').filter(Boolean).slice(0, 2).map(n => n[0]).join('') || '?';
                               const widthClass = (section.key === 'sk_kagawad' || section.key === 'staff' || section.key === 'kagawad') ?
                                 'w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(25%-1.5rem)]' :
                                 'w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-1.5rem)]';
@@ -1783,7 +1846,7 @@ export default function BarangayPortal() {
                                         <span className="text-5xl font-bold text-white tracking-widest opacity-30 group-hover:opacity-50 transition-opacity">{initials}</span>
                                       </div>
                                     )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#112e1f]/90 via-[#112e1f]/40 to-transparent flex flex-col justify-end p-6 text-center z-20">
+                                    <div className={`absolute inset-0 bg-gradient-to-t to-transparent flex flex-col justify-end p-6 text-center z-20 ${tenantConfig.isDemo ? 'from-gray-900/90 via-gray-900/40' : 'from-[#112e1f]/90 via-[#112e1f]/40'}`}>
                                       <h3 className="text-white font-bold text-xl mb-1 drop-shadow-lg">
                                         {(() => {
                                           const pos = official.position || '';
@@ -1796,7 +1859,7 @@ export default function BarangayPortal() {
                                         })()}
                                       </h3>
                                       {official.committee && (
-                                        <p className="text-green-300 text-sm font-medium drop-shadow-md">{official.committee}</p>
+                                        <p className={`text-sm font-medium drop-shadow-md ${tenantConfig.isDemo ? 'text-[#c9a84c]' : 'text-green-300'}`}>{official.committee}</p>
                                       )}
                                     </div>
                                   </div>
@@ -1826,11 +1889,11 @@ export default function BarangayPortal() {
       )}
 
       {/* Contact Section */}
-      <section id="contact" className="py-6 bg-[#112117]">
+      <section id="contact" className={`py-6 ${tenantConfig.isDemo ? 'bg-gray-900' : 'bg-[#112117]'}`}>
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-white mb-1">Feel free to contact us</h2>
-            <p className="text-base text-green-400 italic">Wag mahiya at kami ay inyong tanungin</p>
+            <p className={`text-base italic ${tenantConfig.isDemo ? 'text-[#c9a84c]' : 'text-green-400'}`}>Wag mahiya at kami ay inyong tanungin</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
@@ -1903,7 +1966,7 @@ export default function BarangayPortal() {
 
                 <button
                   type="submit"
-                  className="w-full bg-[#2d5a3d] hover:bg-[#112e1f] text-white py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 transform hover:scale-105 shadow-lg"
+                  className={`w-full text-white py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 transform hover:scale-105 shadow-lg ${tenantConfig.isDemo ? 'bg-[#c9a84c] hover:bg-[#a07830]' : 'bg-[#2d5a3d] hover:bg-[#112e1f]'}`}
                 >
                   <Send className="w-5 h-5" />
                   Send Message
@@ -1913,49 +1976,49 @@ export default function BarangayPortal() {
 
             {/* Contact Info & Office Hours */}
             <div className="space-y-8 h-full flex flex-col">
-              <div className="bg-green-950/50 backdrop-blur-sm rounded-2xl p-8 border border-green-800/50 flex-1">
+              <div className={`backdrop-blur-sm rounded-2xl p-8 border flex-1 ${tenantConfig.isDemo ? 'bg-gray-800/50 border-gray-700' : 'bg-green-950/50 border-green-800/50'}`}>
                 <h3 className="text-xl font-bold text-white mb-6">Contact Information</h3>
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
-                    <div className="bg-green-800 p-3 rounded-lg">
+                    <div className={`p-3 rounded-lg ${tenantConfig.isDemo ? 'bg-gray-700' : 'bg-green-800'}`}>
                       <MapPin className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-white font-medium">Address</p>
-                      <p className="text-green-200">{siteContact.address || tenantConfig.subtitle}</p>
+                      <p className={tenantConfig.isDemo ? 'text-gray-300' : 'text-green-200'}>{siteContact.address || tenantConfig.subtitle}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="bg-green-800 p-3 rounded-lg">
+                    <div className={`p-3 rounded-lg ${tenantConfig.isDemo ? 'bg-gray-700' : 'bg-green-800'}`}>
                       <Phone className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-white font-medium">Phone</p>
-                      <p className="text-green-200">{siteContact.phone}</p>
+                      <p className={tenantConfig.isDemo ? 'text-gray-300' : 'text-green-200'}>{siteContact.phone}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="bg-green-800 p-3 rounded-lg">
+                    <div className={`p-3 rounded-lg ${tenantConfig.isDemo ? 'bg-gray-700' : 'bg-green-800'}`}>
                       <Mail className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <p className="text-white font-medium">Email</p>
-                      <p className="text-green-200">{siteContact.email}</p>
+                      <p className={tenantConfig.isDemo ? 'text-gray-300' : 'text-green-200'}>{siteContact.email}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-green-950/50 backdrop-blur-sm rounded-2xl p-8 border border-green-800/50">
+              <div className={`backdrop-blur-sm rounded-2xl p-8 border ${tenantConfig.isDemo ? 'bg-gray-800/50 border-gray-700' : 'bg-green-950/50 border-green-800/50'}`}>
                 <h3 className="text-xl font-bold text-white mb-4">Office Hours</h3>
-                <div className="space-y-2 text-green-200">
+                <div className={`space-y-2 ${tenantConfig.isDemo ? 'text-gray-300' : 'text-green-200'}`}>
                   {siteContact.officeHours.split('\n').map((line, i) => <p key={i}>{line}</p>)}
                 </div>
               </div>
             </div>
 
             {/* Emergency Hotlines */}
-            <div className="bg-green-950/50 backdrop-blur-sm rounded-2xl p-8 border border-green-800/50 h-full">
+            <div className={`backdrop-blur-sm rounded-2xl p-8 border h-full ${tenantConfig.isDemo ? 'bg-gray-800/50 border-gray-700' : 'bg-green-950/50 border-green-800/50'}`}>
               <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                 <AlertTriangle className="w-6 h-6 text-red-500 animate-pulse" />
                 Emergency Hotlines
@@ -1970,7 +2033,7 @@ export default function BarangayPortal() {
                       <p className="text-white font-medium">{hotline.name}</p>
                       <a
                         href={`tel:${hotline.number}`}
-                        className="text-green-200 hover:text-white transition-colors text-xl font-bold"
+                        className={`transition-colors text-xl font-bold ${tenantConfig.isDemo ? 'text-[#c9a84c] hover:text-white' : 'text-green-200 hover:text-white'}`}
                       >
                         {hotline.number}
                       </a>
@@ -1978,37 +2041,13 @@ export default function BarangayPortal() {
                   </div>
                 ))}
               </div>
-              <div className="mt-8 p-4 bg-green-900/30 rounded-xl text-center border border-green-800/20">
-                <p className="text-green-300 text-[10px] font-bold tracking-widest mb-1 uppercase">Available 24/7</p>
+              <div className={`mt-8 p-4 rounded-xl text-center border ${tenantConfig.isDemo ? 'bg-gray-700/30 border-gray-600/20' : 'bg-green-900/30 border-green-800/20'}`}>
+                <p className={`text-[10px] font-bold tracking-widest mb-1 uppercase ${tenantConfig.isDemo ? 'text-[#c9a84c]' : 'text-green-300'}`}>Available 24/7</p>
                 <p className="text-white font-bold">READY TO RESPOND</p>
               </div>
             </div>
           </div>
 
-        </div>
-      </section>
-
-      {/* Transparency Stats Section - Barangay at a Glance */}
-      <section className="py-16 bg-gradient-to-r from-[#112e1f] to-[#112117] animate-on-scroll">
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Barangay at a Glance</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={index}
-                  className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center transform hover:scale-105 transition-all border border-white/20"
-                >
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <p className="text-4xl font-bold text-white mb-2">{stat.value}</p>
-                  <p className="text-[#bdcdc0]">{stat.label}</p>
-                </div>
-              );
-            })}
-          </div>
         </div>
       </section>
 
@@ -2026,8 +2065,7 @@ export default function BarangayPortal() {
                   <span className="text-sm font-medium text-gray-700">{hotline.name}</span>
                   <a
                     href={`tel:${hotline.number}`}
-                    className="text-green-700 font-semibold hover:text-green-800 transition-colors"
-                  >
+                    className="text-green-700 font-semibold hover:text-green-800 transition-colors"                  >
                     {hotline.number}
                   </a>
                 </div>

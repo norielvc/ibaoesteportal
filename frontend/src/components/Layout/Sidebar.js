@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   Shield,
+  ShieldAlert,
   Activity,
   FileText,
   UserCog,
@@ -414,6 +415,17 @@ export default function Sidebar({ className, isMobileMenuOpen, setIsMobileMenuOp
             </p>
           </div>
         </div>
+
+        {['superadmin', 'SuperAdmin', 'SUPERADMIN', 'super_admin'].includes(user?.role) && (
+          <button
+            type="button"
+            onClick={() => router.push('/superadmin')}
+            className="flex items-center w-full px-4 py-3 mb-1 text-sm font-bold text-amber-400/80 rounded-xl hover:bg-amber-500/10 hover:text-amber-400 transition-all duration-300 group"
+          >
+            <ShieldAlert className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" />
+            Super Admin Panel
+          </button>
+        )}
 
         <button
           type="button"

@@ -14,25 +14,14 @@ export default function App({ Component, pageProps }) {
       // Try hostname (e.g., demo.brgyportal.com)
       if (window.location.hostname.includes('demo')) return 'demo';
 
-      // Check if this is the dashboard/management area
-      const isDashboard = window.location.pathname.startsWith('/dashboard') || 
-                         window.location.pathname.startsWith('/employees') ||
-                         window.location.pathname.startsWith('/officials') ||
-                         window.location.pathname.startsWith('/facilities') ||
-                         window.location.pathname.startsWith('/events') ||
-                         window.location.pathname.startsWith('/achievements') ||
-                         window.location.pathname.startsWith('/programs');
-
-      // Try user profile if in dashboard
-      if (isDashboard) {
-        try {
-          const userData = localStorage.getItem('user');
-          if (userData) {
-            const user = JSON.parse(userData);
-            if (user.tenant_id) return user.tenant_id;
-          }
-        } catch (e) {}
-      }
+      // Always try stored user data first — most reliable source
+      try {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          if (user.tenant_id) return user.tenant_id;
+        }
+      } catch (e) {}
 
       // Try environment variable
       if (process.env.NEXT_PUBLIC_TENANT_ID) return process.env.NEXT_PUBLIC_TENANT_ID;

@@ -231,7 +231,7 @@ const SearchableDropdown = ({ items, onSelect, placeholder, label, colorClass, s
   );
 };
 
-export default function BarangayClearanceModal({ isOpen, onClose }) {
+export default function BarangayClearanceModal({ isOpen, onClose, isDemo = false }) {
   const [formCounter, setFormCounter] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
@@ -445,8 +445,76 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
+  const demoTheme = isDemo ? (
+    <style>{`
+      /* Demo tenant: dark/gold theme override for all form modals */
+      .brgy-modal-wrap [class*="from-[#112e1f]"],
+      .brgy-modal-wrap [class*="from-[#112117]"] {
+        --tw-gradient-from: #111111 !important;
+        --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important;
+      }
+      .brgy-modal-wrap [class*="via-[#2d5a3d]"] {
+        --tw-gradient-stops: var(--tw-gradient-from), #222222, var(--tw-gradient-to, transparent) !important;
+      }
+      .brgy-modal-wrap [class*="to-[#112117]"],
+      .brgy-modal-wrap [class*="to-[#1a3d29]"],
+      .brgy-modal-wrap [class*="to-[#2d5a3d]"] {
+        --tw-gradient-to: #1a1a1a !important;
+      }
+      /* Header gradient override */
+      .brgy-modal-wrap .bg-gradient-to-r[class*="from-[#112e1f]"] {
+        background-image: linear-gradient(to right, #111111, #222222, #111111) !important;
+      }
+      /* Step header pill (green lime -> gold) */
+      .brgy-modal-wrap [class*="from-[#8cc63f]"],
+      .brgy-modal-wrap [class*="from-[#7cb342]"] {
+        --tw-gradient-from: #c9a84c !important;
+        --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important;
+      }
+      .brgy-modal-wrap [class*="to-[#b4d339]"],
+      .brgy-modal-wrap [class*="to-[#7cb342]"],
+      .brgy-modal-wrap [class*="to-[#689f38]"] {
+        --tw-gradient-to: #a07830 !important;
+      }
+      .brgy-modal-wrap [class*="from-[#8cc63f]"],
+      .brgy-modal-wrap [class*="from-[#7cb342]"] {
+        background-image: linear-gradient(to right, #c9a84c, #a07830) !important;
+      }
+      /* Solid bg overrides */
+      .brgy-modal-wrap [class*="bg-[#8cc63f]"],
+      .brgy-modal-wrap [class*="bg-[#7cb342]"],
+      .brgy-modal-wrap [class*="bg-[#2d5a3d]"],
+      .brgy-modal-wrap [class*="bg-[#112e1f]"] { background-color: #1a1a1a !important; }
+      /* Text color overrides */
+      .brgy-modal-wrap [class*="text-[#2d5a3d]"],
+      .brgy-modal-wrap [class*="text-[#112e1f]"],
+      .brgy-modal-wrap [class*="text-[#8cc63f]"] { color: #c9a84c !important; }
+      /* Border overrides */
+      .brgy-modal-wrap [class*="border-[#2d5a3d]"] { border-color: #c9a84c !important; }
+      /* Hover overrides */
+      .brgy-modal-wrap [class*="hover:bg-[#2d5a3d]"]:hover,
+      .brgy-modal-wrap [class*="hover:from-[#7cb342]"]:hover { background-color: #a07830 !important; }
+      /* Tailwind green/emerald -> gold/dark */
+      .brgy-modal-wrap [class*="text-green-"]:not([class*="text-green-50"]):not([class*="text-green-100"]) { color: #c9a84c !important; }
+      .brgy-modal-wrap [class*="text-emerald-"]:not([class*="text-emerald-50"]):not([class*="text-emerald-100"]) { color: #c9a84c !important; }
+      .brgy-modal-wrap [class*="bg-green-"]:not([class*="bg-green-50"]):not([class*="bg-green-100"]) { background-color: #1a1a1a !important; }
+      .brgy-modal-wrap [class*="bg-emerald-"]:not([class*="bg-emerald-50"]):not([class*="bg-emerald-100"]) { background-color: #1a1a1a !important; }
+      .brgy-modal-wrap [class*="border-green-"] { border-color: #c9a84c !important; }
+      .brgy-modal-wrap [class*="border-emerald-"] { border-color: #c9a84c !important; }
+      .brgy-modal-wrap [class*="hover:bg-green-"]:hover,
+      .brgy-modal-wrap [class*="hover:bg-emerald-"]:hover { background-color: #a07830 !important; }
+      .brgy-modal-wrap [class*="focus:ring-green-"],
+      .brgy-modal-wrap [class*="focus:ring-emerald-"],
+      .brgy-modal-wrap [class*="focus:border-green-"],
+      .brgy-modal-wrap [class*="focus:border-emerald-"] { --tw-ring-color: #c9a84c !important; border-color: #c9a84c !important; }
+    `}</style>
+  ) : null;
+
+
   return (
     <>
+      {demoTheme}
+      <div className="brgy-modal-wrap">
       {(!showConfirmationPopup && !showSuccessModal) && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
@@ -791,6 +859,7 @@ export default function BarangayClearanceModal({ isOpen, onClose }) {
           font-weight: 400 !important;
         }
       `}</style>
+      </div>
     </>
   );
 }

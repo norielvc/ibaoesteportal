@@ -11,7 +11,7 @@ const router = express.Router();
  */
 router.get('/', optionalAuthenticateToken, async (req, res) => {
   try {
-    const tenantId = req.user?.tenant_id || req.headers['x-tenant-id'];
+    const tenantId = req.headers['x-tenant-id'] || req.user?.tenant_id;
     if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
 
     // Fire all 6 queries in parallel

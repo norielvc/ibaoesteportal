@@ -82,6 +82,7 @@ router.post('/login', validateLogin, async (req, res) => {
       role: users.role,
       status: users.status,
       avatar: users.avatar,
+      tenant_id: actualTenantId,
       lastLogin: users.last_login,
       loginCount: users.login_count,
       createdAt: users.created_at,

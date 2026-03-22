@@ -260,14 +260,14 @@ export default function ProgramsPage() {
             {/* Edit Modal */}
             {editingProgram && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
                             <h2 className="text-xl font-bold text-gray-900">Edit Program</h2>
                             <button onClick={() => setEditingProgram(null)} className="p-2 hover:bg-gray-100 rounded-lg">
                                 <X className="w-5 h-5 text-gray-500" />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div>
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Program Title</label>
                                 <input type="text" value={editingProgram.title} onChange={(e) => setEditingProgram({ ...editingProgram, title: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
@@ -291,7 +291,7 @@ export default function ProgramsPage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="p-6 border-t border-gray-100 flex gap-3">
+                        <div className="p-6 border-t border-gray-100 flex gap-3 shrink-0">
                             <button onClick={saveEdit} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-bold">Save Changes</button>
                             <button onClick={() => setEditingProgram(null)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-lg font-bold">Cancel</button>
                         </div>
@@ -302,14 +302,14 @@ export default function ProgramsPage() {
             {/* Add Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
                             <h2 className="text-xl font-bold text-gray-900">Add New Program</h2>
                             <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
                                 <X className="w-5 h-5 text-gray-500" />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div>
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Program Title *</label>
                                 <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="e.g. Health Mission" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
@@ -333,7 +333,7 @@ export default function ProgramsPage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="p-6 border-t border-gray-100 flex gap-3">
+                        <div className="p-6 border-t border-gray-100 flex gap-3 shrink-0">
                             <button onClick={addProgram} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-bold">Add Program</button>
                             <button onClick={() => setShowAddModal(false)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-lg font-bold">Cancel</button>
                         </div>

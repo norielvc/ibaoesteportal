@@ -444,8 +444,8 @@ export default function OfficialsPage() {
 
     return (
       <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
-          <div className="p-6 border-b flex justify-between items-center bg-gray-50">
+        <div className="bg-white rounded-3xl w-full max-w-2xl flex flex-col max-h-[90vh] shadow-2xl animate-in fade-in zoom-in duration-300">
+          <div className="p-6 border-b flex justify-between items-center bg-gray-50 shrink-0">
             <div>
               <h3 className="font-black text-xl text-gray-900 tracking-tight flex items-center gap-2">
                 <Crop className="w-6 h-6 text-blue-600" /> {modalTitle}
@@ -457,7 +457,7 @@ export default function OfficialsPage() {
             </button>
           </div>
 
-          <div className="p-8">
+          <div className="p-8 overflow-y-auto flex-1">
             <div className="relative w-full rounded-2xl overflow-hidden shadow-inner border-4 border-gray-100 cursor-move bg-white"
               style={{
                 aspectRatio: cropWidth / cropHeight,
