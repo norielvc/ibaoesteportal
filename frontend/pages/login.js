@@ -82,7 +82,14 @@ export default function Login() {
       {/* Top Nav */}
       <div className="relative z-20 px-6 py-3 flex-shrink-0">
         <button
-          onClick={() => router.push('/')}
+          onClick={() => {
+            const currentTenant = router.query.tenant;
+            if (currentTenant) {
+              router.push(`/?tenant=${currentTenant}`);
+            } else {
+              router.push('/');
+            }
+          }}
           className="group inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-black text-white rounded-full transition-all duration-300 shadow-md text-sm font-medium"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />

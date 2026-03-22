@@ -671,7 +671,7 @@ export default function BarangayPortal() {
                 </a>
               ))}
               <button
-                onClick={() => router.push('/login')}
+                onClick={() => router.push(tenantId && tenantId !== 'ibaoeste' ? `/login?tenant=${tenantId}` : '/login')}
                 className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all shadow-md text-white ${
                   tenantConfig.isDemo
                     ? 'bg-gray-900 hover:bg-black border border-[#c9a84c]'
@@ -714,7 +714,7 @@ export default function BarangayPortal() {
               Contact Us
             </a>
             <button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push(tenantId && tenantId !== 'ibaoeste' ? `/login?tenant=${tenantId}` : '/login')}
               className={`w-full px-6 py-3 rounded-lg font-medium transition-colors text-white ${
                 tenantConfig.isDemo
                   ? 'bg-gray-900 hover:bg-black border border-[#c9a84c]'
