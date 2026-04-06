@@ -15,6 +15,7 @@ export default async function handler(req, res) {
     }
 
     // 1. Search for the user globally by email
+    console.log(`Login attempt for email: ${email}`);
     const { data: user, error: fetchError } = await supabase
       .from('users')
       .select('*')
@@ -22,12 +23,14 @@ export default async function handler(req, res) {
       .single();
 
     if (fetchError || !user) {
+      console.log('Supabase fetch error or user not found:', fetchError);
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid email or password (User not found)'
       });
     }
 
+    console.log('User found, checking status:', user.status);
     // 2. Check if account is active
     if (user.status !== 'active') {
       return res.status(401).json({
@@ -37,11 +40,13 @@ export default async function handler(req, res) {
     }
 
     // 3. Check password using bcrypt
+    console.log('Verifying password with bcrypt...');
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
+      console.log('Invalid password for user:', email);
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid email or password (Password mismatch)'
       });
     }
 
@@ -55,6 +60,11 @@ export default async function handler(req, res) {
       .eq('id', user.id);
 
     // 5. Generate token (Same secret used across all services)
+    if (!process.env.JWT_SECRET) {
+      console.error('CRITICAL: JWT_SECRET is missing from environment variables!');
+      return res.status(500).json({ success: false, message: 'Server configuration error (JWT)' });
+    }
+
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET,
