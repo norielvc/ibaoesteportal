@@ -125,7 +125,7 @@ export default function LandingPageContent() {
               Log in
             </button>
             <a
-              href="https://brgydesk.up.railway.app/demo"
+              href="/demo"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm font-semibold px-5 py-2.5 rounded-xl border transition-colors"
@@ -156,7 +156,7 @@ export default function LandingPageContent() {
             ))}
             <div className="pt-3 flex flex-col gap-3">
               <button onClick={() => router.push('/login')} className="w-full py-3 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700">Log in</button>
-              <a href="https://brgydesk.up.railway.app/demo" target="_blank" rel="noopener noreferrer" className="w-full py-3 rounded-xl text-sm font-semibold text-center border" style={{ borderColor: `${GOLD}50`, color: GOLD_DARK, background: `${GOLD}10` }}>Visit Demo</a>
+              <a href="/demo" target="_blank" rel="noopener noreferrer" className="w-full py-3 rounded-xl text-sm font-semibold text-center border" style={{ borderColor: `${GOLD}50`, color: GOLD_DARK, background: `${GOLD}10` }}>Visit Demo</a>
               <button onClick={() => router.push('/pricing')} className="btn-gold w-full py-3 rounded-xl text-sm font-semibold text-white" style={{ background: `linear-gradient(135deg, ${GOLD_DARK}, ${GOLD})` }}>See Pricing</button>
             </div>
           </div>
@@ -658,7 +658,7 @@ export default function LandingPageContent() {
                 ))}
               </div>
               <a
-                href="https://brgydesk.up.railway.app/demo"
+                href="/demo"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-gold inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base font-semibold text-white"
@@ -676,7 +676,7 @@ export default function LandingPageContent() {
                   <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                   <div className="w-3 h-3 rounded-full bg-green-500/60" />
                   <div className="flex-1 mx-4 bg-white/5 rounded-lg px-4 py-1.5 text-xs text-gray-500 font-mono">
-                    brgydesk.up.railway.app/demo
+                    brgydesk.vercel.app/demo
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -698,7 +698,7 @@ export default function LandingPageContent() {
                     <span className="text-xs text-gray-500 font-medium">Demo is live</span>
                   </div>
                   <a
-                    href="https://brgydesk.up.railway.app/demo"
+                    href="/demo"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs font-bold flex items-center gap-1"
