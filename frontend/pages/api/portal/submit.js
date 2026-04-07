@@ -32,8 +32,14 @@ export default async function handler(req, res) {
   }
 
   /**
-   * STAGE 1: Generate Reference Number
+   * STAGE 1: Normalize type aliases to canonical workflow config keys
    */
+  const typeAliases = {
+    same_person: "certification_same_person",
+    cohabitation: "barangay_cohabitation",
+  };
+  const canonicalType = typeAliases[type] || type;
+
   const year = new Date().getFullYear();
   const prefixMap = {
     barangay_clearance: "BC",
@@ -44,10 +50,12 @@ export default async function handler(req, res) {
     medico_legal: "ML",
     business_permit: "BP",
     educational_assistance: "EA",
+    certification_same_person: "SP",
+    barangay_cohabitation: "CH",
     same_person: "SP",
     cohabitation: "CH",
   };
-  const prefix = prefixMap[type] || "REF";
+  const prefix = prefixMap[canonicalType] || "REF";
   const timestamp = Date.now().toString().slice(-5);
   const refNumber =
     formData.referenceNumber || `${prefix}-${year}-${timestamp}`;
@@ -63,23 +71,23 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
     );
 
-    console.log(`📡 Cloud Submit [${type}] for tenant: ${tenantId}`);
+    console.log(`📡 Cloud Submit [${canonicalType}] for tenant: ${tenantId}`);
 
     const insertData = {
       tenant_id: tenantId,
       reference_number: refNumber,
-      certificate_type: type,
+      certificate_type: canonicalType,
       full_name:
-        (formData.fullName || formData.ownerFullName)?.toUpperCase() || "",
+        (formData.fullName || formData.ownerFullName || formData.deceasedFullName)?.toUpperCase() || "",
       age: parseInt(formData.age) || 0,
       sex: (formData.sex || formData.gender)?.toUpperCase() || "",
       civil_status: formData.civilStatus?.toUpperCase() || "",
-      address: (formData.address || formData.ownerAddress)?.toUpperCase() || "",
+      address: (formData.address || formData.ownerAddress || formData.deceasedAddress)?.toUpperCase() || "",
       contact_number: formData.contactNumber || "",
       email: formData.email || "",
       purpose:
         formData.purpose?.toUpperCase() ||
-        (type === "business_permit" ? "BUSINESS PERMIT / CLEARANCE" : ""),
+        (canonicalType === "business_permit" ? "BUSINESS PERMIT / CLEARANCE" : ""),
       date_of_birth: formData.dateOfBirth || null,
       place_of_birth: formData.placeOfBirth?.toUpperCase() || "",
       resident_id: formData.residentId || null,
@@ -125,7 +133,7 @@ export default async function handler(req, res) {
         const { data: workflowConfig } = await supabase
           .from("workflow_configurations")
           .select("workflow_config")
-          .eq("certificate_type", type)
+          .eq("certificate_type", canonicalType)
           .eq("tenant_id", tenantId)
           .single();
 
@@ -159,7 +167,7 @@ export default async function handler(req, res) {
             {
               request_id: data.id,
               tenant_id: tenantId,
-              request_type: type,
+              request_type: canonicalType,
               step_id: initialStepId.toString(),
               step_name: initialStepName,
               assigned_user_id: userId,
@@ -173,7 +181,7 @@ export default async function handler(req, res) {
           {
             tenant_id: tenantId,
             request_id: data.id,
-            request_type: type,
+            request_type: canonicalType,
             step_id: 0,
             step_name: "Request Submission",
             action: "submitted",

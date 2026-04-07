@@ -169,7 +169,7 @@ const TYPE_OPTIONS = [
   { value: "barangay_guardianship", label: "Guardianship" },
   { value: "barangay_cohabitation", label: "Co-habitation" },
   { value: "business_permit", label: "Business Permit" },
-  { value: "same_person", label: "Same Person" },
+  { value: "certification_same_person", label: "Same Person" },
   { value: "medico_legal", label: "Medico Legal" },
   { value: "educational_assistance", label: "Educational Assistance" },
 ];

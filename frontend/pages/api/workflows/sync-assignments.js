@@ -11,6 +11,7 @@ const certTypes = [
   "medico_legal",
   "business_permit",
   "certification_same_person",
+  "educational_assistance",
 ];
 const activeStatuses = [
   "pending",
