@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+        const tenantId = req.headers['x-tenant-id'];
         if (!tenantId) {
             return res.status(403).json({ success: false, message: 'Tenant context required' });
         }

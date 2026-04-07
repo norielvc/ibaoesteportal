@@ -19,7 +19,12 @@ export default async function handler(req, res) {
   /**
    * STAGE 1: Attempt Cloud Fetch (Live Supabase)
    */
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+    console.error(`❌ [Portal/${type}] SUPABASE_URL or SUPABASE_ANON_KEY is missing from environment variables! Falling back to local data.`);
+  }
+
   try {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) throw new Error('Missing Supabase env vars');
     const { createClient } = require('@supabase/supabase-js');
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
       global: {

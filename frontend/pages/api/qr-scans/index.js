@@ -55,6 +55,7 @@ export default async function handler(req, res) {
   if (!user) return; // Auth handled response
 
   const tenantId = req.headers['x-tenant-id'] || user.tenant_id;
+  if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
 
   if (req.method === 'GET') {
     try {

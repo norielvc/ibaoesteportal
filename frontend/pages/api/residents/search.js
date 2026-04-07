@@ -9,7 +9,8 @@ import fs from 'fs/promises';
  */
 export default async function handler(req, res) {
   const { name } = req.query;
-  const tenantId = req.headers['x-tenant-id'] || 'ibaoeste';
+  const tenantId = req.headers['x-tenant-id'];
+  if (!tenantId) return res.status(403).json({ success: false, message: 'Tenant context required' });
   
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 20;

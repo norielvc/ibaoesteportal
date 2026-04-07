@@ -24,12 +24,7 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    return [
-      {
-        source: '/api/((?!qr-scans|scan-events|residents|portal|officials|health|auth|cms).*):path*', // Don't proxy migrated/native routes
-        destination: 'http://localhost:5005/api/:path*',
-      },
-    ];
+    return [];
   },
 
 };
