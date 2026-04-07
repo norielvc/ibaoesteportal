@@ -329,9 +329,11 @@ export default function Employees() {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[9px] font-black tracking-widest uppercase border ${emp.role === 'admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
                           {emp.role}
                         </span>
-                        <p className="text-[11px] font-black text-gray-500 uppercase tracking-tight leading-none mt-1">
-                          {emp.position || 'TECHNICAL STAFF'}
-                        </p>
+                        {emp.position && (
+                          <p className="text-[11px] font-black text-gray-500 uppercase tracking-tight leading-none mt-1">
+                            {emp.position}
+                          </p>
+                        )}
                       </div>
                     </td>
                     <td className="px-8 py-6">
