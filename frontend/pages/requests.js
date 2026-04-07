@@ -818,16 +818,16 @@ export default function RequestsPage() {
 
     // For approve action, move to next workflow step
     if (action === "approve") {
-      // Status progression mapping:
+      // Status progression mapping - must follow the workflow steps exactly
       const statusFlow = {
         pending: "processing",
         staff_review: "processing",
         returned: "processing",
         submitted: "processing",
-        processing: "oic_review",
-        oic_review: "ready",
+        processing: "secretary_approval",  // processing = waiting for secretary
         secretary_approval: "captain_approval",
         captain_approval: "oic_review",
+        oic_review: "ready",
         Treasury: "secretary_approval",
         approved: "released",
         ready: "released",

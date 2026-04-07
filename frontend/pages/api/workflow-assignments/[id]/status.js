@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     pending: "processing",
     submitted: "processing",
     returned: "processing",
-    processing: "secretary_approval",
+    processing: "secretary_approval",  // processing = waiting for secretary
     secretary_approval: "captain_approval",
     captain_approval: "oic_review",
     Treasury: "oic_review",
