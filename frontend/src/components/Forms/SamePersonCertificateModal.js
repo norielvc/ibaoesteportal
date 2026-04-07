@@ -25,6 +25,7 @@ export default function SamePersonCertificateModal({ isOpen, onClose, isDemo = f
       certType="same_person"
       step3Label="Purpose of Certification"
       extraStep1={extraStep1}
+      requirePurpose={false}
     />
   );
 }

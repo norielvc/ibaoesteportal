@@ -43,6 +43,7 @@ export default function GuardianshipCertificateModal({ isOpen, onClose, isDemo =
       certType="barangay_guardianship"
       step3Label="Purpose of Guardianship"
       extraStep3={extraStep3}
+      requirePurpose={false}
     />
   );
 }

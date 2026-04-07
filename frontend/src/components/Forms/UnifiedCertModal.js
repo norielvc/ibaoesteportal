@@ -375,7 +375,7 @@ export default function UnifiedCertModal({
                       <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-black transition-colors" />
                       <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange}
                         placeholder="09XX XXX XXXX"
-                        className={`w-full pl-14 pr-6 py-4 bg-white border-4 ${errors.contactNumber ? 'border-red-500' : 'border-gray-50'} rounded-2xl focus:border-black outline-none font-black text-xl`} />
+                        className={`w-full pl-14 pr-6 py-4 bg-white border-4 ${errors.contactNumber ? 'border-red-500' : 'border-gray-50'} rounded-2xl focus:border-black outline-none font-black text-xl text-center`} />
                     </div>
                   </div>
                   <div className="group">
@@ -384,7 +384,7 @@ export default function UnifiedCertModal({
                       <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-black transition-colors" />
                       <input type="email" name="email" value={formData.email} onChange={handleInputChange}
                         placeholder="YOUR@EMAIL.COM"
-                        className="w-full pl-14 pr-6 py-4 bg-white border-4 border-gray-50 rounded-2xl focus:border-black outline-none font-black text-xl" />
+                        className="w-full pl-14 pr-6 py-4 bg-white border-4 border-gray-50 rounded-2xl focus:border-black outline-none font-black text-xl text-center" />
                     </div>
                   </div>
                 </div>
@@ -394,15 +394,14 @@ export default function UnifiedCertModal({
               {currentStep === 3 && (
                 <div className="space-y-5 animate-in slide-in-from-right-8 duration-500">
                   {extraStep3}
-                  {requirePurpose && (
-                    <>
+                  {requirePurpose && (                    <>
                       <div className="group">
                         <label className="text-xs font-black uppercase tracking-widest ml-1 mb-3 block">
                           {step3Label} <span className="text-red-500">*</span>
                         </label>
                         <textarea name="purpose" value={formData.purpose} onChange={handleInputChange} rows={4}
                           placeholder="E.G. EMPLOYMENT, LOAN, ETC..."
-                          className={`w-full px-6 py-4 bg-gray-50 border-4 ${errors.purpose ? 'border-red-500' : 'border-gray-50'} rounded-2xl focus:border-black focus:bg-white outline-none font-black text-xl uppercase tracking-tighter resize-none`} />
+                          className={`w-full px-6 py-4 bg-gray-50 border-4 ${errors.purpose ? 'border-red-500' : 'border-gray-50'} rounded-2xl focus:border-black focus:bg-white outline-none font-black text-xl text-center uppercase tracking-tighter resize-none`} />
                       </div>
                       <div className="grid grid-cols-3 gap-3">
                         <SearchableDropdown label="Job & Gov't" placeholder="SELECT..." items={PURPOSE_LIST_1} onSelect={handlePurposeSelect}
@@ -459,3 +458,4 @@ export default function UnifiedCertModal({
     </>
   );
 }
+

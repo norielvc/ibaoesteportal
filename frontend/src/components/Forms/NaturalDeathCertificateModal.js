@@ -46,6 +46,7 @@ export default function NaturalDeathCertificateModal({ isOpen, onClose, isDemo =
       certType="natural_death"
       step3Label="Purpose of Request"
       extraStep3={extraStep3}
+      requirePurpose={false}
     />
   );
 }

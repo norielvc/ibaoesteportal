@@ -43,6 +43,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose, isDemo =
       certType="cohabitation"
       step3Label="Purpose of Certification"
       extraStep3={extraStep3}
+      requirePurpose={false}
     />
   );
 }

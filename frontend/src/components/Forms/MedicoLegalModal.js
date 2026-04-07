@@ -31,6 +31,7 @@ export default function MedicoLegalModal({ isOpen, onClose, isDemo = false, tena
       certType="medico_legal"
       step3Label="Purpose / Nature of Case"
       extraStep3={extraStep3}
+      requirePurpose={false}
     />
   );
 }
