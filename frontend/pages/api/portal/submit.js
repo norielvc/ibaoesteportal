@@ -1,24 +1,44 @@
 import path from "path";
 import fs from "fs/promises";
 
-// In-memory rate limiter (resets on server restart — good enough for Vercel serverless)
+// Protection config — reads from Supabase system_settings, falls back to defaults
+const getProtectionConfig = async (supabase) => {
+  try {
+    const { data, error } = await supabase
+      .from("system_settings")
+      .select("value")
+      .eq("key", "protection_config")
+      .single();
+    if (!error && data?.value) return data.value;
+  } catch {}
+  // Default: all disabled (safe fallback if table doesn't exist)
+  return {
+    rateLimitEnabled: false,
+    rateLimitMax: 5,
+    rateLimitWindowHours: 1,
+    duplicateCheckEnabled: false,
+    cooldownEnabled: false,
+    cooldownDays: 30,
+  };
+};
+
+// In-memory rate limiter (resets on server restart)
 const ipSubmissions = new Map();
 
-function checkRateLimit(ip) {
+function checkRateLimit(ip, config) {
+  if (!config.rateLimitEnabled) return { blocked: false };
+
   const now = Date.now();
-  const windowMs = 60 * 60 * 1000; // 1 hour window
-  const maxPerWindow = 5; // max 5 submissions per IP per hour
+  const windowMs = config.rateLimitWindowHours * 60 * 60 * 1000;
+  const maxPerWindow = config.rateLimitMax;
 
   const record = ipSubmissions.get(ip) || { count: 0, resetAt: now + windowMs };
-
   if (now > record.resetAt) {
-    // Window expired, reset
     record.count = 1;
     record.resetAt = now + windowMs;
   } else {
     record.count += 1;
   }
-
   ipSubmissions.set(ip, record);
 
   if (record.count > maxPerWindow) {
@@ -39,9 +59,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: "Method Not Allowed" });
   }
 
-  // 1. Rate limit by IP
+  // 1. Rate limit by IP — create supabase client early for config fetch
+  const { createClient: createSupabaseClient } = require("@supabase/supabase-js");
+  const supabaseForConfig = createSupabaseClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+  );
+  const config = await getProtectionConfig(supabaseForConfig);
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-  const rateCheck = checkRateLimit(ip);
+  const rateCheck = checkRateLimit(ip, config);
   if (rateCheck.blocked) {
     return res.status(429).json({
       success: false,
@@ -104,48 +130,52 @@ export default async function handler(req, res) {
 
     // 2. Duplicate check — block if same resident has a pending request of same type
     if (formData.residentId) {
-      const { data: existing } = await supabase
-        .from("certificate_requests")
-        .select("id, reference_number, status, created_at")
-        .eq("tenant_id", tenantId)
-        .eq("certificate_type", canonicalType)
-        .eq("resident_id", formData.residentId)
-        .not("status", "in", '("released","rejected","cancelled")')
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+      if (config.duplicateCheckEnabled) {
+        const { data: existing } = await supabase
+          .from("certificate_requests")
+          .select("id, reference_number, status, created_at")
+          .eq("tenant_id", tenantId)
+          .eq("certificate_type", canonicalType)
+          .eq("resident_id", formData.residentId)
+          .not("status", "in", '("released","rejected","cancelled")')
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
 
-      if (existing) {
-        return res.status(409).json({
-          success: false,
-          message: `You already have a pending ${canonicalType.replace(/_/g, ' ')} request (Ref: ${existing.reference_number}). Please wait for it to be processed before submitting a new one.`,
-          code: 'DUPLICATE_REQUEST',
-          existingRef: existing.reference_number,
-          existingStatus: existing.status,
-        });
+        if (existing) {
+          return res.status(409).json({
+            success: false,
+            message: `You already have a pending ${canonicalType.replace(/_/g, ' ')} request (Ref: ${existing.reference_number}). Please wait for it to be processed before submitting a new one.`,
+            code: 'DUPLICATE_REQUEST',
+            existingRef: existing.reference_number,
+            existingStatus: existing.status,
+          });
+        }
       }
 
-      // 3. Cooldown check — same type within last 30 days (released/rejected can reapply)
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: recent } = await supabase
-        .from("certificate_requests")
-        .select("id, reference_number, created_at")
-        .eq("tenant_id", tenantId)
-        .eq("certificate_type", canonicalType)
-        .eq("resident_id", formData.residentId)
-        .eq("status", "released")
-        .gte("created_at", thirtyDaysAgo)
-        .limit(1)
-        .single();
+      // 3. Cooldown check
+      if (config.cooldownEnabled && config.cooldownDays > 0) {
+        const cutoff = new Date(Date.now() - config.cooldownDays * 24 * 60 * 60 * 1000).toISOString();
+        const { data: recent } = await supabase
+          .from("certificate_requests")
+          .select("id, reference_number, created_at")
+          .eq("tenant_id", tenantId)
+          .eq("certificate_type", canonicalType)
+          .eq("resident_id", formData.residentId)
+          .eq("status", "released")
+          .gte("created_at", cutoff)
+          .limit(1)
+          .single();
 
-      if (recent) {
-        const daysAgo = Math.floor((Date.now() - new Date(recent.created_at).getTime()) / 86400000);
-        const daysLeft = 30 - daysAgo;
-        return res.status(429).json({
-          success: false,
-          message: `You recently received this certificate (${daysAgo} days ago). You can reapply in ${daysLeft} day(s).`,
-          code: 'COOLDOWN_ACTIVE',
-        });
+        if (recent) {
+          const daysAgo = Math.floor((Date.now() - new Date(recent.created_at).getTime()) / 86400000);
+          const daysLeft = config.cooldownDays - daysAgo;
+          return res.status(429).json({
+            success: false,
+            message: `You recently received this certificate (${daysAgo} days ago). You can reapply in ${daysLeft} day(s).`,
+            code: 'COOLDOWN_ACTIVE',
+          });
+        }
       }
     }
 

@@ -15,6 +15,9 @@ import {
   EyeOff,
   Loader2,
   AlertCircle,
+  Shield,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 
 const API_URL = "/api";
@@ -310,12 +313,144 @@ function SuccessModal({ data, onClose }) {
   );
 }
 
+function ProtectionSettingsModal({ onClose }) {
+  const [config, setConfig] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    fetch('/api/superadmin/protection-config', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json()).then(d => {
+      if (d.success) setConfig(d.data);
+    });
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true); setError(''); setSaved(false);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/superadmin/protection-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(config),
+      });
+      const data = await res.json();
+      if (data.success) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+      else setError(data.message);
+    } catch { setError('Failed to save'); }
+    finally { setSaving(false); }
+  };
+
+  const Toggle = ({ field, label, description }) => (
+    <div className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0">
+      <div>
+        <p className="font-semibold text-gray-800 text-sm">{label}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+      </div>
+      <button onClick={() => setConfig(c => ({ ...c, [field]: !c[field] }))}
+        className={`relative w-12 h-6 rounded-full transition-colors ${config?.[field] ? 'bg-blue-600' : 'bg-gray-200'}`}>
+        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${config?.[field] ? 'translate-x-7' : 'translate-x-1'}`} />
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="bg-blue-900 px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/10 p-2 rounded-lg"><Shield className="w-5 h-5 text-white" /></div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Flood Protection Settings</h2>
+              <p className="text-blue-200 text-xs">Control portal submission limits</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-white/60 hover:text-white p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {!config ? (
+          <div className="p-8 flex items-center justify-center gap-3 text-gray-400">
+            <Loader2 className="w-5 h-5 animate-spin" /> Loading config...
+          </div>
+        ) : (
+          <div className="p-6 space-y-2">
+            {/* Status banner */}
+            <div className={`flex items-center gap-3 p-3 rounded-xl mb-4 ${config.rateLimitEnabled || config.duplicateCheckEnabled || config.cooldownEnabled ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
+              <Shield className={`w-4 h-4 ${config.rateLimitEnabled || config.duplicateCheckEnabled || config.cooldownEnabled ? 'text-green-600' : 'text-amber-600'}`} />
+              <p className={`text-xs font-semibold ${config.rateLimitEnabled || config.duplicateCheckEnabled || config.cooldownEnabled ? 'text-green-700' : 'text-amber-700'}`}>
+                {config.rateLimitEnabled || config.duplicateCheckEnabled || config.cooldownEnabled
+                  ? 'Protection is ACTIVE — some or all guards are enabled'
+                  : 'Protection is DISABLED — all guards are off (development mode)'}
+              </p>
+            </div>
+
+            <Toggle field="rateLimitEnabled" label="IP Rate Limiting" description="Limit submissions per IP address per hour" />
+            {config.rateLimitEnabled && (
+              <div className="grid grid-cols-2 gap-4 py-3 px-1">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Max Submissions</label>
+                  <input type="number" min="1" max="100" value={config.rateLimitMax}
+                    onChange={e => setConfig(c => ({ ...c, rateLimitMax: parseInt(e.target.value) || 5 }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Per (hours)</label>
+                  <input type="number" min="1" max="24" value={config.rateLimitWindowHours}
+                    onChange={e => setConfig(c => ({ ...c, rateLimitWindowHours: parseInt(e.target.value) || 1 }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+              </div>
+            )}
+
+            <Toggle field="duplicateCheckEnabled" label="Duplicate Request Block" description="Prevent submitting the same certificate type while one is pending" />
+
+            <Toggle field="cooldownEnabled" label="Reapplication Cooldown" description="Prevent reapplying too soon after receiving a certificate" />
+            {config.cooldownEnabled && (
+              <div className="py-3 px-1">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Cooldown Period (days)</label>
+                <input type="number" min="1" max="365" value={config.cooldownDays}
+                  onChange={e => setConfig(c => ({ ...c, cooldownDays: parseInt(e.target.value) || 30 }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+            )}
+
+            {error && <p className="text-red-600 text-xs font-medium bg-red-50 p-3 rounded-lg">{error}</p>}
+            {saved && <p className="text-green-600 text-xs font-medium bg-green-50 p-3 rounded-lg">✓ Settings saved successfully</p>}
+          </div>
+        )}
+
+        <div className="border-t px-6 py-4 flex justify-between items-center bg-gray-50">
+          <button onClick={() => setConfig({ rateLimitEnabled: false, rateLimitMax: 5, rateLimitWindowHours: 1, duplicateCheckEnabled: false, cooldownEnabled: false, cooldownDays: 30 })}
+            className="text-xs font-semibold text-amber-600 hover:text-amber-700 px-3 py-2 hover:bg-amber-50 rounded-lg transition-colors">
+            Disable All (Dev Mode)
+          </button>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors">Cancel</button>
+            <button onClick={handleSave} disabled={saving || !config}
+              className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+              {saving ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SuperAdminDashboard() {
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showOnboard, setShowOnboard] = useState(false);
   const [successData, setSuccessData] = useState(null);
+  const [showProtection, setShowProtection] = useState(false);
 
   const fetchTenants = async () => {
     try {
@@ -389,12 +524,20 @@ export default function SuperAdminDashboard() {
               Manage all platforms and system limits across the municipality.
             </p>
           </div>
-          <button
-            onClick={() => setShowOnboard(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm"
-          >
-            <Plus className="w-5 h-5" /> New Barangay
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowProtection(true)}
+              className="border border-blue-300 text-blue-700 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2 text-sm transition-colors"
+            >
+              <Shield className="w-4 h-4" /> Protection Settings
+            </button>
+            <button
+              onClick={() => setShowOnboard(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm"
+            >
+              <Plus className="w-5 h-5" /> New Barangay
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -544,6 +687,9 @@ export default function SuperAdminDashboard() {
       )}
       {successData && (
         <SuccessModal data={successData} onClose={() => setSuccessData(null)} />
+      )}
+      {showProtection && (
+        <ProtectionSettingsModal onClose={() => setShowProtection(false)} />
       )}
     </div>
   );
