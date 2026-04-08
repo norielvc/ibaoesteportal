@@ -24,7 +24,40 @@ export default async function handler(req, res) {
     });
     if (error)
       return res.status(500).json({ success: false, message: error.message });
-    return res.json({ success: true, certificates: data || [] });
+
+    // For cohabitation requests, enrich with partner resident's place_of_birth
+    const certificates = data || [];
+    const cohabitationRequests = certificates.filter(
+      (c) => c.certificate_type === "barangay_cohabitation" && c.details?.partnerId
+    );
+
+    if (cohabitationRequests.length > 0) {
+      const partnerIds = [...new Set(cohabitationRequests.map((c) => c.details.partnerId))];
+      const { data: partnerResidents } = await supabase
+        .from("residents")
+        .select("id, place_of_birth, date_of_birth, age, sex, gender")
+        .eq("tenant_id", tenantId)
+        .in("id", partnerIds);
+
+      if (partnerResidents?.length) {
+        const partnerMap = Object.fromEntries(partnerResidents.map((r) => [r.id, r]));
+        for (const cert of certificates) {
+          if (cert.certificate_type === "barangay_cohabitation" && cert.details?.partnerId) {
+            const partner = partnerMap[cert.details.partnerId];
+            if (partner) {
+              // Inject partner resident data — no new column needed
+              cert.partner_place_of_birth = partner.place_of_birth || "";
+              // Also fill in age/sex/dob if missing from top-level columns
+              if (!cert.partner_age) cert.partner_age = partner.age || "";
+              if (!cert.partner_sex) cert.partner_sex = partner.sex || partner.gender || "";
+              if (!cert.partner_date_of_birth) cert.partner_date_of_birth = partner.date_of_birth || "";
+            }
+          }
+        }
+      }
+    }
+
+    return res.json({ success: true, certificates });
   }
 
   return res

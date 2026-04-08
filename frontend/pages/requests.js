@@ -1785,9 +1785,7 @@ function RequestDetailsModal({
     partner_full_name: request.partner_full_name || request.details?.partnerFullName || "",
     partner_sex: request.partner_sex || request.details?.partnerSex || "",
     partner_date_of_birth: request.partner_date_of_birth || request.details?.partnerDateOfBirth || "",
-    partner_place_of_birth: request.partner_place_of_birth || request.details?.partnerPlaceOfBirth || "",
     partner_address: request.partner_address || request.address || request.details?.currentAddress || "",
-    partner_civil_status: request.partner_civil_status || "CO-HABITING",
     no_of_children: request.no_of_children || "0",
     living_together_years: request.living_together_years || "0",
     living_together_months: request.living_together_months || "0",
@@ -2739,7 +2737,6 @@ function RequestDetailsModal({
                             <option value="MARRIED">MARRIED</option>
                             <option value="WIDOWED">WIDOWED</option>
                             <option value="SEPARATED">SEPARATED</option>
-                            <option value="CO-HABITING">CO-HABITING</option>
                           </select>
                         ) : (
                           <p className="font-semibold text-gray-800 text-sm uppercase">
@@ -2949,30 +2946,6 @@ function RequestDetailsModal({
                             <option value="FEMALE">FEMALE</option>
                           </select>
                         </div>
-                        <div className="col-span-1 md:col-span-2">
-                          <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1.5">
-                            Civil Status
-                          </p>
-                          <input
-                            type="text"
-                            name="partner_civil_status"
-                            value={editFormData.partner_civil_status}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1.5">
-                            Partner Place of Birth
-                          </p>
-                          <input
-                            type="text"
-                            name="partner_place_of_birth"
-                            value={editFormData.partner_place_of_birth || ""}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
-                          />
-                        </div>
                         <div className="col-span-2">
                           <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1.5">
                             Shared Address
@@ -3074,19 +3047,8 @@ function RequestDetailsModal({
                           <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1">
                             Shared Address
                           </p>
-                          <p
-                            className="font-extrabold text-gray-900 text-[13px] uppercase leading-relaxed"
-                            title={request.address || request.details?.currentAddress}
-                          >
+                          <p className="font-extrabold text-gray-900 text-[13px] uppercase leading-relaxed">
                             {request.address || request.details?.currentAddress || "N/A"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1">
-                            Previous Status
-                          </p>
-                          <p className="font-semibold text-gray-800 text-sm uppercase">
-                            {request.partner_civil_status || "CO-HABITING"}
                           </p>
                         </div>
                         <div>
@@ -4241,7 +4203,6 @@ function RequestDetailsModal({
                         <option value="MARRIED">MARRIED</option>
                         <option value="WIDOWED">WIDOWED</option>
                         <option value="SEPARATED">SEPARATED</option>
-                        <option value="CO-HABITING">CO-HABITING</option>
                       </select>
                     </div>
                     {/* Address */}
