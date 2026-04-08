@@ -2,11 +2,11 @@ import { authenticateToken } from "../../../../src/lib/api-auth";
 import { supabase } from "../../../../lib/supabase";
 
 const statusFlow = {
-  staff_review: "processing",
-  pending: "processing",
-  submitted: "processing",
-  returned: "processing",
-  processing: "secretary_approval",  // processing = waiting for secretary
+  staff_review: "secretary_approval",  // After staff review, goes to secretary
+  pending: "secretary_approval",
+  submitted: "secretary_approval",
+  returned: "secretary_approval",
+  processing: "secretary_approval",  // Legacy: processing = waiting for secretary
   secretary_approval: "captain_approval",
   captain_approval: "oic_review",
   Treasury: "oic_review",

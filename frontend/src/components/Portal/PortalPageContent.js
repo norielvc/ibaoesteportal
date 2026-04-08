@@ -3520,20 +3520,22 @@ function TrackRequestWidget({ tenantId, tenantConfig }) {
   const [error, setError] = React.useState('');
 
   const statusConfig = {
-    staff_review:     { label: 'Under Review',        color: 'bg-blue-100 text-blue-700',   step: 1 },
-    processing:       { label: 'Processing',           color: 'bg-indigo-100 text-indigo-700', step: 2 },
+    pending:          { label: 'Submitted',            color: 'bg-blue-100 text-blue-700',   step: 1 },
+    submitted:        { label: 'Submitted',            color: 'bg-blue-100 text-blue-700',   step: 1 },
+    staff_review:     { label: 'Under Review',         color: 'bg-blue-100 text-blue-700',   step: 2 },
+    processing:       { label: 'Secretary Approval',   color: 'bg-purple-100 text-purple-700', step: 3 },
     secretary_approval: { label: 'Secretary Approval', color: 'bg-purple-100 text-purple-700', step: 3 },
-    captain_approval: { label: 'Captain Approval',    color: 'bg-violet-100 text-violet-700', step: 4 },
-    oic_review:       { label: 'Ready for Release',   color: 'bg-teal-100 text-teal-700',   step: 5 },
-    ready:            { label: 'Ready for Pickup',    color: 'bg-green-100 text-green-700', step: 6 },
-    ready_for_pickup: { label: 'Ready for Pickup',    color: 'bg-green-100 text-green-700', step: 6 },
-    released:         { label: 'Released / Claimed',  color: 'bg-gray-100 text-gray-600',   step: 7 },
-    rejected:         { label: 'Rejected',            color: 'bg-red-100 text-red-700',     step: 0 },
-    returned:         { label: 'Returned for Revision', color: 'bg-orange-100 text-orange-700', step: 1 },
-    cancelled:        { label: 'Cancelled',           color: 'bg-gray-100 text-gray-500',   step: 0 },
+    captain_approval: { label: 'Captain Approval',     color: 'bg-violet-100 text-violet-700', step: 4 },
+    oic_review:       { label: 'Ready for Release',    color: 'bg-teal-100 text-teal-700',   step: 5 },
+    ready:            { label: 'Ready for Pickup',     color: 'bg-green-100 text-green-700', step: 5 },
+    ready_for_pickup: { label: 'Ready for Pickup',     color: 'bg-green-100 text-green-700', step: 5 },
+    released:         { label: 'Released / Claimed',   color: 'bg-gray-100 text-gray-600',   step: 6 },
+    rejected:         { label: 'Rejected',             color: 'bg-red-100 text-red-700',     step: 0 },
+    returned:         { label: 'Returned for Revision', color: 'bg-orange-100 text-orange-700', step: 2 },
+    cancelled:        { label: 'Cancelled',            color: 'bg-gray-100 text-gray-500',   step: 0 },
   };
 
-  const steps = ['Submitted', 'Under Review', 'Processing', 'Approval', 'Ready', 'Released'];
+  const steps = ['Submitted', 'Review', 'Secretary', 'Captain', 'Ready', 'Released'];
 
   const handleTrack = async (e) => {
     e.preventDefault();

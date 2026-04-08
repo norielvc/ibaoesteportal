@@ -820,15 +820,15 @@ export default function RequestsPage() {
     if (action === "approve") {
       // Status progression mapping - must follow the workflow steps exactly
       const statusFlow = {
-        pending: "processing",
-        staff_review: "processing",
-        returned: "processing",
-        submitted: "processing",
-        processing: "secretary_approval",  // processing = waiting for secretary
+        pending: "secretary_approval",  // After staff review, goes to secretary
+        staff_review: "secretary_approval",
+        returned: "secretary_approval",
+        submitted: "secretary_approval",
+        processing: "secretary_approval",  // Legacy: processing = waiting for secretary
         secretary_approval: "captain_approval",
         captain_approval: "oic_review",
         oic_review: "ready",
-        Treasury: "secretary_approval",
+        Treasury: "oic_review",
         approved: "released",
         ready: "released",
         ready_for_pickup: "released",
@@ -986,20 +986,26 @@ export default function RequestsPage() {
         setSelectedRequest(null);
 
         // CRITICAL: Always reload page for staff_review stage (any action)
-        // Also reload for returned status or physical_inspection action
+        // Also reload for returned status or physical_inspection action (business permit only)
+        // Also reload for secretary_approval and captain_approval to ensure proper step transition
         const isStaffReviewStage = req.status === "staff_review";
         const isReturnedStatus = req.status === "returned";
-        const isPhysicalInspectionAction = act === "physical_inspection";
+        const isPhysicalInspectionAction = act === "physical_inspection" && req.certificate_type === "business_permit";
+        const isSecretaryApproval = req.status === "secretary_approval";
+        const isCaptainApproval = req.status === "captain_approval";
 
         const needsPageReload =
-          isStaffReviewStage || isReturnedStatus || isPhysicalInspectionAction;
+          isStaffReviewStage || isReturnedStatus || isPhysicalInspectionAction || isSecretaryApproval || isCaptainApproval;
 
         console.log(`[SUBMIT-ACTION] Reload check:`, {
           reqStatus: req.status,
           action: act,
+          certType: req.certificate_type,
           isStaffReviewStage,
           isReturnedStatus,
           isPhysicalInspectionAction,
+          isSecretaryApproval,
+          isCaptainApproval,
           needsPageReload,
         });
 
@@ -1774,7 +1780,9 @@ function RequestDetailsModal({
     civil_status: request.civil_status || "",
     date_of_birth: request.date_of_birth || "",
     place_of_birth: request.place_of_birth || "",
-    address: request.address || request.details?.currentAddress || "",
+    address: request.certificate_type === "barangay_cohabitation"
+      ? (request.details?.currentAddress || request.address || "")
+      : (request.address || request.details?.currentAddress || ""),
     purpose: request.purpose || "",
     date_of_death: request.date_of_death || "",
     cause_of_death: request.cause_of_death || "",
@@ -1785,6 +1793,7 @@ function RequestDetailsModal({
     partner_full_name: request.partner_full_name || request.details?.partnerFullName || "",
     partner_sex: request.partner_sex || request.details?.partnerSex || "",
     partner_date_of_birth: request.partner_date_of_birth || request.details?.partnerDateOfBirth || "",
+    partner_residential_address: request.partner_residential_address || request.details?.partnerResidentialAddress || "",
     partner_address: request.partner_address || request.address || request.details?.currentAddress || "",
     no_of_children: request.no_of_children || "0",
     living_together_years: request.living_together_years || "0",
@@ -2005,6 +2014,23 @@ function RequestDetailsModal({
       } catch (e) {
         console.error("Error detecting second name mismatch:", e);
       }
+    }
+
+    // Check for cohabitation address mismatch — compare submitted address vs both residents
+    if (request.certificate_type === "barangay_cohabitation") {
+      const submittedAddress = request.details?.currentAddress || request.address;
+      const requestorAddress = resident?.residential_address;
+      const partnerAddress = request.partner_residential_address || request.details?.partnerResidentialAddress;
+      const normalize = (val) => String(val || "").trim().toUpperCase();
+
+      if (submittedAddress && requestorAddress && normalize(submittedAddress) !== normalize(requestorAddress)) {
+        mismatches.push("Address (Requestor)");
+      }
+      if (submittedAddress && partnerAddress && normalize(submittedAddress) !== normalize(partnerAddress)) {
+        mismatches.push("Address (Partner)");
+      }
+      if (submittedAddress && !requestorAddress) mismatches.push("Address (Requestor — not on file)");
+      if (submittedAddress && !partnerAddress) mismatches.push("Address (Partner — not on file)");
     }
 
     // Check for Guardian mismatch for Guardianship certificates
@@ -2890,14 +2916,14 @@ function RequestDetailsModal({
 
               {request.certificate_type === "barangay_cohabitation" && (
                 <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm mt-4">
-                  <div className="flex justify-between items-center mb-5 border-l-4 border-rose-500 pl-3">
+                  <div className="flex justify-between items-center mb-4 border-l-4 border-rose-500 pl-3">
                     <h3 className="font-black text-gray-900 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em]">
                       <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
                       Partner Information
                     </h3>
                   </div>
                   <div
-                    className={`grid gap-6 ${["oic_review", "ready", "ready_for_pickup"].includes(request.status) ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4"}`}
+                    className={`grid gap-4 ${["oic_review", "ready", "ready_for_pickup"].includes(request.status) ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4"}`}
                   >
                     {isEditing ? (
                       <>
@@ -2997,6 +3023,7 @@ function RequestDetailsModal({
                       </>
                     ) : (
                       <>
+                        {/* Partner Basic Info Row */}
                         <div
                           className={
                             [
@@ -3004,14 +3031,14 @@ function RequestDetailsModal({
                               "ready",
                               "ready_for_pickup",
                             ].includes(request.status)
-                              ? "col-span-1"
-                              : "col-span-2 md:col-span-2"
+                              ? "col-span-2"
+                              : "col-span-2"
                           }
                         >
                           <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1">
                             Partner Name
                           </p>
-                          <p className="font-extrabold text-gray-900 uppercase text-[15px] tracking-tight truncate">
+                          <p className="font-extrabold text-gray-900 uppercase text-[15px] tracking-tight">
                             {request.partner_full_name || "N/A"}
                           </p>
                         </div>
@@ -3035,7 +3062,7 @@ function RequestDetailsModal({
                               (request.partner_sex || "-")}
                           </p>
                         </div>
-                        <div className="col-span-2 md:col-span-2">
+                        <div className="col-span-2">
                           <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1">
                             Partner Place of Birth
                           </p>
@@ -3043,30 +3070,56 @@ function RequestDetailsModal({
                             {request.partner_place_of_birth || request.details?.partnerPlaceOfBirth || "NOT RECORDED"}
                           </p>
                         </div>
-                        <div className="col-span-2 md:col-span-2">
+
+                        {/* Relationship Info - Compact Row */}
+                        <div>
                           <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1">
-                            Shared Address
+                            Partnership Length
                           </p>
-                          <p className="font-extrabold text-gray-900 text-[13px] uppercase leading-relaxed">
-                            {request.address || request.details?.currentAddress || "N/A"}
+                          <p className="font-black text-gray-900 text-sm">
+                            {request.living_together_years || "0"} YRS, {request.living_together_months || "0"} MOS
                           </p>
                         </div>
                         <div>
                           <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1">
                             No. of Children
                           </p>
-                          <p className="font-black text-gray-900 text-sm font-mono tracking-tighter">
+                          <p className="font-black text-gray-900 text-sm">
                             {request.no_of_children || 0}
                           </p>
                         </div>
-                        <div className="col-span-2">
-                          <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1">
-                            Partnership Length
+
+                        {/* Address Verification Block — Optimized 3-column layout */}
+                        <div className="col-span-2 md:col-span-4 bg-amber-50 border border-amber-200 rounded-xl p-4 mt-2">
+                          <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <span className="text-amber-600">⚠</span> Address Verification — Staff Review Required
                           </p>
-                          <p className="font-semibold text-gray-800 text-sm uppercase">
-                            {request.living_together_years || "0"} YRS,{" "}
-                            {request.living_together_months || "0"} MOS
-                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="bg-white rounded-lg p-3 border border-amber-100">
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-wide mb-1.5">
+                                Requestor Address on File
+                              </p>
+                              <p className="font-bold text-gray-800 text-xs uppercase leading-relaxed">
+                                {request.residents?.residential_address || "NOT RECORDED"}
+                              </p>
+                            </div>
+                            <div className="bg-white rounded-lg p-3 border border-amber-100">
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-wide mb-1.5">
+                                Partner Address on File
+                              </p>
+                              <p className="font-bold text-gray-800 text-xs uppercase leading-relaxed">
+                                {request.partner_residential_address || request.details?.partnerResidentialAddress || request.partner_residential_address_injected || "NOT RECORDED"}
+                              </p>
+                            </div>
+                            <div className="bg-white rounded-lg p-3 border-2 border-blue-300 ring-2 ring-blue-100">
+                              <p className="text-[10px] font-black text-blue-600 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                                <span className="text-blue-500">★</span> New Address Submitted
+                              </p>
+                              <p className="font-bold text-blue-800 text-xs uppercase leading-relaxed">
+                                {request.details?.currentAddress || request.address || "NOT PROVIDED"}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </>
                     )}
@@ -4445,11 +4498,23 @@ function RequestDetailsModal({
                     Sync information to Master Database?
                   </p>
                   <p className="text-xs text-amber-700 mt-2 leading-relaxed">
-                    This will update the permanent Resident Profile for{" "}
-                    <span className="font-bold underline">
-                      {request.full_name || request.applicant_name}
-                    </span>{" "}
-                    with the information from this certificate request.
+                    {request.certificate_type === "barangay_cohabitation" ? (
+                      <>
+                        This will update the residential address for both{" "}
+                        <span className="font-bold underline">{request.full_name || request.applicant_name}</span>
+                        {" "}and{" "}
+                        <span className="font-bold underline">{request.partner_full_name || request.details?.partnerFullName || "Partner"}</span>
+                        {" "}with the new address submitted in this request.
+                      </>
+                    ) : (
+                      <>
+                        This will update the permanent Resident Profile for{" "}
+                        <span className="font-bold underline">
+                          {request.full_name || request.applicant_name}
+                        </span>{" "}
+                        with the information from this certificate request.
+                      </>
+                    )}
                   </p>
                   <div className="mt-3 bg-white/50 p-2 rounded border border-amber-100">
                     <p className="text-[10px] font-bold text-amber-800 uppercase mb-1 underline">
@@ -5413,11 +5478,41 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
       const jsPDF = (await import("jspdf")).default;
 
       const element = certificateRef.current;
+      
+      // Temporarily reset letter-spacing for better PDF rendering
+      const originalStyles = [];
+      const allElements = element.querySelectorAll('*');
+      allElements.forEach((el) => {
+        const computed = window.getComputedStyle(el);
+        originalStyles.push({
+          element: el,
+          letterSpacing: el.style.letterSpacing,
+          wordSpacing: el.style.wordSpacing,
+        });
+        // Reset to normal spacing
+        el.style.letterSpacing = 'normal';
+        el.style.wordSpacing = 'normal';
+      });
+      
+      // Add a small delay to ensure fonts are loaded and styles applied
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 3, // Increased scale for better quality
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        letterRendering: true, // Better text rendering
+        allowTaint: false,
+        foreignObjectRendering: false, // Disable to avoid text issues
+        imageTimeout: 0,
+        removeContainer: true,
+      });
+
+      // Restore original styles
+      originalStyles.forEach(({ element, letterSpacing, wordSpacing }) => {
+        element.style.letterSpacing = letterSpacing;
+        element.style.wordSpacing = wordSpacing;
       });
 
       const imgData = canvas.toDataURL("image/png");
@@ -5425,6 +5520,7 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
         orientation: "portrait",
         unit: "mm",
         format: "a4",
+        compress: true,
       });
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -5442,6 +5538,8 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
         imgY,
         imgWidth * ratio,
         imgHeight * ratio,
+        undefined,
+        'FAST' // Use FAST compression for better quality
       );
       pdf.save(`${request.reference_number}.pdf`);
     } catch (error) {
@@ -5484,18 +5582,20 @@ function CertificatePreviewModal({ request, onClose, onBack, getTypeLabel }) {
                 <Printer className="w-4 h-4" />
                 Print
               </button>
-              <button
-                onClick={handleDownloadPDF}
-                disabled={isDownloading}
-                className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all font-medium text-sm disabled:opacity-50"
-              >
-                {isDownloading ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Download className="w-4 h-4" />
-                )}
-                Download
-              </button>{" "}
+              {['oic_review', 'ready', 'ready_for_pickup', 'released'].includes(request.status) && (
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloading}
+                  className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all font-medium text-sm disabled:opacity-50"
+                >
+                  {isDownloading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                  Download
+                </button>
+              )}
               <button
                 onClick={onClose}
                 className="text-white/80 hover:text-white p-2 hover:bg-white/10 rounded-lg ml-2"
@@ -5591,7 +5691,9 @@ function ClearancePreviewForRequests({
     age: request.age || "",
     sex: request.sex || "",
     civilStatus: request.civil_status || "",
-    address: request.address || request.details?.currentAddress || "",
+    address: request.certificate_type === "barangay_cohabitation"
+      ? (request.details?.currentAddress || request.address || "")
+      : (request.address || request.details?.currentAddress || ""),
     dateOfBirth: request.date_of_birth || "",
     placeOfBirth: request.place_of_birth || "",
     dateOfDeath:

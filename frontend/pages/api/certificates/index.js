@@ -35,7 +35,7 @@ export default async function handler(req, res) {
       const partnerIds = [...new Set(cohabitationRequests.map((c) => c.details.partnerId))];
       const { data: partnerResidents } = await supabase
         .from("residents")
-        .select("id, place_of_birth, date_of_birth, age, sex, gender")
+        .select("id, place_of_birth, date_of_birth, age, sex, gender, residential_address")
         .eq("tenant_id", tenantId)
         .in("id", partnerIds);
 
@@ -45,9 +45,8 @@ export default async function handler(req, res) {
           if (cert.certificate_type === "barangay_cohabitation" && cert.details?.partnerId) {
             const partner = partnerMap[cert.details.partnerId];
             if (partner) {
-              // Inject partner resident data — no new column needed
               cert.partner_place_of_birth = partner.place_of_birth || "";
-              // Also fill in age/sex/dob if missing from top-level columns
+              cert.partner_residential_address = partner.residential_address || "";
               if (!cert.partner_age) cert.partner_age = partner.age || "";
               if (!cert.partner_sex) cert.partner_sex = partner.sex || partner.gender || "";
               if (!cert.partner_date_of_birth) cert.partner_date_of_birth = partner.date_of_birth || "";

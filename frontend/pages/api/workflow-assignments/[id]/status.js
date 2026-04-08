@@ -16,6 +16,8 @@ export default async function handler(req, res) {
   const { action, comments, comment } = req.body;
   const note = comments || comment || "";
 
+  console.log(`[WORKFLOW-ASSIGNMENT] Processing action: ${action} for assignment ID: ${id}`);
+
   // 1. Fetch the assignment being acted on
   const { data: assignment, error: fetchErr } = await supabase
     .from("workflow_assignments")
@@ -41,6 +43,8 @@ export default async function handler(req, res) {
   if (!cert)
     return res.status(404).json({ success: false, message: "Certificate not found" });
 
+  console.log(`[WORKFLOW-ASSIGNMENT] Certificate found: ${cert.reference_number}, Current status: ${cert.status}, Type: ${certType}`);
+
   // 3. Mark ALL pending assignments for this request as completed
   await supabase
     .from("workflow_assignments")
@@ -51,11 +55,11 @@ export default async function handler(req, res) {
 
   // 4. Determine next certificate status
   const statusFlow = {
-    staff_review: "processing",
-    pending: "processing",
-    submitted: "processing",
-    returned: "processing",
-    processing: "secretary_approval",  // processing = waiting for secretary
+    staff_review: "secretary_approval",  // After staff review, goes to secretary
+    pending: "secretary_approval",
+    submitted: "secretary_approval",
+    returned: "secretary_approval",
+    processing: "secretary_approval",  // Legacy: processing = waiting for secretary
     secretary_approval: "captain_approval",
     captain_approval: "oic_review",
     Treasury: "oic_review",
@@ -67,6 +71,7 @@ export default async function handler(req, res) {
   let newCertStatus = cert.status;
   if (action === "approve") {
     newCertStatus = statusFlow[cert.status] || cert.status;
+    console.log(`[WORKFLOW-ASSIGNMENT] Status flow: ${cert.status} -> ${newCertStatus}`);
   } else if (action === "reject") {
     newCertStatus = "rejected";
   } else if (action === "return") {
@@ -106,11 +111,17 @@ export default async function handler(req, res) {
 
     const steps = wfConfig?.workflow_config?.steps || [];
 
+    console.log(`[WORKFLOW-ASSIGNMENT] Looking for next step with status: ${newCertStatus}`);
+    console.log(`[WORKFLOW-ASSIGNMENT] Available steps:`, steps.map(s => ({ name: s.name, status: s.status, users: s.assignedUsers?.length || 0 })));
+
     // Find the step matching the new certificate status
     const nextStep = steps.find(s => s.status === newCertStatus)
       || steps.find(s => s.requiresApproval && s.status !== cert.status);
 
+    console.log(`[WORKFLOW-ASSIGNMENT] Next step found:`, nextStep ? { name: nextStep.name, status: nextStep.status, users: nextStep.assignedUsers?.length || 0 } : 'NONE');
+
     if (nextStep?.assignedUsers?.length) {
+      console.log(`[WORKFLOW-ASSIGNMENT] Creating ${nextStep.assignedUsers.length} assignments for step: ${nextStep.name}`);
       for (const userId of nextStep.assignedUsers) {
         await supabase.from("workflow_assignments").insert([{
           request_id: requestId,
@@ -122,6 +133,8 @@ export default async function handler(req, res) {
           status: "pending",
         }]);
       }
+    } else {
+      console.warn(`[WORKFLOW-ASSIGNMENT] No next step found or no users assigned for status: ${newCertStatus}`);
     }
   }
 

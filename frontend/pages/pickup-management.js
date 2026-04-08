@@ -5,7 +5,7 @@ import Layout from '@/components/Layout/Layout';
 import {
   FileCheck, Search, Eye, Calendar, User, Phone, MapPin,
   Shield, Clock, CheckCircle, AlertTriangle, QrCode,
-  ExternalLink, RefreshCw, Package, History, XCircle, X, ChevronDown, ShieldCheck, Heart, FileText, Skull, Activity
+  ExternalLink, RefreshCw, Package, History, XCircle, X, ChevronDown, ShieldCheck, Heart, FileText, Skull, Activity, Info
 } from 'lucide-react';
 import { getAuthToken } from '@/lib/auth';
 
@@ -607,64 +607,68 @@ function ConfirmPickupModal({ certificate, onClose, onConfirm, pickupName, setPi
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
         <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-          <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-5 flex items-center justify-between shrink-0">
+          <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-5 py-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-xl border border-white/20">
-                <CheckCircle className="w-6 h-6 text-white" />
+              <div className="bg-white/20 p-2 rounded-xl">
+                <CheckCircle className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-white uppercase tracking-tight leading-none mb-1">Confirm Release</h3>
-                <p className="text-emerald-100/80 font-bold text-[10px] uppercase tracking-widest">Final Status Update</p>
+                <h3 className="text-lg font-black text-white uppercase tracking-tight leading-none">Confirm Release</h3>
+                <p className="text-emerald-100/80 font-semibold text-[10px] uppercase tracking-wide">Final Status Update</p>
               </div>
             </div>
-            <button onClick={onClose} className="text-white/80 hover:text-white transition-all p-2 hover:bg-white/10 rounded-xl">
-              <X className="w-6 h-6" />
+            <button onClick={onClose} className="text-white/80 hover:text-white transition-all p-1.5 hover:bg-white/10 rounded-lg">
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-6 space-y-4">
-            <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100 shadow-sm relative overflow-hidden mb-6">
-              <p className="text-[10px] text-emerald-600 uppercase font-black tracking-[0.2em] mb-3">Ref Record No.</p>
-              <p className="text-2xl font-mono font-black text-emerald-900 mb-1 tracking-tighter">{certificate.reference_number}</p>
-              <p className="text-[11px] font-black text-emerald-700 uppercase tracking-widest mb-4">{getTypeLabel(certificate.certificate_type)}</p>
-
-              <div className="pt-4 border-t border-emerald-200/50">
-                <p className="text-[10px] text-emerald-600 uppercase font-black tracking-[0.2em] mb-1.5">Official Applicant</p>
-                <p className="text-xl font-black text-emerald-900 uppercase tracking-tight leading-none">{certificate.full_name || certificate.applicant_name}</p>
+          <div className="p-5 space-y-4">
+            {/* Certificate Info - Compact */}
+            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] text-emerald-600 uppercase font-black tracking-widest mb-1">Ref No.</p>
+                  <p className="text-lg font-mono font-black text-emerald-900 tracking-tight truncate">{certificate.reference_number}</p>
+                </div>
+                <span className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wide shrink-0">
+                  {getTypeLabel(certificate.certificate_type).split(' ')[0]}
+                </span>
               </div>
-              <CheckCircle className="absolute -bottom-6 -right-6 w-32 h-32 text-emerald-600 opacity-5" />
+
+              <div className="pt-3 border-t border-emerald-200">
+                <p className="text-[9px] text-emerald-600 uppercase font-black tracking-widest mb-1">Applicant</p>
+                <p className="text-base font-black text-emerald-900 uppercase tracking-tight leading-tight">{certificate.full_name || certificate.applicant_name}</p>
+              </div>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-[10px] text-gray-400 uppercase font-black tracking-[0.2em] ml-1">
-                Name of Person Picking Up *
+            {/* Pickup Person Input */}
+            <div className="space-y-2">
+              <label className="text-[10px] text-gray-500 uppercase font-black tracking-wide ml-1 flex items-center gap-1">
+                <User className="w-3 h-3" />
+                Person Picking Up <span className="text-red-500">*</span>
               </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-10 flex items-center pointer-events-none">
-                  <User className="w-5 h-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  value={pickupName}
-                  onChange={(e) => setPickupName(e.target.value)}
-                  placeholder="ENTER FULL NAME"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-black text-gray-900 uppercase text-sm tracking-tight placeholder:text-gray-300 shadow-inner"
-                  autoFocus
-                  onKeyPress={(e) => e.key === 'Enter' && pickupName.trim() && onConfirm(certificate.id, pickupName)}
-                />
-              </div>
-              <div className="flex items-center gap-2 px-1">
-                <Info className="w-3.5 h-3.5 text-blue-500" />
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight italic">
-                  Always verify the government ID before processing the release.
+              <input
+                type="text"
+                value={pickupName}
+                onChange={(e) => setPickupName(e.target.value)}
+                placeholder="ENTER FULL NAME"
+                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none font-bold text-gray-900 uppercase text-sm placeholder:text-gray-300"
+                autoFocus
+                onKeyPress={(e) => e.key === 'Enter' && pickupName.trim() && onConfirm(certificate.id, pickupName)}
+              />
+              <div className="flex items-start gap-2 px-1">
+                <Info className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-gray-500 font-semibold leading-relaxed">
+                  Verify government ID before processing release
                 </p>
               </div>
             </div>
 
-            <div className="flex gap-4 pt-6 mt-6 border-t border-gray-100">
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4">
               <button
                 onClick={onClose}
-                className="flex-1 px-6 py-4 bg-white border-2 border-gray-100 text-gray-500 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] hover:bg-gray-50 active:scale-95 transition-all"
+                className="flex-1 px-4 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl text-xs font-black uppercase tracking-wide hover:bg-gray-50 active:scale-95 transition-all"
                 disabled={confirming}
               >
                 Cancel
@@ -672,17 +676,17 @@ function ConfirmPickupModal({ certificate, onClose, onConfirm, pickupName, setPi
               <button
                 onClick={() => onConfirm(certificate.id, pickupName)}
                 disabled={confirming || !pickupName.trim()}
-                className="flex-[2] px-6 py-4 bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] hover:bg-emerald-700 transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xl shadow-emerald-200 transition-all"
+                className="flex-[2] px-4 py-3 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wide hover:bg-emerald-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 transition-all"
               >
                 {confirming ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    Updating Systems...
+                    Processing...
                   </>
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4" />
-                    Confirm & Release
+                    Confirm Release
                   </>
                 )}
               </button>

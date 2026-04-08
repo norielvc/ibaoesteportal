@@ -6,7 +6,7 @@
  * Step 3: Purpose + optional extra fields
  */
 import React, { useState, useEffect } from 'react';
-import { X, FileText, Search, Phone, Mail, Send, CheckCircle, ChevronRight, AlertCircle, Info } from 'lucide-react';
+import { X, FileText, Search, Phone, Mail, Send, CheckCircle, ChevronRight, AlertCircle, Info, User, Hash, Calendar, MapPin, Users, Clock, Baby, Fingerprint, Shield, Link, ClipboardList, Home, Building } from 'lucide-react';
 import ResidentSearchModal from '../Modals/ResidentSearchModal';
 
 const PURPOSE_LIST_1 = [
@@ -216,12 +216,31 @@ export default function UnifiedCertModal({
 
   // Confirmation Modal
   if (showConfirmation) {
-    const skip = ['residentId', 'age', 'sex', 'civilStatus', 'address', 'dateOfBirth', 'placeOfBirth', 'partnerId'];
+    const skip = ['residentId', 'age', 'sex', 'civilStatus', 'address', 'dateOfBirth', 'placeOfBirth', 'partnerId', 'partnerAge', 'partnerSex', 'partnerDateOfBirth', 'partnerResidentialAddress'];
+
+    // Single color for all icons — professional, consistent
+    const iconColor = 'text-gray-500';
+    const iconBg = 'bg-gray-100';
+
     const iconMap = {
-      fullName: '👤', contactNumber: '📞', email: '✉️', purpose: '📋',
-      partnerFullName: '👫', yearsLiving: '📅', numberOfChildren: '👶',
-      aliasName: '🪪', guardianName: '🛡️', guardianRelationship: '🔗',
+      fullName: User,
+      contactNumber: Phone,
+      email: Mail,
+      purpose: ClipboardList,
+      partnerFullName: Users,
+      yearsLiving: Clock,
+      numberOfChildren: Baby,
+      aliasName: Fingerprint,
+      guardianName: Shield,
+      guardianRelationship: Link,
+      partnerAge: Hash,
+      partnerSex: User,
+      partnerDateOfBirth: Calendar,
+      houseNo: Home,
+      purok: MapPin,
+      currentAddress: Building,
     };
+
     const labelMap = {
       fullName: 'Full Name / Buong Pangalan',
       contactNumber: 'Contact Number / Numero',
@@ -233,6 +252,12 @@ export default function UnifiedCertModal({
       aliasName: 'Alias / Other Name',
       guardianName: "Guardian's Name",
       guardianRelationship: 'Relationship / Relasyon',
+      partnerAge: 'Partner Age',
+      partnerSex: 'Partner Sex',
+      partnerDateOfBirth: 'Partner Date of Birth',
+      houseNo: 'House No. / Numero ng Bahay',
+      purok: 'Purok / Sitio',
+      currentAddress: 'Current Address / Kasalukuyang Tirahan',
     };
 
     // Merge formData + extraFormData for display
@@ -251,36 +276,39 @@ export default function UnifiedCertModal({
             </button>
           </div>
           <div className="p-8 bg-gray-50 overflow-y-auto max-h-[60vh]">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {Object.entries(allData).map(([k, v]) => {
                 if (!v || skip.includes(k)) return null;
                 const label = labelMap[k] || k.replace(/([A-Z])/g, ' $1').toUpperCase();
-                const wideKeys = ['purpose', 'email', 'partnerFullName'];
+                const wideKeys = ['purpose', 'email', 'partnerFullName', 'currentAddress'];
+                const IconComponent = iconMap[k] || FileText;
                 return (
-                  <div key={k} className={`flex items-start gap-4 p-6 bg-white border-2 border-gray-100 rounded-3xl shadow-sm group ${wideKeys.includes(k) ? 'sm:col-span-2' : ''}`}>
-                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-lg shrink-0">{iconMap[k] || '📄'}</div>
+                  <div key={k} className={`flex items-start gap-3 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm ${wideKeys.includes(k) ? 'sm:col-span-2' : ''}`}>
+                    <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
+                      <IconComponent className={`w-4 h-4 ${iconColor}`} />
+                    </div>
                     <div className="min-w-0 flex-1">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] block mb-1">{label}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] block mb-0.5">{label}</span>
                       {k === 'purpose' ? (
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                           {v.toString().split('\n').filter(Boolean).map((line, i) => (
                             <div key={i} className="flex items-start gap-2">
-                              <span className="text-gray-300 mt-1 shrink-0">•</span>
-                              <span className="text-base font-black text-black leading-snug uppercase">{line}</span>
+                              <span className="text-gray-300 mt-1 shrink-0 text-xs">•</span>
+                              <span className="text-sm font-bold text-gray-900 leading-snug uppercase">{line}</span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-lg font-black text-black leading-tight break-all uppercase">{v.toString()}</span>
+                        <span className="text-sm font-bold text-gray-900 leading-tight break-all uppercase">{v.toString()}</span>
                       )}
                     </div>
                   </div>
                 );
               })}
             </div>
-            <div className="mt-4 p-5 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-4">
-              <CheckCircle className="w-6 h-6 text-emerald-500 shrink-0" />
-              <p className="text-emerald-700 text-[11px] font-bold uppercase tracking-wide">All details validated against the official directory.</p>
+            <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-gray-400 shrink-0" />
+              <p className="text-gray-500 text-[11px] font-semibold uppercase tracking-wide">Please review all details before confirming your submission.</p>
             </div>
           </div>
           <div className="border-t bg-white px-8 py-6 flex justify-between items-center shrink-0">

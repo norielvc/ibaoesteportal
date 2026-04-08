@@ -15,6 +15,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose, isDemo =
   const [partnerAge, setPartnerAge] = useState('');
   const [partnerSex, setPartnerSex] = useState('');
   const [partnerDob, setPartnerDob] = useState('');
+  const [partnerResidentialAddress, setPartnerResidentialAddress] = useState('');
   const [yearsLiving, setYearsLiving] = useState('');
   const [children, setChildren] = useState('0');
   const [isPartnerSearchOpen, setIsPartnerSearchOpen] = useState(false);
@@ -35,12 +36,14 @@ export default function CohabitationCertificateModal({ isOpen, onClose, isDemo =
     setPartnerAge(resident.age || '');
     setPartnerSex(resident.gender || resident.sex || '');
     setPartnerDob(resident.date_of_birth || '');
+    setPartnerResidentialAddress(resident.residential_address || '');
     setIsPartnerSearchOpen(false);
   };
 
   const handleClose = () => {
     setPartnerName(''); setPartnerId(null);
     setPartnerAge(''); setPartnerSex(''); setPartnerDob('');
+    setPartnerResidentialAddress('');
     setYearsLiving(''); setChildren('0');
     setHouseNo(''); setPurok('');
     onClose();
@@ -213,6 +216,7 @@ export default function CohabitationCertificateModal({ isOpen, onClose, isDemo =
         partnerAge,
         partnerSex,
         partnerDateOfBirth: partnerDob,
+        partnerResidentialAddress,
         yearsLiving,
         numberOfChildren: children,
         houseNo,

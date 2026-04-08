@@ -188,7 +188,9 @@ export default async function handler(req, res) {
       age: parseInt(formData.age) || 0,
       sex: (formData.sex || formData.gender)?.toUpperCase() || "",
       civil_status: formData.civilStatus?.toUpperCase() || "",
-      address: (formData.address || formData.currentAddress || formData.ownerAddress || formData.deceasedAddress)?.toUpperCase() || "",
+      address: canonicalType === "barangay_cohabitation"
+        ? (formData.currentAddress || formData.address || "")?.toUpperCase()
+        : (formData.address || formData.ownerAddress || formData.deceasedAddress)?.toUpperCase() || "",
       contact_number: formData.contactNumber || "",
       email: formData.email || "",
       purpose:
@@ -206,6 +208,7 @@ export default async function handler(req, res) {
         partner_age: parseInt(formData.partnerAge) || null,
         partner_sex: formData.partnerSex?.toUpperCase() || "",
         partner_date_of_birth: formData.partnerDateOfBirth || null,
+        partner_residential_address: formData.partnerResidentialAddress?.toUpperCase() || "",
         no_of_children: parseInt(formData.numberOfChildren) || 0,
         living_together_years: parseInt(formData.yearsLiving) || 0,
         living_together_months: 0,
@@ -231,15 +234,18 @@ export default async function handler(req, res) {
         // Cohabitation — store with all key variants for compatibility
         partner_name: formData.partnerFullName?.toUpperCase(),
         partnerFullName: formData.partnerFullName?.toUpperCase(),
+        partnerId: formData.partnerId || null,
         partnerAge: formData.partnerAge || "",
         partnerSex: formData.partnerSex?.toUpperCase() || "",
         partnerDateOfBirth: formData.partnerDateOfBirth || "",
+        partnerResidentialAddress: formData.partnerResidentialAddress?.toUpperCase() || "",
         noOfChildren: formData.numberOfChildren || "0",
         livingTogetherYears: formData.yearsLiving || "0",
         livingTogetherMonths: "0",
         houseNo: formData.houseNo?.toUpperCase(),
         purok: formData.purok?.toUpperCase(),
-        currentAddress: formData.currentAddress?.toUpperCase(),
+        // Explicitly store the submitted address — separate from resident's address on file
+        currentAddress: formData.currentAddress?.toUpperCase() || "",
         // Others
         ...formData.details,
       },
