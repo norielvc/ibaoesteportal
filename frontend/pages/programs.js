@@ -21,7 +21,8 @@ import {
   Shield,
   Activity,
 } from "lucide-react";
-import { getAuthToken } from "@/lib/auth";
+import { getAuthToken, getUserData } from "@/lib/auth";
+import { deleteStorageImage } from "@/lib/deleteStorageImage";
 
 const API_URL = "/api";
 
@@ -51,7 +52,10 @@ export default function ProgramsPage() {
   const fetchPrograms = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/programs`);
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/programs`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -114,29 +118,44 @@ export default function ProgramsPage() {
     }
   };
 
-  const handleImageUpload = (e, isEditing = false) => {
+  const handleImageUpload = async (e, isEditing = false) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      setNotification({
-        type: "error",
-        message: "Image size must be less than 2MB",
-      });
+    if (file.size > 5 * 1024 * 1024) {
+      setNotification({ type: "error", message: "Image size must be less than 5MB" });
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      setNotification({ type: "error", message: "Please select an image file" });
       return;
     }
 
+    setNotification({ type: "info", message: "Uploading image..." });
+
+    const oldUrl = isEditing ? editingProgram?.image : formData.image;
+
     const reader = new FileReader();
-    reader.onloadend = () => {
-      if (isEditing && editingProgram) {
-        setEditingProgram({ ...editingProgram, image: reader.result });
-      } else {
-        setFormData({ ...formData, image: reader.result });
+    reader.onloadend = async () => {
+      try {
+        const token = getAuthToken();
+        const response = await fetch("/api/upload/image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ base64: reader.result, folder: "programs", oldUrl }),
+        });
+        const data = await response.json();
+        if (!data.success) throw new Error(data.message);
+
+        if (isEditing && editingProgram) {
+          setEditingProgram({ ...editingProgram, image: data.url });
+        } else {
+          setFormData({ ...formData, image: data.url });
+        }
+        setNotification({ type: "success", message: "Image uploaded successfully" });
+      } catch (err) {
+        setNotification({ type: "error", message: `Upload failed: ${err.message}` });
       }
-      setNotification({
-        type: "success",
-        message: "Image uploaded successfully",
-      });
     };
     reader.readAsDataURL(file);
   };
@@ -197,6 +216,8 @@ export default function ProgramsPage() {
   };
 
   const deleteProgram = (id) => {
+    const program = programs.find((p) => p.id === id);
+    if (program) deleteStorageImage(program.image);
     setPrograms(programs.filter((p) => p.id !== id));
     setHasChanges(true);
     setNotification({

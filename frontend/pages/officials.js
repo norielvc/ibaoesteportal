@@ -24,6 +24,7 @@ import {
   Activity,
 } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
+import { deleteStorageImage } from "@/lib/deleteStorageImage";
 
 const API_URL = "/api";
 
@@ -453,45 +454,62 @@ export default function OfficialsPage() {
     }
   };
 
-  const handleApplyCrop = (croppedBase64) => {
+  const handleApplyCrop = async (croppedBase64) => {
     const field = targetField;
-    const base64 = croppedBase64;
-    const newOfficials = { ...officials };
-
-    if (field.startsWith("councilor_")) {
-      const index = parseInt(field.split("_")[1]);
-      const newImgs = [...officials.officialImages.councilors];
-      newImgs[index] = base64;
-      newOfficials.officialImages = {
-        ...officials.officialImages,
-        councilors: newImgs,
-      };
-    } else if (field.startsWith("skKagawad_")) {
-      const index = parseInt(field.split("_")[1]);
-      const newImgs = [...officials.officialImages.skKagawads];
-      newImgs[index] = base64;
-      newOfficials.officialImages = {
-        ...officials.officialImages,
-        skKagawads: newImgs,
-      };
-    } else if (field === "hero_image") {
-      newOfficials.heroSection = { ...officials.heroSection, image: base64 };
-    } else {
-      newOfficials.officialImages = {
-        ...officials.officialImages,
-        [field]: base64,
-      };
-    }
-
-    setOfficials(newOfficials);
-    setHasChanges(true);
     setCroppingImg(null);
     setTargetField(null);
-    setNotification({
-      type: "success",
-      message:
-        "Official photo optimized and applied. Click Save All to finalize.",
-    });
+
+    setNotification({ type: "info", message: "Uploading photo..." });
+
+    // Capture old URL before replacing
+    let oldUrl = null;
+    if (field.startsWith("councilor_")) {
+      const index = parseInt(field.split("_")[1]);
+      oldUrl = officials.officialImages.councilors[index];
+    } else if (field.startsWith("skKagawad_")) {
+      const index = parseInt(field.split("_")[1]);
+      oldUrl = officials.officialImages.skKagawads[index];
+    } else if (field === "hero_image") {
+      oldUrl = officials.heroSection?.image;
+    } else {
+      oldUrl = officials.officialImages[field];
+    }
+
+    try {
+      const token = getAuthToken();
+      const response = await fetch("/api/upload/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ base64: croppedBase64, folder: "officials", oldUrl }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.message);
+
+      const imageUrl = data.url;
+      const newOfficials = { ...officials };
+
+      if (field.startsWith("councilor_")) {
+        const index = parseInt(field.split("_")[1]);
+        const newImgs = [...officials.officialImages.councilors];
+        newImgs[index] = imageUrl;
+        newOfficials.officialImages = { ...officials.officialImages, councilors: newImgs };
+      } else if (field.startsWith("skKagawad_")) {
+        const index = parseInt(field.split("_")[1]);
+        const newImgs = [...officials.officialImages.skKagawads];
+        newImgs[index] = imageUrl;
+        newOfficials.officialImages = { ...officials.officialImages, skKagawads: newImgs };
+      } else if (field === "hero_image") {
+        newOfficials.heroSection = { ...officials.heroSection, image: imageUrl };
+      } else {
+        newOfficials.officialImages = { ...officials.officialImages, [field]: imageUrl };
+      }
+
+      setOfficials(newOfficials);
+      setHasChanges(true);
+      setNotification({ type: "success", message: "Photo uploaded. Click Save All to finalize." });
+    } catch (err) {
+      setNotification({ type: "error", message: `Upload failed: ${err.message}` });
+    }
   };
 
   const updateStyle = (section, field, value) => {
@@ -684,24 +702,35 @@ export default function OfficialsPage() {
     );
   };
 
-  const handleLogoUpload = (side, e) => {
+  const handleLogoUpload = async (side, e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        let fieldName = "";
-        if (side === "left") fieldName = "leftLogo";
-        else if (side === "right") fieldName = "rightLogo";
-        else if (side === "captain") fieldName = "captainImage";
+    if (!file) return;
 
-        updateStyle("logos", fieldName, reader.result);
-        setNotification({
-          type: "success",
-          message: `${side.charAt(0).toUpperCase() + side.slice(1)} image uploaded`,
+    setNotification({ type: "info", message: "Uploading image..." });
+
+    // Capture old URL before replacing
+    const fieldName = side === "left" ? "leftLogo" : side === "right" ? "rightLogo" : "captainImage";
+    const oldUrl = officials.logos?.[fieldName];
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const token = getAuthToken();
+        const response = await fetch("/api/upload/image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ base64: reader.result, folder: "logos", oldUrl }),
         });
-      };
-      reader.readAsDataURL(file);
-    }
+        const data = await response.json();
+        if (!data.success) throw new Error(data.message);
+
+        updateStyle("logos", fieldName, data.url);
+        setNotification({ type: "success", message: `${side.charAt(0).toUpperCase() + side.slice(1)} image uploaded` });
+      } catch (err) {
+        setNotification({ type: "error", message: `Upload failed: ${err.message}` });
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const removeLogo = (side) => {
@@ -709,6 +738,9 @@ export default function OfficialsPage() {
     if (side === "left") fieldName = "leftLogo";
     else if (side === "right") fieldName = "rightLogo";
     else if (side === "captain") fieldName = "captainImage";
+
+    // Delete from storage
+    deleteStorageImage(officials.logos?.[fieldName]);
 
     updateStyle("logos", fieldName, "");
     setNotification({
@@ -1996,19 +2028,31 @@ export default function OfficialsPage() {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files[0];
                         if (!file) return;
+                        setNotification({ type: "info", message: "Uploading logo..." });
+                        const oldUrl = officials.portalBranding?.logoUrl;
                         const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setOfficials({
-                            ...officials,
-                            portalBranding: {
-                              ...officials.portalBranding,
-                              logoUrl: reader.result,
-                            },
-                          });
-                          setHasChanges(true);
+                        reader.onloadend = async () => {
+                          try {
+                            const token = getAuthToken();
+                            const response = await fetch("/api/upload/image", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                              body: JSON.stringify({ base64: reader.result, folder: "logos", oldUrl }),
+                            });
+                            const data = await response.json();
+                            if (!data.success) throw new Error(data.message);
+                            setOfficials({
+                              ...officials,
+                              portalBranding: { ...officials.portalBranding, logoUrl: data.url },
+                            });
+                            setHasChanges(true);
+                            setNotification({ type: "success", message: "Logo uploaded" });
+                          } catch (err) {
+                            setNotification({ type: "error", message: `Upload failed: ${err.message}` });
+                          }
                         };
                         reader.readAsDataURL(file);
                       }}

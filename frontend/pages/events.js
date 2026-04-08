@@ -17,7 +17,7 @@ import {
   Upload,
   Loader2,
 } from "lucide-react";
-import { getAuthToken } from "@/lib/auth";
+import { getAuthToken, getUserData } from "@/lib/auth";
 
 const API_URL = "/api";
 
@@ -50,7 +50,10 @@ export default function EventsPage() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/events`);
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/events`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
 
       if (data.success && data.data.length > 0) {

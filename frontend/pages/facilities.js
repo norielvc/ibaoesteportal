@@ -21,7 +21,8 @@ import {
   Home,
   Award,
 } from "lucide-react";
-import { getAuthToken } from "@/lib/auth";
+import { getAuthToken, getUserData } from "@/lib/auth";
+import { deleteStorageImage } from "@/lib/deleteStorageImage";
 
 const API_URL = "/api";
 
@@ -74,7 +75,10 @@ export default function FacilitiesPage() {
   const fetchFacilities = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/facilities`);
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/facilities`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -185,43 +189,51 @@ export default function FacilitiesPage() {
     }
   };
 
-  const handleImageUpload = (e, isEditing = false, imageIndex = 0) => {
+  const handleImageUpload = async (e, isEditing = false, imageIndex = 0) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check file size (1MB = 1024 * 1024 bytes)
-    if (file.size > 1024 * 1024) {
-      setNotification({
-        type: "error",
-        message: "Image size must be less than 1MB",
-      });
+    if (file.size > 5 * 1024 * 1024) {
+      setNotification({ type: "error", message: "Image size must be less than 5MB" });
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      setNotification({ type: "error", message: "Please select an image file" });
       return;
     }
 
-    // Check file type
-    if (!file.type.startsWith("image/")) {
-      setNotification({
-        type: "error",
-        message: "Please select an image file",
-      });
-      return;
-    }
+    setNotification({ type: "info", message: "Uploading image..." });
+
+    // Capture old URL before overwriting
+    const oldUrl = isEditing
+      ? editingFacility?.images?.[imageIndex]
+      : formData.images?.[imageIndex];
 
     const reader = new FileReader();
-    reader.onloadend = () => {
-      if (isEditing && editingFacility) {
-        const newImages = [...editingFacility.images];
-        newImages[imageIndex] = reader.result;
-        setEditingFacility({ ...editingFacility, images: newImages });
-      } else {
-        const newImages = [...formData.images];
-        newImages[imageIndex] = reader.result;
-        setFormData({ ...formData, images: newImages });
+    reader.onloadend = async () => {
+      try {
+        const token = getAuthToken();
+        const response = await fetch("/api/upload/image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ base64: reader.result, folder: "facilities", oldUrl }),
+        });
+        const data = await response.json();
+        if (!data.success) throw new Error(data.message);
+
+        if (isEditing && editingFacility) {
+          const newImages = [...editingFacility.images];
+          newImages[imageIndex] = data.url;
+          setEditingFacility({ ...editingFacility, images: newImages });
+        } else {
+          const newImages = [...formData.images];
+          newImages[imageIndex] = data.url;
+          setFormData({ ...formData, images: newImages });
+        }
+        setNotification({ type: "success", message: "Image uploaded successfully" });
+      } catch (err) {
+        setNotification({ type: "error", message: `Upload failed: ${err.message}` });
       }
-      setNotification({
-        type: "success",
-        message: "Image uploaded successfully",
-      });
     };
     reader.readAsDataURL(file);
   };
@@ -296,6 +308,11 @@ export default function FacilitiesPage() {
         message: "Must have at least one facility",
       });
       return;
+    }
+    const facility = facilities.find((f) => f.id === id);
+    if (facility) {
+      // Clean up all storage images for this facility
+      (facility.images || []).forEach((url) => deleteStorageImage(url));
     }
     setFacilities(facilities.filter((f) => f.id !== id));
     setHasChanges(true);
@@ -580,6 +597,8 @@ export default function FacilitiesPage() {
                           </div>
                           <button
                             onClick={() => {
+                              const removedUrl = editingFacility.images[idx];
+                              deleteStorageImage(removedUrl);
                               const newImages = editingFacility.images.filter(
                                 (_, i) => i !== idx,
                               );
