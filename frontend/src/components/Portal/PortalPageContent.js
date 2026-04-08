@@ -42,6 +42,7 @@ import {
   Trophy,
   Target,
   Quote,
+  Image,
 } from "lucide-react";
 import BarangayClearanceModal from "@/components/Forms/BarangayClearanceModal";
 import IndigencyCertificateModal from "@/components/Forms/IndigencyCertificateModal";
@@ -1776,69 +1777,100 @@ export default function PortalPageContent({ initialTenantId }) {
           </button>
         </div>
 
-        <div className="py-24 md:py-32">
+        {/* Section Header */}
+        <div className="max-w-[1600px] mx-auto px-8 lg:px-16 pt-16 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.3em] mb-2" style={{ color: tenantConfig.accentColor }}>
+                Our Facilities
+              </p>
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
+                Community Spaces
+              </h2>
+            </div>
+            <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
+              {facilities.length} facilit{facilities.length === 1 ? "y" : "ies"} available to residents
+            </p>
+          </div>
+        </div>
+
+        {/* Cards Grid */}
+        <div className="py-10 md:py-14">
           <div className="max-w-[1600px] mx-auto px-8 lg:px-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {facilities.map((facility, index) => (
                 <div
                   key={index}
-                  className="group relative flex flex-col cursor-pointer bg-white rounded-[3rem] overflow-hidden premium-shadow transform transition-all duration-700 hover:-translate-y-3"
+                  className="group relative flex flex-col cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                   onClick={() => {
                     setSelectedFacility(facility);
                     setFacilityImageIndex(0);
                   }}
                 >
-                  {/* Card Image Area */}
-                  <div className="relative aspect-[4/3] overflow-hidden">
+                  {/* Image */}
+                  <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
                     <img
-                      src={
-                        facility.images && facility.images.length > 0
-                          ? facility.images[0]
-                          : "/background.jpg"
-                      }
+                      src={facility.images?.[0] || "/background.jpg"}
                       alt={facility.name}
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      onError={(e) => { e.target.src = "/background.jpg"; }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent opacity-60"></div>
-                    <div className="absolute bottom-6 left-8 flex items-center gap-3">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: tenantConfig.accentColor }}
-                      ></span>
-                      <span className="text-white text-xs font-black uppercase tracking-widest">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
+                    {/* Number badge */}
+                    <div className="absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ backgroundColor: tenantConfig.primaryColor }}>
+                      {String(index + 1).padStart(2, "0")}
                     </div>
+                    {/* Multi-image indicator */}
+                    {facility.images?.length > 1 && (
+                      <div className="absolute top-4 right-4 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full">
+                        <Image className="w-3 h-3" />
+                        {facility.images.length}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Card Content Area */}
-                  <div className="p-10 flex flex-col flex-1">
-                    <h3
-                      className="text-2xl font-black text-gray-900 mb-4 transition-colors"
-                      style={{
-                        groupHover: { color: tenantConfig.accentColor },
-                      }}
-                    >
+                  {/* Content */}
+                  <div className="p-6 flex flex-col flex-1">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 leading-snug group-hover:text-opacity-80 transition-colors">
                       {facility.name}
                     </h3>
-                    <p className="text-gray-500 text-base leading-relaxed font-medium mb-10 flex-1">
+                    <p className="text-gray-500 text-sm leading-relaxed mb-4 flex-1">
                       {facility.description}
                     </p>
 
-                    <div className="flex items-center justify-between border-t border-gray-50 pt-8">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-gray-300" />
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                          Main Campus
+                    {/* Feature tags */}
+                    {facility.features?.filter(f => f?.trim()).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {facility.features.filter(f => f?.trim()).map((feat, i) => (
+                          <span
+                            key={i}
+                            className="px-2.5 py-1 text-[11px] font-semibold rounded-full border"
+                            style={{
+                              backgroundColor: `${tenantConfig.accentColor}15`,
+                              borderColor: `${tenantConfig.accentColor}30`,
+                              color: tenantConfig.primaryColor,
+                            }}
+                          >
+                            {feat}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-gray-300" />
+                        <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                          {tenantConfig.shortName}
                         </span>
                       </div>
-                      <button
-                        className="flex items-center gap-3 font-black text-sm uppercase tracking-tighter"
+                      <span
+                        className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide"
                         style={{ color: tenantConfig.accentColor }}
                       >
-                        Explore Space{" "}
-                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-all" />
-                      </button>
+                        View Photos
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                      </span>
                     </div>
                   </div>
                 </div>
