@@ -1774,7 +1774,7 @@ function RequestDetailsModal({
     civil_status: request.civil_status || "",
     date_of_birth: request.date_of_birth || "",
     place_of_birth: request.place_of_birth || "",
-    address: request.address || "",
+    address: request.address || request.details?.currentAddress || "",
     purpose: request.purpose || "",
     date_of_death: request.date_of_death || "",
     cause_of_death: request.cause_of_death || "",
@@ -1782,10 +1782,11 @@ function RequestDetailsModal({
     requestor_name: request.requestor_name || "",
     guardian_name: request.guardian_name || "",
     guardian_relationship: request.guardian_relationship || "",
-    partner_full_name: request.partner_full_name || "",
-    partner_sex: request.partner_sex || "",
-    partner_date_of_birth: request.partner_date_of_birth || "",
-    partner_address: request.partner_address || request.address || "",
+    partner_full_name: request.partner_full_name || request.details?.partnerFullName || "",
+    partner_sex: request.partner_sex || request.details?.partnerSex || "",
+    partner_date_of_birth: request.partner_date_of_birth || request.details?.partnerDateOfBirth || "",
+    partner_place_of_birth: request.partner_place_of_birth || request.details?.partnerPlaceOfBirth || "",
+    partner_address: request.partner_address || request.address || request.details?.currentAddress || "",
     partner_civil_status: request.partner_civil_status || "CO-HABITING",
     no_of_children: request.no_of_children || "0",
     living_together_years: request.living_together_years || "0",
@@ -2962,12 +2963,24 @@ function RequestDetailsModal({
                         </div>
                         <div className="col-span-2">
                           <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1.5">
-                            Partner Address
+                            Partner Place of Birth
                           </p>
                           <input
                             type="text"
-                            name="partner_address"
-                            value={editFormData.partner_address}
+                            name="partner_place_of_birth"
+                            value={editFormData.partner_place_of_birth || ""}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1.5">
+                            Shared Address
+                          </p>
+                          <input
+                            type="text"
+                            name="address"
+                            value={editFormData.address}
                             onChange={handleInputChange}
                             className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-gray-900 uppercase text-sm"
                           />
@@ -3051,15 +3064,21 @@ function RequestDetailsModal({
                         </div>
                         <div className="col-span-2 md:col-span-2">
                           <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1">
-                            Partner Address
+                            Partner Place of Birth
+                          </p>
+                          <p className="font-semibold text-gray-800 text-sm uppercase">
+                            {request.partner_place_of_birth || request.details?.partnerPlaceOfBirth || "NOT RECORDED"}
+                          </p>
+                        </div>
+                        <div className="col-span-2 md:col-span-2">
+                          <p className="text-[11px] text-gray-400 uppercase font-semibold tracking-wide mb-1">
+                            Shared Address
                           </p>
                           <p
                             className="font-extrabold text-gray-900 text-[13px] uppercase leading-relaxed"
-                            title={request.partner_address || request.address}
+                            title={request.address || request.details?.currentAddress}
                           >
-                            {request.partner_address ||
-                              request.address ||
-                              "N/A"}
+                            {request.address || request.details?.currentAddress || "N/A"}
                           </p>
                         </div>
                         <div>
