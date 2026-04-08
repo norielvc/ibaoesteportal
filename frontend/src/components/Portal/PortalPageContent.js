@@ -64,7 +64,7 @@ export default function PortalPageContent({ initialTenantId }) {
   }, []);
 
   const [tenantConfig, setTenantConfig] = useState({
-    name: "BARANGAY PORTAL",
+    name: "BARANGAY",
     shortName: "Barangay",
     subtitle: "Public Information and Service Center",
     logo: "/logo.png",
@@ -97,7 +97,7 @@ export default function PortalPageContent({ initialTenantId }) {
     if (tenantId === "demo") {
       setTenantConfig({
         tenant_id: "demo",
-        name: "DEMO BARANGAY PORTAL",
+        name: "DEMO BARANGAY",
         shortName: "Demo Barangay",
         subtitle: "Sample Municipality, Philippines",
         logo: "/images/bdlogo.png",
@@ -115,7 +115,7 @@ export default function PortalPageContent({ initialTenantId }) {
     } else {
       setTenantConfig({
         tenant_id: tenantId,
-        name: "IBA O' ESTE PORTAL",
+        name: "IBA O' ESTE",
         shortName: "Iba O' Este",
         subtitle: "Calumpit, Bulacan",
         logo: "/logo.png",
@@ -1081,7 +1081,7 @@ export default function PortalPageContent({ initialTenantId }) {
                 style={{ backgroundColor: tenantConfig.primaryColor }}
               >
                 <div className="absolute inset-0 w-1/2 h-full bg-white/20 skew-x-[-20deg] -translate-x-full group-hover:translate-x-[250%] transition-transform duration-700"></div>
-                <span className="relative z-10">Login Portal</span>
+                <span className="relative z-10">Login</span>
               </button>
             </div>
 
@@ -2082,7 +2082,7 @@ export default function PortalPageContent({ initialTenantId }) {
                       className={`w-full sm:w-auto px-10 py-4 ${tenantId === "demo" ? "bg-black" : "bg-[#112117]"} text-white rounded-2xl font-black hover:bg-black transition-all shadow-xl ${tenantId === "demo" ? "hover:shadow-zinc-900/20" : "hover:shadow-green-900/20"} text-sm flex items-center justify-center gap-3 group`}
                     >
                       <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                      BACK TO PORTAL
+                      BACK
                     </button>
                     <div className="flex items-center gap-3">
                       <div className="text-right hidden sm:block">
