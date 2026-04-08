@@ -87,9 +87,10 @@ export default function UnifiedCertModal({
   isDemo = false,
   extraStep1 = null,
   extraStep3 = null,
+  extraStep4 = null,   // optional 4th step (e.g. address for cohabitation)
   requirePurpose = true,
   step3Label = "State Your Purpose / Sabihin ang Layunin",
-  extraFormData = {},   // additional fields merged into submission (e.g. partnerFullName)
+  extraFormData = {},
 }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -334,14 +335,14 @@ export default function UnifiedCertModal({
           {/* Progress Steps */}
           <div className="px-8 pt-5 shrink-0">
             <div className="max-w-3xl mx-auto flex items-center justify-between">
-              {[1, 2, 3].map((s) => (
+              {[1, 2, 3, ...(extraStep4 ? [4] : [])].map((s) => (
                 <React.Fragment key={s}>
                   <div className="flex flex-col items-center">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black transition-all ${currentStep >= s ? 'bg-black text-white scale-110' : 'bg-gray-100 text-gray-300'}`}>
                       {currentStep > s ? <CheckCircle className="w-6 h-6 text-emerald-400" /> : s}
                     </div>
                   </div>
-                  {s < 3 && <div className={`flex-1 h-1 mx-4 rounded-full ${currentStep > s ? 'bg-black' : 'bg-gray-100'}`} />}
+                  {s < (extraStep4 ? 4 : 3) && <div className={`flex-1 h-1 mx-4 rounded-full ${currentStep > s ? 'bg-black' : 'bg-gray-100'}`} />}
                 </React.Fragment>
               ))}
             </div>
@@ -447,6 +448,13 @@ export default function UnifiedCertModal({
                   )}
                 </div>
               )}
+
+              {/* Step 4: Optional extra step (e.g. address for cohabitation) */}
+              {extraStep4 && currentStep === 4 && (
+                <div className="space-y-5 animate-in slide-in-from-right-8 duration-500">
+                  {extraStep4}
+                </div>
+              )}
             </div>
           </div>
 
@@ -458,22 +466,28 @@ export default function UnifiedCertModal({
               </button>
             ) : <div />}
 
-            {currentStep < 3 ? (
-              <button onClick={() => {
-                if (currentStep === 1 && !formData.fullName) { setErrors({ fullName: true }); return; }
-                if (currentStep === 2 && !formData.contactNumber) { setErrors({ contactNumber: true }); return; }
-                setCurrentStep(p => p + 1);
-              }} className="px-12 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-zinc-800 transition-all flex items-center gap-3">
-                Next Step / Susunod <ChevronRight className="w-5 h-5" />
-              </button>
-            ) : (
-              <button onClick={() => {
-                if (requirePurpose && !formData.purpose.trim()) { setErrors({ purpose: true }); return; }
-                setShowConfirmation(true);
-              }} className="px-12 py-4 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center gap-3 hover:opacity-90 active:scale-95" style={{ backgroundColor: accentColor }}>
-                <Send className="w-5 h-5" /> Submit Request / I-submit ang Request
-              </button>
-            )}
+            {(() => {
+              const totalSteps = extraStep4 ? 4 : 3;
+              if (currentStep < totalSteps) {
+                return (
+                  <button onClick={() => {
+                    if (currentStep === 1 && !formData.fullName) { setErrors({ fullName: true }); return; }
+                    if (currentStep === 2 && !formData.contactNumber) { setErrors({ contactNumber: true }); return; }
+                    setCurrentStep(p => p + 1);
+                  }} className="px-12 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-zinc-800 transition-all flex items-center gap-3">
+                    Next Step / Susunod <ChevronRight className="w-5 h-5" />
+                  </button>
+                );
+              }
+              return (
+                <button onClick={() => {
+                  if (requirePurpose && !formData.purpose.trim()) { setErrors({ purpose: true }); return; }
+                  setShowConfirmation(true);
+                }} className="px-12 py-4 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center gap-3 hover:opacity-90 active:scale-95" style={{ backgroundColor: accentColor }}>
+                  <Send className="w-5 h-5" /> Submit Request / I-submit ang Request
+                </button>
+              );
+            })()}
           </div>
         </div>
       </div>
