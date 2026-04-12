@@ -427,8 +427,8 @@ export default function MobileQRScannerPage() {
                     <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
                     <p className="text-xs text-amber-700 font-medium leading-relaxed">No active events found. Please create one in the dashboard to start scanning.</p>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Scanning Target */}
               <div className="space-y-6">
