@@ -9,6 +9,9 @@ import {
   Smartphone,
   Zap,
   User,
+  Calendar,
+  HardDrive,
+  Info
 } from "lucide-react";
 import { isAuthenticated, getAuthToken } from "@/lib/auth";
 
