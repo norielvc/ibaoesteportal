@@ -409,62 +409,59 @@ export default function MobileQRScannerPage() {
 
           {/* Duplicate Warning Modal */}
           {duplicateInfo && awaitingAcknowledgment && (
-            <div className="bg-gradient-to-r from-red-400 to-red-500 rounded-2xl p-3 text-white shadow-xl">
-              <div className="text-center mb-2">
-                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <AlertCircle className="w-5 h-5 text-white" />
+            <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-5 text-white shadow-2xl animate-in zoom-in duration-300">
+              <div className="text-center mb-4">
+                <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-md">
+                  <AlertCircle className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-base font-bold">⚠️ Duplicate QR Code!</h3>
-                <p className="text-xs text-red-100">
-                  This QR code has already been scanned
+                <h3 className="text-xl font-black">Hold On!</h3>
+                <p className="text-sm text-amber-100 font-medium">
+                  This QR code was already scanned
                 </p>
               </div>
-
-              <div className="bg-white bg-opacity-20 rounded-xl p-2 mb-2">
-                <div className="text-xs font-semibold text-red-100 mb-1">
-                  QR CODE DATA:
-                </div>
-                <div className="bg-white bg-opacity-20 rounded-lg p-2 mb-2">
-                  <p className="font-mono text-white text-xs font-bold break-all">
-                    {duplicateInfo.qrData}
-                  </p>
-                </div>
-
-                <div className="border-t border-white border-opacity-20 pt-2">
-                  <div className="text-xs font-semibold text-red-100 mb-1">
-                    ORIGINAL SCAN:
+    
+              <div className="bg-black/10 rounded-2xl p-4 mb-4 border border-white/10">
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-[10px] font-bold text-amber-200 uppercase tracking-widest mb-1">
+                      SCANNING CONTEXT
+                    </div>
+                    <p className="text-sm text-white font-bold break-all bg-white/10 p-2 rounded-lg">
+                      {duplicateInfo.qrData}
+                    </p>
                   </div>
-                  <div className="bg-white bg-opacity-10 rounded-lg p-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock className="w-3 h-3 text-white" />
-                      <div className="text-white text-xs font-medium">
-                        {new Date(
-                          duplicateInfo.existingScan.scan_timestamp,
-                        ).toLocaleString()}
+    
+                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/10">
+                    <div>
+                      <div className="text-[10px] font-bold text-amber-200 uppercase tracking-widest mb-1">
+                        BY STAFF
+                      </div>
+                      <div className="flex items-center gap-2 text-white">
+                        <User className="w-3 h-3" />
+                        <span className="text-xs font-bold">{duplicateInfo.existingScan.scanned_by_name || "Unknown"}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <User className="w-3 h-3 text-white" />
-                      <div className="text-white text-xs font-medium">
-                        {duplicateInfo.existingScan.scanned_by}
+                    <div>
+                      <div className="text-[10px] font-bold text-amber-200 uppercase tracking-widest mb-1">
+                        TIMESTAMP
+                      </div>
+                      <div className="flex items-center gap-2 text-white">
+                        <Clock className="w-3 h-3" />
+                        <span className="text-xs font-bold">
+                          {new Date(duplicateInfo.existingScan.scan_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-
-              <div className="text-center mb-2">
-                <p className="text-red-100 text-xs">
-                  You must acknowledge this duplicate before scanning another QR
-                  code
-                </p>
-              </div>
-
+    
               <button
                 onClick={acknowledgeDuplicate}
-                className="w-full bg-white bg-opacity-20 text-white py-2 rounded-xl font-bold text-xs backdrop-blur-sm border border-white border-opacity-30 active:scale-95 transition-transform"
+                className="w-full bg-white text-orange-600 py-4 rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
               >
-                ✓ I Understand - Continue Scanning
+                <CheckCircle className="w-5 h-5" />
+                Acknowledge & Continue
               </button>
             </div>
           )}
@@ -632,35 +629,31 @@ export default function MobileQRScannerPage() {
 
           {/* Error Display */}
           {error && !duplicateInfo && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-3">
-              <div className="flex items-start gap-2">
-                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-4 h-4 text-red-500" />
+            <div className="bg-white rounded-3xl p-6 shadow-2xl border-2 border-red-100 animate-in slide-in-from-bottom duration-300">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-4 border border-red-100 shadow-sm">
+                  <AlertCircle className="w-8 h-8 text-red-500" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-bold text-red-800 mb-2">
-                    Scan Not Saved
-                  </h3>
-                  <div className="text-red-600 mb-2 whitespace-pre-line text-xs">
-                    {error}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setError(null);
-                        triggerCamera();
-                      }}
-                      className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-semibold active:scale-95 transition-transform"
-                    >
-                      Try Again
-                    </button>
-                    <button
-                      onClick={() => setError(null)}
-                      className="bg-gray-100 text-gray-700 px-3 py-1 rounded-lg text-xs font-semibold active:scale-95 transition-transform"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
+                <h3 className="text-xl font-black text-gray-900 mb-2">Scan Failed</h3>
+                <div className="text-gray-500 mb-6 text-sm font-medium leading-relaxed max-w-[280px]">
+                  {error}
+                </div>
+                <div className="grid grid-cols-2 gap-3 w-full">
+                  <button
+                    onClick={() => {
+                      setError(null);
+                      triggerCamera();
+                    }}
+                    className="bg-red-500 text-white py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-red-500/20 active:scale-95 transition-all"
+                  >
+                    Try Again
+                  </button>
+                  <button
+                    onClick={() => setError(null)}
+                    className="bg-gray-100 text-gray-700 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest active:scale-95 transition-all"
+                  >
+                    Dismiss
+                  </button>
                 </div>
               </div>
             </div>

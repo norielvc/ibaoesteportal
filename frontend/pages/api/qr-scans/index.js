@@ -138,18 +138,29 @@ export default async function handler(req, res) {
       // Duplicate check (scoped to event)
       let duplicateQuery = supabase
         .from("qr_scans")
-        .select("*")
+        .select(`
+          *,
+          users:scanned_by(first_name, last_name)
+        `)
         .eq("qr_data", qr_data)
         .eq("tenant_id", tenantId);
       if (event_id) duplicateQuery = duplicateQuery.eq("event_id", event_id);
 
-      const { data: existingScan } = await duplicateQuery.single();
+      const { data: existingScan } = await duplicateQuery.maybeSingle();
 
       if (existingScan) {
+        const scannerName = existingScan.users 
+          ? `${existingScan.users.first_name} ${existingScan.users.last_name}`
+          : "Unknown Staff";
+
         return res.status(409).json({
           success: false,
           isDuplicate: true,
-          message: `Already scanned on ${new Date(existingScan.scan_timestamp).toLocaleString()}`,
+          message: "Already scanned",
+          existingScan: {
+            ...existingScan,
+            scanned_by_name: scannerName
+          },
         });
       }
 
