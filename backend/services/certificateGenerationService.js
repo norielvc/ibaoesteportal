@@ -130,45 +130,81 @@ class CertificateGenerationService {
                 .map(h => h.users.employee_code);
                 
             const uniqueProcessorCodes = [...new Set(previousProcessors)].join(' / ');
-            
+
+            // 1. Get Chairman's Signature specifically for rendering in the PDF
+            const captainSigRecord = (history || []).find(h =>
+                (h.action === 'approve' || h.action === 'forward') &&
+                h.signature_data &&
+                new Date(h.created_at).getTime() > lastReturnTime &&
+                (h.step_name?.toLowerCase().includes('captain') ||
+                 h.step_name?.toLowerCase().includes('chairman') ||
+                 h.step_name?.toLowerCase().includes('punong'))
+            );
+            const captainSignature = captainSigRecord?.signature_data;
+
+            // 2. Get Forwarder Signatures (excluding Chairman)
+            const forwarderSignatures = (history || [])
+                .filter(h =>
+                    ['approve', 'forward'].includes(h.action) &&
+                    h.signature_data &&
+                    new Date(h.created_at).getTime() > lastReturnTime &&
+                    !(h.step_name?.toLowerCase().includes('captain') ||
+                      h.step_name?.toLowerCase().includes('chairman') ||
+                      h.step_name?.toLowerCase().includes('punong'))
+                )
+                .reduce((acc, current) => {
+                   if (!acc.find(item => item.performed_by === current.performed_by)) {
+                       acc.push(current);
+                   }
+                   return acc;
+                }, [])
+                .map(h => h.signature_data);
+
             // Pass a unified object to maintain compatibility with existing template logic
-            const captainApproval = uniqueProcessorCodes ? { users: { employee_code: uniqueProcessorCodes } } : null;
+            const signatureContext = {
+                users: { employee_code: uniqueProcessorCodes },
+                signature_data: captainSignature,
+                forwarderSignatures: forwarderSignatures
+            };
+
+            // Pass history to physical inspection data getter if needed
+            const getInspectionData = async (reqId) => await this.getPhysicalInspectionData(reqId, history, lastReturnTime);
 
             // Generate certificate content based on type
             let certificateContent;
             switch (request.certificate_type) {
                 case 'barangay_clearance':
-                    certificateContent = await this.generateBarangayClearanceContent(request, config, captainApproval);
+                    certificateContent = await this.generateBarangayClearanceContent(request, config, signatureContext, history, lastReturnTime);
                     break;
                 case 'certificate_of_indigency':
-                    certificateContent = this.generateIndigencyContent(request, config, captainApproval);
+                    certificateContent = this.generateIndigencyContent(request, config, signatureContext);
                     break;
                 case 'barangay_residency':
-                    certificateContent = this.generateResidencyContent(request, config, captainApproval);
+                    certificateContent = this.generateResidencyContent(request, config, signatureContext);
                     break;
                 case 'certification_same_person':
-                    certificateContent = this.generateSamePersonContent(request, config, captainApproval);
+                    certificateContent = this.generateSamePersonContent(request, config, signatureContext);
                     break;
                 case 'barangay_guardianship':
-                    certificateContent = this.generateGuardianshipContent(request, config, captainApproval);
+                    certificateContent = this.generateGuardianshipContent(request, config, signatureContext);
                     break;
                 case 'barangay_cohabitation':
-                    certificateContent = this.generateCohabitationContent(request, config, captainApproval);
+                    certificateContent = this.generateCohabitationContent(request, config, signatureContext);
                     break;
                 case 'natural_death':
-                    certificateContent = this.generateNaturalDeathContent(request, config, captainApproval);
+                    certificateContent = this.generateNaturalDeathContent(request, config, signatureContext);
                     break;
                 case 'certification_medico_legal':
-                    certificateContent = this.generateMedicoLegalContent(request, config, captainApproval);
+                    certificateContent = this.generateMedicoLegalContent(request, config, signatureContext);
                     break;
                 case 'business_permit':
                     // Choose template for business permit
                     if (templateType === 'new') {
                         // Explicitly requested new template
-                        certificateContent = await this.generateBusinessClearanceContent(request, config, captainApproval);
+                        certificateContent = await this.generateBusinessClearanceContent(request, config, signatureContext, history, lastReturnTime);
                     } else {
                         // Default to the old Business Permit template (satisfies 'revert' request)
-                        certificateContent = await this.generateBusinessPermitContent(request, config, captainApproval);
+                        certificateContent = await this.generateBusinessPermitContent(request, config, signatureContext, history, lastReturnTime);
                     }
                     break;
                 default:
@@ -322,13 +358,13 @@ class CertificateGenerationService {
       `;
     }
 
-    async generateBarangayClearanceContent(request, config, captainApproval = null) {
+    async generateBarangayClearanceContent(request, config, captainApproval = null, history = null, lastReturnTime = 0) {
         const { officials, styles } = config;
         const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         const bodyStyle = styles.bodyStyle || {};
 
         // Check if this clearance has physical inspection data
-        const inspectionData = await this.getPhysicalInspectionData(request.id);
+        const inspectionData = await this.getPhysicalInspectionData(request.id, history, lastReturnTime);
         const hasInspectionData = inspectionData && Object.keys(inspectionData.areas).some(area =>
             inspectionData.areas[area].findings || inspectionData.areas[area].date || inspectionData.areas[area].remarks
         );
@@ -413,9 +449,14 @@ class CertificateGenerationService {
 
                     <div class="sig-block" style="margin-top: 20px;">
                         <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 40px; position: relative;">
+                            ${this.renderSignature(captainApproval?.signature_data)}
+                        </div>
                         <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
-                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                        <div style="position: relative;">
+                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
+                        </div>
                         ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
                     </div>
                 </div>
@@ -466,9 +507,14 @@ class CertificateGenerationService {
 
                     <div class="sig-block" style="margin-top: 20px;">
                         <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 40px; position: relative;">
+                            ${this.renderSignature(captainApproval?.signature_data)}
+                        </div>
                         <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
-                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                        <div style="position: relative;">
+                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
+                        </div>
                         ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
                     </div>
                 </div>
@@ -519,9 +565,14 @@ class CertificateGenerationService {
 
                     <div class="sig-block" style="margin-top: 20px;">
                         <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 40px; position: relative;">
+                            ${this.renderSignature(captainApproval?.signature_data)}
+                        </div>
                         <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
-                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                        <div style="position: relative;">
+                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
+                        </div>
                         ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
                     </div>
                 </div>
@@ -595,9 +646,14 @@ class CertificateGenerationService {
 
                     <div class="sig-block" style="margin-top: 10px;">
                         <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 40px; position: relative;">
+                            ${this.renderSignature(captainApproval?.signature_data)}
+                        </div>
                         <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
-                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                        <div style="position: relative;">
+                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
+                        </div>
                         ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
                     </div>
                 </div>
@@ -790,11 +846,11 @@ class CertificateGenerationService {
         </html>
         `;
     }
-    async generateBusinessPermitContent(request, config, captainApproval = null) {
+    async generateBusinessPermitContent(request, config, captainApproval = null, history = null, lastReturnTime = 0) {
         try {
             console.log(`[CERT-GEN] Generating Business Permit Content for: ${request.reference_number}`);
             // Get physical inspection data from the new tables
-            const inspectionData = await this.getPhysicalInspectionData(request.id);
+            const inspectionData = await this.getPhysicalInspectionData(request.id, history, lastReturnTime);
             const leftLogoSrc = config.logos?.leftLogo || '';
             const qrCodeSVG = this.generateQRCodeSVG(`${config.baseUrl}/verify/${request.reference_number}`);
             console.log(`[CERT-GEN] Inspection data and QR generated`);
@@ -1024,7 +1080,9 @@ class CertificateGenerationService {
                                     <td style="border-left: none; text-align: left; padding-left: 5px;">${inspectionData.recommendations?.[comm]?.name || ''}</td>
                                     <td style="font-weight: 800;">${comm}</td>
                                     <td>${inspectionData.recommendations?.[comm]?.date || ''}</td>
-                                    <td style="border-right: none;"></td>
+                                    <td style="border-right: none;">
+                                      ${inspectionData.recommendations?.[comm]?.signature_data ? `<img src="${inspectionData.recommendations[comm].signature_data}" style="height: 20px; width: auto; mix-blend-mode: multiply;">` : ''}
+                                    </td>
                                   </tr>
                                 `).join('')}
                             </tbody>
@@ -1033,7 +1091,10 @@ class CertificateGenerationService {
 
                     <div style="margin-top: 15px; padding-left: 5px;">
                       <p style="font-weight: 800; font-size: 10px; margin-bottom: 20px;">C. APPROVAL</p>
-                      <div style="margin-left: 40px;">
+                      <div style="margin-left: 40px; position: relative;">
+                        <div style="position: absolute; left: 0; top: -50px; width: 200px; height: 100px; pointer-events: none; z-index: 20;">
+                          ${captainApproval?.signature_data ? `<img src="${captainApproval.signature_data}" style="width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply;">` : ''}
+                        </div>
                         <p style="font-weight: 900; font-size: 13px; margin: 0; text-transform: uppercase;">${config.officials.chairman}</p>
                         <p style="font-weight: 800; font-size: 11px; margin: 0;">BARANGAY CHAIRMAN</p>
                         ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
@@ -1097,7 +1158,7 @@ class CertificateGenerationService {
         `).join('');
     }
 
-    async getPhysicalInspectionData(requestId) {
+    async getPhysicalInspectionData(requestId, history = null, lastReturnTime = 0) {
         try {
             // Get the main inspection report
             const { data: report, error: reportError } = await supabase
@@ -1105,38 +1166,38 @@ class CertificateGenerationService {
                 .select('*')
                 .eq('request_id', requestId)
                 .single();
-
+ 
             if (reportError && reportError.code !== 'PGRST116') {
                 console.error('Error fetching inspection report:', reportError);
                 return this.getDefaultInspectionData();
             }
-
+ 
             if (!report) {
                 return this.getDefaultInspectionData();
             }
-
+ 
             // Get area findings
             const { data: areaFindings, error: areaError } = await supabase
                 .from('inspection_area_findings')
                 .select('*')
                 .eq('inspection_report_id', report.id);
-
+ 
             if (areaError) {
                 console.error('Error fetching area findings:', areaError);
                 return this.getDefaultInspectionData();
             }
-
+ 
             // Get committee recommendations
             const { data: committeeRecs, error: committeeError } = await supabase
                 .from('committee_recommendations')
                 .select('*')
                 .eq('inspection_report_id', report.id);
-
+ 
             if (committeeError) {
                 console.error('Error fetching committee recommendations:', committeeError);
                 return this.getDefaultInspectionData();
             }
-
+ 
             // Format the data
             const inspectionData = {
                 areas: {},
@@ -1144,7 +1205,7 @@ class CertificateGenerationService {
                 ownerRepresentative: report.owner_representative,
                 recommendations: {}
             };
-
+ 
             // Format area findings
             areaFindings.forEach(area => {
                 inspectionData.areas[area.area_name] = {
@@ -1153,15 +1214,22 @@ class CertificateGenerationService {
                     remarks: area.remarks || ''
                 };
             });
-
+ 
             // Format committee recommendations
             committeeRecs.forEach(committee => {
+                const sig = (history || []).find(h => 
+                   h.signature_data && 
+                   h.step_name?.toUpperCase().includes(committee.committee_name.toUpperCase()) &&
+                   new Date(h.created_at).getTime() > lastReturnTime
+                );
+
                 inspectionData.recommendations[committee.committee_name] = {
                     name: committee.signatory_name || '',
-                    date: committee.recommendation_date || ''
+                    date: committee.recommendation_date || '',
+                    signature_data: sig?.signature_data
                 };
             });
-
+ 
             return inspectionData;
 
         } catch (error) {
@@ -1195,9 +1263,9 @@ class CertificateGenerationService {
         };
     }
 
-    async generateBusinessClearanceContent(request, config, captainApproval = null) {
+    async generateBusinessClearanceContent(request, config, captainApproval = null, history = null, lastReturnTime = 0) {
         // Get physical inspection data
-        const inspectionData = await this.getPhysicalInspectionData(request.id);
+        const inspectionData = await this.getPhysicalInspectionData(request.id, history, lastReturnTime);
 
         // Get OR details if available
         const { data: orData } = await supabase
@@ -1496,8 +1564,14 @@ class CertificateGenerationService {
                         
                         <div class="signature-block">
                             <div class="truly-yours">TRULY YOURS,</div>
+                            <div style="height: 40px; position: relative;">
+                                ${this.renderSignature(captainApproval?.signature_data)}
+                            </div>
                             <div class="signature-name">${config.officials.chairman}</div>
-                            <div class="signature-title">BARANGAY CHAIRMAN</div>
+                            <div style="position: relative;">
+                                <div class="signature-title">BARANGAY CHAIRMAN</div>
+                                ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
+                            </div>
                             ${captainApproval?.users?.employee_code ? `<div style="font-size: 10px; font-weight: bold; margin-top: 2px; color: #666;">${captainApproval.users.employee_code}</div>` : ''}
                         </div>
                     </div>
@@ -1538,9 +1612,14 @@ class CertificateGenerationService {
                     <div class="sig-block"><div class="sig-line"></div><p style="font-size: 11px;">Resident's Signature / Thumb Mark</p></div>
                     <div class="sig-block" style="margin-top: 30px;">
                         <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 40px; position: relative;">
+                            ${this.renderSignature(captainApproval?.signature_data)}
+                        </div>
                         <p style="font-weight: bold; margin: 0; text-transform: uppercase;">${officials.chairman}</p>
-                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                        <div style="position: relative;">
+                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
+                        </div>
                         ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
                     </div>
                 </div>
@@ -1571,9 +1650,14 @@ class CertificateGenerationService {
                 <div class="signature-section">
                     <div class="sig-block" style="margin-top: 30px;">
                         <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 40px; position: relative;">
+                            ${this.renderSignature(captainApproval?.signature_data)}
+                        </div>
                         <p style="font-weight: bold; margin: 0; text-transform: uppercase;">${officials.chairman}</p>
-                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                        <div style="position: relative;">
+                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
+                        </div>
                         ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
                     </div>
                 </div>
@@ -1597,9 +1681,14 @@ class CertificateGenerationService {
                 <div class="signature-section">
                     <div class="sig-block" style="margin-top: 30px;">
                         <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 40px; position: relative;">
+                            ${this.renderSignature(captainApproval?.signature_data)}
+                        </div>
                         <p style="font-weight: bold; margin: 0; text-transform: uppercase;">${officials.chairman}</p>
-                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                        <div style="position: relative;">
+                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
+                        </div>
                         ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
                     </div>
                 </div>
@@ -1630,15 +1719,41 @@ class CertificateGenerationService {
                 <div class="signature-section">
                     <div class="sig-block" style="margin-top: 30px;">
                         <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 40px; position: relative;">
+                            ${this.renderSignature(captainApproval?.signature_data)}
+                        </div>
                         <p style="font-weight: bold; margin: 0; text-transform: uppercase;">${officials.chairman}</p>
-                        <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                        <div style="position: relative;">
+                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
+                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
+                        </div>
                         ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
                     </div>
                 </div>
             </div>
         `;
         return this.generateDocument('REQUEST FOR MEDICO LEGAL', bodyHtml, request, config);
+    }
+
+    renderSignature(signatureData, offsetTop = -65) {
+        if (!signatureData) return '';
+        // Using persistent Base64 or URL for the signature
+        return `
+            <div style="position: relative; height: 0; width: 0; overflow: visible; display: inline-block; vertical-align: middle;">
+                <div style="position: absolute; left: 50%; transform: translateX(-50%); top: ${offsetTop}px; width: 240px; height: 120px; pointer-events: none; z-index: 20; display: flex; align-items: center; justify-content: center;">
+                    <img src="${signatureData}" style="width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply;">
+                </div>
+            </div>
+        `;
+    }
+
+    renderAdditionalSignatures(signatures) {
+        if (!signatures || signatures.length === 0) return '';
+        return `
+            <div style="position: absolute; left: 130px; top: 50%; transform: translateY(-50%); display: flex; gap: 10px; pointer-events: none; z-index: 15;">
+                ${signatures.map(src => `<img src="${src}" style="height: 48px; width: auto; mix-blend-mode: multiply;">`).join('')}
+            </div>
+        `;
     }
 }
 

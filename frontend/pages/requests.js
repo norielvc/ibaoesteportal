@@ -5897,13 +5897,27 @@ function ClearancePreviewForRequests({
   // Determine Issued Date (Final Approval Date or Current Date)
   const captainApproval = history?.find(
     (h) =>
-      h.action === "approve" &&
+      (h.action === "approve" || h.action === "forward") &&
+      h.signature_data &&
       new Date(h.created_at).getTime() > lastReturnTime &&
       (h.step_name?.toLowerCase().includes("captain") ||
         h.step_name?.toLowerCase().includes("chairman") ||
-        h.officialRole === "Brgy. Captain" ||
-        h.official_role === "Brgy. Captain"),
+        h.step_name?.toLowerCase().includes("punong") ||
+        ["Brgy. Captain", "Chairman", "Barangay Chairman", "Punong Barangay"].includes(h.officialRole) ||
+        ["Brgy. Captain", "Chairman", "Barangay Chairman", "Punong Barangay"].includes(h.official_role) ||
+        (h.users && `${h.users.first_name || ''} ${h.users.last_name || ''}`.trim().toUpperCase() === (officials.chairman || '').toUpperCase())),
   );
+
+  const getSignatureForCommittee = (committee) => {
+    if (!history) return null;
+    // Look for signatures in steps that include the committee name
+    const sig = history.find(h =>
+      h.signature_data &&
+      h.step_name?.toUpperCase().includes(committee.toUpperCase()) &&
+      new Date(h.created_at).getTime() > lastReturnTime
+    );
+    return sig?.signature_data;
+  };
 
   // Collect all unique employee codes from previous processors in chronological order, AFTER the most recent return
   const previousProcessors = (history || [])
@@ -6601,7 +6615,16 @@ function ClearancePreviewForRequests({
                               {inspectionData?.recommendations?.[committee]
                                 ?.date || ""}
                             </td>
-                            <td className="border border-black p-1"></td>
+                            <td className="border border-black p-1">
+                              {getSignatureForCommittee(committee) && (
+                                <img
+                                  src={getSignatureForCommittee(committee)}
+                                  className="h-6 w-auto mx-auto object-contain"
+                                  style={{ mixBlendMode: "multiply" }}
+                                  alt="Committee Sig"
+                                />
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -6609,7 +6632,18 @@ function ClearancePreviewForRequests({
 
                     <p className="font-bold mb-6">C. APPROVAL</p>
                     <div className="flex flex-col mb-4 relative ml-4">
-                      {/* Optional e-signature rendering if available and wanted on business permits */}
+                      {captainApproval?.signature_data && (
+                        <div
+                          className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[80%] w-60 h-32 pointer-events-none flex items-center justify-center z-20"
+                          style={{ mixBlendMode: "multiply" }}
+                        >
+                          <img
+                            src={captainApproval.signature_data}
+                            className="w-full h-full object-contain"
+                            alt="Captain Sig"
+                          />
+                        </div>
+                      )}
                       <p className="font-bold text-[14px] uppercase">
                         {officials.chairman}
                       </p>
@@ -7105,7 +7139,7 @@ function ClearancePreviewForRequests({
                                 return history
                                   ?.filter((h) => {
                                     if (
-                                      h.action !== "approve" ||
+                                      !["approve", "forward"].includes(h.action) ||
                                       !h.signature_data
                                     )
                                       return false;
@@ -7123,8 +7157,12 @@ function ClearancePreviewForRequests({
                                       h.step_name
                                         ?.toLowerCase()
                                         .includes("chairman") ||
-                                      h.officialRole === "Brgy. Captain" ||
-                                      h.official_role === "Brgy. Captain";
+                                      h.step_name
+                                        ?.toLowerCase()
+                                        .includes("punong") ||
+                                      ["Brgy. Captain", "Chairman", "Barangay Chairman", "Punong Barangay"].includes(h.officialRole) ||
+                                      ["Brgy. Captain", "Chairman", "Barangay Chairman", "Punong Barangay"].includes(h.official_role) ||
+                                      (h.users && `${h.users.first_name || ''} ${h.users.last_name || ''}`.trim().toUpperCase() === (officials.chairman || '').toUpperCase());
                                     if (isCaptain) return false;
 
                                     // Unique per person
