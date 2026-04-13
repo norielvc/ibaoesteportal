@@ -15,12 +15,12 @@ export default async function handler(req, res) {
 
   const { data, error } = await supabase
     .from("workflow_history")
-    .select("*, users:performed_by (first_name, last_name, email, role)")
+    .select("*, users:performed_by (first_name, last_name, email, role, employee_code)")
     .eq("request_id", requestId)
     .eq("tenant_id", tenantId)
     .order("created_at", { ascending: true });
 
   if (error)
     return res.status(500).json({ success: false, message: error.message });
-  return res.json({ success: true, data: data || [] });
+  return res.json({ success: true, history: data || [] });
 }

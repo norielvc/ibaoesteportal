@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return res.status(403).json({ success: false, message: "Tenant context required" });
 
   const { id } = req.query;
-  const { action, comments, comment } = req.body;
+  const { action, comments, comment, signatureData } = req.body;
   const note = comments || comment || "";
 
   console.log(`[WORKFLOW-ASSIGNMENT] Processing action: ${action} for assignment ID: ${id}`);
@@ -87,6 +87,17 @@ export default async function handler(req, res) {
     .eq("id", requestId)
     .eq("tenant_id", tenantId);
 
+  // 5.5 Fetch config to get current step role
+  const { data: currentWfConfig } = await supabase
+    .from("workflow_configurations")
+    .select("workflow_config")
+    .eq("certificate_type", certType)
+    .eq("tenant_id", tenantId)
+    .single();
+
+  const currentStepsList = currentWfConfig?.workflow_config?.steps || [];
+  const activeStep = currentStepsList.find(s => s.id.toString() === assignment.step_id.toString());
+
   // 6. Log to workflow history
   await supabase.from("workflow_history").insert([{
     tenant_id: tenantId,
@@ -97,6 +108,9 @@ export default async function handler(req, res) {
     action,
     performed_by: user._id,
     comments: note,
+    signature_data: signatureData || null,
+    official_role: activeStep?.officialRole || null,
+    previous_status: cert.status,
     new_status: newCertStatus,
   }]);
 

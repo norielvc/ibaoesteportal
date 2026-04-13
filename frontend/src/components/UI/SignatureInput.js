@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Pen, Upload, Check } from "lucide-react";
-import SignaturePad from "./SignaturePad";
+import { Upload, Check } from "lucide-react";
 import SignatureUpload from "./SignatureUpload";
 
 export default function SignatureInput({

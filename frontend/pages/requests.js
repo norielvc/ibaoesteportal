@@ -44,10 +44,11 @@ import {
   Store,
   Check,
   FilterX,
+  Upload,
 } from "lucide-react";
 import { getAuthToken, getUserData } from "@/lib/auth";
 import Modal from "@/components/UI/Modal";
-import SignaturePad from "@/components/UI/SignaturePad";
+import SignatureUpload from "@/components/UI/SignatureUpload";
 // API Configuration
 const API_URL = "/api";
 
@@ -5125,20 +5126,56 @@ function ActionModal({
                   </div>
                   <div className="bg-white rounded-xl border border-blue-200 p-1 shadow-sm">
                     {!showSignPad && (userSignature || tempSignature) ? (
-                      <div className="relative h-24 flex items-center justify-center rounded-lg bg-gray-50 border-2 border-dashed border-gray-200 hover:border-blue-400 cursor-pointer overflow-hidden group transition-all" onClick={() => setShowSignPad(true)}>
-                        <img src={tempSignature || userSignature} className="h-full object-contain p-2" alt="Sign" />
-                        <div className="absolute inset-0 bg-white/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest border border-blue-200 px-3 py-1 rounded bg-blue-50">Click to Resign</span>
+                      <div className="relative h-28 flex items-center justify-center rounded-2xl bg-emerald-50/30 border-2 border-dashed border-emerald-500/20 hover:border-emerald-500/40 cursor-pointer overflow-hidden group transition-all" onClick={() => setShowSignPad(true)}>
+                        <img
+                          src={tempSignature || userSignature}
+                          className="h-full object-contain p-4 mix-blend-multiply"
+                          alt="Signature Preview"
+                        />
+                        <div className="absolute inset-0 bg-emerald-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                          <span className="text-white text-[10px] font-black uppercase tracking-widest bg-emerald-900/60 px-4 py-2 rounded-full backdrop-blur-md">
+                            Change Signature
+                          </span>
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-white rounded-lg overflow-hidden border border-gray-100">
-                        <SignaturePad onSignatureChange={setTempSignature} height={100} label="" />
-                        <div className="flex bg-gray-50 border-t border-gray-200">
-                          <button onClick={() => setTempSignature(null)} className="flex-1 py-2 text-[10px] font-bold text-gray-500 hover:text-gray-800 uppercase">Clear</button>
-                          <div className="w-px bg-gray-200"></div>
-                          <button onClick={() => setShowSignPad(false)} className="flex-1 py-2 text-[10px] font-black text-blue-600 hover:bg-blue-50 uppercase">Confirm</button>
-                        </div>
+                      <div className="space-y-4">
+                        <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-2xl hover:bg-emerald-50 hover:border-emerald-500 cursor-pointer transition-all group bg-gray-50/30">
+                          <div className="flex flex-col items-center gap-4 text-center">
+                            <div className="p-4 bg-emerald-100/50 text-emerald-600 rounded-2xl group-hover:bg-emerald-200/50 group-hover:scale-110 transition-all duration-300">
+                              <Upload className="w-8 h-8" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-gray-800 uppercase tracking-[0.15em] mb-1">Upload Signature File</p>
+                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest opacity-60">PNG or JPG (transparent bg preferred)</p>
+                            </div>
+                            {(userSignature || tempSignature) && (
+                              <button 
+                                type="button" 
+                                onClick={(e) => { e.preventDefault(); setShowSignPad(false); }}
+                                className="mt-2 text-[9px] font-black text-emerald-600 uppercase tracking-widest hover:underline"
+                              >
+                                ← Back to saved signature
+                              </button>
+                            )}
+                          </div>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (readerEvent) => {
+                                  setTempSignature(readerEvent.target.result);
+                                  setShowSignPad(false);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                        </label>
                       </div>
                     )}
                   </div>
@@ -5160,27 +5197,45 @@ function ActionModal({
 
           <div className="flex items-center gap-3">
             {actionType === "approve" && canUseEsign ? (
-              <>
+              <div className="flex items-center gap-4">
                 <button
                   onClick={() => onSubmit(null, null, null, comment)}
                   disabled={processing}
-                  className="px-6 py-3 rounded-xl border-2 border-gray-100 text-[11px] font-black text-gray-600 uppercase tracking-widest hover:border-gray-300 hover:bg-gray-50 transition-all"
+                  className="px-8 py-4 rounded-2xl border-2 border-gray-100 text-[12px] font-black text-gray-500 uppercase tracking-widest hover:border-emerald-200 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all disabled:opacity-50"
                 >
-                  Approve w/o Signature
+                  Approve Without Signature
                 </button>
-                <button
-                  onClick={() => onSubmit(tempSignature || userSignature, null, null, comment)}
-                  disabled={processing || (!tempSignature && !userSignature)}
-                  className="px-8 py-3 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300 transform active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {processing ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <PenTool className="w-4 h-4" />
+                
+                <div className="relative group">
+                  <button
+                    onClick={() => {
+                      const finalSig = tempSignature || userSignature;
+                      if (!finalSig) {
+                        toast.error("Please provide or select a signature to use this option.");
+                        return;
+                      }
+                      onSubmit(finalSig, null, null, comment);
+                    }}
+                    disabled={processing || (!tempSignature && !userSignature)}
+                    className={`px-10 py-4 bg-emerald-600 text-white rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-emerald-200 hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-3 ${
+                      (!tempSignature && !userSignature) ? "opacity-30 cursor-not-allowed grayscale" : ""
+                    }`}
+                  >
+                    {processing ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <PenTool className="w-5 h-5" />
+                    )}
+                    Approve With Signature
+                  </button>
+                  
+                  {isEsignRole && !tempSignature && !userSignature && (
+                    <p className="absolute -top-10 right-0 text-[10px] font-bold text-rose-500 uppercase animate-pulse whitespace-nowrap bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-rose-100 shadow-sm pointer-events-none">
+                      ⚠️ Upload signature to use this option
+                    </p>
                   )}
-                  Approve with Signature
-                </button>
-              </>
+                </div>
+              </div>
             ) : (
               <button
                 onClick={() => onSubmit(null, null, null, comment)}
@@ -5188,12 +5243,12 @@ function ActionModal({
                   processing ||
                   (["reject", "return"].includes(actionType) && !comment.trim())
                 }
-                className={`px-8 py-3 ${cfg.buttonBg} text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`px-10 py-4 ${cfg.buttonBg} text-white rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {processing ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <cfg.icon className="w-4 h-4" />
+                  <cfg.icon className="w-5 h-5" />
                 )}
                 {cfg.buttonText}
               </button>
@@ -5895,18 +5950,55 @@ function ClearancePreviewForRequests({
       : 0;
 
   // Determine Issued Date (Final Approval Date or Current Date)
-  const captainApproval = history?.find(
-    (h) =>
-      (h.action === "approve" || h.action === "forward") &&
-      h.signature_data &&
-      new Date(h.created_at).getTime() > lastReturnTime &&
-      (h.step_name?.toLowerCase().includes("captain") ||
-        h.step_name?.toLowerCase().includes("chairman") ||
-        h.step_name?.toLowerCase().includes("punong") ||
-        ["Brgy. Captain", "Chairman", "Barangay Chairman", "Punong Barangay"].includes(h.officialRole) ||
-        ["Brgy. Captain", "Chairman", "Barangay Chairman", "Punong Barangay"].includes(h.official_role) ||
-        (h.users && `${h.users.first_name || ''} ${h.users.last_name || ''}`.trim().toUpperCase() === (officials.chairman || '').toUpperCase())),
-  );
+  const CAPTAIN_ROLES = ["BRGY. CAPTAIN", "CHAIRMAN", "BARANGAY CHAIRMAN", "PUNONG BARANGAY"];
+  const captainApproval = !history ? null : history.find(h => {
+    const hasAction = h.action === 'approve' || h.action === 'forward' || h.action === 'create';
+    if (!hasAction || !h.signature_data) return false;
+    
+    // Check timing
+    if (new Date(h.created_at).getTime() <= lastReturnTime) return false;
+    
+    // Check Step Name
+    const sName = (h.step_name || '').toUpperCase();
+    if (sName.includes('CAPTAIN') || sName.includes('CHAIRMAN') || sName.includes('PUNONG')) return true;
+    
+    // Check Roles (Case Insensitive)
+    const hRole = (h.officialRole || h.official_role || h.privilegeRole || h.privilege_role || '').toUpperCase();
+    if (CAPTAIN_ROLES.some(r => hRole.includes(r))) return true;
+    
+    // Check Name Match
+    const pName = h.users ? `${h.users.first_name || ''} ${h.users.last_name || ''}`.trim().toUpperCase() : (h.performed_by_name || '').toUpperCase();
+    const cName = (officials.chairman || 'RICARDO S. VILLANUEVA').toUpperCase();
+    if (pName && (pName.includes(cName) || cName.includes(pName))) return true;
+    
+    return false;
+  });
+
+  const secretaryApproval = !history ? null : history.find(h => {
+    const hasAction = h.action === 'approve' || h.action === 'forward';
+    if (!hasAction || !h.signature_data) return false;
+    if (new Date(h.created_at).getTime() <= lastReturnTime) return false;
+    
+    // Check Step Name or Role
+    const sName = (h.step_name || '').toUpperCase();
+    const hRole = (h.officialRole || h.official_role || '').toUpperCase();
+    if (sName.includes('SECRETARY') || hRole.includes('SECRETARY')) return true;
+    
+    return false;
+  });
+
+  // Determine the display name and role for the Captain/Chairman section
+  const captainName = captainApproval?.users 
+    ? `${captainApproval.users.first_name || ''} ${captainApproval.users.last_name || ''}`.trim()
+    : captainApproval?.performed_by_name || officials.chairman || 'RICARDO S. VILLANUEVA';
+    
+  const secretaryName = secretaryApproval?.users 
+    ? `${secretaryApproval.users.first_name || ''} ${secretaryApproval.users.last_name || ''}`.trim()
+    : secretaryApproval?.performed_by_name || officials.secretary || 'JOEY MANIO';
+    
+  const detectedRole = captainApproval 
+    ? (captainApproval.official_role || captainApproval.officialRole || captainApproval.privilege_role || captainApproval.privilegeRole || 'Barangay Chairman').toUpperCase()
+    : 'BARANGAY CHAIRMAN';
 
   const getSignatureForCommittee = (committee) => {
     if (!history) return null;
@@ -5923,7 +6015,7 @@ function ClearancePreviewForRequests({
   const previousProcessors = (history || [])
     .filter(
       (h) =>
-        ["create", "approve", "forward", "physical_inspection"].includes(
+        ["create", "submitted", "approve", "forward", "physical_inspection"].includes(
           h.action,
         ) && h.users?.employee_code,
     )
@@ -6309,11 +6401,11 @@ function ClearancePreviewForRequests({
                             </div>
                           )}
                           <p className="font-bold text-[22px] uppercase relative z-10 text-black">
-                            {officials.chairman}
+                            {captainName}
                           </p>
                           <div className="flex flex-col relative z-10">
                             <p className="text-[16px] font-bold text-gray-900 uppercase tracking-tight">
-                              BARANGAY CHAIRMAN
+                              {detectedRole || 'BARANGAY CHAIRMAN'}
                             </p>
                             {uniqueProcessorCodes && (
                               <p className="text-[10px] font-bold text-gray-500 mt-0.5">
@@ -6645,10 +6737,10 @@ function ClearancePreviewForRequests({
                         </div>
                       )}
                       <p className="font-bold text-[14px] uppercase">
-                        {officials.chairman}
+                        {captainName}
                       </p>
                       <p className="font-bold text-[13px] uppercase">
-                        BARANGAY CHAIRMAN
+                        {detectedRole || 'BARANGAY CHAIRMAN'}
                       </p>
                       {uniqueProcessorCodes && (
                         <p className="text-[10px] font-bold text-gray-500 mt-0.5">
@@ -7094,93 +7186,62 @@ function ClearancePreviewForRequests({
                         >
                           TRULY YOURS,
                         </p>
-
+ 
                         <div className="relative inline-block">
-                          {/* Big Backdrop Signature centered horizontally but positioned above name */}
-                          {captainApproval?.signature_data && (
-                            <div
-                              className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[80%] w-60 h-32 pointer-events-none flex items-center justify-center z-20"
-                              style={{ mixBlendMode: "multiply" }}
-                            >
-                              <img
-                                src={captainApproval.signature_data}
-                                className="w-full h-full object-contain"
-                                alt="Captain Sig"
-                              />
+                          <div className="flex items-center gap-1 relative z-10">
+                            <div className="relative">
+                              {captainApproval?.signature_data && (
+                                <>
+                                  <div
+                                    className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[75%] w-64 h-32 pointer-events-none flex items-center justify-center z-20"
+                                    style={{ mixBlendMode: "multiply" }}
+                                  >
+                                    <img
+                                      src={captainApproval.signature_data}
+                                      className="w-full h-full object-contain"
+                                      alt="Captain Sig"
+                                    />
+                                  </div>
+                                  <div className="absolute left-[70%] top-0 -translate-y-[140%] text-[5px] text-gray-400 whitespace-nowrap opacity-70 font-medium z-30 flex flex-col leading-tight border-l border-gray-300 pl-1">
+                                      <span className="font-bold text-gray-500">{captainName}</span>
+                                      <span>{new Date(captainApproval.created_at).toLocaleDateString("en-US")}</span>
+                                      <span>{new Date(captainApproval.created_at).toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                                  </div>
+                                </>
+                              )}
+                              <p
+                                className="uppercase font-bold mb-0 whitespace-nowrap"
+                                style={{ fontSize: "20px" }}
+                              >
+                                {captainName}
+                              </p>
                             </div>
-                          )}
+                            {secretaryApproval?.signature_data && (
+                              <div className="h-12 w-28 pointer-events-none mb-1 -ml-3 flex items-center gap-1">
+                                <img
+                                  src={secretaryApproval.signature_data}
+                                  className="h-full w-full object-contain mix-blend-multiply"
+                                  alt="Sec Sig"
+                                />
+                                <div className="text-[5px] text-gray-400 whitespace-nowrap leading-tight flex flex-col self-end mb-2 opacity-70 font-medium border-l border-gray-300 pl-1">
+                                  <span className="font-bold text-gray-500">{secretaryName}</span>
+                                  <span>{new Date(secretaryApproval.created_at).toLocaleDateString("en-US")}</span>
+                                  <span>{new Date(secretaryApproval.created_at).toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
 
-                          <p
-                            className="uppercase font-bold mb-1 relative z-10"
-                            style={{ fontSize: "20px" }}
-                          >
-                            {officials.chairman}
-                          </p>
-
-                          <div className="relative flex items-center z-10">
+                          <div className="relative flex items-center z-10 w-full mb-2 -mt-1.5">
                             <div className="flex flex-col">
-                              <p className="text-[15px] font-bold shrink-0">
-                                BARANGAY CHAIRMAN
+                              <p className="text-[14px] font-bold shrink-0 leading-tight">
+                                {detectedRole || 'BARANGAY CHAIRMAN'}
                               </p>
                               {uniqueProcessorCodes && (
-                                <p className="text-[10px] font-bold text-gray-500 mt-0.5 shrink-0">
+                                <p className="text-[9px] font-bold text-gray-500 mt-0.5 shrink-0 leading-tight">
                                   {uniqueProcessorCodes}
                                 </p>
                               )}
-                            </div>
-
-                            {/* Additional Forwarder Signatures (Backdrop Overlay - does not affect text layout) */}
-                            <div
-                              className="absolute left-32 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none"
-                              style={{ mixBlendMode: "multiply" }}
-                            >
-                              {(() => {
-                                const seenSignatories = new Set();
-                                return history
-                                  ?.filter((h) => {
-                                    if (
-                                      !["approve", "forward"].includes(h.action) ||
-                                      !h.signature_data
-                                    )
-                                      return false;
-                                    if (
-                                      new Date(h.created_at).getTime() <=
-                                      lastReturnTime
-                                    )
-                                      return false;
-
-                                    // Skip captain/chairman signatures as they are handled separately above
-                                    const isCaptain =
-                                      h.step_name
-                                        ?.toLowerCase()
-                                        .includes("captain") ||
-                                      h.step_name
-                                        ?.toLowerCase()
-                                        .includes("chairman") ||
-                                      h.step_name
-                                        ?.toLowerCase()
-                                        .includes("punong") ||
-                                      ["Brgy. Captain", "Chairman", "Barangay Chairman", "Punong Barangay"].includes(h.officialRole) ||
-                                      ["Brgy. Captain", "Chairman", "Barangay Chairman", "Punong Barangay"].includes(h.official_role) ||
-                                      (h.users && `${h.users.first_name || ''} ${h.users.last_name || ''}`.trim().toUpperCase() === (officials.chairman || '').toUpperCase());
-                                    if (isCaptain) return false;
-
-                                    // Unique per person
-                                    if (seenSignatories.has(h.performed_by))
-                                      return false;
-                                    seenSignatories.add(h.performed_by);
-                                    return true;
-                                  })
-                                  .map((sigEntry, idx) => (
-                                    <div key={idx} className="h-12 w-28">
-                                      <img
-                                        src={sigEntry.signature_data}
-                                        className="h-full w-full object-contain"
-                                        alt="Official Sig"
-                                      />
-                                    </div>
-                                  ));
-                              })()}
                             </div>
                           </div>
                         </div>

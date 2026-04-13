@@ -124,7 +124,7 @@ class CertificateGenerationService {
 
             // Collect all unique employee codes from previous processors in chronological order, AFTER the most recent return
             const previousProcessors = (history || [])
-                .filter(h => ['create', 'approve', 'forward', 'physical_inspection'].includes(h.action) && h.users?.employee_code)
+                .filter(h => ['create', 'submitted', 'approve', 'forward', 'physical_inspection'].includes(h.action) && h.users?.employee_code)
                 .filter(h => new Date(h.created_at).getTime() > lastReturnTime)
                 .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
                 .map(h => h.users.employee_code);
@@ -133,24 +133,51 @@ class CertificateGenerationService {
 
             // 1. Get Chairman's Signature specifically for rendering in the PDF
             const captainSigRecord = (history || []).find(h =>
+                (h.action === 'approve' || h.action === 'forward' || h.action === 'create') &&
+                h.signature_data &&
+                new Date(h.created_at).getTime() > lastReturnTime &&
+                (
+                    h.step_name?.toLowerCase().includes('captain') ||
+                    h.step_name?.toLowerCase().includes('chairman') ||
+                    h.step_name?.toLowerCase().includes('punong') ||
+                    h.official_role?.toLowerCase().includes('captain') ||
+                    h.official_role?.toLowerCase().includes('chairman') ||
+                    h.official_role?.toLowerCase().includes('punong')
+                )
+            );
+            const captainSignature = captainSigRecord?.signature_data;
+
+            // 1b. Get Secretary's Signature specifically
+            const secretarySigRecord = (history || []).find(h =>
                 (h.action === 'approve' || h.action === 'forward') &&
                 h.signature_data &&
                 new Date(h.created_at).getTime() > lastReturnTime &&
-                (h.step_name?.toLowerCase().includes('captain') ||
-                 h.step_name?.toLowerCase().includes('chairman') ||
-                 h.step_name?.toLowerCase().includes('punong'))
+                (
+                  (h.step_name?.toLowerCase().includes('secretary')) ||
+                  (h.official_role?.toLowerCase().includes('secretary'))
+                )
             );
-            const captainSignature = captainSigRecord?.signature_data;
+            const secretarySignature = secretarySigRecord?.signature_data;
+            const secretaryName = secretarySigRecord?.users 
+                ? `${secretarySigRecord.users.first_name || ''} ${secretarySigRecord.users.last_name || ''}`.trim() 
+                : secretarySigRecord?.performed_by_name || '';
 
             // 2. Get Forwarder Signatures (excluding Chairman)
             const forwarderSignatures = (history || [])
                 .filter(h =>
-                    ['approve', 'forward'].includes(h.action) &&
+                    ['approve', 'forward', 'physical_inspection'].includes(h.action) &&
                     h.signature_data &&
                     new Date(h.created_at).getTime() > lastReturnTime &&
-                    !(h.step_name?.toLowerCase().includes('captain') ||
-                      h.step_name?.toLowerCase().includes('chairman') ||
-                      h.step_name?.toLowerCase().includes('punong'))
+                    !(
+                      (h.step_name?.toLowerCase().includes('captain') ||
+                       h.step_name?.toLowerCase().includes('chairman') ||
+                       h.step_name?.toLowerCase().includes('punong') ||
+                       h.step_name?.toLowerCase().includes('secretary')) ||
+                      (h.official_role?.toLowerCase().includes('captain') ||
+                       h.official_role?.toLowerCase().includes('chairman') ||
+                       h.official_role?.toLowerCase().includes('punong') ||
+                       h.official_role?.toLowerCase().includes('secretary'))
+                    )
                 )
                 .reduce((acc, current) => {
                    if (!acc.find(item => item.performed_by === current.performed_by)) {
@@ -160,11 +187,23 @@ class CertificateGenerationService {
                 }, [])
                 .map(h => h.signature_data);
 
+            const captainName = captainSigRecord?.users 
+                ? `${captainSigRecord.users.first_name || ''} ${captainSigRecord.users.last_name || ''}`.trim() 
+                : captainSigRecord?.performed_by_name || config.officials.chairman;
+
+            const captainRole = captainSigRecord?.official_role || 'BARANGAY CHAIRMAN';
+
             // Pass a unified object to maintain compatibility with existing template logic
             const signatureContext = {
                 users: { employee_code: uniqueProcessorCodes },
                 signature_data: captainSignature,
-                forwarderSignatures: forwarderSignatures
+                created_at: captainSigRecord?.created_at,
+                secretary_signature: secretarySignature,
+                secretary_name: secretaryName,
+                secretary_created_at: secretarySigRecord?.created_at,
+                forwarderSignatures: forwarderSignatures,
+                officialName: captainName,
+                officialRole: captainRole
             };
 
             // Pass history to physical inspection data getter if needed
@@ -447,18 +486,7 @@ class CertificateGenerationService {
                         </div>
                     </div>
 
-                    <div class="sig-block" style="margin-top: 20px;">
-                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px; position: relative;">
-                            ${this.renderSignature(captainApproval?.signature_data)}
-                        </div>
-                        <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
-                        <div style="position: relative;">
-                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
-                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
-                        </div>
-                        ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
-                    </div>
+                    ${this.renderTrulyYours(captainApproval, officials)}
                 </div>
             </div>
         `;
@@ -498,24 +526,13 @@ class CertificateGenerationService {
                     Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName}, ${config.headerInfo.municipality}, ${config.headerInfo.province}.
                 </p>
 
-                <div class="signature-section">
-                    <div class="sig-block">
-                        <div class="sig-line" style="border-bottom: 1px solid #000; width: 300px; height: 40px; margin: 20px 0 5px 0;">
-                            <p style="font-size: 12px; margin: 0; padding-top: 45px;">Resident's Signature / Thumb Mark</p>
-                        </div>
+                <div class="signature-section" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px;">
+                    <div class="sig-block" style="text-align: left;">
+                        <div class="sig-line" style="border-bottom: 1px solid #000; width: 250px; height: 30px; margin: 0 0 5px 0;"></div>
+                        <p style="font-size: 11px; margin: 0;">Resident's Signature / Thumb Mark</p>
                     </div>
-
-                    <div class="sig-block" style="margin-top: 20px;">
-                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px; position: relative;">
-                            ${this.renderSignature(captainApproval?.signature_data)}
-                        </div>
-                        <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
-                        <div style="position: relative;">
-                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
-                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
-                        </div>
-                        ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
+                    <div class="sig-block" style="text-align: left; position: relative; min-width: 320px;">
+                        ${this.renderTrulyYours(captainApproval, officials)}
                     </div>
                 </div>
             </div>
@@ -556,24 +573,14 @@ class CertificateGenerationService {
                     Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName}, ${config.headerInfo.municipality}, ${config.headerInfo.province}.
                 </p>
 
-                <div class="signature-section">
-                    <div class="sig-block">
-                        <div class="sig-line" style="border-bottom: 1px solid #000; width: 300px; height: 40px; margin: 20px 0 5px 0;">
-                            <p style="font-size: 12px; margin: 0; padding-top: 45px;">Resident's Signature / Thumb Mark</p>
-                        </div>
+                <div class="signature-section" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px;">
+                    <div class="sig-block" style="text-align: left;">
+                        <div class="sig-line" style="border-bottom: 1px solid #000; width: 250px; height: 30px; margin: 0 0 5px 0;"></div>
+                        <p style="font-size: 11px; margin: 0;">Resident's Signature / Thumb Mark</p>
                     </div>
 
-                    <div class="sig-block" style="margin-top: 20px;">
-                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px; position: relative;">
-                            ${this.renderSignature(captainApproval?.signature_data)}
-                        </div>
-                        <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
-                        <div style="position: relative;">
-                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
-                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
-                        </div>
-                        ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
+                    <div class="sig-block" style="text-align: left; position: relative; min-width: 320px;">
+                        ${this.renderTrulyYours(captainApproval, officials)}
                     </div>
                 </div>
             </div>
@@ -644,18 +651,7 @@ class CertificateGenerationService {
                         </div>
                     </div>
 
-                    <div class="sig-block" style="margin-top: 10px;">
-                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px; position: relative;">
-                            ${this.renderSignature(captainApproval?.signature_data)}
-                        </div>
-                        <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em;">${officials.chairman}</p>
-                        <div style="position: relative;">
-                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
-                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
-                        </div>
-                        ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
-                    </div>
+                    ${this.renderTrulyYours(captainApproval, officials)}
                 </div>
             </div>
         `;
@@ -1095,9 +1091,16 @@ class CertificateGenerationService {
                         <div style="position: absolute; left: 0; top: -50px; width: 200px; height: 100px; pointer-events: none; z-index: 20;">
                           ${captainApproval?.signature_data ? `<img src="${captainApproval.signature_data}" style="width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply;">` : ''}
                         </div>
-                        <p style="font-weight: 900; font-size: 13px; margin: 0; text-transform: uppercase;">${config.officials.chairman}</p>
-                        <p style="font-weight: 800; font-size: 11px; margin: 0;">BARANGAY CHAIRMAN</p>
-                        ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <p style="font-weight: 900; font-size: 13px; margin: 0; text-transform: uppercase;">${captainApproval?.officialName || config.officials.chairman}</p>
+                            ${captainApproval?.secretary_signature ? `
+                            <div style="height: 35px; width: 80px;">
+                                <img src="${captainApproval.secretary_signature}" style="width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply;">
+                            </div>
+                            ` : ''}
+                        </div>
+                        <p style="font-weight: 800; font-size: 11px; margin: 0;">${captainApproval?.officialRole || 'BARANGAY CHAIRMAN'}</p>
+                        ${captainApproval?.users?.employee_code ? `<p style="font-size: 11px; font-weight: bold; margin: 0; color: #000;">${captainApproval.users.employee_code}</p>` : ''}
                       </div>
                     </div>
                 </div>
@@ -1563,16 +1566,7 @@ class CertificateGenerationService {
                         </div>
                         
                         <div class="signature-block">
-                            <div class="truly-yours">TRULY YOURS,</div>
-                            <div style="height: 40px; position: relative;">
-                                ${this.renderSignature(captainApproval?.signature_data)}
-                            </div>
-                            <div class="signature-name">${config.officials.chairman}</div>
-                            <div style="position: relative;">
-                                <div class="signature-title">BARANGAY CHAIRMAN</div>
-                                ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
-                            </div>
-                            ${captainApproval?.users?.employee_code ? `<div style="font-size: 10px; font-weight: bold; margin-top: 2px; color: #666;">${captainApproval.users.employee_code}</div>` : ''}
+                             ${this.renderTrulyYours(captainApproval, officials)}
                         </div>
                     </div>
                 </div>
@@ -1609,19 +1603,7 @@ class CertificateGenerationService {
                 </div>
                 <p style="margin: 40px 0;">Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName}, ${config.headerInfo.municipality}, ${config.headerInfo.province} upon the request of above mentioned persons for any legal purposes it may serve.</p>
                 <div class="signature-section">
-                    <div class="sig-block"><div class="sig-line"></div><p style="font-size: 11px;">Resident's Signature / Thumb Mark</p></div>
-                    <div class="sig-block" style="margin-top: 30px;">
-                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px; position: relative;">
-                            ${this.renderSignature(captainApproval?.signature_data)}
-                        </div>
-                        <p style="font-weight: bold; margin: 0; text-transform: uppercase;">${officials.chairman}</p>
-                        <div style="position: relative;">
-                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
-                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
-                        </div>
-                        ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
-                    </div>
+                    ${this.renderTrulyYours(captainApproval, officials)}
                 </div>
             </div>
         `;
@@ -1648,18 +1630,7 @@ class CertificateGenerationService {
                 </div>
                 <p style="margin: 40px 0;">Issued this <strong>${currentDate}</strong> at ${config.headerInfo.barangayName} for legal purposes.</p>
                 <div class="signature-section">
-                    <div class="sig-block" style="margin-top: 30px;">
-                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px; position: relative;">
-                            ${this.renderSignature(captainApproval?.signature_data)}
-                        </div>
-                        <p style="font-weight: bold; margin: 0; text-transform: uppercase;">${officials.chairman}</p>
-                        <div style="position: relative;">
-                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
-                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
-                        </div>
-                        ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
-                    </div>
+                    ${this.renderTrulyYours(captainApproval, officials)}
                 </div>
             </div>
         `;
@@ -1679,18 +1650,7 @@ class CertificateGenerationService {
                 <p style="margin: 20px 0;">This also certifies that the death was <strong>${details.covidRelated ? 'COVID-19' : 'NON-COVID'}</strong> related.</p>
                 <p style="margin: 40px 0;">Issued this <strong>${currentDate}</strong> for burial/legal purposes.</p>
                 <div class="signature-section">
-                    <div class="sig-block" style="margin-top: 30px;">
-                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px; position: relative;">
-                            ${this.renderSignature(captainApproval?.signature_data)}
-                        </div>
-                        <p style="font-weight: bold; margin: 0; text-transform: uppercase;">${officials.chairman}</p>
-                        <div style="position: relative;">
-                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
-                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
-                        </div>
-                        ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
-                    </div>
+                    ${this.renderTrulyYours(captainApproval, officials)}
                 </div>
             </div>
         `;
@@ -1717,18 +1677,7 @@ class CertificateGenerationService {
                 </div>
                 <p style="margin: 40px 0;">Issued this <strong>${currentDate}</strong> for medical record purposes.</p>
                 <div class="signature-section">
-                    <div class="sig-block" style="margin-top: 30px;">
-                        <p style="font-weight: bold; margin: 0;">TRULY YOURS,</p>
-                        <div style="height: 40px; position: relative;">
-                            ${this.renderSignature(captainApproval?.signature_data)}
-                        </div>
-                        <p style="font-weight: bold; margin: 0; text-transform: uppercase;">${officials.chairman}</p>
-                        <div style="position: relative;">
-                            <p style="font-size: 11px; font-weight: bold; margin: 0;">BARANGAY CHAIRMAN</p>
-                            ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
-                        </div>
-                        ${captainApproval?.users?.employee_code ? `<p style="font-size: 10px; font-weight: bold; margin: 0; color: #666;">${captainApproval.users.employee_code}</p>` : ''}
-                    </div>
+                    ${this.renderTrulyYours(captainApproval, officials)}
                 </div>
             </div>
         `;
@@ -1752,6 +1701,46 @@ class CertificateGenerationService {
         return `
             <div style="position: absolute; left: 130px; top: 50%; transform: translateY(-50%); display: flex; gap: 10px; pointer-events: none; z-index: 15;">
                 ${signatures.map(src => `<img src="${src}" style="height: 48px; width: auto; mix-blend-mode: multiply;">`).join('')}
+            </div>
+        `;
+    }
+
+    renderTrulyYours(captainApproval, officials) {
+        const chairmanName = captainApproval.officialName || officials.chairman;
+        const secretaryName = captainApproval.secretary_name || officials.secretary;
+        return `
+            <div class="sig-block" style="margin-top: 20px; text-align: left;">
+                <p style="font-weight: bold; margin: 20px 0 10px 0;">TRULY YOURS,</p>
+                <div style="display: flex; align-items: center; gap: 5px; position: relative; z-index: 10;">
+                    <div style="position: relative; display: inline-block;">
+                        <div style="position: absolute; left: 50%; transform: translateX(-50%) translateY(-65%); top: 0; width: 240px; height: 120px; pointer-events: none; z-index: 20; display: flex; align-items: center; justify-content: center;">
+                            ${captainApproval?.signature_data ? `<img src="${captainApproval.signature_data}" style="width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply;">` : ''}
+                        </div>
+                        <div style="position: absolute; left: 95%; top: 0; transform: translateY(-130%); font-size: 4px; color: #888; white-space: nowrap; line-height: 1.2; opacity: 0.8; z-index: 30; border-left: 0.5px solid #ccc; padding-left: 2px;">
+                            <div style="font-weight: bold; color: #666; font-size: 4.5px;">${chairmanName.toUpperCase()}</div>
+                            <div>${new Date(captainApproval?.created_at).toLocaleDateString("en-US")}</div>
+                            <div>${new Date(captainApproval?.created_at).toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
+                        </div>
+                        <p style="font-weight: bold; margin: 0; text-transform: uppercase; font-size: 1.1em; white-space: nowrap;">${chairmanName}</p>
+                    </div>
+                    ${captainApproval?.secretary_signature ? `
+                    <div style="display: flex; align-items: center; gap: 2px;">
+                        <div style="height: 48px; width: 120px; margin-bottom: 5px; margin-left: -5px;">
+                            <img src="${captainApproval.secretary_signature}" style="width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply;">
+                        </div>
+                        <div style="font-size: 4px; color: #888; white-space: nowrap; line-height: 1.2; opacity: 0.8; align-self: flex-end; margin-bottom: 8px; border-left: 0.5px solid #ccc; padding-left: 2px;">
+                            <div style="font-weight: bold; color: #666; font-size: 4.5px;">${secretaryName.toUpperCase()}</div>
+                            <div>${new Date(captainApproval?.secretary_created_at).toLocaleDateString("en-US")}</div>
+                            <div>${new Date(captainApproval?.secretary_created_at).toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                <div style="position: relative; margin-top: -3px;">
+                    <p style="font-size: 10px; font-weight: bold; margin: 0; line-height: 1;">${captainApproval.officialRole || 'BARANGAY CHAIRMAN'}</p>
+                    ${this.renderAdditionalSignatures(captainApproval?.forwarderSignatures)}
+                </div>
+                ${captainApproval?.users?.employee_code ? `<p style="font-size: 11px; font-weight: bold; margin: 0; color: #000;">${captainApproval.users.employee_code}</p>` : ''}
             </div>
         `;
     }
