@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
 
   const { ref } = req.query;
-  const tenantId = req.headers['x-tenant-id'];
+  const tenantId = (req.headers['x-tenant-id'] || '').toLowerCase();
 
   if (!ref) return res.status(400).json({ success: false, message: 'Reference number required' });
   if (!tenantId) return res.status(400).json({ success: false, message: 'Tenant context required' });

@@ -42,7 +42,7 @@ import {
   Trophy,
   Target,
   Quote,
-  Image,
+  Image as ImageIcon,
 } from "lucide-react";
 import BarangayClearanceModal from "@/components/Forms/BarangayClearanceModal";
 import IndigencyCertificateModal from "@/components/Forms/IndigencyCertificateModal";
@@ -57,7 +57,7 @@ import SamePersonCertificateModal from "@/components/Forms/SamePersonCertificate
 
 export default function PortalPageContent({ initialTenantId }) {
   const router = useRouter();
-  const [tenantId, setTenantId] = useState(initialTenantId || "ibaoeste");
+  const [tenantId, setTenantId] = useState((initialTenantId || "ibaoeste").toLowerCase());
 
   // Version Check Log
   useEffect(() => {
@@ -91,7 +91,7 @@ export default function PortalPageContent({ initialTenantId }) {
   const API_URL = getApiUrl().replace(/\/$/, "");
 
   useEffect(() => {
-    if (initialTenantId) setTenantId(initialTenantId);
+    if (initialTenantId) setTenantId(initialTenantId.toLowerCase());
   }, [initialTenantId]);
 
   useEffect(() => {
@@ -171,104 +171,179 @@ export default function PortalPageContent({ initialTenantId }) {
   const [selectedFacility, setSelectedFacility] = useState(null);
   const [facilityImageIndex, setFacilityImageIndex] = useState(0);
 
+  const [subscription, setSubscription] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [lockedFeature, setLockedFeature] = useState(null);
+
+  // Fetch subscription info for this tenant to handle feature gating
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      if (!tenantId) return;
+      try {
+        // Residents can see public subscription status (plan name/features)
+        const res = await fetch(`/api/subscription/usage?tenantId=${tenantId}`);
+        const data = await res.json();
+        if (data.success) {
+          setSubscription(data.data);
+        }
+      } catch (e) {
+        console.error("Subscription fetch error:", e);
+      }
+    };
+    fetchSubscription();
+  }, [tenantId]);
+
+  const isFeatureLocked = (featureKey) => {
+    if (!subscription) return false; // Still loading
+    
+    // Pro plan bypass - all features unlocked
+    if (subscription.planId === 'pro' || subscription.requests?.total === -1) {
+      return false;
+    }
+    
+    // Standard plan - basic 3 certificates + portal sections always unlocked
+    const basicCertificates = ['barangay_clearance', 'certificate_of_indigency', 'barangay_residency'];
+    const standardFeatures = ['facilities', 'programs', 'achievements'];
+    
+    if (subscription.planId === 'standard') {
+      if (basicCertificates.includes(featureKey) || standardFeatures.includes(featureKey)) {
+        return false;
+      }
+    }
+    
+    // Check if featureKey is in the allowed list from database
+    return subscription.features && !subscription.features.includes(featureKey);
+  };
+
+  const handleFeatureClick = (featureKey, featureTitle, openModalAction) => {
+    if (isFeatureLocked(featureKey)) {
+      setLockedFeature(featureTitle);
+      setShowUpgradeModal(true);
+      return;
+    }
+    openModalAction(true);
+  };
+
   const forms = useMemo(
     () => [
       {
+        id: "barangay_clearance",
         title: "Barangay Clearance",
         description:
           "Official clearance for employment, business permits, and other legal purposes.",
         icon: Shield,
         color: "blue",
         features: ["Employment", "Business", "Legal"],
-        onClick: () => setShowClearanceModal(true),
+        locked: isFeatureLocked("barangay_clearance"),
+        onClick: () => handleFeatureClick("barangay_clearance", "Barangay Clearance", setShowClearanceModal),
       },
       {
+        id: "certificate_of_indigency",
         title: "Certificate of Indigency",
         description:
           "Proof of financial status for medical, educational, and social assistance programs.",
         icon: FileText,
         color: "green",
         features: ["Medical", "Education", "Assistance"],
-        onClick: () => setShowIndigencyModal(true),
+        locked: isFeatureLocked("certificate_of_indigency"),
+        onClick: () => handleFeatureClick("certificate_of_indigency", "Certificate of Indigency", setShowIndigencyModal),
       },
       {
+        id: "barangay_residency",
         title: "Barangay Residency",
         description: `Certificate confirming your residence in ${tenantConfig.shortName} for various requirements.`,
         icon: Home,
         color: "orange",
         features: ["Proof", "Enrollment", "ID"],
-        onClick: () => setShowResidencyModal(true),
+        locked: isFeatureLocked("barangay_residency"),
+        onClick: () => handleFeatureClick("barangay_residency", "Barangay Residency", setShowResidencyModal),
       },
       {
+        id: "business_permit",
         title: "Business Permit",
         description: `Official permit to operate a business within ${tenantConfig.shortName} barangay jurisdiction.`,
         icon: Building2,
         color: "purple",
         features: ["New Business", "Renewal", "Transfer"],
-        onClick: () => setShowBusinessPermitModal(true),
+        locked: isFeatureLocked("business_permit"),
+        onClick: () => handleFeatureClick("business_permit", "Business Permit", setShowBusinessPermitModal),
       },
       {
+        id: "business_closure",
         title: "Business Closure",
         description:
           "Official notice to cease business operations within the barangay.",
         icon: Briefcase,
         color: "blue",
         features: ["Liquidation", "Permit Exit", "Tax Clearance"],
-        onClick: () => setShowComingSoonModal(true),
+        locked: isFeatureLocked("business_permit"), // Grouped with business
+        onClick: () => handleFeatureClick("business_permit", "Business Closure", setShowComingSoonModal),
       },
       {
+        id: "barangay_cohabitation",
         title: "Co-habitation",
         description:
           "Certification for couples living together without formal marriage.",
         icon: Heart,
         color: "green",
         features: ["Live-in", "Relationship", "Proof"],
-        onClick: () => setShowCohabitationModal(true),
+        locked: isFeatureLocked("barangay_cohabitation"),
+        onClick: () => handleFeatureClick("barangay_cohabitation", "Co-habitation", setShowCohabitationModal),
       },
       {
+        id: "medico_legal",
         title: "Medico-legal",
         description:
           "Official document for cases requiring medical and legal coordination.",
         icon: Stethoscope,
         color: "orange",
         features: ["Accident", "Legal Case", "Medical Report"],
-        onClick: () => setShowMedicoLegalModal(true),
+        locked: isFeatureLocked("medico_legal"),
+        onClick: () => handleFeatureClick("medico_legal", "Medico-legal", setShowMedicoLegalModal),
       },
       {
+        id: "certification_same_person",
         title: "Certification of Same Person",
         description:
           "Certification that differences in name records refer to the same individual.",
         icon: Fingerprint,
         color: "purple",
         features: ["ID Match", "Affidavit", "Verification"],
-        onClick: () => setShowSamePersonModal(true),
+        locked: isFeatureLocked("certification_same_person"),
+        onClick: () => handleFeatureClick("certification_same_person", "Certification of Same Person", setShowSamePersonModal),
       },
       {
+        id: "barangay_guardianship",
         title: "Guardianship",
         description:
           "Legal certification for designated guardians of minors or dependents.",
         icon: UserPlus,
         color: "blue",
         features: ["Legal Guardian", "Minor Support", "Custody"],
-        onClick: () => setShowGuardianshipModal(true),
+        locked: isFeatureLocked("barangay_guardianship"),
+        onClick: () => handleFeatureClick("barangay_guardianship", "Guardianship", setShowGuardianshipModal),
       },
       {
+        id: "natural_death",
         title: "Natural Death",
         description:
           "Official certification for natural death recording and burial requirements.",
         icon: Flower2,
         color: "green",
         features: ["Certified", "Family Record", "Cemetery"],
-        onClick: () => setShowNaturalDeathModal(true),
+        locked: isFeatureLocked("natural_death"),
+        onClick: () => handleFeatureClick("natural_death", "Natural Death", setShowNaturalDeathModal),
       },
       {
+        id: "educational_assistance",
         title: "Educational Assistance",
         description:
           "Apply for scholarship and financial support for studying residents.",
         icon: GraduationCap,
         color: "blue",
         features: ["Scholarship", "Allowance", "Education"],
-        onClick: () => setShowEducationalAssistanceModal(true),
+        locked: isFeatureLocked("educational_assistance"),
+        onClick: () => handleFeatureClick("educational_assistance", "Educational Assistance", setShowEducationalAssistanceModal),
       },
     ],
     [
@@ -284,6 +359,7 @@ export default function PortalPageContent({ initialTenantId }) {
       setShowSamePersonModal,
       setShowEducationalAssistanceModal,
       tenantConfig.shortName,
+      subscription, // Important: re-memo if subscription data changes
     ],
   );
 
@@ -398,8 +474,6 @@ export default function PortalPageContent({ initialTenantId }) {
   // Load events from API
   useEffect(() => {
     const fetchEvents = async () => {
-      // Small delay on first load to ensure interceptor is ready
-      await new Promise((r) => setTimeout(r, 100));
       if (!tenantId) return;
       try {
         console.log(
@@ -422,35 +496,12 @@ export default function PortalPageContent({ initialTenantId }) {
           throw new Error("API results empty - falling back");
         }
       } catch (error) {
-        console.warn(
-          "📡 API Fallback: Serving events from internal resilience store",
+        console.error(
+          "❌ Events API failed - no fallback data will be shown",
           error.message,
         );
-        const internalEvents = [
-          {
-            id: "ev-1",
-            title: "Community Health Fair",
-            date: "2026-04-15",
-            description: "Free check-ups at the Plaza.",
-            tenant_id: "ibaoeste",
-            image: "/images/seniorcitizens.jpg",
-          },
-          {
-            id: "ev-2",
-            title: "Barangay cleanup",
-            date: "2026-04-20",
-            description: "Join the green drive.",
-            tenant_id: "demo",
-            image: "/images/barangay-officials.jpg",
-          },
-        ];
-        setNewsItems(
-          internalEvents.filter(
-            (e) =>
-              e.tenant_id === tenantId ||
-              (tenantId === "demo" && e.tenant_id === "demo"),
-          ),
-        );
+        // Don't show fake data - leave empty
+        setNewsItems([]);
       }
     };
 
@@ -475,8 +526,6 @@ export default function PortalPageContent({ initialTenantId }) {
   // Load facilities from API
   useEffect(() => {
     const fetchFacilities = async () => {
-      // Small delay on first load to ensure interceptor is ready
-      await new Promise((r) => setTimeout(r, 150));
       if (!tenantId) return;
       try {
         console.log(
@@ -504,40 +553,12 @@ export default function PortalPageContent({ initialTenantId }) {
           throw new Error("API results empty - falling back");
         }
       } catch (error) {
-        console.warn(
-          "📡 API Fallback: Serving facilities from internal resilience store",
+        console.error(
+          "❌ Facilities API failed - no fallback data will be shown",
           error.message,
         );
-        const internalFacilities = [
-          {
-            id: "f-1",
-            name: "Barangay Hall",
-            icon: "Building2",
-            description: "Central Administrative Center for public services.",
-            tenant_id: "ibaoeste",
-            images: ["/images/barangay-officials.jpg"],
-          },
-          {
-            id: "f-2",
-            name: "Digital Center",
-            icon: "Cpu",
-            description: "State-of-the-art tech hub for smart governance.",
-            tenant_id: "demo",
-            images: ["/images/seniorcitizens.jpg"],
-          },
-        ];
-        // Filter by tenant
-        const filtered = internalFacilities.filter(
-          (f) =>
-            f.tenant_id === tenantId ||
-            (tenantId === "demo" && f.tenant_id === "demo"),
-        );
-        // Map icons
-        const processed = filtered.map((f) => ({
-          ...f,
-          icon: getIconComponent(f.icon),
-        }));
-        setFacilities(processed);
+        // Don't show fake data - leave empty
+        setFacilities([]);
       }
     };
 
@@ -563,8 +584,6 @@ export default function PortalPageContent({ initialTenantId }) {
   // Fetch local government details and achievements
   useEffect(() => {
     const fetchData = async () => {
-      // Small delay on first load to ensure interceptor is ready
-      await new Promise((r) => setTimeout(r, 200));
       if (!tenantId) return;
       console.log(
         `🌐 BRGY PORTAL [V2.5]: Fetching dynamic content for tenant: ${tenantId}`,
@@ -586,29 +605,12 @@ export default function PortalPageContent({ initialTenantId }) {
           setOfficials(officialsData.data);
         }
       } catch (err) {
-        console.warn(
-          "📡 API Fallback: Serving officials from internal resilience store",
+        console.error(
+          "❌ Officials API failed - no fallback data will be shown",
           err.message,
         );
-        const internalOfficials = [
-          {
-            name: "Hon. Juan Dela Cruz",
-            position: "Punong Barangay",
-            position_type: "captain",
-            image_url: "/images/brgycaptain.png",
-          },
-          {
-            name: "Hon. Maria Clara Santos",
-            position: "Barangay Secretary",
-            position_type: "secretary",
-          },
-          {
-            name: "Hon. Cardo Dalisay",
-            position: "Kagawad 1",
-            position_type: "kagawad",
-          },
-        ];
-        setOfficials(internalOfficials);
+        // Don't show fake data - leave empty
+        setOfficials([]);
       }
 
       try {
@@ -649,26 +651,9 @@ export default function PortalPageContent({ initialTenantId }) {
           }
         }
       } catch (err) {
-        console.warn("📡 API Fallback: Achievements store");
-        const internalAchievements = [
-          {
-            id: "a-1",
-            title: "Cleanest Barangay 2025",
-            description: "Awarded for excellence in waste management.",
-            year: "2025",
-            category: "Environment",
-            image: "/images/cleanup.jpg",
-          },
-          {
-            id: "a-2",
-            title: "Smart Governance Award",
-            description: "Digital Transformation leader of the year.",
-            year: "2024",
-            category: "Technology",
-            image: "/images/tech-center.jpg",
-          },
-        ];
-        setAchievements(internalAchievements);
+        console.error("❌ Achievements API failed - no fallback data will be shown", err.message);
+        // Don't show fake data - leave empty
+        setAchievements([]);
       }
 
       try {
@@ -683,32 +668,9 @@ export default function PortalPageContent({ initialTenantId }) {
           }
         }
       } catch (error) {
-        console.warn("📡 API Fallback: Programs skipped");
-        const internalPrograms = [
-          {
-            id: "p-1",
-            title: "Solid Waste Management",
-            description: "Monthly collection and recycling drive.",
-            image: "/images/cleanup.jpg",
-            tenant_id: "ibaoeste",
-          },
-          {
-            id: "p-2",
-            title: "Senior Citizen Wellness",
-            description:
-              "Health checkups and social engagement for our elders.",
-            image: "/images/seniorcitizens.jpg",
-            tenant_id: "demo",
-          },
-        ];
-        setPrograms(
-          internalPrograms.filter(
-            (p) =>
-              !p.tenant_id ||
-              p.tenant_id === tenantId ||
-              (tenantId === "demo" && p.tenant_id === "demo"),
-          ),
-        );
+        console.error("❌ Programs API failed - no fallback data will be shown", error.message);
+        // Don't show fake data - leave empty
+        setPrograms([]);
       }
 
       try {
@@ -1012,6 +974,7 @@ export default function PortalPageContent({ initialTenantId }) {
             <div className="relative group shrink-0">
               <div className="absolute -inset-1 bg-white/20 rounded-full blur opacity-40 group-hover:opacity-75 transition duration-500"></div>
               <img
+                loading="eager"
                 src={tenantConfig.logo}
                 alt="Barangay Logo"
                 className="relative h-14 w-14 md:h-16 md:w-16 lg:h-24 lg:w-24 object-contain drop-shadow-2xl brightness-110"
@@ -1476,7 +1439,7 @@ export default function PortalPageContent({ initialTenantId }) {
                               {/* Content */}
                               <div className="relative">
                                 <h3
-                                  className="text-xl md:text-2xl font-black text-gray-900 mb-3 leading-tight transition-colors"
+                                  className="text-xl md:text-2xl font-black text-gray-900 mb-3 leading-tight transition-colors flex items-center flex-wrap"
                                   style={{
                                     groupHover: {
                                       color: tenantConfig.accentColor,
@@ -1484,8 +1447,13 @@ export default function PortalPageContent({ initialTenantId }) {
                                   }}
                                 >
                                   {form.title}
+                                  {form.locked && (
+                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black bg-gray-100 text-gray-400 border border-gray-200 uppercase tracking-tighter">
+                                      <Shield className="w-2.5 h-2.5 mr-1" /> Locked
+                                    </span>
+                                  )}
                                 </h3>
-                                <p className="text-gray-500 mb-8 leading-relaxed text-sm md:text-base font-medium">
+                                <p className={`text-gray-500 mb-8 leading-relaxed text-sm md:text-base font-medium ${form.locked ? 'opacity-40' : ''}`}>
                                   {form.description}
                                 </p>
 
@@ -1506,16 +1474,21 @@ export default function PortalPageContent({ initialTenantId }) {
                                 {/* Premium Button */}
                                 <button
                                   onClick={form.onClick}
-                                  className="w-full py-4 rounded-2xl font-black text-white transition-all flex items-center justify-center gap-3 shadow-lg group/btn overflow-hidden relative"
+                                  disabled={form.locked}
+                                  className={`w-full py-4 rounded-2xl font-black text-white transition-all flex items-center justify-center gap-3 shadow-lg group/btn overflow-hidden relative ${form.locked ? 'grayscale opacity-40 cursor-not-allowed' : ''}`}
                                   style={{
-                                    backgroundColor: tenantConfig.primaryColor,
+                                    backgroundColor: form.locked ? '#9ca3af' : tenantConfig.primaryColor,
                                   }}
                                 >
                                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
                                   <span className="relative z-10">
-                                    Request Certificate
+                                    {form.locked ? 'Locked (Upgrade Needed)' : 'Request Certificate'}
                                   </span>
-                                  <Plus className="w-5 h-5 relative z-10 group-hover/btn:rotate-90 transition-transform" />
+                                  {form.locked ? (
+                                    <Shield className="w-5 h-5 relative z-10" />
+                                  ) : (
+                                    <Plus className="w-5 h-5 relative z-10 group-hover/btn:rotate-90 transition-transform" />
+                                  )}
                                 </button>
                               </div>
                             </div>
@@ -1524,17 +1497,11 @@ export default function PortalPageContent({ initialTenantId }) {
                       })}
                     </div>
 
-                    {/* Navigation Arrows - Improved positioning */}
+                    {/* Navigation Arrows */}
                     <button
                       onClick={() => {
-                        const maxSlide = Math.max(
-                          0,
-                          forms.length - itemsPerView,
-                        );
-                        setCurrentFormSlide(
-                          (prev) =>
-                            (prev - 1 + (maxSlide + 1)) % (maxSlide + 1),
-                        );
+                        const maxSlide = Math.max(0, forms.length - itemsPerView);
+                        setCurrentFormSlide((prev) => (prev - 1 + (maxSlide + 1)) % (maxSlide + 1));
                       }}
                       className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border opacity-80 hover:opacity-100"
                       style={{
@@ -1546,13 +1513,8 @@ export default function PortalPageContent({ initialTenantId }) {
                     </button>
                     <button
                       onClick={() => {
-                        const maxSlide = Math.max(
-                          0,
-                          forms.length - itemsPerView,
-                        );
-                        setCurrentFormSlide(
-                          (prev) => (prev + 1) % (maxSlide + 1),
-                        );
+                        const maxSlide = Math.max(0, forms.length - itemsPerView);
+                        setCurrentFormSlide((prev) => (prev + 1) % (maxSlide + 1));
                       }}
                       className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 backdrop-blur-sm shadow-xl rounded-full flex items-center justify-center transition-all z-20 border opacity-80 hover:opacity-100"
                       style={{
@@ -1566,19 +1528,12 @@ export default function PortalPageContent({ initialTenantId }) {
 
                   {/* Dots Navigation */}
                   <div className="flex justify-center gap-2 mt-8">
-                    {Array.from({
-                      length: forms.length - (itemsPerView - 1),
-                    }).map((_, index) => (
+                    {Array.from({ length: Math.max(0, forms.length - (itemsPerView - 1)) }).map((_, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentFormSlide(index)}
                         className={`w-3 h-3 rounded-full transition-all ${currentFormSlide === index ? "w-8 shadow-lg" : "bg-gray-400 hover:bg-gray-500"}`}
-                        style={{
-                          backgroundColor:
-                            currentFormSlide === index
-                              ? tenantConfig.primaryColor
-                              : undefined,
-                        }}
+                        style={{ backgroundColor: currentFormSlide === index ? tenantConfig.primaryColor : undefined }}
                       />
                     ))}
                   </div>
@@ -1606,395 +1561,240 @@ export default function PortalPageContent({ initialTenantId }) {
         </div>
       </section>
 
-      <section className="py-20 md:py-32 bg-white w-full border-t border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-16">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-            <div className="max-w-2xl">
-              <div
-                className="h-1 w-12 mb-6 rounded-full"
-                style={{ backgroundColor: tenantConfig.accentColor }}
-              ></div>
-              <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight">
-                Community{" "}
-                <span style={{ color: tenantConfig.accentColor }}>
-                  Programs
-                </span>{" "}
-                & Initiatives
-              </h2>
-            </div>
-            <p className="text-gray-500 text-lg md:text-xl font-medium max-w-sm">
-              Empowering our residents through sustainable and inclusive
-              programs.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
-            {programs.map((program, idx) => (
-              <div
-                key={program.id || idx}
-                className="flex flex-col group cursor-pointer h-full program-card"
-                onClick={() => setSelectedProgram(program)}
-              >
-                <div className="w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden mb-6 bg-gray-100 premium-shadow transition-all duration-700 group-hover:-translate-y-2">
-                  <img
-                    src={
-                      program.image ||
-                      "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800"
-                    }
-                    alt={program.title}
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                  />
-                </div>
-                <div className="flex flex-col flex-1 px-2">
-                  <p
-                    className="text-[10px] font-black uppercase tracking-[0.3em] mb-3"
-                    style={{ color: tenantConfig.accentColor }}
-                  >
-                    {program.category}
-                  </p>
-                  <h3
-                    className="text-gray-900 text-xl font-black mb-3 leading-snug transition-colors"
-                    style={{ color: "inherit" }}
-                  >
-                    {program.title}
-                  </h3>
-                  <p className="text-gray-500 text-sm md:text-base leading-relaxed mb-4 flex-1 font-medium">
-                    {program.description}
-                  </p>
-                  <div
-                    className="flex items-center gap-2 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all"
-                    style={{ color: tenantConfig.accentColor }}
-                  >
-                    View Impact <ChevronRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Facilities Section - Cinematic Overhaul */}
-      <section id="directory" className="relative bg-gray-50 overflow-hidden">
-        {/* Top Carousel Hero - Cinematic Split Frame */}
-        <div className="relative w-full h-[60vh] min-h-[500px] lg:h-[70vh] bg-gray-950 overflow-hidden">
-          {facilities.flatMap((f) => f.images || []).length > 0 ? (
-            facilities
-              .flatMap((f) => f.images || [])
-              .filter((img, i, arr) => arr.indexOf(img) === i)
-              .map((img, index) => (
+      {/* Programs Section */}
+      {!isFeatureLocked('programs') && (
+        <section className="py-20 md:py-32 bg-white w-full border-t border-gray-100">
+          <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-16">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+              <div className="max-w-2xl">
                 <div
-                  key={index}
-                  className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${heroCarouselIndex === index ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}
-                >
-                  <img
-                    src={img}
-                    alt={`Facility slide ${index + 1}`}
-                    className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-[2000ms]"
-                  />
-                </div>
-              ))
-          ) : (
-            <div className="absolute inset-0 bg-gray-900 animate-pulse"></div>
-          )}
-
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
-
-          {/* Cinematic Floating Content */}
-          <div className="absolute inset-0 z-20 flex items-center px-8 sm:px-12 lg:px-24">
-            <div className="max-w-4xl">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="h-px w-20 bg-white/30"></div>
-                <div className="flex items-center gap-2 px-6 py-2 bg-white/10 backdrop-blur-xl rounded-full border border-white/10 shadow-2xl">
-                  <span
-                    className="w-2 h-2 rounded-full animate-pulse"
-                    style={{ backgroundColor: tenantConfig.accentColor }}
-                  />
-                  <span className="text-[11px] font-black tracking-[0.4em] uppercase text-white">
-                    Public Spaces
-                  </span>
-                </div>
+                  className="h-1 w-12 mb-6 rounded-full"
+                  style={{ backgroundColor: tenantConfig.accentColor }}
+                ></div>
+                <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight">
+                  Community{" "}
+                  <span style={{ color: tenantConfig.accentColor }}>
+                    Programs
+                  </span>{" "}
+                  & Initiatives
+                </h2>
               </div>
-
-              <h2 className="text-4xl md:text-7xl lg:text-8xl font-black text-white leading-[1] mb-8 tracking-tighter">
-                COMMUNITY
-                <br />
-                <span
-                  className="text-transparent bg-clip-text"
-                  style={{
-                    backgroundImage: `linear-gradient(to right, #fff, ${tenantConfig.accentColor})`,
-                  }}
-                >
-                  FACILITIES
-                </span>
-              </h2>
-
-              <p
-                className="text-gray-300 text-lg md:text-xl font-medium mb-12 max-w-xl leading-relaxed italic border-l-2 pl-6"
-                style={{ borderColor: tenantConfig.accentColor }}
-              >
-                "Inaalagaan para sa bawat mamamayan. Quality spaces designed for
-                growth, sports, and community wellness."
+              <p className="text-gray-500 text-lg md:text-xl font-medium max-w-sm">
+                Empowering our residents through sustainable and inclusive
+                programs.
               </p>
-
-              {/* Navigation Indicators */}
-              <div className="flex items-center gap-4">
-                {facilities
-                  .flatMap((f) => f.images || [])
-                  .filter((img, i, arr) => arr.indexOf(img) === i)
-                  .map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setHeroCarouselIndex(idx)}
-                      className={`h-0.5 transition-all duration-500 rounded-full ${heroCarouselIndex === idx ? "w-12 opacity-100" : "w-4 opacity-30 bg-white"}`}
-                      style={{
-                        backgroundColor:
-                          heroCarouselIndex === idx
-                            ? tenantConfig.accentColor
-                            : undefined,
-                      }}
-                    />
-                  ))}
-              </div>
             </div>
-          </div>
 
-          {/* Navigation Controls - Minimalist */}
-          <button
-            onClick={() => {
-              const totalImages =
-                facilities
-                  .flatMap((f) => f.images || [])
-                  .filter((img, i, arr) => arr.indexOf(img) === i).length || 1;
-              setHeroCarouselIndex((prev) =>
-                prev === 0 ? totalImages - 1 : prev - 1,
-              );
-            }}
-            className="absolute left-6 bottom-12 z-30 w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white transition-all hover:bg-white/10 backdrop-blur-md group"
-          >
-            <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-          </button>
-          <button
-            onClick={() => {
-              const totalImages =
-                facilities
-                  .flatMap((f) => f.images || [])
-                  .filter((img, i, arr) => arr.indexOf(img) === i).length || 1;
-              setHeroCarouselIndex((prev) =>
-                prev === totalImages - 1 ? 0 : prev + 1,
-              );
-            }}
-            className="absolute left-24 bottom-12 z-30 w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white transition-all hover:bg-white/10 backdrop-blur-md group"
-          >
-            <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
-        {/* Section Header */}
-        <div className="max-w-[1600px] mx-auto px-8 lg:px-16 pt-16 pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.3em] mb-2" style={{ color: tenantConfig.accentColor }}>
-                Our Facilities
-              </p>
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
-                Community Spaces
-              </h2>
-            </div>
-            <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
-              {facilities.length} facilit{facilities.length === 1 ? "y" : "ies"} available to residents
-            </p>
-          </div>
-        </div>
-
-        {/* Cards Grid */}
-        <div className="py-10 md:py-14">
-          <div className="max-w-[1600px] mx-auto px-8 lg:px-16">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {facilities.map((facility, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
+              {programs.map((program, idx) => (
                 <div
-                  key={index}
-                  className="group relative flex flex-col cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-                  onClick={() => {
-                    setSelectedFacility(facility);
-                    setFacilityImageIndex(0);
-                  }}
+                  key={program.id || idx}
+                  className="flex flex-col group cursor-pointer h-full program-card"
+                  onClick={() => setSelectedProgram(program)}
                 >
-                  {/* Image */}
-                  <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
+                  <div className="w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden mb-6 bg-gray-100 premium-shadow transition-all duration-700 group-hover:-translate-y-2">
                     <img
-                      src={facility.images?.[0] || "/background.jpg"}
-                      alt={facility.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      onError={(e) => { e.target.src = "/background.jpg"; }}
+                      loading="lazy"
+                      src={program.image || "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800"}
+                      alt={program.title}
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                     />
-                    {/* Number badge */}
-                    <div className="absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ backgroundColor: tenantConfig.primaryColor }}>
-                      {String(index + 1).padStart(2, "0")}
-                    </div>
-                    {/* Multi-image indicator */}
-                    {facility.images?.length > 1 && (
-                      <div className="absolute top-4 right-4 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full">
-                        <Image className="w-3 h-3" />
-                        {facility.images.length}
-                      </div>
-                    )}
                   </div>
-
-                  {/* Content */}
-                  <div className="p-6 flex flex-col flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 leading-snug group-hover:text-opacity-80 transition-colors">
-                      {facility.name}
-                    </h3>
-                    <p className="text-gray-500 text-sm leading-relaxed mb-4 flex-1">
-                      {facility.description}
+                  <div className="flex flex-col flex-1 px-2">
+                    <p
+                      className="text-[10px] font-black uppercase tracking-[0.3em] mb-3"
+                      style={{ color: tenantConfig.accentColor }}
+                    >
+                      {program.category}
                     </p>
-
-                    {/* Feature tags */}
-                    {facility.features?.filter(f => f?.trim()).length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {facility.features.filter(f => f?.trim()).map((feat, i) => (
-                          <span
-                            key={i}
-                            className="px-2.5 py-1 text-[11px] font-semibold rounded-full border"
-                            style={{
-                              backgroundColor: `${tenantConfig.accentColor}15`,
-                              borderColor: `${tenantConfig.accentColor}30`,
-                              color: tenantConfig.primaryColor,
-                            }}
-                          >
-                            {feat}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-gray-300" />
-                        <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                          {tenantConfig.shortName}
-                        </span>
-                      </div>
-                      <span
-                        className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide"
-                        style={{ color: tenantConfig.accentColor }}
-                      >
-                        View Photos
-                        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                      </span>
+                    <h3
+                      className="text-gray-900 text-xl font-black mb-3 leading-snug transition-colors"
+                    >
+                      {program.title}
+                    </h3>
+                    <p className="text-gray-500 text-sm md:text-base leading-relaxed mb-4 flex-1 font-medium">
+                      {program.description}
+                    </p>
+                    <div
+                      className="flex items-center gap-2 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all"
+                      style={{ color: tenantConfig.accentColor }}
+                    >
+                      View Impact <ChevronRight className="w-4 h-4" />
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Barangay Achievement and Awards Section */}
-      <section
-        id="achievements"
-        className="py-20 md:py-32 bg-gray-950 relative overflow-hidden animate-on-scroll"
-      >
-        {/* Cinematic Gradient Overlays */}
-        <div
-          className="absolute inset-x-0 top-0 h-px"
-          style={{
-            background: `linear-gradient(to right, transparent, ${tenantConfig.accentColor}80, transparent)`,
-          }}
-        ></div>
-        <div
-          className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2"
-          style={{ backgroundColor: `${tenantConfig.accentColor}10` }}
-        ></div>
-        <div
-          className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2"
-          style={{ backgroundColor: `${tenantConfig.primaryColor}10` }}
-        ></div>
-
-        <div className="relative z-10 max-w-[1800px] mx-auto px-8 sm:px-12 lg:px-16">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20 md:mb-24">
-            <div className="max-w-3xl">
-              <div
-                className="inline-flex items-center gap-3 px-4 py-1.5 border rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-8"
-                style={{
-                  backgroundColor: `${tenantConfig.accentColor}20`,
-                  borderColor: `${tenantConfig.accentColor}30`,
-                  color: tenantConfig.accentColor,
-                }}
-              >
-                <Star className="w-3.5 h-3.5 fill-current" />
-                Community Milestones
+      {/* Facilities Section */}
+      {!isFeatureLocked('facilities') && (
+        <section id="directory" className="relative bg-gray-50 overflow-hidden">
+          <div className="relative w-full h-[60vh] min-h-[500px] lg:h-[70vh] bg-gray-950 overflow-hidden">
+            {facilities.flatMap((f) => f.images || []).length > 0 ? (
+              facilities.flatMap((f) => f.images || []).filter((img, i, arr) => arr.indexOf(img) === i).map((img, index) => (
+                <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${heroCarouselIndex === index ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}>
+                  <img 
+                    src={img} 
+                    alt={`Slide ${index}`} 
+                    className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-[2000ms]"
+                    loading={index === 0 ? "eager" : "lazy"}
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="absolute inset-0 bg-gray-900 animate-pulse"></div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
+            <div className="absolute inset-0 z-20 flex items-center px-8 sm:px-12 lg:px-24">
+              <div className="max-w-4xl text-left">
+                <h2 className="text-4xl md:text-7xl lg:text-8xl font-black text-white leading-[1] mb-8 tracking-tighter uppercase">
+                  Community<br/>
+                  <span className="text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(to right, #fff, ${tenantConfig.accentColor})` }}>
+                    Facilities
+                  </span>
+                </h2>
               </div>
-              <h2 className="text-4xl md:text-7xl font-black text-white tracking-tight leading-[1.05]">
-                Our Legacy of
-                <br />
-                <span
-                  className="text-transparent bg-clip-text"
-                  style={{
-                    backgroundImage: `linear-gradient(to right, #fff, ${tenantConfig.accentColor})`,
-                  }}
-                >
-                  Excellence
-                </span>
-              </h2>
-            </div>
-            <div className="lg:max-w-sm">
-              <p className="text-gray-400 text-lg md:text-xl font-medium leading-relaxed italic">
-                "Recognizing the hard work and dedication of our community in
-                building a brighter, better {tenantConfig.shortName}."
-              </p>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-            {achievements.map((achievement, idx) => (
-              <div
-                key={achievement.id || idx}
-                onClick={() => setSelectedAchievement(achievement)}
-                className={`group relative bg-white/[0.02] border border-white/5 rounded-[2.5rem] overflow-hidden cursor-pointer transition-all duration-500 ${tenantId === "demo" ? "hover:border-[#C9A84C]/30 hover:bg-white/[0.04]" : "hover:border-emerald-500/30 hover:bg-white/[0.04]"}`}
-              >
-                <div className="aspect-[4/5] relative overflow-hidden">
-                  <img
-                    src={
-                      achievement.image ||
-                      "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800"
-                    }
-                    alt={achievement.title}
-                    className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000 scale-[1.05] group-hover:scale-100"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/20 to-transparent"></div>
-
-                  {/* Card Content Overlay */}
-                  <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                    <span
-                      className="text-[10px] font-black tracking-[0.3em] mb-3 uppercase"
-                      style={{ color: tenantConfig.accentColor }}
-                    >
-                      {achievement.year} Award
+          
+          {/* Facilities Grid */}
+          <div className="py-20 max-w-[1600px] mx-auto px-8 lg:px-16">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {facilities.map((facility, index) => (
+                <div
+                  key={index}
+                  className="group relative flex flex-col cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                  onClick={() => setSelectedFacility(facility)}
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
+                    <img 
+                      src={facility.images?.[0]} 
+                      alt={facility.name} 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-6 text-left">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">{facility.name}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed mb-4">{facility.description}</p>
+                    <span className="flex items-center gap-1 text-xs font-bold uppercase" style={{ color: tenantConfig.accentColor }}>
+                      View Photos <ChevronRight className="w-4 h-4" />
                     </span>
-                    <h3 className="text-2xl md:text-3xl font-black text-white leading-tight mb-4">
-                      {achievement.title}
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-0.5 transition-all duration-500 group-hover:w-20"
-                        style={{ backgroundColor: tenantConfig.accentColor }}
-                      ></div>
-                      <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">
-                        Detail View
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Barangay Achievement and Awards Section */}
+      {!isFeatureLocked('achievements') && (
+        <section
+          id="achievements"
+          className="py-20 md:py-32 bg-gray-950 relative overflow-hidden animate-on-scroll"
+        >
+          {/* Cinematic Gradient Overlays */}
+          <div
+            className="absolute inset-x-0 top-0 h-px"
+            style={{
+              background: `linear-gradient(to right, transparent, ${tenantConfig.accentColor}80, transparent)`,
+            }}
+          ></div>
+          <div
+            className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2"
+            style={{ backgroundColor: `${tenantConfig.accentColor}10` }}
+          ></div>
+          <div
+            className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2"
+            style={{ backgroundColor: `${tenantConfig.primaryColor}10` }}
+          ></div>
+
+          <div className="relative z-10 max-w-[1800px] mx-auto px-8 sm:px-12 lg:px-16">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20 md:mb-24">
+              <div className="max-w-3xl">
+                <div
+                  className="inline-flex items-center gap-3 px-4 py-1.5 border rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-8"
+                  style={{
+                    backgroundColor: `${tenantConfig.accentColor}20`,
+                    borderColor: `${tenantConfig.accentColor}30`,
+                    color: tenantConfig.accentColor,
+                  }}
+                >
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  Community Milestones
+                </div>
+                <h2 className="text-4xl md:text-7xl font-black text-white tracking-tight leading-[1.05]">
+                  Our Legacy of
+                  <br />
+                  <span
+                    className="text-transparent bg-clip-text"
+                    style={{
+                      backgroundImage: `linear-gradient(to right, #fff, ${tenantConfig.accentColor})`,
+                    }}
+                  >
+                    Excellence
+                  </span>
+                </h2>
+              </div>
+              <div className="lg:max-w-sm">
+                <p className="text-gray-400 text-lg md:text-xl font-medium leading-relaxed italic">
+                  "Recognizing the hard work and dedication of our community in
+                  building a brighter, better {tenantConfig.shortName}."
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
+              {achievements.map((achievement, idx) => (
+                <div
+                  key={achievement.id || idx}
+                  onClick={() => setSelectedAchievement(achievement)}
+                  className={`group relative bg-white/[0.02] border border-white/5 rounded-[2.5rem] overflow-hidden cursor-pointer transition-all duration-500 ${tenantId === "demo" ? "hover:border-[#C9A84C]/30 hover:bg-white/[0.04]" : "hover:border-emerald-500/30 hover:bg-white/[0.04]"}`}
+                >
+                  <div className="aspect-[4/5] relative overflow-hidden">
+                    <img
+                      loading="lazy"
+                      src={
+                        achievement.image ||
+                        "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800"
+                      }
+                      alt={achievement.title}
+                      className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000 scale-[1.05] group-hover:scale-100"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/20 to-transparent"></div>
+
+                    {/* Card Content Overlay */}
+                    <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                      <span
+                        className="text-[10px] font-black tracking-[0.3em] mb-3 uppercase"
+                        style={{ color: tenantConfig.accentColor }}
+                      >
+                        {achievement.year} Award
                       </span>
+                      <h3 className="text-2xl md:text-3xl font-black text-white leading-tight mb-4">
+                        {achievement.title}
+                      </h3>
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-0.5 transition-all duration-500 group-hover:w-20"
+                          style={{ backgroundColor: tenantConfig.accentColor }}
+                        ></div>
+                        <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">
+                          Detail View
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Achievement Modal */}
       {selectedAchievement && (
@@ -2015,6 +1815,7 @@ export default function PortalPageContent({ initialTenantId }) {
             <div className="relative h-64 sm:h-80 lg:h-[450px] w-full group overflow-hidden">
               <div className="absolute inset-0 bg-[#113821]/20 z-10"></div>
               <img
+                loading="lazy"
                 src={selectedAchievement.image}
                 alt={selectedAchievement.title}
                 className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
@@ -2059,6 +1860,7 @@ export default function PortalPageContent({ initialTenantId }) {
             {/* Left Column: Fixed Image on Desktop */}
             <div className="relative w-full md:w-[45%] h-64 md:h-full group overflow-hidden shrink-0">
               <img
+                loading="lazy"
                 src={selectedProgram.image}
                 alt={selectedProgram.title}
                 className="w-full h-full object-cover transform transition-transform duration-1000 group-hover:scale-105"
@@ -2227,6 +2029,13 @@ export default function PortalPageContent({ initialTenantId }) {
         tenantConfig={{ ...tenantConfig, tenant_id: tenantId }}
       />
 
+      <UpgradeNeededModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        featureName={lockedFeature}
+        tenantConfig={tenantConfig}
+      />
+
       {/* Barangay Officials Section - Optimized */}
       {visibilitySettings?.section !== false && (
         <section
@@ -2236,6 +2045,7 @@ export default function PortalPageContent({ initialTenantId }) {
           {/* Photo - Full visibility without overlay */}
           <div className="relative">
             <img
+              loading="eager"
               src={heroSettings?.image || ""}
               alt={heroSettings?.title || "Barangay Officials"}
               className="w-full h-auto md:h-[400px] lg:h-[500px] xl:h-[600px] md:object-cover bg-gray-800"
@@ -2543,8 +2353,7 @@ export default function PortalPageContent({ initialTenantId }) {
                                       >
                                         <div className="relative aspect-[4/5] overflow-hidden group bg-white">
                                           {official.image_url ? (
-                                            <img
-                                              src={official.image_url}
+                                            <img loading="lazy" src={official.image_url}
                                               alt={official.name}
                                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10"
                                             />
@@ -2672,8 +2481,7 @@ export default function PortalPageContent({ initialTenantId }) {
                                       >
                                         <div className="relative aspect-[4/5] overflow-hidden group bg-white">
                                           {official.image_url ? (
-                                            <img
-                                              src={official.image_url}
+                                            <img loading="lazy" src={official.image_url}
                                               alt={official.name}
                                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10"
                                             />
@@ -2774,8 +2582,7 @@ export default function PortalPageContent({ initialTenantId }) {
                                   >
                                     <div className="relative aspect-square overflow-hidden group bg-white">
                                       {official.image_url ? (
-                                        <img
-                                          src={official.image_url}
+                                        <img loading="lazy" src={official.image_url}
                                           alt={official.name}
                                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10"
                                         />
@@ -3383,8 +3190,7 @@ export default function PortalPageContent({ initialTenantId }) {
                         key={idx}
                         className={`absolute inset-0 transition-opacity duration-500 ease-in-out flex items-center justify-center ${facilityImageIndex === idx ? "opacity-100 z-10" : "opacity-0 z-0"}`}
                       >
-                        <img
-                          src={img}
+                        <img loading="lazy" src={img}
                           alt={`${selectedFacility.name} image ${idx + 1}`}
                           className="w-full h-full object-contain"
                         />
@@ -3453,8 +3259,7 @@ export default function PortalPageContent({ initialTenantId }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative h-56 md:h-72">
-              <img
-                src={selectedNewsItem.image || "/background.jpg"}
+              <img loading="lazy" src={selectedNewsItem.image || "/background.jpg"}
                 alt={selectedNewsItem.title}
                 className="w-full h-full object-cover"
               />
@@ -3680,6 +3485,51 @@ function TrackRequestWidget({ tenantId, tenantConfig }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+
+function UpgradeNeededModal({ isOpen, onClose, featureName, tenantConfig }) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden relative transform transition-all p-8 md:p-12 text-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div 
+          className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl"
+          style={{ background: `linear-gradient(135deg, ${tenantConfig.primaryColor}, ${tenantConfig.accentColor})` }}
+        >
+          <div className="w-10 h-10 text-white flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+          </div>
+        </div>
+        
+        <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-4 tracking-tight">
+          Premium Feature
+        </h2>
+        
+        <p className="text-gray-500 text-base md:text-lg mb-8 leading-relaxed font-medium">
+          The <span className="font-bold text-gray-900">{featureName}</span> request 
+          is currently limited to specific subscription tiers. 
+          Please contact our <span className="italic">Barangay Secretariat</span> for 
+          manual processing or eligibility inquiries.
+        </p>
+
+        <button
+          onClick={onClose}
+          className="w-full py-4 rounded-2xl font-black text-white transition-all shadow-lg hover:-translate-y-1 hover:shadow-xl active:scale-95"
+          style={{ backgroundColor: tenantConfig.primaryColor }}
+        >
+          I Understand
+        </button>
+      </div>
     </div>
   );
 }

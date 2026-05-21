@@ -9,7 +9,7 @@ import fs from "fs/promises";
  */
 export default async function handler(req, res) {
   const { type } = req.query;
-  const tenantId = req.headers["x-tenant-id"] || "ibaoeste";
+  const tenantId = (req.headers["x-tenant-id"] || "ibaoeste").toLowerCase();
 
   const validTypes = [
     "events",

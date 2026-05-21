@@ -9,7 +9,7 @@ import fs from "fs/promises";
  */
 export default async function handler(req, res) {
   const { type } = req.query;
-  const tenantId = req.headers["x-tenant-id"] || "ibaoeste";
+  const tenantId = (req.headers["x-tenant-id"] || "ibaoeste").toLowerCase();
 
   const validTypes = [
     "events",
@@ -45,7 +45,7 @@ export default async function handler(req, res) {
         global: {
           fetch: (url, options) => {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const timeoutId = setTimeout(() => controller.abort(), 1500);
             return fetch(url, { ...options, signal: controller.signal })
               .then((res) => {
                 clearTimeout(timeoutId);
@@ -100,9 +100,12 @@ export default async function handler(req, res) {
       .select("*")
       .eq("tenant_id", tenantId);
 
-    // Apply sorting for officials
+    // Apply sorting
     if (type === "officials") {
       query = query.eq("is_active", true);
+    } else if (type === "events" || type === "facilities" || type === "programs" || type === "achievements") {
+      // Order by order_index for content that has it
+      query = query.order("order_index", { ascending: true });
     } else {
       query = query.order("id", { ascending: true });
     }
@@ -143,40 +146,16 @@ export default async function handler(req, res) {
       console.error(`Supabase fetch error [${type}]:`, error.message);
     }
   } catch (cloudError) {
-    console.warn(
-      `⚠️ Cloud Bypass [Portal/${type}]: Keys missing or unreachable.`,
+    console.error(
+      `❌ Cloud data unavailable [Portal/${type}]: ${cloudError.message}`,
     );
-  }
-
-  /**
-   * STAGE 2: Local Resilience Fallback (JSON-based)
-   */
-  try {
-    const dataPath = path.join(
-      process.cwd(),
-      "src/data/mock/portal_config.json",
-    );
-    const jsonData = await fs.readFile(dataPath, "utf8");
-    const config = JSON.parse(jsonData);
-
-    const list = config[type] || [];
-    const filteredList = list.filter(
-      (item) => !item.tenant_id || item.tenant_id === tenantId,
-    );
-
-    console.log(
-      `📦 Fallback data served for [Portal/${type}] (Found ${filteredList.length} items)`,
-    );
+    // Don't serve fake fallback data - return empty result
     return res.status(200).json({
       success: true,
-      data: type === "config" ? config.config || {} : filteredList,
-      source: "local_resilience_store",
+      data: type === "config" ? {} : [],
+      source: "no_data_available",
+      message: "Database unavailable - no fallback data provided"
     });
-  } catch (fsError) {
-    console.error(`❌ CRITICAL FAILURE [Portal/${type}]:`, fsError);
-    return res
-      .status(500)
-      .json({ success: false, message: "Portal content unavailable offline." });
   }
 }
 

@@ -77,7 +77,8 @@ export default async function handler(req, res) {
   }
 
   const { type, formData } = req.body;
-  const tenantId = req.headers["x-tenant-id"] || formData?.tenantId;
+  const rawTenantId = req.headers["x-tenant-id"] || formData?.tenantId;
+  const tenantId = rawTenantId ? rawTenantId.toLowerCase() : rawTenantId;
 
   if (!type || !formData) {
     return res.status(400).json({ success: false, message: "Missing type or formData" });
@@ -125,6 +126,52 @@ export default async function handler(req, res) {
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
     );
+
+    // 0. SUBSCRIPTION ENFORCEMENT
+    const { data: sub } = await supabase
+      .from('barangay_subscriptions')
+      .select('*, plan:subscription_plans(*)')
+      .eq('barangay_id', tenantId)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (sub && sub.plan) {
+      // Pro plan bypass - all certificates allowed
+      const isProPlan = sub.plan.max_requests === -1;
+      
+      // Standard plan - basic 3 certificates + all 11 certificates always allowed
+      const isStandardPlan = sub.plan_id === 'standard';
+      const basicCertificates = ['barangay_clearance', 'certificate_of_indigency', 'barangay_residency'];
+      
+      // Feature Gate (Bypass if Pro/Unlimited or Standard plan with basic certs)
+      if (!isProPlan && !isStandardPlan) {
+        // Starter plan - check features array
+        if (sub.plan.features && sub.plan.features.length > 0 && !sub.plan.features.includes(canonicalType)) {
+          return res.status(403).json({
+            success: false,
+            message: `Your current plan does not support ${canonicalType.replace(/_/g, ' ')} requests. Please contact your barangay admin to upgrade.`,
+            code: 'PLAN_RESTRICTED'
+          });
+        }
+      }
+
+      // Usage Limit Gate (e.g. 500/mo for Starter, 2000/mo for Standard)
+      if (sub.plan.max_requests !== -1) {
+          const { count: requestsThisMonth } = await supabase
+            .from('certificate_requests')
+            .select('id', { count: 'exact', head: true })
+            .eq('tenant_id', tenantId)
+            .gte('created_at', sub.current_period_start || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
+            
+          if (requestsThisMonth >= sub.plan.max_requests) {
+            return res.status(403).json({
+              success: false,
+              message: "Monthly request limit reached for this barangay. Please try again next month or upgrade your plan.",
+              code: 'PLAN_LIMIT_REACHED'
+            });
+          }
+      }
+    }
 
     console.log(`📡 Cloud Submit [${canonicalType}] for tenant: ${tenantId}`);
 
@@ -266,6 +313,36 @@ export default async function handler(req, res) {
     if (!error) {
       console.log(`✅ LIVE Request stored: ${refNumber}`);
 
+      // Send email notification to applicant
+      try {
+        if (formData.email) {
+          const backendUrl = process.env.BACKEND_URL || 'http://localhost:5005';
+          const emailResponse = await fetch(`${backendUrl}/api/email/send-notification`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              recipientEmail: formData.email,
+              recipientName: formData.fullName || formData.ownerFullName || 'Applicant',
+              eventType: 'RECEIVED',
+              certificateType: canonicalType,
+              referenceNumber: refNumber,
+              applicantName: formData.fullName || formData.ownerFullName || 'Applicant',
+              comments: '',
+              requestId: data.id
+            })
+          });
+          const emailResult = await emailResponse.json();
+          if (emailResult.success) {
+            console.log(`📧 Confirmation email sent to ${formData.email}`);
+          } else {
+            console.warn(`⚠️ Email failed: ${emailResult.error}`);
+          }
+        }
+      } catch (emailError) {
+        console.error('Email notification error:', emailError);
+        // Don't fail the submission if email fails
+      }
+
       // Create initial workflow assignment so staff can see it in their queue
       try {
         const { data: workflowConfig } = await supabase
@@ -294,10 +371,10 @@ export default async function handler(req, res) {
         if (staffUserIds.length === 0) {
           const { data: staffUsers } = await supabase
             .from("users")
-            .select("id")
+            .select("_id")
             .eq("tenant_id", tenantId)
             .in("role", ["admin", "staff", "secretary", "captain"]);
-          staffUserIds = (staffUsers || []).map((u) => u.id);
+          staffUserIds = (staffUsers || []).map((u) => u._id);
         }
 
         for (const userId of staffUserIds) {
@@ -312,6 +389,113 @@ export default async function handler(req, res) {
               status: "pending",
             },
           ]);
+        }
+
+        // Send email notifications & in-app notifications to assigned staff
+        try {
+          const backendUrl = process.env.BACKEND_URL || 'http://localhost:5005';
+          
+          console.log(`📋 Staff User IDs to notify:`, staffUserIds);
+          
+          const { data: staffUsers, error: staffQueryError } = await supabase
+            .from('users')
+            .select('_id, email, first_name, last_name')
+            .in('_id', staffUserIds)
+            .eq('tenant_id', tenantId);
+
+          if (staffQueryError) {
+            console.error('❌ Error querying staff users:', staffQueryError);
+          }
+          
+          console.log(`👥 Found ${staffUsers?.length || 0} staff users to notify`);
+
+          for (const staff of staffUsers || []) {
+            console.log(`📤 Notifying staff: ${staff.first_name} ${staff.last_name} (${staff._id})`);
+            
+            // Send email
+            if (staff.email) {
+              await fetch(`${backendUrl}/api/email/send-notification`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  recipientEmail: staff.email,
+                  recipientName: `${staff.first_name} ${staff.last_name}`,
+                  eventType: 'SUBMITTED',
+                  certificateType: canonicalType,
+                  referenceNumber: refNumber,
+                  applicantName: formData.fullName || formData.ownerFullName || 'Applicant',
+                  comments: '',
+                  requestId: data.id
+                })
+              });
+              console.log(`📧 Assignment email sent to ${staff.email}`);
+            }
+            
+            // Create in-app notification
+            try {
+              const notifData = {
+                tenant_id: tenantId,
+                user_id: staff._id,
+                title: 'New Request Assigned',
+                message: `New request ${refNumber} from ${formData.fullName || formData.ownerFullName || 'Applicant'} needs your review.`,
+                type: 'info',
+                category: 'assignment',
+                reference_number: refNumber,
+                request_id: data.id,
+                link: `/requests`,
+                read: false,
+                created_at: new Date().toISOString()
+              };
+              
+              console.log(`🔔 Creating notification for user ${staff._id}:`, notifData);
+              
+              const { data: notifResult, error: notifError } = await supabase
+                .from('notifications')
+                .insert([notifData])
+                .select();
+              
+              if (notifError) {
+                console.error(`❌ In-app notification failed for ${staff._id}:`, notifError);
+              } else {
+                console.log(`✅ In-app notification created for staff ${staff._id}`, notifResult);
+              }
+            } catch (notifError) {
+              console.error(`❌ In-app notification exception for ${staff._id}:`, notifError);
+            }
+          }
+        } catch (emailError) {
+          console.error('❌ Staff notification error:', emailError);
+        }
+        
+        // Create in-app notification for applicant (if they have a user account)
+        if (formData.residentId) {
+          try {
+            const { data: residentUser } = await supabase
+              .from('users')
+              .select('_id')
+              .eq('resident_id', formData.residentId)
+              .eq('tenant_id', tenantId)
+              .maybeSingle();
+            
+            if (residentUser) {
+              await supabase.from('notifications').insert([{
+                tenant_id: tenantId,
+                user_id: residentUser._id,
+                title: 'Request Received',
+                message: `Your request ${refNumber} has been received and is being processed.`,
+                type: 'success',
+                category: 'request_submitted',
+                reference_number: refNumber,
+                request_id: data.id,
+                link: `/track/${refNumber}`,
+                read: false,
+                created_at: new Date().toISOString()
+              }]);
+              console.log(`🔔 In-app notification created for applicant ${residentUser._id}`);
+            }
+          } catch (notifError) {
+            console.warn('⚠️ Applicant in-app notification failed:', notifError.message);
+          }
         }
 
         // Log initial history entry
